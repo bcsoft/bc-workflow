@@ -1,0 +1,127 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>cn.bc</groupId>
+		<artifactId>bc-parent</artifactId>
+		<version>0.4-SNAPSHOT</version>
+		<relativePath>../../bc-framework/bc-parent/pom.xml</relativePath>
+	</parent>
+	<groupId>cn.bc.workflow</groupId>
+	<artifactId>bc-workflow-parent</artifactId>
+	<packaging>pom</packaging>
+	<version>0.1-SNAPSHOT</version>
+	<name>bc-workflow-parent</name>
+	<description>工作流各模块的parent</description>
+
+	<properties>
+		<!-- 平台版本号 -->
+		<framework.version>0.4-SNAPSHOT</framework.version>
+		<!-- activiti版本号 -->
+		<activiti.version>5.6</activiti.version>
+	</properties>
+
+	<dependencies>
+		<!-- 平台模块 -->
+		<dependency>
+			<groupId>cn.bc</groupId>
+			<artifactId>bc-core</artifactId>
+			<version>${framework.version}</version>
+		</dependency>
+
+		<!-- provided -->
+		<dependency>
+			<groupId>javax.persistence</groupId>
+			<artifactId>persistence-api</artifactId>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>javax.servlet</groupId>
+			<artifactId>servlet-api</artifactId>
+			<scope>provided</scope>
+		</dependency>
+
+		<!-- activiti -->
+		<dependency>
+			<groupId>org.activiti</groupId>
+			<artifactId>activiti-engine</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.activiti</groupId>
+			<artifactId>activiti-spring</artifactId>
+		</dependency>
+		
+		<!-- activiti sources
+		<dependency>
+			<groupId>org.activiti</groupId>
+			<artifactId>activiti-engine</artifactId>
+			<version>${activiti.version}</version>
+			<classifier>sources</classifier>
+		</dependency>
+		<dependency>
+			<groupId>org.activiti</groupId>
+			<artifactId>activiti-spring</artifactId>
+			<version>${activiti.version}</version>
+			<classifier>sources</classifier>
+		</dependency> -->
+	</dependencies>
+
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.activiti</groupId>
+				<artifactId>activiti-engine</artifactId>
+				<version>${activiti.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.activiti</groupId>
+				<artifactId>activiti-spring</artifactId>
+				<version>${activiti.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.activiti</groupId>
+				<artifactId>activiti-camel</artifactId>
+				<version>${activiti.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.activiti</groupId>
+				<artifactId>activiti-cdi</artifactId>
+				<version>${activiti.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.activiti</groupId>
+				<artifactId>activiti-cxf</artifactId>
+				<version>${activiti.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.activiti</groupId>
+				<artifactId>activiti-cycle</artifactId>
+				<version>${activiti.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.activiti</groupId>
+				<artifactId>activiti-designer-integration</artifactId>
+				<version>${activiti.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.activiti</groupId>
+				<artifactId>activiti-mule</artifactId>
+				<version>${activiti.version}</version>
+			</dependency>
+
+			<!-- <dependency> <groupId>org.activiti</groupId> <artifactId>activiti-pvm</artifactId> 
+				<version>${activiti.version}</version> </dependency> <dependency> <groupId>org.activiti</groupId> 
+				<artifactId>activiti-rest</artifactId> <version>${activiti.version}</version> 
+				</dependency> <dependency> <groupId>org.activiti</groupId> <artifactId>activiti-probe</artifactId> 
+				<version>${activiti.version}</version> </dependency> <dependency> <groupId>org.activiti</groupId> 
+				<artifactId>activiti-explorer</artifactId> <version>${activiti.version}</version> 
+				</dependency> <dependency> <groupId>org.activiti</groupId> <artifactId>activiti-spring</artifactId> 
+				<version>${activiti.version}</version> </dependency> <dependency> <groupId>org.activiti</groupId> 
+				<artifactId>activiti-webapp</artifactId> <version>${activiti.version}</version> 
+				</dependency> <dependency> <groupId>org.activiti</groupId> <artifactId>activiti-engine-examples</artifactId> 
+				<version>${activiti.version}</version> </dependency> <dependency> <groupId>org.activiti</groupId> 
+				<artifactId>activiti-engine-test-cfg</artifactId> <version>${activiti.version}</version> 
+				</dependency> -->
+		</dependencies>
+	</dependencyManagement>
+</project>
