@@ -1,3 +1,4 @@
+-- activiti5.6 cycle
 drop table if exists ACT_CY_CONN_CONFIG;
 drop table if exists ACT_CY_CONFIG;
 drop table if exists ACT_CY_LINK;
