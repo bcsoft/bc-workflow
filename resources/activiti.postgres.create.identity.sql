@@ -30,17 +30,19 @@ create table ACT_ID_INFO (
     TYPE_ varchar(64),
     KEY_ varchar(255),
     VALUE_ varchar(255),
-    PASSWORD_ LONGBLOB,
+    PASSWORD_ bytea,
     PARENT_ID_ varchar(255),
     primary key (ID_)
 );
 
+create index ACT_IDX_MEMB_GROUP on ACT_ID_MEMBERSHIP(GROUP_ID_);
 alter table ACT_ID_MEMBERSHIP 
-    add constraint ACT_FK_MEMB_GROUP 
+    add constraint ACT_FK_MEMB_GROUP
     foreign key (GROUP_ID_) 
     references ACT_ID_GROUP (ID_);
 
+create index ACT_IDX_MEMB_USER on ACT_ID_MEMBERSHIP(USER_ID_);
 alter table ACT_ID_MEMBERSHIP 
-    add constraint ACT_FK_MEMB_USER 
+    add constraint ACT_FK_MEMB_USER
     foreign key (USER_ID_) 
     references ACT_ID_USER (ID_);

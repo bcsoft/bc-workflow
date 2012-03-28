@@ -53,36 +53,31 @@
 		<dependency>
 			<groupId>org.activiti</groupId>
 			<artifactId>activiti-camel</artifactId>
-			<version>${activiti.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.activiti</groupId>
 			<artifactId>activiti-cdi</artifactId>
-			<version>${activiti.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.activiti</groupId>
 			<artifactId>activiti-cxf</artifactId>
-			<version>${activiti.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.activiti</groupId>
 			<artifactId>activiti-osgi</artifactId>
-			<version>${activiti.version}</version>
 		</dependency>
 		<!-- activiti all
 		<dependency>
 			<groupId>org.activiti</groupId>
 			<artifactId>activiti-webapp-explorer2</artifactId>
-			<version>${activiti.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.activiti</groupId>
 			<artifactId>activiti-mule</artifactId>
-			<version>${activiti.version}</version>
 		</dependency>
 		-->
 		
+		<!-- activiti sources
 		<dependency>
 			<groupId>org.activiti</groupId>
 			<artifactId>activiti-engine</artifactId>
@@ -119,7 +114,6 @@
 			<version>${activiti.version}</version>
 			<classifier>sources</classifier>
 		</dependency>
-		<!-- activiti sources
 		<dependency>
 			<groupId>org.activiti</groupId>
 			<artifactId>activiti-mule</artifactId>
@@ -175,6 +169,11 @@
 			<dependency>
 				<groupId>org.activiti</groupId>
 				<artifactId>activiti-mule</artifactId>
+				<version>${activiti.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.activiti</groupId>
+				<artifactId>activiti-osgi</artifactId>
 				<version>${activiti.version}</version>
 			</dependency>
 
