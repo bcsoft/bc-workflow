@@ -4,21 +4,21 @@
 	<parent>
 		<groupId>cn.bc</groupId>
 		<artifactId>bc-parent</artifactId>
-		<version>0.4-SNAPSHOT</version>
+		<version>1.0-SNAPSHOT</version>
 		<relativePath>../../bc-framework/bc-parent/pom.xml</relativePath>
 	</parent>
 	<groupId>cn.bc.workflow</groupId>
 	<artifactId>bc-workflow-parent</artifactId>
 	<packaging>pom</packaging>
-	<version>0.1-SNAPSHOT</version>
+	<version>0.2-SNAPSHOT</version>
 	<name>bc-workflow-parent</name>
 	<description>工作流各模块的parent</description>
 
 	<properties>
 		<!-- 平台版本号 -->
-		<framework.version>0.4-SNAPSHOT</framework.version>
+		<framework.version>1.0-SNAPSHOT</framework.version>
 		<!-- activiti版本号 -->
-		<activiti.version>5.6</activiti.version>
+		<activiti.version>5.9</activiti.version>
 	</properties>
 
 	<dependencies>
@@ -50,8 +50,39 @@
 			<groupId>org.activiti</groupId>
 			<artifactId>activiti-spring</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>org.activiti</groupId>
+			<artifactId>activiti-camel</artifactId>
+			<version>${activiti.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.activiti</groupId>
+			<artifactId>activiti-cdi</artifactId>
+			<version>${activiti.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.activiti</groupId>
+			<artifactId>activiti-cxf</artifactId>
+			<version>${activiti.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.activiti</groupId>
+			<artifactId>activiti-osgi</artifactId>
+			<version>${activiti.version}</version>
+		</dependency>
+		<!-- activiti all
+		<dependency>
+			<groupId>org.activiti</groupId>
+			<artifactId>activiti-webapp-explorer2</artifactId>
+			<version>${activiti.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.activiti</groupId>
+			<artifactId>activiti-mule</artifactId>
+			<version>${activiti.version}</version>
+		</dependency>
+		-->
 		
-		<!-- activiti sources
 		<dependency>
 			<groupId>org.activiti</groupId>
 			<artifactId>activiti-engine</artifactId>
@@ -63,7 +94,45 @@
 			<artifactId>activiti-spring</artifactId>
 			<version>${activiti.version}</version>
 			<classifier>sources</classifier>
-		</dependency> -->
+		</dependency>
+		<dependency>
+			<groupId>org.activiti</groupId>
+			<artifactId>activiti-camel</artifactId>
+			<version>${activiti.version}</version>
+			<classifier>sources</classifier>
+		</dependency>
+		<dependency>
+			<groupId>org.activiti</groupId>
+			<artifactId>activiti-cdi</artifactId>
+			<version>${activiti.version}</version>
+			<classifier>sources</classifier>
+		</dependency>
+		<dependency>
+			<groupId>org.activiti</groupId>
+			<artifactId>activiti-cxf</artifactId>
+			<version>${activiti.version}</version>
+			<classifier>sources</classifier>
+		</dependency>
+		<dependency>
+			<groupId>org.activiti</groupId>
+			<artifactId>activiti-osgi</artifactId>
+			<version>${activiti.version}</version>
+			<classifier>sources</classifier>
+		</dependency>
+		<!-- activiti sources
+		<dependency>
+			<groupId>org.activiti</groupId>
+			<artifactId>activiti-mule</artifactId>
+			<version>${activiti.version}</version>
+			<classifier>sources</classifier>
+		</dependency>
+		<dependency>
+			<groupId>org.activiti</groupId>
+			<artifactId>activiti-webapp-explorer2</artifactId>
+			<version>${activiti.version}</version>
+			<classifier>sources</classifier>
+		</dependency>
+		-->
 	</dependencies>
 
 	<dependencyManagement>
