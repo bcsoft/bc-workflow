@@ -33,8 +33,10 @@ public class ActivitiTest {
 	@Deployment(resources = { "cn/bc/workflow/testProcess.bpmn20.xml" })
 	public void simpleProcessTest() {
 		runtimeService.startProcessInstanceByKey("testProcess");
+		assertEquals(1, runtimeService.createProcessInstanceQuery().count());
+
 		Task task = taskService.createTaskQuery().singleResult();
-		assertEquals("My Task", task.getName());
+		assertEquals("任务1", task.getName());
 
 		taskService.complete(task.getId());
 		assertEquals(0, runtimeService.createProcessInstanceQuery().count());

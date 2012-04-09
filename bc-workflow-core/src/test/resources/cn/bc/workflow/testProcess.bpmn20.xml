@@ -5,7 +5,7 @@
 	<process id="testProcess">
 		<startEvent id="start" />
 		<sequenceFlow id="flow1" sourceRef="start" targetRef="task1" />
-		<userTask id="task1" name="My Task"/>
+		<userTask id="task1" name="任务1"/>
 		<sequenceFlow id="flow2" sourceRef="task1" targetRef="end" />
 		<endEvent id="end" />
 	</process>
