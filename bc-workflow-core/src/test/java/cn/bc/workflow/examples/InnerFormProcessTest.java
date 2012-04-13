@@ -30,7 +30,7 @@ import cn.bc.core.util.DateUtils;
 @RunWith(SpringJUnit4ClassRunner.class)
 @Transactional
 @ContextConfiguration("classpath:spring-test.xml")
-public class SampleProcessTest {
+public class InnerFormProcessTest {
 	@Autowired
 	private RuntimeService runtimeService;
 
@@ -48,7 +48,7 @@ public class SampleProcessTest {
 	public ActivitiRule activitiSpringRule;
 
 	@Test
-	@Deployment(resources = { "cn/bc/workflow/examples/SampleProcess.bpmn20.xml" })
+	@Deployment(resources = { "cn/bc/workflow/examples/InnerFormProcess.bpmn20.xml" })
 	public void testStartFormData() {
 		// 流程开始事件的表单信息
 		String procDefId = repositoryService.createProcessDefinitionQuery()
@@ -85,9 +85,9 @@ public class SampleProcessTest {
 	}
 
 	@Test
-	@Deployment(resources = { "cn/bc/workflow/examples/SampleProcess.bpmn20.xml" })
+	@Deployment(resources = { "cn/bc/workflow/examples/InnerFormProcess.bpmn20.xml" })
 	public void testTaskFormData() {
-		String key = "sampleProcess";
+		String key = "innerFormProcess";
 		List<FormProperty> fp;
 
 		// 定义一些流程变量
