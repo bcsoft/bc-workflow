@@ -1,9 +1,14 @@
+-- http://homeland520.blog.163.com/blog/static/81958868201112564938465/
 create table ACT_GE_PROPERTY (
     NAME_ varchar(64),
     VALUE_ varchar(300),
     REV_ integer,
     primary key (NAME_)
 );
+COMMENT ON TABLE ACT_GE_PROPERTY IS '属性数据表,存储整个流程引擎级别的数据';
+COMMENT ON COLUMN ACT_GE_PROPERTY.NAME_ IS '属性名称,如activiti的数据脚本名schema.version';
+COMMENT ON COLUMN ACT_GE_PROPERTY.VALUE_ IS '属性值,如activiti的版本号5.9';
+COMMENT ON COLUMN ACT_GE_PROPERTY.REV_ IS '修订号';
 
 insert into ACT_GE_PROPERTY
 values ('schema.version', '5.9', 1);
@@ -23,6 +28,13 @@ create table ACT_GE_BYTEARRAY (
     GENERATED_ boolean,
     primary key (ID_)
 );
+COMMENT ON TABLE ACT_GE_BYTEARRAY IS '用来保存部署文件的大文本数据';
+COMMENT ON COLUMN ACT_GE_BYTEARRAY.ID_ IS '资源文件编号,自增长';
+COMMENT ON COLUMN ACT_GE_BYTEARRAY.REV_ IS '版本号';
+COMMENT ON COLUMN ACT_GE_BYTEARRAY.NAME_ IS '资源文件名称';
+COMMENT ON COLUMN ACT_GE_BYTEARRAY.DEPLOYMENT_ID_ IS '来自于父表ACT_RE_DEPLOYMENT中的主键';
+COMMENT ON COLUMN ACT_GE_BYTEARRAY.BYTES_ IS '存储文本字节流';
+COMMENT ON COLUMN ACT_GE_BYTEARRAY.GENERATED_ IS '';
 
 create table ACT_RE_DEPLOYMENT (
     ID_ varchar(64),
@@ -30,6 +42,10 @@ create table ACT_RE_DEPLOYMENT (
     DEPLOY_TIME_ timestamp,
     primary key (ID_)
 );
+COMMENT ON TABLE ACT_RE_DEPLOYMENT IS '用来存储部署时需要被持久化保存下来的信息';
+COMMENT ON COLUMN ACT_RE_DEPLOYMENT.ID_ IS '部署编号,自增长';
+COMMENT ON COLUMN ACT_RE_DEPLOYMENT.NAME_ IS '部署的包名称';
+COMMENT ON COLUMN ACT_RE_DEPLOYMENT.DEPLOY_TIME_ IS '部署时间';
 
 create table ACT_RU_EXECUTION (
     ID_ varchar(64),
@@ -38,16 +54,30 @@ create table ACT_RU_EXECUTION (
     BUSINESS_KEY_ varchar(255),
     PARENT_ID_ varchar(64),
     PROC_DEF_ID_ varchar(64),
-	  SUPER_EXEC_ varchar(64),
+    SUPER_EXEC_ varchar(64),
     ACT_ID_ varchar(255),
     IS_ACTIVE_ boolean,
     IS_CONCURRENT_ boolean,
-	  IS_SCOPE_ boolean,
-	IS_EVENT_SCOPE_ boolean,
-	SUSPENSION_STATE_ integer,
+    IS_SCOPE_ boolean,
+    IS_EVENT_SCOPE_ boolean,
+    SUSPENSION_STATE_ integer,
     primary key (ID_),
     unique (PROC_DEF_ID_, BUSINESS_KEY_)
 );
+COMMENT ON TABLE ACT_RU_EXECUTION IS '';
+COMMENT ON COLUMN ACT_RU_EXECUTION.ID_ IS '';
+COMMENT ON COLUMN ACT_RU_EXECUTION.REV_ IS '版本号';
+COMMENT ON COLUMN ACT_RU_EXECUTION.PROC_INST_ID_ IS '流程实例编号';
+COMMENT ON COLUMN ACT_RU_EXECUTION.BUSINESS_KEY_ IS '业务编号';
+COMMENT ON COLUMN ACT_RU_EXECUTION.PARENT_ID_ IS '';
+COMMENT ON COLUMN ACT_RU_EXECUTION.PROC_DEF_ID_ IS '流程ID';
+COMMENT ON COLUMN ACT_RU_EXECUTION.SUPER_EXEC_ IS '';
+COMMENT ON COLUMN ACT_RU_EXECUTION.ACT_ID_ IS '';
+COMMENT ON COLUMN ACT_RU_EXECUTION.IS_ACTIVE_ IS '';
+COMMENT ON COLUMN ACT_RU_EXECUTION.IS_CONCURRENT_ IS '';
+COMMENT ON COLUMN ACT_RU_EXECUTION.IS_SCOPE_ IS '';
+COMMENT ON COLUMN ACT_RU_EXECUTION.IS_EVENT_SCOPE_ IS '';
+COMMENT ON COLUMN ACT_RU_EXECUTION.SUSPENSION_STATE_ IS '';
 
 create table ACT_RU_JOB (
     ID_ varchar(64) NOT NULL,
@@ -67,7 +97,13 @@ create table ACT_RU_JOB (
     HANDLER_CFG_ varchar(4000),
     primary key (ID_)
 );
+COMMENT ON TABLE ACT_RU_JOB IS '运行时定时任务数据表';
 
+-- 注意：此表与ACT_RE_DEPLOYMENT是多对一的关系，即一个部署的bar包里可能包含多个流程定义文件，
+-- 每个流程定义文件都会有一条记录在ACT_RE_PROCDEF表内，每条流程定义的数据，都会对应ACT_GE_BYTEARRAY表
+-- 内的一个资源文件和PNG图片文件。
+-- 与ACT_GE_BYTEARRAY的关联是通过程序用ACT_GE_BYTEARRAY.NAME_与ACT_RE_PROCDEF.RESOURCE_NAME_完成的，
+-- 在数据库表结构内没有体现。
 create table ACT_RE_PROCDEF (
     ID_ varchar(64),
     REV_ integer,
@@ -82,6 +118,18 @@ create table ACT_RE_PROCDEF (
     SUSPENSION_STATE_ integer,
     primary key (ID_)
 );
+COMMENT ON TABLE ACT_RE_PROCDEF IS '业务流程定义数据表';
+COMMENT ON COLUMN ACT_RE_PROCDEF.ID_ IS '流程ID,由“流程编号:流程版本号:自增长ID”组成';
+COMMENT ON COLUMN ACT_RE_PROCDEF.REV_ IS '';
+COMMENT ON COLUMN ACT_RE_PROCDEF.CATEGORY_ IS '流程命令空间(该编号是流程文件targetNamespace的属性值)';
+COMMENT ON COLUMN ACT_RE_PROCDEF.NAME_ IS '流程名称(该编号就是流程文件process元素的name属性值)';
+COMMENT ON COLUMN ACT_RE_PROCDEF.KEY_ IS '流程编号(该编号就是流程文件process元素的id属性值)';
+COMMENT ON COLUMN ACT_RE_PROCDEF.VERSION_ IS '流程版本号(由程序控制,新增即为1,修改后依次加1)';
+COMMENT ON COLUMN ACT_RE_PROCDEF.DEPLOYMENT_ID_ IS '部署编号';
+COMMENT ON COLUMN ACT_RE_PROCDEF.RESOURCE_NAME_ IS '资源文件名称';
+COMMENT ON COLUMN ACT_RE_PROCDEF.DGRM_RESOURCE_NAME_ IS '图片资源文件名称';
+COMMENT ON COLUMN ACT_RE_PROCDEF.HAS_START_FORM_KEY_ IS '是否有Start Form Key';
+COMMENT ON COLUMN ACT_RE_PROCDEF.SUSPENSION_STATE_ IS '';
 
 create table ACT_RU_TASK (
     ID_ varchar(64),
@@ -101,6 +149,7 @@ create table ACT_RU_TASK (
     DUE_DATE_ timestamp,
     primary key (ID_)
 );
+COMMENT ON TABLE ACT_RU_TASK IS '运行时任务数据表';
 
 create table ACT_RU_IDENTITYLINK (
     ID_ varchar(64),
@@ -111,6 +160,7 @@ create table ACT_RU_IDENTITYLINK (
     TASK_ID_ varchar(64),
     primary key (ID_)
 );
+COMMENT ON TABLE ACT_RU_IDENTITYLINK IS '任务参与者数据表,存储当前节点参与者的信息';
 
 create table ACT_RU_VARIABLE (
     ID_ varchar(64) not null,
@@ -127,6 +177,7 @@ create table ACT_RU_VARIABLE (
     TEXT2_ varchar(4000),
     primary key (ID_)
 );
+COMMENT ON TABLE ACT_RU_VARIABLE IS '运行时流程变量数据表';
 
 create table ACT_RU_EVENT_SUBSCR (
     ID_ varchar(64) not null,

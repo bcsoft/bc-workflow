@@ -1,0 +1,66 @@
+Activiti相关学习资料：
+
+1) eclipse配置
+XML文件自动完成和验证的配置：
+	Window --> Preferences --> XML --> XML Catalog --> Add...
+	加入 ${activiti.home}/docs/xsd/BPMN20.xsd 和 ${activiti.home}/docs/xsd/activiti-bpmn-extensions-5.4.xsd两个文件即可
+
+流程设计器插件：
+	Help -> Install New Software, 点击“Add”按钮，填写如下信息
+	Name: Activiti BPMN 2.0 designer
+	Location: http://activiti.org/designer/update/
+	确认"Contact all updates sites.." 被勾选中
+Activiti Designer 编辑器的特性：
+	保存时将自动生成 BPMN 2.0 XML 文件和流程图的图片(自动生成图片功能可以在Eclipse preferences的Activiti节中切换)；
+	可以导入 BPMN 2.0 XML 文件：
+		方法1) 将XML配置文件放到 src/main/resources/diagrams 目录(扩展名必须为.bpmn20.xml),打开时就会自动生成
+		方法2) 项目右键菜单中选择“Import BPMN 2.0 file”
+	可以打包为bar或jar文件发布：项目右键菜单中选择“Create deployment artifacts”；
+		使用Activiti Explorer上传此文件将流程发布到引擎，如果包含jar则需将其放到/WEB-INF/lib目录以让Activiti Engine找到
+	自动生成单元测试：.bpmn20.xml文件的右键菜单选择；
+	Activiti project是以Maven project的形式生成，可以执行mvn eclipse:eclipse来配置依赖，但对于流程设计器Maven依赖不是必须的，只是在单元测试时需要；
+	
+
+1) Activiti-5.2工作流引擎-源码解析（引擎初始化）
+ref: http://homeland520.blog.163.com/blog/static/8195886820112125758209/?recommendBlog
+org.activiti.engine.impl.cfg. ProcessEngineConfigurationImpl
+其初始化的方法为：
+ protected void init() {
+    initHistoryLevel();
+    initExpressionManager();
+    initVariableTypes();
+    initFormEngines();
+    initFormTypes();
+    initScriptingEngines();
+    initBusinessCalendarManager();
+    initCommandContextFactory();
+    initTransactionContextFactory();
+    initCommandExecutors();
+    initServices();						--> 初始化工作流引擎的各个Service
+    initIdGenerator();					--> 初始化自增长序列生成器
+    initDeployers();
+    initJobExecutor();
+    initDataSource();					--> 初始化数据源
+    initTransactionFactory();			--> 初始化事务工厂
+    initSqlSessionFactory();			--> 初始化sqlSessionFactory，主要是初始化iBatis的配置等相关信息
+    initSessionFactories();				--> 初始化各个主要Service的SessionFactory
+    initJpa();							--> 初始化JPA
+  }
+  
+Activiti-5.2工作流引擎-数据库表结构(持续......) http://homeland520.blog.163.com/blog/static/81958868201112564938465/
+	流程文件部署主要涉及到3个表，分别是：ACT_GE_BYTEARRAY、ACT_RE_DEPLOYMENT、ACT_RE_PROCDEF。主要完成“部署包”-->“流程定义文件”-->“所有包内文件”的解析部署关系。
+	从表结构中可以看出，流程定义的元素需要每次从数据库加载并解析，因为流程定义的元素没有转化成数据库表来完成，当然流程元素解析后是放在缓存中的
+	
+Activiti-5.2工作流引擎-源码解析（整体结构）  http://homeland520.blog.163.com/blog/static/8195886820111257735459/
+	-- 有各个接口的方法名截图
+	RepositoryService 			--> 管理流程部署
+	RuntimeService 				--> 管理运行时流程实例的操作
+	TaskService 				--> 管理运行时任务的操作
+	ManagementService 			--> 管理定时任务的操作
+	IdentityService 			--> 管理组织结构的操作
+	HistoryService 				--> 管理流程实例、任务实例等历史数据的操作
+	FormService 				--> 管理任务表单的操作
+
+Activiti-5.2工作流引擎-源码解析（业务流程部署）  http://homeland520.blog.163.com/blog/static/819588682011213223991/
+	
+	

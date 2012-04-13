@@ -11,13 +11,16 @@
         http://www.springframework.org/schema/tx/spring-tx-3.0.xsd
         http://www.springframework.org/schema/aop
         http://www.springframework.org/schema/aop/spring-aop-3.0.xsd">
-
+	<!-- Activiti的Spring集成配置 -->
 	<bean id="processEngineConfiguration" class="org.activiti.spring.SpringProcessEngineConfiguration">
 		<property name="dataSource" ref="dataSource" />
 		<property name="transactionManager" ref="transactionManager" />
 		<property name="databaseSchemaUpdate" value="true" />
+		
 		<property name="mailServerHost" value="localhost" />
 		<property name="mailServerPort" value="5025" />
+		
+		<!-- 使用JPA需要的配置 -->
 		<property name="jpaEntityManagerFactory" ref="entityManagerFactory" />
 		<property name="jpaHandleTransaction" value="true" />
 		<property name="jpaCloseEntityManager" value="true" />
@@ -33,6 +36,14 @@
 		 <!-- 配置要自动发布的流程，spring启动时会自动检测，看流程是否有更新或未发布，并自动进行更新或发布
 		<property name="deploymentResources" 
 			value="classpath:testProcess.bpmn20.xml" />-->
+			
+		<!-- 自定义用户、用户组的配置 -->
+		<property name="customSessionFactories">  
+            <list>  
+                <bean class="cn.bc.workflow.activiti.CustomUserManagerFactory" p:userManager-ref="customUserManager"/>  
+                <bean class="cn.bc.workflow.activiti.CustomGroupManagerFactory" p:groupManager-ref="customGroupManager"/>  
+            </list>  
+        </property>  
 	</bean>
 
 	<bean id="processEngine" class="org.activiti.spring.ProcessEngineFactoryBean">
@@ -45,6 +56,8 @@
 		factory-method="getRuntimeService" />
 	<bean id="taskService" factory-bean="processEngine"
 		factory-method="getTaskService" />
+	<bean id="formService" factory-bean="processEngine"
+		factory-method="getFormService" />
 	<bean id="historyService" factory-bean="processEngine"
 		factory-method="getHistoryService" />
 	<bean id="managementService" factory-bean="processEngine"
