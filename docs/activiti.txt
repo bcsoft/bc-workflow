@@ -63,4 +63,25 @@ Activiti-5.2工作流引擎-源码解析（整体结构）  http://homeland520.b
 
 Activiti-5.2工作流引擎-源码解析（业务流程部署）  http://homeland520.blog.163.com/blog/static/819588682011213223991/
 	
-	
+---------------------------------------------------------------------------
+http://ecm-kit.15604.n6.nabble.com/Activiti-5-9-td5000877.html#a5000883
+5.9版本改变了很多东东，除了解决了很多bug外，还实现了很多新功能，比较突出的几点如下： 
+1. 不再有.activiti和.bpmn20.xml 文件了，取而代之的是一个.bpmn文件。所以，以前因为.activiti文件和.bpmn20.xml文件之间相互同步而产生的那些恼人的问题就随之而去了（这是我最happy的地方，以前因为这个问题，我很回避用.activit文件。动不动就产生死锁，i5的台机都要等半天。。。）。所以想从老版本.bpmn20.xml文件移植到新的.bpmn文件，只要简单的重命名文件即可，因此也不存在什么移植过程了。 
+2. 支持嵌入式子过程。 
+3. 支持signal events和event sub processes。 
+4. 支持boundary events。 
+5. 升级到Graphiti 0.9。 
+6. 解决了很多bug。 
+---------------------------------------------------------------------------
+Activiti Workflow HelloWorld示例与测试环境搭建 2012-03-21 5.9
+http://www.ecmkit.com/2012/03/21/activiti-workflow-hell/
+---------------------------------------------------------------------------
+从Activiti Designer5.8升级到5.9遇到的问题 2012-05-01 5.9.2
+http://www.kafeitu.me/activiti/2012/05/01/activiti-designer-5.8-to-5.9.html
+---------------------------------------------------------------------------
+在Share中添加工作流
+http://www.ecmkit.com/2012/03/29/%E5%9C%A8share%E4%B8%AD%E6%B7%BB%E5%8A%A0%E5%B7%A5%E4%BD%9C%E6%B5%81/
+---------------------------------------------------------------------------
+Activiti in Action（实战Activiti）-BPMN 2.0 what’s in it for developers.docx
+http://ishare.iask.sina.com.cn/f/21631754.html
+---------------------------------------------------------------------------

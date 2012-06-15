@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<model:Screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:model="http://wireframesketcher.com/1.0/model.ecore">
+  <widgets xsi:type="model:WidgetGroup" id="9" x="8" y="8" measuredWidth="410" measuredHeight="384">
+    <widgets xsi:type="model:Panel" id="280" y="31" width="400" height="34" measuredWidth="400" measuredHeight="34" background="#cccccc"/>
+    <widgets xsi:type="model:Icon" id="275" x="368" y="37" measuredWidth="24" measuredHeight="24" icon="desc (medium)"/>
+    <widgets xsi:type="model:Label" id="281" x="10" y="33" text="{calendar} 待办事项" measuredWidth="90" measuredHeight="29">
+      <font size="12" bold="false"/>
+    </widgets>
+    <widgets xsi:type="model:Panel" id="282" y="63" width="400" height="321" measuredWidth="400" measuredHeight="321"/>
+    <widgets xsi:type="model:WidgetGroup" id="287" x="2" y="65" measuredWidth="398" measuredHeight="69">
+      <widgets xsi:type="model:WidgetGroup" id="278" measuredWidth="64" measuredHeight="64">
+        <widgets xsi:type="model:Panel" id="277" width="64" height="64" measuredWidth="64" measuredHeight="64" background="#f3f3f3" foreground="#999999" border="none"/>
+        <widgets xsi:type="model:Image" id="276" width="64" height="64" measuredWidth="64" measuredHeight="64" src="assets/people02.png"/>
+      </widgets>
+      <widgets xsi:type="model:Label" id="279" x="69" text="{checked}{user} 确认交车时间" measuredWidth="138" measuredHeight="29">
+        <font size="12" bold="false"/>
+      </widgets>
+      <widgets xsi:type="model:Label" id="283" x="340" y="2" text="10分钟前" measuredWidth="55" measuredHeight="25">
+        <font size="9" bold="false"/>
+      </widgets>
+      <widgets xsi:type="model:HLine" id="286" y="63" width="398" measuredWidth="398" measuredHeight="6" foreground="#cccccc"/>
+      <widgets xsi:type="model:Text" id="306" x="69" y="28" width="325" height="36" text="2012年7月份交车流程" measuredWidth="325" measuredHeight="36">
+        <font/>
+      </widgets>
+    </widgets>
+    <widgets xsi:type="model:WidgetGroup" id="288" x="2" y="132" measuredWidth="398" measuredHeight="69">
+      <widgets xsi:type="model:WidgetGroup" id="289" measuredWidth="64" measuredHeight="64">
+        <widgets xsi:type="model:Panel" id="290" width="64" height="64" measuredWidth="64" measuredHeight="64" background="#f3f3f3" foreground="#999999" border="none"/>
+        <widgets xsi:type="model:Image" id="291" width="64" height="64" measuredWidth="64" measuredHeight="64" src="assets/people01.png"/>
+      </widgets>
+      <widgets xsi:type="model:Label" id="292" x="69" text="{unchecked}{user}{alarm} 修理厂检测确认" measuredWidth="170" measuredHeight="29">
+        <font size="12" bold="false"/>
+      </widgets>
+      <widgets xsi:type="model:Label" id="293" x="348" y="4" text="2小时前" measuredWidth="48" measuredHeight="25">
+        <font size="9" bold="false"/>
+      </widgets>
+      <widgets xsi:type="model:HLine" id="295" y="63" width="398" measuredWidth="398" measuredHeight="6" foreground="#cccccc"/>
+      <widgets xsi:type="model:Text" id="305" x="69" y="28" width="325" height="36" text="2012年7月份交车流程" measuredWidth="325" measuredHeight="36">
+        <font/>
+      </widgets>
+    </widgets>
+    <widgets xsi:type="model:WidgetGroup" id="296" x="2" y="199" measuredWidth="398" measuredHeight="69">
+      <widgets xsi:type="model:WidgetGroup" id="297" measuredWidth="64" measuredHeight="64">
+        <widgets xsi:type="model:Panel" id="298" width="64" height="64" measuredWidth="64" measuredHeight="64" background="#f3f3f3" foreground="#999999" border="none"/>
+        <widgets xsi:type="model:Image" id="299" width="64" height="64" measuredWidth="64" measuredHeight="64" src="assets/people03.png"/>
+      </widgets>
+      <widgets xsi:type="model:Label" id="300" x="69" text="{unchecked}{usergroup} 录入司机车辆信息" measuredWidth="170" measuredHeight="29">
+        <font size="12" bold="false"/>
+      </widgets>
+      <widgets xsi:type="model:Label" id="301" x="358" y="2" text="3天前" measuredWidth="36" measuredHeight="25">
+        <font size="9" bold="false"/>
+      </widgets>
+      <widgets xsi:type="model:HLine" id="303" y="63" width="398" measuredWidth="398" measuredHeight="6" foreground="#cccccc"/>
+      <widgets xsi:type="model:Text" id="304" x="69" y="28" width="325" height="36" text="张三的司机入职处理流程：张三的司机入职处理流程，张三的司机入职处理流程，张三的司机入职处理流程。" measuredWidth="325" measuredHeight="36">
+        <font/>
+      </widgets>
+    </widgets>
+    <widgets xsi:type="model:Icon" id="307" x="345" y="37" measuredWidth="24" measuredHeight="24" icon="eye (medium)"/>
+    <widgets xsi:type="model:Label" id="308" x="2" y="3" text="主页右侧边栏" measuredWidth="101" measuredHeight="29">
+      <font size="12" bold="false"/>
+    </widgets>
+    <widgets xsi:type="model:Tooltip" id="373" x="248" text="打开待办事项视图" measuredWidth="106" measuredHeight="42" background="#00ff00" position="bottomRight">
+      <font/>
+    </widgets>
+    <widgets xsi:type="model:Tooltip" id="374" x="376" text="折叠" measuredWidth="34" measuredHeight="42" background="#00ff00">
+      <font/>
+    </widgets>
+  </widgets>
+  <widgets xsi:type="model:Note" id="309" x="424" y="187" width="370" height="205" text="说明：&#xD;&#xA;1）小图标示意说明：&#xD;&#xA;     {checked}&#x9;&#x9;-- 状态为已认领处理中&#xD;&#xA;     {unchecked}&#x9;-- 状态为待认领，处于此状态时，点击即可马上认领&#xD;&#xA;     {user}&#x9;&#x9;&#x9;-- 个人待办&#xD;&#xA;     {usergroup}&#x9;-- 组织待办，处于此状态，有权限用户可将此待办分派给具体的用户进行处理&#xD;&#xA;2）鼠标悬停在相应图标上需要显示相关提示信息：&#xD;&#xA;发送人图标&#x9;&#x9;&#x9;-- 提示发送人姓名，具体发送时间信息&#xD;&#xA;办理期限图标&#x9;&#x9;-- 提示具体的办理期限，如果过了办理期限还没办完的，此图标闪烁晃动提示" measuredWidth="370" measuredHeight="205" annotation="true" textAlignment="Left">
+    <font/>
+  </widgets>
+  <widgets xsi:type="model:WidgetGroup" id="360" x="416" y="35" measuredWidth="378" measuredHeight="140">
+    <widgets xsi:type="model:Panel" id="318" x="25" y="28" width="353" height="81" measuredWidth="353" measuredHeight="81" alpha="0" foreground="#999999" border="dashed-rounded"/>
+    <widgets xsi:type="model:WidgetGroup" id="310" x="33" y="36" measuredWidth="336" measuredHeight="69">
+      <widgets xsi:type="model:WidgetGroup" id="311" measuredWidth="64" measuredHeight="64">
+        <widgets xsi:type="model:Panel" id="312" width="64" height="64" measuredWidth="64" measuredHeight="64" background="#f3f3f3" foreground="#999999" border="none"/>
+        <widgets xsi:type="model:Image" id="313" width="64" height="64" measuredWidth="64" measuredHeight="64" src="assets/people01.png"/>
+      </widgets>
+      <widgets xsi:type="model:Label" id="314" x="69" text="{unchecked}{user}{alarm} 修理厂检测确认" measuredWidth="170" measuredHeight="29">
+        <font size="12" bold="false"/>
+      </widgets>
+      <widgets xsi:type="model:Label" id="315" x="288" y="2" text="2小时前" measuredWidth="48" measuredHeight="25">
+        <font size="9" bold="false"/>
+      </widgets>
+      <widgets xsi:type="model:HLine" id="316" y="63" width="336" measuredWidth="336" measuredHeight="6" foreground="#cccccc"/>
+      <widgets xsi:type="model:Text" id="317" x="69" y="28" width="260" height="36" text="2012年7月份交车流程" measuredWidth="260" measuredHeight="36">
+        <font/>
+      </widgets>
+    </widgets>
+    <widgets xsi:type="model:Tooltip" id="351" y="98" text="发送人" measuredWidth="46" measuredHeight="42" background="#00ff00" position="topRight">
+      <font/>
+    </widgets>
+    <widgets xsi:type="model:Tooltip" id="352" x="139" y="60" text="待办期限" measuredWidth="58" measuredHeight="42" background="#00ff00" position="topLeft">
+      <font/>
+    </widgets>
+    <widgets xsi:type="model:Tooltip" id="355" x="121" text="待办类型" measuredWidth="58" measuredHeight="42" background="#00ff00">
+      <font/>
+    </widgets>
+    <widgets xsi:type="model:Tooltip" id="356" x="49" text="认领状态" measuredWidth="58" measuredHeight="42" background="#00ff00" position="bottomRight">
+      <font/>
+    </widgets>
+    <widgets xsi:type="model:Tooltip" id="357" x="289" text="发送时间" measuredWidth="58" measuredHeight="42" background="#00ff00" position="bottomRight">
+      <font/>
+    </widgets>
+    <widgets xsi:type="model:Tooltip" id="358" x="214" y="77" text="附加说明" measuredWidth="58" measuredHeight="42" background="#00ff00" position="topLeft">
+      <font/>
+    </widgets>
+    <widgets xsi:type="model:Tooltip" id="359" x="209" text="待办事项" measuredWidth="58" measuredHeight="42" background="#00ff00">
+      <font/>
+    </widgets>
+  </widgets>
+  <widgets xsi:type="model:WidgetGroup" id="369" x="8" y="419" measuredWidth="591" measuredHeight="388">
+    <widgets xsi:type="model:Panel" id="361" y="28" width="591" height="37" measuredWidth="591" measuredHeight="37"/>
+    <widgets xsi:type="model:Panel" id="362" y="63" width="591" height="290" measuredWidth="591" measuredHeight="290"/>
+    <widgets xsi:type="model:Panel" id="363" y="351" width="591" height="37" measuredWidth="591" measuredHeight="37"/>
+    <widgets xsi:type="model:Accordion" id="364" x="430" y="63" width="161" height="290" text="待办事项&#xA;提醒&#xA;邮件" measuredWidth="161" measuredHeight="290" selection="0">
+      <items x="0" y="2" width="161" height="27" text="待办事项"/>
+      <items x="0" y="236" width="161" height="27" text="提醒"/>
+      <items x="0" y="263" width="161" height="27" text="邮件"/>
+    </widgets>
+    <widgets xsi:type="model:Label" id="365" x="10" y="34" text="主菜单" measuredWidth="41" measuredHeight="25">
+      <font/>
+    </widgets>
+    <widgets xsi:type="model:Label" id="366" x="10" y="357" text="任务栏" measuredWidth="41" measuredHeight="25">
+      <font/>
+    </widgets>
+    <widgets xsi:type="model:Label" id="367" x="10" y="73" text="桌面图标" measuredWidth="53" measuredHeight="25">
+      <font/>
+    </widgets>
+    <widgets xsi:type="model:Label" id="368" text="主页布局" measuredWidth="69" measuredHeight="29">
+      <font size="12" bold="false"/>
+    </widgets>
+    <widgets xsi:type="model:Icon" id="370" x="558" y="30" measuredWidth="32" measuredHeight="32" icon="shutdown (large)"/>
+    <widgets xsi:type="model:Icon" id="371" x="525" y="30" measuredWidth="32" measuredHeight="32" icon="help (large)"/>
+    <widgets xsi:type="model:Icon" id="372" x="488" y="31" measuredWidth="32" measuredHeight="32" icon="comments (large)"/>
+  </widgets>
+  <hRuler/>
+  <vRuler/>
+  <font/>
+</model:Screen>
