@@ -63,6 +63,9 @@ public class CustomFormProcessTest {
 		Assert.assertEquals("cn/bc/workflow/examples/CustomForm.form", formKey);// 表单资源路径
 		Object startForm = formService.getRenderedStartForm(procDefId);
 		Assert.assertNotNull(startForm);
+		System.out.println("--startForm 0--");
+		System.out.println(startForm);
+		System.out.println("--startForm 1--");
 
 		// 定义流程变量并启动流程
 		Map<String, String> formProperties = new HashMap<String, String>();
@@ -75,6 +78,9 @@ public class CustomFormProcessTest {
 		Assert.assertEquals("任务1", task.getName());
 		Object taskForm = formService.getRenderedTaskForm(task.getId());
 		Assert.assertNotNull(taskForm);
+		System.out.println("--taskForm 0--");
+		System.out.println(taskForm);
+		System.out.println("--taskForm 1--");
 
 		// 管理员领取并完成任务
 		taskService.claim(task.getId(), "admin");

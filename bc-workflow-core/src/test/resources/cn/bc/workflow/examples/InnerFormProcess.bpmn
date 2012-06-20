@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:activiti="http://activiti.org/bpmn"
+	xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:omgdc="http://www.omg.org/spec/DD/20100524/DC"
+	xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI" typeLanguage="http://www.w3.org/2001/XMLSchema"
+	expressionLanguage="http://www.w3.org/1999/XPath" targetNamespace="http://www.activiti.org/test">
+	<process id="innerFormProcess">
+		<startEvent id="start">
+			<extensionElements>
+				<!-- 支持的类型列表：string (org.activiti.engine.impl.form.StringFormType) long 
+					(org.activiti.engine.impl.form.LongFormType) enum (org.activiti.engine.impl.form.EnumFormType) 
+					date (org.activiti.engine.impl.form.DateFormType) boolean (org.activiti.engine.impl.form.BooleanFormType) -->
+
+				<!-- 字符串类型的表单域 -->
+				<activiti:formProperty id="speaker" name="Speaker"
+					variable="SpeakerName" type="string" value="a" />
+
+				<!-- 日期类型的表单域 -->
+				<activiti:formProperty id="start" type="date"
+					datePattern="yyyy-MM-dd" />
+
+				<!-- 下拉框类型的表单域 -->
+				<activiti:formProperty id="direction" type="enum">
+					<activiti:value id="left" name="Go Left" />
+					<activiti:value id="right" name="Go Right" />
+					<activiti:value id="up" name="Go Up" />
+					<activiti:value id="down" name="Go Down" />
+				</activiti:formProperty>
+			</extensionElements>
+		</startEvent>
+		<sequenceFlow id="flow1" sourceRef="start" targetRef="task1" />
+		<userTask id="task1" name="任务1">
+			<extensionElements>
+				<!-- 字符串类型的表单域 -->
+				<activiti:formProperty id="speaker" name="Speaker"
+					variable="SpeakerName" type="string" value="${mySpeaker}"/>
+
+				<!-- 日期类型的表单域 -->
+				<activiti:formProperty id="start" type="date"
+					datePattern="yyyy-MM-dd"  value="${startDate}"/>
+
+				<!-- 下拉框类型的表单域 -->
+				<activiti:formProperty id="direction" type="enum">
+					<activiti:value id="left" name="Go Left" />
+					<activiti:value id="right" name="Go Right" />
+					<activiti:value id="up" name="Go Up" />
+					<activiti:value id="down" name="Go Down" />
+				</activiti:formProperty>
+			</extensionElements>
+		</userTask>
+		<sequenceFlow id="flow2" sourceRef="task1" targetRef="end" />
+		<endEvent id="end" />
+	</process>
+</definitions>

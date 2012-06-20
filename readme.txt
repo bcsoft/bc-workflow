@@ -47,5 +47,5 @@ ACT_RE_*: 'RE' repository的相关表.，包含静态的配置信息，如流程
 ACT_RU_*: 'RU' runtime的相关表，包含运行时的数据，如流程实例、用户任务、variables、 jobs等，这些数据只在流程运行时存在，流程结束后就会被清除，以保证最小数据和提高性能。.
 ACT_ID_*: 'ID' identity的相关表，包含身份标识信息，如users、 groups等。
 ACT_HI_*: 'HI' history的相关表，包含历史数据信息，如以往的process instances、variables、tasks等。
-ACT_GE_*: general data, which is used in various use cases.
+ACT_GE_*: 通用数据及设置 general data, which is used in various use cases.
 

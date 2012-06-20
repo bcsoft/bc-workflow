@@ -17,7 +17,7 @@ insert into ACT_GE_PROPERTY
 values ('schema.history', 'create(5.9)', 1);
 
 insert into ACT_GE_PROPERTY
-values ('next.dbid', '1', 1);
+values ('next.dbid', '1000', 1);
 
 create table ACT_GE_BYTEARRAY (
     ID_ varchar(64),
@@ -275,3 +275,8 @@ alter table ACT_RU_EVENT_SUBSCR
     add constraint ACT_FK_EVENT_EXEC
     foreign key (EXECUTION_ID_)
     references ACT_RU_EXECUTION(ID_);
+	
+-- ADD BY DRAGON
+create index ACT_FK_VAR_TASK on ACT_RU_VARIABLE(TASK_ID_);
+create index ACT_FK_PROCDEF_DEPLOYMENT on ACT_RE_PROCDEF(DEPLOYMENT_ID_);
+create index ACT_FK_TASK_PARENT on ACT_RU_TASK(PARENT_TASK_ID_);
