@@ -3,8 +3,12 @@
  */
 package cn.bc.workflow.activiti;
 
+import java.util.List;
+
+import org.activiti.engine.form.FormProperty;
 import org.activiti.engine.runtime.ProcessInstance;
 import org.activiti.engine.task.Task;
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -16,6 +20,8 @@ import org.json.JSONObject;
  */
 public final class ActivitiUtils {
 	public static String toString(Task task) {
+		if (task == null)
+			return null;
 		JSONObject json = new JSONObject();
 		try {
 			json.put("id", task.getId());
@@ -43,16 +49,18 @@ public final class ActivitiUtils {
 		return json.toString();
 	}
 
-	public static String toString(ProcessInstance task) {
+	public static String toString(ProcessInstance pi) {
+		if (pi == null)
+			return null;
 		JSONObject json = new JSONObject();
 		try {
-			json.put("id", task.getId());
-			json.put("processDefinitionId", task.getProcessDefinitionId());
-			json.put("processInstanceId", task.getProcessInstanceId());
-			json.put("businessKey", task.getBusinessKey());
-			json.put("isSuspended", task.isSuspended());
-			json.put("isEnded", task.isEnded());
-			json.put("class", task.getClass());
+			json.put("id", pi.getId());
+			json.put("processDefinitionId", pi.getProcessDefinitionId());
+			json.put("processInstanceId", pi.getProcessInstanceId());
+			json.put("businessKey", pi.getBusinessKey());
+			json.put("isSuspended", pi.isSuspended());
+			json.put("isEnded", pi.isEnded());
+			json.put("class", pi.getClass());
 		} catch (JSONException e) {
 			try {
 				json.put("_error_", e.getMessage());
@@ -61,5 +69,33 @@ public final class ActivitiUtils {
 			}
 		}
 		return json.toString();
+	}
+
+	public static String toString(List<FormProperty> ps) {
+		if (ps == null)
+			return null;
+		JSONArray jsons = new JSONArray();
+		JSONObject json = new JSONObject();
+		for (FormProperty p : ps) {
+			json = new JSONObject();
+			jsons.put(json);
+			try {
+				json.put("id", p.getId());
+				json.put("name", p.getName());
+				json.put("type", p.getType());
+				json.put("value", p.getValue());
+				json.put("readable", p.isReadable());
+				json.put("required", p.isRequired());
+				json.put("writable", p.isWritable());
+				json.put("class", p.getClass());
+			} catch (JSONException e) {
+				try {
+					json.put("_error_", e.getMessage());
+				} catch (JSONException e1) {
+					e1.printStackTrace();
+				}
+			}
+		}
+		return jsons.toString();
 	}
 }
