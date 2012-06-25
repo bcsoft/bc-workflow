@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE struts PUBLIC
+    "-//Apache Software Foundation//DTD Struts Configuration 2.0//EN"
+    "http://struts.apache.org/dtds/struts-2.0.dtd">
+<struts>
+	<package name="todo" extends="bc-default" namespace="/bc-workflow-core/todo">
+		<action name="list" class="todoAction" method="list"/>
+		<action name="paging" class="todoAction" method="paging"/>
+		<action name="data" class="todoAction" method="data"/>
+	</package>
+
+</struts>
