@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE struts PUBLIC
+    "-//Apache Software Foundation//DTD Struts Configuration 2.0//EN"
+    "http://struts.apache.org/dtds/struts-2.0.dtd">
+<struts>
+	<package name="todo" extends="bc-default" namespace="/bc-workflow/todo">
+		<action name="personals/list" class="todoPersonalsAction" method="list"/>
+		<action name="personals/paging" class="todoPersonalsAction" method="paging"/>
+		<action name="personals/data" class="todoPersonalsAction" method="data"/>
+		<action name="personals/data" class="todoPersonalsAction" method="data"/>
+		
+		<action name="personals/sidebarlist" class="todoSideBarPersonalsAction" >
+			<result name="success">/bc-workflow-webapp/todo/sideBarPersonal.jsp</result>
+		</action>
+		
+		<action name="manages/list" class="todoManagesAction" method="list"/>
+		<action name="manages/paging" class="todoManagesAction" method="paging"/>
+		<action name="manages/data" class="todoManagesAction" method="data"/>
+	</package>
+	
+</struts>
