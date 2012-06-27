@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<model:Screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:model="http://wireframesketcher.com/1.0/model.ecore">
+  <widgets xsi:type="model:WidgetGroup" id="13" x="8" y="32" measuredWidth="705" measuredHeight="593">
+    <widgets xsi:type="model:Window" id="1" width="705" height="457" text="工作空间" measuredWidth="705" measuredHeight="457" minimizeButton="true" maximizeButton="true"/>
+    <widgets xsi:type="model:ButtonBar" id="3" x="10" y="29" text="签领任务,委托任务,分派任务" measuredWidth="206" measuredHeight="30" selection="">
+      <font/>
+      <items x="0" y="0" width="69" height="30" text="签领任务"/>
+      <items x="69" y="0" width="68" height="30" text="委托任务"/>
+      <items x="137" y="0" width="69" height="30" text="分派任务"/>
+    </widgets>
+    <widgets xsi:type="model:Accordion" id="586" y="64" width="705" text="信息区" measuredWidth="705" measuredHeight="135" selection="0">
+      <items x="0" y="2" width="705" height="27" text="信息区"/>
+    </widgets>
+    <widgets xsi:type="model:Accordion" id="587" y="225" width="705" height="368" text="办理区" measuredWidth="705" measuredHeight="368" selection="0">
+      <items x="0" y="2" width="705" height="27" text="办理区"/>
+    </widgets>
+    <widgets xsi:type="model:WidgetGroup" id="588" x="10" y="258" measuredWidth="398" measuredHeight="69">
+      <widgets xsi:type="model:WidgetGroup" id="589" measuredWidth="64" measuredHeight="64">
+        <widgets xsi:type="model:Panel" id="590" width="64" height="64" measuredWidth="64" measuredHeight="64" background="#f3f3f3" foreground="#999999" border="none"/>
+        <widgets xsi:type="model:Image" id="591" width="64" height="64" measuredWidth="64" measuredHeight="64" src="assets/people02.png"/>
+      </widgets>
+      <widgets xsi:type="model:Label" id="592" x="69" text="{checked}{user} 确认交车时间" measuredWidth="138" measuredHeight="29">
+        <font size="12" bold="false"/>
+      </widgets>
+      <widgets xsi:type="model:Label" id="593" x="340" y="2" text="10分钟前" measuredWidth="55" measuredHeight="25">
+        <font size="9" bold="false"/>
+      </widgets>
+      <widgets xsi:type="model:HLine" id="594" y="63" width="398" measuredWidth="398" measuredHeight="6" foreground="#cccccc"/>
+      <widgets xsi:type="model:Text" id="595" x="69" y="28" width="325" height="36" text="2012年7月份交车流程" measuredWidth="325" measuredHeight="36">
+        <font/>
+      </widgets>
+    </widgets>
+  </widgets>
+  <hRuler/>
+  <vRuler/>
+  <font/>
+</model:Screen>
