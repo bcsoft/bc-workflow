@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE struts PUBLIC
+    "-//Apache Software Foundation//DTD Struts Configuration 2.0//EN"
+    "http://struts.apache.org/dtds/struts-2.0.dtd">
+<struts>
+	<!-- 我的经办 -->
+	<package name="myDones" extends="bc-default" namespace="/bc-workflow/myDones">
+		<action name="list" class="donesAction" method="list">
+			<param name="my">true</param>
+		</action>
+		<action name="data" class="donesAction" method="data">
+			<param name="my">true</param>
+		</action>
+		<action name="paging" class="donesAction" method="paging">
+			<param name="my">true</param>
+		</action>
+	</package>
+	<!-- 任务监控 -->
+	<package name="taskMonitors" extends="bc-default" namespace="/bc-workflow/taskMonitors">
+		<action name="list" class="donesAction" method="list"/>
+		<action name="data" class="donesAction" method="data"/>
+		<action name="paging" class="donesAction" method="paging"/>
+	</package>
+	<!-- 流程监控 -->											 
+	<package name="flowMonitors" extends="bc-default" namespace="/bc-workflow/flowMonitors">
+		<action name="list" class="workFlowDonesAction" method="list"/>
+		<action name="data" class="workFlowDonesAction" method="data"/>
+		<action name="paging" class="donesAction" method="paging"/>
+	</package>
+</struts>
