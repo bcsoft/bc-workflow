@@ -9,8 +9,8 @@
 		<action name="personals/data" class="todoPersonalsAction" method="data"/>
 		<action name="personals/data" class="todoPersonalsAction" method="data"/>
 		
-		<action name="personals/sidebarlist" class="todoSideBarPersonalsAction" >
-			<result name="success">/bc-workflow-webapp/todo/sideBarPersonal.jsp</result>
+		<action name="personals/sidebar" class="todoSideBarPersonalsAction" >
+			<result name="success">/bc-workflow/todo/sidebar.jsp</result>
 		</action>
 		
 		<action name="manages/list" class="todoManagesAction" method="list"/>
