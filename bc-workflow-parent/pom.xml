@@ -80,6 +80,12 @@
 			<artifactId>bc-core</artifactId>
 			<version>${framework.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>cn.bc</groupId>
+			<artifactId>bc-db-jdbc</artifactId>
+			<version>${framework.version}</version>
+			<scope>compile</scope>
+		</dependency>
 
 		<!-- provided -->
 		<dependency>
