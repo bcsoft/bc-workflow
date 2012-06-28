@@ -1,34 +1,296 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <model:Screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:model="http://wireframesketcher.com/1.0/model.ecore">
-  <widgets xsi:type="model:WidgetGroup" id="13" x="8" y="32" measuredWidth="705" measuredHeight="593">
-    <widgets xsi:type="model:Window" id="1" width="705" height="457" text="工作空间" measuredWidth="705" measuredHeight="457" minimizeButton="true" maximizeButton="true"/>
-    <widgets xsi:type="model:ButtonBar" id="3" x="10" y="29" text="签领任务,委托任务,分派任务" measuredWidth="206" measuredHeight="30" selection="">
-      <font/>
-      <items x="0" y="0" width="69" height="30" text="签领任务"/>
-      <items x="69" y="0" width="68" height="30" text="委托任务"/>
-      <items x="137" y="0" width="69" height="30" text="分派任务"/>
-    </widgets>
-    <widgets xsi:type="model:Accordion" id="586" y="64" width="705" text="信息区" measuredWidth="705" measuredHeight="135" selection="0">
-      <items x="0" y="2" width="705" height="27" text="信息区"/>
-    </widgets>
-    <widgets xsi:type="model:Accordion" id="587" y="225" width="705" height="368" text="办理区" measuredWidth="705" measuredHeight="368" selection="0">
-      <items x="0" y="2" width="705" height="27" text="办理区"/>
-    </widgets>
-    <widgets xsi:type="model:WidgetGroup" id="588" x="10" y="258" measuredWidth="398" measuredHeight="69">
-      <widgets xsi:type="model:WidgetGroup" id="589" measuredWidth="64" measuredHeight="64">
-        <widgets xsi:type="model:Panel" id="590" width="64" height="64" measuredWidth="64" measuredHeight="64" background="#f3f3f3" foreground="#999999" border="none"/>
-        <widgets xsi:type="model:Image" id="591" width="64" height="64" measuredWidth="64" measuredHeight="64" src="assets/people02.png"/>
+  <widgets xsi:type="model:WidgetGroup" id="13" x="8" y="8" measuredWidth="1041" measuredHeight="793">
+    <widgets xsi:type="model:Window" id="1" x="1" width="705" height="793" text="工作空间" measuredWidth="705" measuredHeight="793" minimizeButton="true" maximizeButton="true"/>
+    <widgets xsi:type="model:WidgetGroup" id="797" x="1" y="19" measuredWidth="705" measuredHeight="133">
+      <widgets xsi:type="model:Accordion" id="586" width="705" height="133" text="公共信息" measuredWidth="705" measuredHeight="133" selection="0">
+        <items x="0" y="2" width="705" height="27" text="公共信息"/>
       </widgets>
-      <widgets xsi:type="model:Label" id="592" x="69" text="{checked}{user} 确认交车时间" measuredWidth="138" measuredHeight="29">
-        <font size="12" bold="false"/>
+      <widgets xsi:type="model:WidgetGroup" id="798" x="10" y="84" measuredWidth="684" measuredHeight="25">
+        <widgets xsi:type="model:Icon" id="799" y="3" measuredWidth="16" measuredHeight="16" icon="new (small)"/>
+        <widgets xsi:type="model:Label" id="800" x="21" text="意见：测试意见..." measuredWidth="98" measuredHeight="25">
+          <font size="9" bold="false"/>
+        </widgets>
+        <widgets xsi:type="model:Link" id="827" x="621" text="{delete}删除" measuredWidth="43" measuredHeight="25">
+          <font/>
+        </widgets>
+        <widgets xsi:type="model:Link" id="828" x="573" text="{download}下载" measuredWidth="43" measuredHeight="25">
+          <font/>
+        </widgets>
+        <widgets xsi:type="model:Link" id="829" x="494" text="{edit}编辑|查看" measuredWidth="70" measuredHeight="25">
+          <font/>
+        </widgets>
+        <widgets xsi:type="model:Icon" id="830" x="668" y="5" measuredWidth="16" measuredHeight="16" icon="desc (small)"/>
       </widgets>
-      <widgets xsi:type="model:Label" id="593" x="340" y="2" text="10分钟前" measuredWidth="55" measuredHeight="25">
-        <font size="9" bold="false"/>
+      <widgets xsi:type="model:WidgetGroup" id="805" x="10" y="108" measuredWidth="684" measuredHeight="25">
+        <widgets xsi:type="model:Icon" id="806" y="3" measuredWidth="16" measuredHeight="16" icon="new (small)"/>
+        <widgets xsi:type="model:Label" id="807" x="21" text="附件：附件1" measuredWidth="72" measuredHeight="25">
+          <font size="9" bold="false"/>
+        </widgets>
+        <widgets xsi:type="model:Link" id="831" x="621" text="{delete}删除" measuredWidth="43" measuredHeight="25">
+          <font/>
+        </widgets>
+        <widgets xsi:type="model:Link" id="832" x="573" text="{download}下载" measuredWidth="43" measuredHeight="25">
+          <font/>
+        </widgets>
+        <widgets xsi:type="model:Link" id="833" x="494" text="{edit}编辑|查看" measuredWidth="70" measuredHeight="25">
+          <font/>
+        </widgets>
+        <widgets xsi:type="model:Icon" id="834" x="668" y="6" measuredWidth="16" measuredHeight="16" icon="desc (small)"/>
       </widgets>
-      <widgets xsi:type="model:HLine" id="594" y="63" width="398" measuredWidth="398" measuredHeight="6" foreground="#cccccc"/>
-      <widgets xsi:type="model:Text" id="595" x="69" y="28" width="325" height="36" text="2012年7月份交车流程" measuredWidth="325" measuredHeight="36">
+      <widgets xsi:type="model:WidgetGroup" id="812" x="10" y="37" measuredWidth="684" measuredHeight="25">
+        <widgets xsi:type="model:Icon" id="813" y="3" measuredWidth="16" measuredHeight="16" icon="new (small)"/>
+        <widgets xsi:type="model:Label" id="814" x="21" text="表单：4月分交车确认表" measuredWidth="132" measuredHeight="25">
+          <font size="9" bold="false"/>
+        </widgets>
+        <widgets xsi:type="model:Link" id="816" x="621" text="{delete}删除" measuredWidth="43" measuredHeight="25">
+          <font/>
+        </widgets>
+        <widgets xsi:type="model:Link" id="817" x="573" text="{download}下载" measuredWidth="43" measuredHeight="25">
+          <font/>
+        </widgets>
+        <widgets xsi:type="model:Link" id="818" x="494" text="{edit}编辑|查看" measuredWidth="70" measuredHeight="25">
+          <font/>
+        </widgets>
+        <widgets xsi:type="model:Icon" id="826" x="668" y="5" measuredWidth="16" measuredHeight="16" icon="asc (small)"/>
+      </widgets>
+      <widgets xsi:type="model:WidgetGroup" id="820" x="32" y="61" measuredWidth="643" measuredHeight="25">
+        <widgets xsi:type="model:Icon" id="821" y="3" measuredWidth="16" measuredHeight="16" foreground="#999999" icon="calendar2 (small)"/>
+        <widgets xsi:type="model:Label" id="822" x="21" text="创建：小张 2012-01-01 08:00，最后修改：小明 2012-01-01 08:00" measuredWidth="371" measuredHeight="25" foreground="#999999">
+          <font size="9" bold="false"/>
+        </widgets>
+        <widgets xsi:type="model:Link" id="835" x="600" text="{download}审计" measuredWidth="43" measuredHeight="25">
+          <font/>
+        </widgets>
+      </widgets>
+      <widgets xsi:type="model:Icon" id="836" x="682" y="7" measuredWidth="16" measuredHeight="16" icon="desc (small)"/>
+      <widgets xsi:type="model:Icon" id="837" x="659" y="7" measuredWidth="16" measuredHeight="16" icon="pages (small)"/>
+      <widgets xsi:type="model:Link" id="841" x="583" y="2" text="{arrow-up}添加附件" measuredWidth="67" measuredHeight="25">
         <font/>
       </widgets>
+      <widgets xsi:type="model:Link" id="842" x="503" y="2" text="{new}添加意见" measuredWidth="67" measuredHeight="25">
+        <font/>
+      </widgets>
+    </widgets>
+    <widgets xsi:type="model:WidgetGroup" id="596" x="1" y="495" measuredWidth="705" measuredHeight="290">
+      <widgets xsi:type="model:Accordion" id="587" width="705" height="290" text="已办信息" measuredWidth="705" measuredHeight="290" selection="0">
+        <items x="0" y="2" width="705" height="27" text="已办信息"/>
+      </widgets>
+      <widgets xsi:type="model:WidgetGroup" id="588" y="175" measuredWidth="705" measuredHeight="104">
+        <widgets xsi:type="model:WidgetGroup" id="589" x="10" y="6" measuredWidth="64" measuredHeight="64">
+          <widgets xsi:type="model:Panel" id="590" width="64" height="64" measuredWidth="64" measuredHeight="64" background="#f3f3f3" foreground="#999999" border="none"/>
+          <widgets xsi:type="model:Image" id="591" width="64" height="64" measuredWidth="64" measuredHeight="64" src="assets/people02.png"/>
+        </widgets>
+        <widgets xsi:type="model:Label" id="592" x="79" text="汇总月即将退出营运车辆" measuredWidth="181" measuredHeight="30">
+          <font size="12" bold="true"/>
+        </widgets>
+        <widgets xsi:type="model:Label" id="593" x="525" text="小明 2012-01-01 09:00" measuredWidth="173" measuredHeight="29">
+          <font size="12" bold="false"/>
+        </widgets>
+        <widgets xsi:type="model:WidgetGroup" id="602" x="79" y="28" measuredWidth="619" measuredHeight="25">
+          <widgets xsi:type="model:Icon" id="600" y="3" measuredWidth="16" measuredHeight="16" icon="new (small)"/>
+          <widgets xsi:type="model:Label" id="601" x="21" text="意见：XXXXX,aaaaaaaaaaaXXXXX,aaaaaaaaaaa..." measuredWidth="290" measuredHeight="25">
+            <font size="9" bold="false"/>
+          </widgets>
+          <widgets xsi:type="model:Label" id="611" x="513" text="2012-01-01 08:30" measuredWidth="106" measuredHeight="25" foreground="#666666">
+            <font size="9" bold="false"/>
+          </widgets>
+          <widgets xsi:type="model:Link" id="617" x="417" text="{print-preview}查看" measuredWidth="43" measuredHeight="25" state="disabled">
+            <font/>
+          </widgets>
+          <widgets xsi:type="model:Link" id="618" x="464" text="{download}下载" measuredWidth="43" measuredHeight="25" state="disabled">
+            <font/>
+          </widgets>
+        </widgets>
+        <widgets xsi:type="model:WidgetGroup" id="603" x="79" y="52" measuredWidth="619" measuredHeight="25">
+          <widgets xsi:type="model:Icon" id="604" y="3" measuredWidth="16" measuredHeight="16" icon="word (small)"/>
+          <widgets xsi:type="model:Label" id="605" x="21" text="附件：XXXXX..." measuredWidth="90" measuredHeight="25">
+            <font size="9" bold="false"/>
+          </widgets>
+          <widgets xsi:type="model:Label" id="612" x="513" text="2012-01-01 08:40" measuredWidth="106" measuredHeight="25" foreground="#666666">
+            <font size="9" bold="false"/>
+          </widgets>
+          <widgets xsi:type="model:Link" id="619" x="417" text="{print-preview}查看" measuredWidth="43" measuredHeight="25" state="disabled">
+            <font/>
+          </widgets>
+          <widgets xsi:type="model:Link" id="620" x="464" text="{download}下载" measuredWidth="43" measuredHeight="25" state="disabled">
+            <font/>
+          </widgets>
+        </widgets>
+        <widgets xsi:type="model:HLine" id="606" y="98" width="705" measuredWidth="705" measuredHeight="6" foreground="#cccccc"/>
+        <widgets xsi:type="model:WidgetGroup" id="607" x="79" y="76" measuredWidth="619" measuredHeight="25">
+          <widgets xsi:type="model:Icon" id="608" y="3" measuredWidth="16" measuredHeight="16" icon="link (small)"/>
+          <widgets xsi:type="model:Label" id="609" x="21" text="附件：《附录1》" measuredWidth="96" measuredHeight="25">
+            <font size="9" bold="false"/>
+          </widgets>
+          <widgets xsi:type="model:Label" id="613" x="513" text="2012-01-01 08:45" measuredWidth="106" measuredHeight="25" foreground="#666666">
+            <font size="9" bold="false"/>
+          </widgets>
+          <widgets xsi:type="model:Link" id="621" x="417" text="{print-preview}查看" measuredWidth="43" measuredHeight="25" state="disabled">
+            <font/>
+          </widgets>
+          <widgets xsi:type="model:Link" id="622" x="464" text="{download}下载" measuredWidth="43" measuredHeight="25" state="disabled">
+            <font/>
+          </widgets>
+        </widgets>
+        <widgets xsi:type="model:Label" id="614" x="369" y="2" text="小张 2012-01-01 08:00 -->" measuredWidth="157" measuredHeight="25" foreground="#999999">
+          <font size="9" bold="false"/>
+        </widgets>
+      </widgets>
+      <widgets xsi:type="model:Icon" id="597" x="679" y="7" measuredWidth="16" measuredHeight="16" icon="desc (small)"/>
+      <widgets xsi:type="model:Icon" id="598" x="656" y="7" measuredWidth="16" measuredHeight="16" icon="pages (small)"/>
+      <widgets xsi:type="model:WidgetGroup" id="623" y="101" measuredWidth="705" measuredHeight="75">
+        <widgets xsi:type="model:WidgetGroup" id="624" x="10" y="6" measuredWidth="64" measuredHeight="64">
+          <widgets xsi:type="model:Panel" id="625" width="64" height="64" measuredWidth="64" measuredHeight="64" background="#f3f3f3" foreground="#999999" border="none"/>
+          <widgets xsi:type="model:Image" id="626" width="64" height="64" measuredWidth="64" measuredHeight="64" src="assets/people02.png"/>
+        </widgets>
+        <widgets xsi:type="model:Label" id="627" x="79" text="落实交车日期" measuredWidth="101" measuredHeight="30">
+          <font size="12" bold="true"/>
+        </widgets>
+        <widgets xsi:type="model:Label" id="628" x="525" text="小强 2012-01-01 10:00" measuredWidth="173" measuredHeight="29">
+          <font size="12" bold="false"/>
+        </widgets>
+        <widgets xsi:type="model:HLine" id="641" y="69" width="705" measuredWidth="705" measuredHeight="6" foreground="#cccccc"/>
+        <widgets xsi:type="model:Label" id="648" x="369" y="2" text="小明 2012-01-01 09:00 -->" measuredWidth="157" measuredHeight="25" foreground="#999999">
+          <font size="9" bold="false"/>
+        </widgets>
+      </widgets>
+      <widgets xsi:type="model:WidgetGroup" id="649" y="27" measuredWidth="705" measuredHeight="75">
+        <widgets xsi:type="model:WidgetGroup" id="650" x="10" y="6" measuredWidth="64" measuredHeight="64">
+          <widgets xsi:type="model:Panel" id="651" width="64" height="64" measuredWidth="64" measuredHeight="64" background="#f3f3f3" foreground="#999999" border="none"/>
+          <widgets xsi:type="model:Image" id="652" width="64" height="64" measuredWidth="64" measuredHeight="64" src="assets/people02.png"/>
+        </widgets>
+        <widgets xsi:type="model:Label" id="653" x="79" text="确认并发起交车或续保处理" measuredWidth="197" measuredHeight="30">
+          <font size="12" bold="true"/>
+        </widgets>
+        <widgets xsi:type="model:Label" id="654" x="525" text="小明 2012-01-01 11:00" measuredWidth="173" measuredHeight="29">
+          <font size="12" bold="false"/>
+        </widgets>
+        <widgets xsi:type="model:HLine" id="655" y="69" width="705" measuredWidth="705" measuredHeight="6" foreground="#cccccc"/>
+        <widgets xsi:type="model:Label" id="656" x="369" y="2" text="小强 2012-01-01 10:00 -->" measuredWidth="157" measuredHeight="25" foreground="#999999">
+          <font size="9" bold="false"/>
+        </widgets>
+      </widgets>
+      <widgets xsi:type="model:WidgetGroup" id="845" x="631" y="7" measuredWidth="16" measuredHeight="16">
+        <widgets xsi:type="model:Icon" id="843" x="7" width="9" measuredWidth="9" measuredHeight="16" icon="arrow-down (small)"/>
+        <widgets xsi:type="model:Icon" id="844" width="8" measuredWidth="8" measuredHeight="16" icon="arrow-up (small)"/>
+      </widgets>
+    </widgets>
+    <widgets xsi:type="model:WidgetGroup" id="657" y="150" measuredWidth="706" measuredHeight="347">
+      <widgets xsi:type="model:Accordion" id="658" x="1" width="705" height="347" text="待办信息" measuredWidth="705" measuredHeight="347" selection="0">
+        <items x="0" y="2" width="705" height="27" text="待办信息"/>
+      </widgets>
+      <widgets xsi:type="model:WidgetGroup" id="659" y="27" measuredWidth="706" measuredHeight="183">
+        <widgets xsi:type="model:WidgetGroup" id="660" x="10" y="5" measuredWidth="64" measuredHeight="64">
+          <widgets xsi:type="model:Panel" id="661" width="64" height="64" measuredWidth="64" measuredHeight="64" background="#f3f3f3" foreground="#999999" border="none"/>
+          <widgets xsi:type="model:Image" id="662" width="64" height="64" measuredWidth="64" measuredHeight="64" src="assets/people02.png"/>
+        </widgets>
+        <widgets xsi:type="model:HLine" id="677" y="177" width="705" measuredWidth="705" measuredHeight="6" foreground="#cccccc"/>
+        <widgets xsi:type="model:WidgetGroup" id="716" x="80" measuredWidth="619" measuredHeight="30">
+          <widgets xsi:type="model:Link" id="720" x="480" y="2" text="{arrow-up}添加附件" measuredWidth="67" measuredHeight="25">
+            <font/>
+          </widgets>
+          <widgets xsi:type="model:Link" id="721" x="552" y="2" text="{check}完成办理" measuredWidth="67" measuredHeight="25">
+            <font/>
+          </widgets>
+          <widgets xsi:type="model:Label" id="722" text="汇总月即将退出营运车辆" measuredWidth="181" measuredHeight="30">
+            <font size="12" bold="true"/>
+          </widgets>
+          <widgets xsi:type="model:Link" id="749" x="408" y="2" text="{new}添加意见" measuredWidth="67" measuredHeight="25">
+            <font/>
+          </widgets>
+        </widgets>
+        <widgets xsi:type="model:WidgetGroup" id="723" x="79" y="29" measuredWidth="618" measuredHeight="25">
+          <widgets xsi:type="model:Icon" id="724" y="3" measuredWidth="16" measuredHeight="16" icon="calendar2 (small)"/>
+          <widgets xsi:type="model:Label" id="725" x="21" text="小张 于 2012-01-01 08:00 发送给 您 办理" measuredWidth="234" measuredHeight="25">
+            <font size="9" bold="false"/>
+          </widgets>
+          <widgets xsi:type="model:Icon" id="729" x="434" y="3" measuredWidth="16" measuredHeight="16" foreground="#ff0000" icon="alarm (small)"/>
+          <widgets xsi:type="model:Label" id="730" x="452" text="办理期限：2012-01-01 15:00" measuredWidth="166" measuredHeight="25" foreground="#ff0000">
+            <font size="9" bold="false"/>
+          </widgets>
+        </widgets>
+        <widgets xsi:type="model:WidgetGroup" id="731" x="79" y="129" measuredWidth="619" measuredHeight="25">
+          <widgets xsi:type="model:Icon" id="732" y="3" measuredWidth="16" measuredHeight="16" icon="new (small)"/>
+          <widgets xsi:type="model:Label" id="733" x="21" text="意见：测试意见..." measuredWidth="98" measuredHeight="25">
+            <font size="9" bold="false"/>
+          </widgets>
+          <widgets xsi:type="model:Label" id="734" x="513" text="2012-01-01 08:05" measuredWidth="106" measuredHeight="25" foreground="#666666">
+            <font size="9" bold="false"/>
+          </widgets>
+          <widgets xsi:type="model:Link" id="736" x="464" text="{delete}删除" measuredWidth="43" measuredHeight="25">
+            <font/>
+          </widgets>
+          <widgets xsi:type="model:Link" id="751" x="416" text="{download}下载" measuredWidth="43" measuredHeight="25">
+            <font/>
+          </widgets>
+          <widgets xsi:type="model:Link" id="752" x="368" text="{edit}编辑" measuredWidth="43" measuredHeight="25">
+            <font/>
+          </widgets>
+        </widgets>
+        <widgets xsi:type="model:WidgetGroup" id="753" x="79" y="153" measuredWidth="619" measuredHeight="25">
+          <widgets xsi:type="model:Icon" id="754" y="3" measuredWidth="16" measuredHeight="16" icon="new (small)"/>
+          <widgets xsi:type="model:Label" id="755" x="21" text="附件：附件1" measuredWidth="72" measuredHeight="25">
+            <font size="9" bold="false"/>
+          </widgets>
+          <widgets xsi:type="model:Label" id="756" x="513" text="2012-01-01 08:10" measuredWidth="106" measuredHeight="25" foreground="#666666">
+            <font size="9" bold="false"/>
+          </widgets>
+          <widgets xsi:type="model:Link" id="757" x="464" text="{delete}删除" measuredWidth="43" measuredHeight="25">
+            <font/>
+          </widgets>
+          <widgets xsi:type="model:Link" id="758" x="416" text="{download}下载" measuredWidth="43" measuredHeight="25">
+            <font/>
+          </widgets>
+          <widgets xsi:type="model:Link" id="759" x="368" text="{print-preview}查看" measuredWidth="43" measuredHeight="25">
+            <font/>
+          </widgets>
+        </widgets>
+        <widgets xsi:type="model:Table" id="794" x="79" y="53" width="627" text="(w:60).车号,(w:60).营运性质,(w:60).登记日期,合同期限&#xA;2E417,供车合同,2004-01-01,2005-01-31&#xA;74K27,承保合同,2004-10-01,2005-01-31" measuredWidth="627" measuredHeight="73" alternative="#eeeeee">
+          <font/>
+        </widgets>
+        <widgets xsi:type="model:Icon" id="795" x="684" y="57" measuredWidth="16" measuredHeight="16" icon="circled-mul (small)"/>
+        <widgets xsi:type="model:Icon" id="796" x="665" y="57" measuredWidth="16" measuredHeight="16" icon="circled-plus (small)"/>
+      </widgets>
+      <widgets xsi:type="model:Icon" id="685" x="680" y="7" measuredWidth="16" measuredHeight="16" icon="desc (small)"/>
+      <widgets xsi:type="model:Icon" id="686" x="657" y="7" measuredWidth="16" measuredHeight="16" icon="pages (small)"/>
+      <widgets xsi:type="model:WidgetGroup" id="760" x="1" y="209" measuredWidth="705" measuredHeight="134">
+        <widgets xsi:type="model:WidgetGroup" id="761" x="9" y="5" measuredWidth="64" measuredHeight="64">
+          <widgets xsi:type="model:Panel" id="762" width="64" height="64" measuredWidth="64" measuredHeight="64" background="#f3f3f3" foreground="#999999" border="none"/>
+          <widgets xsi:type="model:Image" id="763" width="64" height="64" measuredWidth="64" measuredHeight="64" src="assets/people02.png"/>
+        </widgets>
+        <widgets xsi:type="model:HLine" id="764" y="128" width="705" measuredWidth="705" measuredHeight="6" foreground="#cccccc"/>
+        <widgets xsi:type="model:WidgetGroup" id="765" x="79" measuredWidth="619" measuredHeight="30">
+          <widgets xsi:type="model:Link" id="766" x="480" y="2" text="{arrow-up}添加附件" measuredWidth="67" measuredHeight="25">
+            <font/>
+          </widgets>
+          <widgets xsi:type="model:Link" id="767" x="552" y="2" text="{check}完成办理" measuredWidth="67" measuredHeight="25">
+            <font/>
+          </widgets>
+          <widgets xsi:type="model:Label" id="768" text="落实交车日期" measuredWidth="101" measuredHeight="30">
+            <font size="12" bold="true"/>
+          </widgets>
+          <widgets xsi:type="model:Link" id="769" x="408" y="2" text="{new}添加意见" measuredWidth="67" measuredHeight="25">
+            <font/>
+          </widgets>
+        </widgets>
+        <widgets xsi:type="model:WidgetGroup" id="770" x="78" y="29" measuredWidth="618" measuredHeight="25">
+          <widgets xsi:type="model:Icon" id="771" y="3" measuredWidth="16" measuredHeight="16" icon="calendar2 (small)"/>
+          <widgets xsi:type="model:Label" id="772" x="21" text="小张 于 2012-01-01 08:00 发送给 小明 办理" measuredWidth="246" measuredHeight="25">
+            <font size="9" bold="false"/>
+          </widgets>
+          <widgets xsi:type="model:Icon" id="773" x="434" y="3" measuredWidth="16" measuredHeight="16" foreground="#ff0000" icon="alarm (small)"/>
+          <widgets xsi:type="model:Label" id="774" x="452" text="办理期限：2012-01-01 15:00" measuredWidth="166" measuredHeight="25" foreground="#ff0000">
+            <font size="9" bold="false"/>
+          </widgets>
+        </widgets>
+        <widgets xsi:type="model:Table" id="792" x="79" y="53" width="626" text="(w:60).车号,(w:150).确认交车还是续保,交车日期&#xA;2E417,{unselected}交车 {unselected}续保,{calendar}　&#xA;74K27,{unselected}交车 {unselected}续保,{calendar}　" measuredWidth="626" measuredHeight="73" alternative="#eeeeee">
+          <font/>
+        </widgets>
+      </widgets>
+    </widgets>
+    <widgets xsi:type="model:Note" id="838" x="712" width="329" height="513" text="工作空间：&#xD;&#xA;1）工作空间包含3大区域：公共信息、待办信息、经办信息&#xD;&#xA;&#xD;&#xA;公共信息：&#xD;&#xA;1）显示流程相关的总信息，只有有权限的用户在有待办的情况下才可以进行相应的编辑修改操作。没有待办的情况下也可以考虑适当进行编辑处理（管理维护目的）。&#xD;&#xA;&#xD;&#xA;待办信息：&#xD;&#xA;1）显示当前流程实例的所有待办信息，包括非当前待办人的待办。&#xD;&#xA;2）对当前用户的待办信息才用高亮显示，让用户清晰地知道哪些是自己该办的事情，如果已经超出办理期限还没办理完毕，要用更显眼的方式让用户知道。&#xD;&#xA;3）如果不是当前人的待办信息，则为只读状态，没有任何编辑功能，而且也不显示此待办办理过程中填写的任何信息（如意见、附件）等。&#xD;&#xA;4）如果是当前用户的待办，显示所有待办处理功能；如可以添加修改删除意见、附件，填写任务表单信息。&#xD;&#xA;5）默认按任务的创建时间逆序排序。&#xD;&#xA;&#xD;&#xA;已办信息：&#xD;&#xA;1）显示流程所有的已经完成办理的任务信息。&#xD;&#xA;2）通过上下箭头按钮可以切换已办列表的显示顺序，默认按照办理完成时间的逆序方向显示。&#xD;&#xA;&#xD;&#xA;小图标示意说明：&#xD;&#xA;     {pages}&#x9;&#x9;-- 折叠或展开所有子节点&#xD;&#xA;     {asc}{desc}&#x9;-- 折叠或展开本节点" measuredWidth="329" measuredHeight="513" annotation="true" textAlignment="Left">
+      <font bold="false"/>
     </widgets>
   </widgets>
   <hRuler/>
