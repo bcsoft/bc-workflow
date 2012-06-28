@@ -17,6 +17,32 @@ public class WorkflowAction extends AbstractBaseAction {
 	private static final long serialVersionUID = 1L;
 
 	/**
+	 * 发起流程
+	 * 
+	 * @return
+	 * @throws Exception
+	 */
+	public String startFlow() throws Exception {
+		try {
+			// key为流程的编码
+			Assert.assertNotEmpty(key);
+
+			// 当前用户帐号
+			// String currentUserAccount = getCurrentUserAccount();
+
+			// 完成任务：TODO 表单信息的处理
+			this.runtimeService.startProcessInstanceByKey(key);
+
+			// 返回信息
+			json = createSuceessMsg("启动成功！").toString();
+		} catch (Exception e) {
+			json = createFailureMsg(e).toString();
+		}
+
+		return SUCCESS;
+	}
+
+	/**
 	 * 完成任务
 	 * 
 	 * @return

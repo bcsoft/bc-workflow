@@ -36,6 +36,8 @@ public abstract class AbstractBaseAction extends ActionSupport implements
 
 	public String json;// json
 	public String id;// 任务、流程实例等的id，视具体情况而定
+	public String key;// 任务、流程的编码，视具体情况而定
+	public String ver;// 任务、流程的版本号，视具体情况而定
 
 	@Autowired
 	public void setRuntimeService(RuntimeService runtimeService) {
