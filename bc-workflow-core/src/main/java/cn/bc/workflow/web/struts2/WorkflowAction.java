@@ -43,32 +43,6 @@ public class WorkflowAction extends AbstractBaseAction {
 	}
 
 	/**
-	 * 完成任务
-	 * 
-	 * @return
-	 * @throws Exception
-	 */
-	public String completeTask() throws Exception {
-		try {
-			// id为任务的id
-			Assert.assertNotEmpty(id);
-
-			// 当前用户帐号
-			// String currentUserAccount = getCurrentUserAccount();
-
-			// 完成任务：TODO 表单信息的处理
-			this.taskService.complete(id);
-
-			// 返回信息
-			json = createSuceessMsg("完成任务成功！").toString();
-		} catch (Exception e) {
-			json = createFailureMsg(e).toString();
-		}
-
-		return SUCCESS;
-	}
-
-	/**
 	 * 领取任务
 	 * 
 	 * @return
@@ -87,6 +61,32 @@ public class WorkflowAction extends AbstractBaseAction {
 
 			// 返回信息
 			json = createSuceessMsg("任务领取成功！").toString();
+		} catch (Exception e) {
+			json = createFailureMsg(e).toString();
+		}
+
+		return SUCCESS;
+	}
+
+	/**
+	 * 完成任务
+	 * 
+	 * @return
+	 * @throws Exception
+	 */
+	public String completeTask() throws Exception {
+		try {
+			// id为任务的id
+			Assert.assertNotEmpty(id);
+
+			// 当前用户帐号
+			// String currentUserAccount = getCurrentUserAccount();
+
+			// 完成任务：TODO 表单信息的处理
+			this.taskService.complete(id);
+
+			// 返回信息
+			json = createSuceessMsg("完成任务成功！").toString();
 		} catch (Exception e) {
 			json = createFailureMsg(e).toString();
 		}

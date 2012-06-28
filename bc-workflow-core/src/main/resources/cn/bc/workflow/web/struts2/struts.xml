@@ -9,4 +9,9 @@
 			<result name="success">/bc-workflow/workspace/workspace.jsp</result>
 		</action>
 	</package>
+	<package name="workflow" extends="bc-default" namespace="/bc-workflow/workflow">
+		<action name="startFlow" class="workflowAction" method="startFlow" />
+		<action name="claimTask" class="workflowAction" method="claimTask" />
+		<action name="completeTask" class="workflowAction" method="completeTask" />
+	</package>
 </struts>
