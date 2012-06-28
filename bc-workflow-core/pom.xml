@@ -51,12 +51,6 @@
 		<!-- for test -->
 		<dependency>
 			<groupId>cn.bc</groupId>
-			<artifactId>bc-db-jdbc</artifactId>
-			<version>${framework.version}</version>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>cn.bc</groupId>
 			<artifactId>bc-test</artifactId>
 			<version>${framework.version}</version>
 			<scope>test</scope>

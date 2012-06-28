@@ -21,7 +21,7 @@
     </widgets>
   </widgets>
   <widgets xsi:type="model:Note" id="585" x="8" y="176" width="497" height="193" text="说明：&#xD;&#xA;1）此视图只显示当前用户的待办信息列表。&#xD;&#xA;2）小图标示意说明：&#xD;&#xA;     {checked}&#x9;&#x9;-- 状态为已签领处理中&#xD;&#xA;     {unchecked}&#x9;-- 状态为待签领，处于此状态时，点击即可马上签领&#xD;&#xA;     {user}&#x9;&#x9;&#x9;-- 个人待办&#xD;&#xA;     {usergroup}&#x9;-- 组织待办，有权限用户可将此待办分派给具体的用户进行处理&#xD;&#xA;     {alarm}&#x9;-- 有办理期限时显示此图标，如果过了办理期限还没办完的，此图标闪烁晃动提示&#xD;&#xA;3）通过委托操作可以将任务委派给其他用户办理，但有权限的用户方可委托任务。&#xD;&#xA;4）有权限的用户可以将组织待办分派给指定用户进行处理，分派操作仅适用于组织待办。&#xD;&#xA;" measuredWidth="497" measuredHeight="193" annotation="true" textAlignment="Left">
-    <font bold="true"/>
+    <font bold="false"/>
   </widgets>
   <hRuler/>
   <vRuler/>
