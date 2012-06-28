@@ -14,4 +14,7 @@
 	<!-- 自定义Activiti的配置元素 -->
 	<bean id="customUserManager" class="cn.bc.workflow.activiti.CustomUserManager"/>
 	<bean id="customGroupManager" class="cn.bc.workflow.activiti.CustomGroupManager"/>
+	<!-- todoService -->
+	<bean id="todoService" class="cn.bc.workflow.todo.service.TodoServiceImpl" />
+	
 </beans>
