@@ -5,10 +5,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Controller;
 
+import cn.bc.core.Page;
+import cn.bc.core.query.Query;
 import cn.bc.core.query.condition.Condition;
 import cn.bc.core.query.condition.ConditionUtils;
 import cn.bc.core.query.condition.impl.EqualsCondition;
@@ -23,6 +26,7 @@ import cn.bc.web.ui.html.grid.TextColumn4MapKey;
 import cn.bc.web.ui.html.page.PageOption;
 import cn.bc.web.ui.html.toolbar.Toolbar;
 import cn.bc.web.ui.html.toolbar.ToolbarButton;
+import cn.bc.workflow.todo.service.TodoService;
 
 /**
  * 我的待办视图Action
@@ -35,24 +39,12 @@ import cn.bc.web.ui.html.toolbar.ToolbarButton;
 public class TodoPersonalsAction extends ViewAction<Map<String, Object>>{
 	private static final long serialVersionUID = 1L;
 	
-//	private IdentityService identityService; //用户信息service
-//	private TaskService taskService; //待办任务service
-//	private HistoryService historyService; //历史信息service
-//	
-//	@Autowired
-//	public void setIdentityService(IdentityService identityService) {
-//		this.identityService = identityService;
-//	}
-//
-//	@Autowired
-//	public void setTaskService(TaskService taskService) {
-//		this.taskService = taskService;
-//	}
-//	
-//	@Autowired
-//	public void setHistoryService(HistoryService historyService) {
-//		this.historyService = historyService;
-//	}
+	private TodoService todoService;
+	
+	@Autowired
+	public void setTodoService(TodoService todoService) {
+		this.todoService = todoService;
+	}
 
 	@Override
 	public boolean isReadonly() {
@@ -64,33 +56,8 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>>{
 	@Override
 	protected SqlObject<Map<String, Object>> getSqlObject() {
 		
-		SqlObject<Map<String, Object>> sqlObject = new SqlObject<Map<String, Object>>();
-		// 构建查询语句,where和order by不要包含在sql中(要统一放到condition中)
-		StringBuffer sql = new StringBuffer();
-		sql.append("select art.id_,art.name_ artName,art.due_date_,aiu.first_ aiuName,art.create_time_,arp.name_ arpName");
-		sql.append(" from act_ru_task art");
-		sql.append(" left join act_id_user aiu on art.assignee_ = aiu.id_");
-		sql.append(" left join act_re_procdef arp on art.proc_def_id_ = arp.id_");
-		
-		sqlObject.setSql(sql.toString());
-		
-		// 注入参数
-		sqlObject.setArgs(null);
-		
-		// 数据映射器
-		sqlObject.setRowMapper(new RowMapper<Map<String, Object>>() {
-			public Map<String, Object> mapRow(Object[] rs, int rowNum) {
-				Map<String, Object> map = new HashMap<String, Object>();
-				int i = 0;
-				map.put("id_", rs[i++]);
-				map.put("artName", rs[i++]); // 标题
-				map.put("due_date_", rs[i++]); // 办理期限
-				map.put("aiuName", rs[i++]); // 发送人
-				map.put("create_time_", rs[i++]); //  发送时间
-				map.put("arpName", rs[i++]); //  分类
-				return map;
-			}
-		});
+		SqlObject<Map<String, Object>> sqlObject = TodoPersonalsAction.getTodoPersonalData();
+
 		return sqlObject;
 	}
 	
@@ -154,7 +121,23 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>>{
 
 		return columns;
 	}
-
+	
+	@Override
+	protected List<Map<String, Object>> findList() {
+		return this.getQuery().list();
+	}
+	
+	@Override
+	protected Page<Map<String, Object>> findPage() {
+		return this.getQuery().page(this.getPage().getPageNo(),
+				this.getPage().getPageSize());
+	}
+	
+	@Override
+	protected Query<Map<String, Object>> getQuery() {
+		return this.todoService.createSqlQuery(getSqlObject());
+	}	
+	
 	@Override
 	protected String getFormActionName() {
 		return "personals";
@@ -175,5 +158,41 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>>{
 		return new String [] {"art.name_","aiu.first_","aiu.last_","arp.name_"};
 	}
 	
+	private static SqlObject<Map<String, Object>> getTodoPersonalData (){
+		SqlObject<Map<String, Object>> sqlObject = new SqlObject<Map<String,Object>>();
+		
+		// 构建查询语句,where和order by不要包含在sql中(要统一放到condition中)
+		StringBuffer sql = new StringBuffer();
+		sql.append("select art.id_,art.name_ artName,art.due_date_,aiu.first_ aiuName,art.create_time_,arp.name_ arpName");
+		sql.append(",art.description_,ari.group_id_,ari.user_id_");
+		sql.append(" from act_ru_task art");
+		sql.append(" left join act_id_user aiu on art.assignee_ = aiu.id_");
+		sql.append(" left join act_re_procdef arp on art.proc_def_id_ = arp.id_");
+		sql.append(" left join act_ru_identitylink ari on art.id_ = ari.task_id_");
+		
+		sqlObject.setSql(sql.toString());
+		
+		// 注入参数
+		sqlObject.setArgs(null);
+		
+		// 数据映射器
+		sqlObject.setRowMapper(new RowMapper<Map<String, Object>>() {
+			public Map<String, Object> mapRow(Object[] rs, int rowNum) {
+				Map<String, Object> map = new HashMap<String, Object>();
+				int i = 0;
+				map.put("id_", rs[i++]);
+				map.put("artName", rs[i++]); // 标题
+				map.put("due_date_", rs[i++]); // 办理期限
+				map.put("aiuName", rs[i++]); // 发送人
+				map.put("create_time_", rs[i++]); //  发送时间
+				map.put("arpName", rs[i++]); //  分类
+				map.put("description_", rs[i++]); // 附加说明
+				map.put("group_id_", rs[i++]); //  参与者岗位code
+				map.put("user_id_", rs[i++]); //  参与人岗位code
+				return map;
+			}
+		});
+		return sqlObject;
+	}
 	
 }
