@@ -167,7 +167,7 @@ public class TodoManagesAction extends ViewAction<Map<String, Object>>{
 
 	@Override
 	protected String getFormActionName() {
-		return "manages";
+		return "manage";
 	}
 	
 	@Override

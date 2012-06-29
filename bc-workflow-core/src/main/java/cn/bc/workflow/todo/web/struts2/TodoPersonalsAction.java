@@ -140,7 +140,7 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>>{
 	
 	@Override
 	protected String getFormActionName() {
-		return "personals";
+		return "personal";
 	}
 	
 	@Override
