@@ -1,10 +1,13 @@
 package cn.bc.workflow.web.struts2;
 
+import org.activiti.engine.repository.Deployment;
 import org.commontemplate.util.Assert;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Controller;
 
+import cn.bc.core.exception.CoreException;
+import cn.bc.core.util.DateUtils;
 import cn.bc.web.ui.json.Json;
 
 /**
@@ -17,6 +20,45 @@ import cn.bc.web.ui.json.Json;
 @Controller
 public class WorkflowAction extends AbstractBaseAction {
 	private static final long serialVersionUID = 1L;
+	public String toUser;
+	public String type;
+
+	/**
+	 * 发布流程(xml、zip或bar包)
+	 * 
+	 * @return
+	 * @throws Exception
+	 */
+	public String deploy() throws Exception {
+		try {
+			// key为流程的编码
+			Assert.assertNotEmpty(key);
+
+			// 完成任务
+			Deployment deploy;
+			if ("xml".equalsIgnoreCase(type)) {
+				deploy = this.workflowService.deployXmlFromTemplate(key);
+			} else if ("xml".equalsIgnoreCase(type)) {
+				deploy = this.workflowService.deployZipFromTemplate(key);
+			} else {
+				throw new CoreException("不支持的发布类型：type=" + type + ",key=" + key);
+			}
+
+			// 返回信息
+			Json json = createSuceessMsg("流程发布成功！");
+			Json d = new Json();
+			d.put("id", deploy.getId());
+			d.put("name", deploy.getName());
+			d.put("deploymentTime",
+					DateUtils.formatDateTime(deploy.getDeploymentTime()));
+			json.put("deploy", d);// 发布对象
+			this.json = json.toString();
+		} catch (Exception e) {
+			json = createFailureMsg(e).toString();
+		}
+
+		return SUCCESS;
+	}
 
 	/**
 	 * 发起流程
@@ -78,10 +120,36 @@ public class WorkflowAction extends AbstractBaseAction {
 			Assert.assertNotEmpty(id);
 
 			// 完成任务
-			this.taskService.complete(id);
+			this.workflowService.completeTask(id);
 
 			// 返回信息
 			json = createSuceessMsg("完成任务成功！").toString();
+		} catch (Exception e) {
+			json = createFailureMsg(e).toString();
+		}
+
+		return SUCCESS;
+	}
+
+	/**
+	 * 委派任务
+	 * 
+	 * @return
+	 * @throws Exception
+	 */
+	public String delegateTask() throws Exception {
+		try {
+			// id为任务的id
+			Assert.assertNotEmpty(id);
+
+			// 委派给的用户
+			Assert.assertNotEmpty(toUser);
+
+			// 委派任务
+			this.workflowService.delegateTask(id, toUser);
+
+			// 返回信息
+			json = createSuceessMsg("委派任务成功！").toString();
 		} catch (Exception e) {
 			json = createFailureMsg(e).toString();
 		}
