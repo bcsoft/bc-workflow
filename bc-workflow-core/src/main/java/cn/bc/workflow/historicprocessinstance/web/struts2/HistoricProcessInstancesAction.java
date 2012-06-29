@@ -1,4 +1,4 @@
-package cn.bc.workflow.done.web.struts2;
+package cn.bc.workflow.historicprocessinstance.web.struts2;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -13,16 +13,19 @@ import cn.bc.core.query.condition.Condition;
 import cn.bc.core.query.condition.Direction;
 import cn.bc.core.query.condition.impl.AndCondition;
 import cn.bc.core.query.condition.impl.OrderCondition;
+import cn.bc.core.util.DateUtils;
 import cn.bc.db.jdbc.RowMapper;
 import cn.bc.db.jdbc.SqlObject;
 import cn.bc.identity.web.SystemContext;
 import cn.bc.web.formater.CalendarFormater;
 import cn.bc.web.struts2.ViewAction;
 import cn.bc.web.ui.html.grid.Column;
+import cn.bc.web.ui.html.grid.HiddenColumn4MapKey;
 import cn.bc.web.ui.html.grid.IdColumn4MapKey;
 import cn.bc.web.ui.html.grid.TextColumn4MapKey;
 import cn.bc.web.ui.html.page.PageOption;
 import cn.bc.web.ui.html.toolbar.Toolbar;
+import cn.bc.web.ui.html.toolbar.ToolbarButton;
 import cn.bc.web.ui.json.Json;
 
 /**
@@ -34,7 +37,7 @@ import cn.bc.web.ui.json.Json;
 
 @Scope(BeanDefinition.SCOPE_PROTOTYPE)
 @Controller
-public class WorkFlowDonesAction extends ViewAction<Map<String, Object>> {
+public class HistoricProcessInstancesAction extends ViewAction<Map<String, Object>> {
 	private static final long serialVersionUID = 1L;
 
 	@Override
@@ -55,7 +58,7 @@ public class WorkFlowDonesAction extends ViewAction<Map<String, Object>> {
 		// 构建查询语句,where和order by不要包含在sql中(要统一放到condition中)
 		StringBuffer sql = new StringBuffer();
 		
-		sql.append("select a.id_,b.name_ as category,a.start_time_,a.end_time_,a.duration_");
+		sql.append("select a.id_,b.name_ as category,a.start_time_,a.end_time_,a.duration_,a.proc_inst_id_");
 		sql.append(" from act_hi_procinst a");
 		sql.append(" INNER JOIN act_re_procdef b on b.id_=a.proc_def_id_");
 		sqlObject.setSql(sql.toString());
@@ -75,9 +78,15 @@ public class WorkFlowDonesAction extends ViewAction<Map<String, Object>> {
 				map.put("duration", rs[i++]);
 				if(map.get("end_time")!=null){
 					map.put("status", "完成");
-				}else{
+				}else
 					map.put("status", "未完成");
-				}
+				
+				//格式化耗时
+				if(map.get("duration")!=null)
+					map.put("frmDuration", 
+							DateUtils.getWasteTime(Long.parseLong(map.get("duration").toString())));
+				
+				map.put("procinstid",rs[i++]);
 				return map;
 			}
 		});
@@ -99,11 +108,11 @@ public class WorkFlowDonesAction extends ViewAction<Map<String, Object>> {
 		columns.add(new TextColumn4MapKey("a.end_time_", "end_time",
 				getText("done.endTime")).setUseTitleFromLabel(true)
 				.setValueFormater(new CalendarFormater("yyyy-MM-dd hh:mm:ss.SSS")));
-		columns.add(new TextColumn4MapKey("a.duration_", "duration",
+		columns.add(new TextColumn4MapKey("a.duration_", "frmDuration",
 				getText("done.duration")));
+		columns.add(new  HiddenColumn4MapKey("procinstid", "procinstid"));
 		return columns;
 	}
-
 
 	@Override
 	protected String getGridRowLabelExpression() {
@@ -117,20 +126,23 @@ public class WorkFlowDonesAction extends ViewAction<Map<String, Object>> {
 
 	@Override
 	protected String getFormActionName() {
-		return "wordFlowDone";
+		return "historicProcessInstance";
 	}
 
 	@Override
 	protected PageOption getHtmlPageOption() {
 		return super.getHtmlPageOption().setWidth(800).setMinWidth(400)
-				.setHeight(400).setMinHeight(300);
+				.setHeight(400).setMinHeight(300).setMinimizable(false);
 	}
 
 	@Override
 	protected Toolbar getHtmlPageToolbar() {
 		Toolbar tb = new Toolbar();
 		// 查看
-		tb.addButton(this.getDefaultOpenToolbarButton());
+		tb.addButton(new ToolbarButton()
+		.setIcon("ui-icon-arrowthickstop-1-s")
+		.setText(getText("label.read"))
+		.setClick("bc.historicProcessInstanceSelectView.clickOk"));
 
 		// 搜索按钮
 		tb.addButton(this.getDefaultSearchToolbarButton());
@@ -151,6 +163,16 @@ public class WorkFlowDonesAction extends ViewAction<Map<String, Object>> {
 		Json json = new Json();
 
 		return json;
+	}
+	
+	@Override
+	protected String getGridDblRowMethod() {
+		return "bc.historicProcessInstanceSelectView.clickOk";
+	}
+	
+	@Override
+	protected String getHtmlPageJs() {
+		return this.getHtmlPageNamespace() + "-workflow/historicprocessinstance/select.js";
 	}
 
 	// ==高级搜索代码开始==
