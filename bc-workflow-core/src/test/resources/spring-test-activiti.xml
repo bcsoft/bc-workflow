@@ -16,16 +16,27 @@
 		<property name="dataSource" ref="dataSource" />
 		<property name="transactionManager" ref="transactionManager" />
 		<property name="databaseSchemaUpdate" value="true" />
-		
+
+		<!-- 历史的配置：
+			none-忽略所有历史归档；
+			acitivity-存档所有的流程实例和活动实例，不存档细节；
+			audit-默认，存档所有的流程实例、活动实例以及提交的表单属性，以便通过表单进行的用户交互可被追溯和查证；
+			full-这是历史归档的最高级别，因此执行时最慢，这一级别存储了所有在 audit 中存储的信息，以及其它所有可能的细节如流程变量的更新
+		-->
+		<property name="history" value="audit" />
+
+		<!-- 邮件服务器的配置：mailServerHost、mailServerPort、mailServerDefaultFrom、mailServerUsername、mailServerPassword -->
 		<property name="mailServerHost" value="localhost" />
 		<property name="mailServerPort" value="5025" />
-		
+
 		<!-- 使用JPA需要的配置 -->
 		<property name="jpaEntityManagerFactory" ref="entityManagerFactory" />
 		<property name="jpaHandleTransaction" value="true" />
 		<property name="jpaCloseEntityManager" value="true" />
+
+		<!-- 作业执行器的配置：JobExecutor是管理触发定时器线程的组件，默认在流程引擎启动时被激活，进行单元测试时，处理多线程是很多余的，可以将其关闭 -->
 		<property name="jobExecutorActivate" value="false" />
-		
+
 		<!-- 控制可以在流程配置文件内使用的spring bean的范围，不配置则代表所有spring bean都可以使用
 		<property name="beans">
 			<map>
@@ -33,23 +44,30 @@
 			</map>
 		</property>
 		 -->
-		 <!-- 配置要自动发布的流程，spring启动时会自动检测，看流程是否有更新或未发布，并自动进行更新或发布
-		<property name="deploymentResources" 
-			value="classpath:testProcess.bpmn20.xml" />-->
-			
-		<!-- 自定义用户、用户组的配置 -->
-		<property name="customSessionFactories">  
-            <list>  
-                <bean class="cn.bc.workflow.activiti.CustomUserManagerFactory" p:userManager-ref="customUserManager"/>  
-                <bean class="cn.bc.workflow.activiti.CustomGroupManagerFactory" p:groupManager-ref="customGroupManager"/>  
-            </list>  
-        </property>  
-	</bean>
 
+		<!-- 配置要自动发布的流程，spring启动时会自动检测，看流程是否有更新或未发布，并自动进行更新或发布
+		<property name="deploymentResources" value="classpath:testProcess.bpmn20.xml" />
+		 -->
+
+		<!-- 自定义用户、用户组的配置 -->
+		<property name="customSessionFactories">
+			<list>
+				<bean class="cn.bc.workflow.activiti.CustomUserManagerFactory"
+					p:userManager-ref="customUserManager" />
+				<bean class="cn.bc.workflow.activiti.CustomGroupManagerFactory"
+					p:groupManager-ref="customGroupManager" />
+			</list>
+		</property>
+	</bean>
+	
+	<!-- 自定义Activiti的用户和用户组管理 -->
+	<bean id="customUserManager" class="cn.bc.workflow.activiti.CustomUserManager"/>
+	<bean id="customGroupManager" class="cn.bc.workflow.activiti.CustomGroupManager"/>
+
+	<!-- Activiti引擎服务 -->
 	<bean id="processEngine" class="org.activiti.spring.ProcessEngineFactoryBean">
 		<property name="processEngineConfiguration" ref="processEngineConfiguration" />
 	</bean>
-
 	<bean id="repositoryService" factory-bean="processEngine"
 		factory-method="getRepositoryService" />
 	<bean id="runtimeService" factory-bean="processEngine"
@@ -62,8 +80,11 @@
 		factory-method="getHistoryService" />
 	<bean id="managementService" factory-bean="processEngine"
 		factory-method="getManagementService" />
-		
+	<bean id="identityService" factory-bean="processEngine"
+		factory-method="getIdentityService" />
+
+	<!-- Activiti测试驱动 -->
 	<bean id="activitiRule" class="cn.bc.workflow.test.activiti.ActivitiRule">
-	  <property name="processEngine" ref="processEngine" />
-	</bean> 
+		<property name="processEngine" ref="processEngine" />
+	</bean>
 </beans>

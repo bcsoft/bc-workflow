@@ -11,7 +11,24 @@
         http://www.springframework.org/schema/tx/spring-tx-3.0.xsd
         http://www.springframework.org/schema/aop
         http://www.springframework.org/schema/aop/spring-aop-3.0.xsd">
-	<!-- 自定义Activiti的用户和用户组管理 -->
-	<bean id="customUserManager" class="cn.bc.workflow.activiti.CustomUserManager"/>
-	<bean id="customGroupManager" class="cn.bc.workflow.activiti.CustomGroupManager"/>
+	<!-- WorkFlowService 事务管理 -->
+	<aop:config>
+		<!-- http://static.springsource.org/spring/docs/3.0.x/spring-framework-reference/html/aop.html#aop-pointcuts
+			包或实现类使用within关键字，接口实现使用this关键字
+		 -->
+		<aop:pointcut id="workflowServiceMethod"
+			expression="this(cn.bc.workflow.service.WorkflowService)" />
+		<aop:advisor pointcut-ref="crudServiceMethod" advice-ref="workflowServiceTxAdvice" />
+	</aop:config>
+	<tx:advice id="workflowServiceTxAdvice" transaction-manager="transactionManager">
+		<tx:attributes>
+			<tx:method name="deploy*" propagation="REQUIRED" read-only="true" />
+			<tx:method name="start*" propagation="REQUIRED" read-only="true" />
+			<tx:method name="claimTask" propagation="REQUIRED" read-only="true" />
+			<tx:method name="completeTask" propagation="REQUIRED" read-only="true" />
+			<tx:method name="delegateTask" propagation="REQUIRED" read-only="true" />
+		</tx:attributes>
+	</tx:advice>
+	
+	<bean id="workflowServiceImpl" class="cn.bc.workflow.service.WorkflowServiceImpl"/>	
 </beans>
