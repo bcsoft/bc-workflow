@@ -42,7 +42,6 @@ import cn.bc.web.ui.json.Json;
 public class HistoricTaskInstancesAction extends ViewAction<Map<String, Object>> {
 	private static final long serialVersionUID = 1L;
 	public boolean my = false;// 是否从我的经办
-	public String procInstId;//流程实例id
 
 	@Override
 	public boolean isReadonly() {
@@ -135,7 +134,7 @@ public class HistoricTaskInstancesAction extends ViewAction<Map<String, Object>>
 
 	@Override
 	protected String[] getGridSearchFields() {
-		return new String[] { "a.first_", "a.name_", "c.name_" };
+		return new String[] { "d.first_", "a.name_", "c.name_" };
 	}
 
 	@Override
@@ -166,32 +165,22 @@ public class HistoricTaskInstancesAction extends ViewAction<Map<String, Object>>
 
 	@Override
 	protected Condition getGridSpecalCondition() {
-		
 		// 状态条件
 		AndCondition ac = new AndCondition();
-		
-		if(procInstId!=null)
-			ac.add(new EqualsCondition("a.proc_inst_id_",this.procInstId));
-		
 		if(my){
 			SystemContext context = (SystemContext) this.getContext();
 			ac.add(new EqualsCondition("a.assignee_",context.getUser().getCode()));
 			//结束时间不能为空
 			ac.add(new IsNotNullCondition("a.end_time_"));
 		}
-		return ac;
+		return ac.isEmpty()?null:ac;
 	}
 
 	@Override
 	protected Json getGridExtrasData() {
 		Json json = new Json();
-		if(procInstId!=null&&procInstId.length()>0)
-			json.put("procInstId", procInstId);
-		
-		if(my){
+		if(my)
 			json.put("my", my);
-		}
-		
 		return json;
 	}
 	

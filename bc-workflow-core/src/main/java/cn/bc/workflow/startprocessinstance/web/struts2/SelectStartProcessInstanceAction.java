@@ -1,0 +1,156 @@
+package cn.bc.workflow.startprocessinstance.web.struts2;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Controller;
+
+import cn.bc.core.query.condition.Condition;
+import cn.bc.core.query.condition.Direction;
+import cn.bc.core.query.condition.impl.AndCondition;
+import cn.bc.core.query.condition.impl.OrderCondition;
+import cn.bc.core.query.condition.impl.QlCondition;
+import cn.bc.db.jdbc.RowMapper;
+import cn.bc.db.jdbc.SqlObject;
+import cn.bc.web.formater.CalendarFormater;
+import cn.bc.web.struts2.AbstractSelectPageAction;
+import cn.bc.web.ui.html.grid.Column;
+import cn.bc.web.ui.html.grid.HiddenColumn4MapKey;
+import cn.bc.web.ui.html.grid.IdColumn4MapKey;
+import cn.bc.web.ui.html.grid.TextColumn4MapKey;
+import cn.bc.web.ui.html.page.HtmlPage;
+import cn.bc.web.ui.html.page.PageOption;
+import cn.bc.web.ui.json.Json;
+
+/**
+ * 选择发起流程视图Action
+ * 
+ * @author lbj
+ * 
+ */
+
+@Scope(BeanDefinition.SCOPE_PROTOTYPE)
+@Controller
+public class SelectStartProcessInstanceAction extends AbstractSelectPageAction<Map<String, Object>> {
+	private static final long serialVersionUID = 1L;
+	public boolean isNewVersion=false;//是否只显示最新版本,否-显示全部版本
+
+
+	@Override
+	protected OrderCondition getGridOrderCondition() {
+		return new OrderCondition("c.deploy_time_", Direction.Desc);
+	}
+
+	@Override
+	protected SqlObject<Map<String, Object>> getSqlObject() {
+		SqlObject<Map<String, Object>> sqlObject = new SqlObject<Map<String, Object>>();
+		// 构建查询语句,where和order by不要包含在sql中(要统一放到condition中)
+		StringBuffer sql = new StringBuffer();
+		sql.append("select a.id_,a.name_,a.version_,c.deploy_time_,a.key_");
+		sql.append(" from act_re_procdef a");
+		sql.append(" inner join act_re_deployment c on c.id_=a.deployment_id_");
+		sqlObject.setSql(sql.toString());
+		
+		// 注入参数
+		sqlObject.setArgs(null);
+
+		// 数据映射器
+		sqlObject.setRowMapper(new RowMapper<Map<String, Object>>() {
+			public Map<String, Object> mapRow(Object[] rs, int rowNum) {
+				Map<String, Object> map = new HashMap<String, Object>();
+				int i = 0;
+				map.put("id", rs[i++]);
+				map.put("name", rs[i++]);
+				map.put("version", rs[i++]);
+				map.put("deploy_time", rs[i++]);
+				map.put("key", rs[i++]);
+				return map;
+			}
+		});
+		return sqlObject;
+	}
+
+	@Override
+	protected List<Column> getGridColumns() {
+		List<Column> columns = new ArrayList<Column>();
+		columns.add(new IdColumn4MapKey("a.id_", "id"));
+		columns.add(new TextColumn4MapKey("a.name_", "name",
+				getText("startProcdef.name")).setSortable(true)
+				.setUseTitleFromLabel(true));
+		columns.add(new TextColumn4MapKey("a.version_", "version",
+				getText("startProcdef.version"), 100).setUseTitleFromLabel(true));
+		columns.add(new TextColumn4MapKey("c.deploy_time", "deploy_time",
+				getText("startProcdef.deployTime"),150).setUseTitleFromLabel(true)
+				.setValueFormater(new CalendarFormater("yyyy-MM-dd hh:MM:ss")));
+		columns.add(new HiddenColumn4MapKey("key", "key"));
+		return columns;
+	}
+
+	@Override
+	protected String getHtmlPageTitle() {
+		return this.getText("selectStartProcdef");
+	}
+
+	@Override
+	protected String[] getGridSearchFields() {
+		return new String[] { "a.name_"};
+	}
+
+	@Override
+	protected PageOption getHtmlPageOption() {
+		return super.getHtmlPageOption().setWidth(600).setMinWidth(200)
+				.setHeight(400).setMinHeight(200).setModal(true);
+	}
+
+	@Override
+	protected Condition getGridSpecalCondition() {
+		// 状态条件
+		AndCondition ac = new AndCondition();
+		
+		if(isNewVersion)
+			ac.add(
+					new QlCondition("not exists(select 0 from act_re_procdef b where a.key_=b.key_ and a.version_<b.version_)"
+							,(Object[])null));
+
+		return ac.isEmpty()?null:ac;
+	}
+
+	@Override
+	protected Json getGridExtrasData() {
+		Json json = new Json();
+		if(isNewVersion)
+			json.put("isNewVersion", isNewVersion);
+		return json;
+	}
+	
+	@Override
+	protected String getHtmlPageJs() {
+		return this.getHtmlPageNamespace() + "/startprocessinstance/select.js";
+	}
+
+	@Override
+	protected String getClickOkMethod() {
+		return "bc.startProcessInstanceSelectDialog.clickOk";
+	}
+
+	@Override
+	protected String getHtmlPageNamespace() {
+		return this.getContextPath() + "/bc-workflow";
+	}
+
+	@Override
+	protected String getGridRowLabelExpression() {
+		return "['name'] + '.' + ['version']";
+	}
+	
+	@Override
+	protected HtmlPage buildHtmlPage() {
+		return super.buildHtmlPage().setNamespace(
+				this.getHtmlPageNamespace() + "/selectStartProcessInstance");
+	}
+
+}

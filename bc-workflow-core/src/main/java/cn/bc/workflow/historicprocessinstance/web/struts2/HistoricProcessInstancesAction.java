@@ -138,6 +138,11 @@ public class HistoricProcessInstancesAction extends ViewAction<Map<String, Objec
 	@Override
 	protected Toolbar getHtmlPageToolbar() {
 		Toolbar tb = new Toolbar();
+		// 发起流程
+		tb.addButton(new ToolbarButton()
+		.setIcon("ui-icon-play")
+		.setText(getText("startProcdef"))
+		.setClick("bc.historicProcessInstanceSelectView.starProcess"));
 		// 查看
 		tb.addButton(new ToolbarButton()
 		.setIcon("ui-icon-arrowthickstop-1-s")
@@ -155,7 +160,7 @@ public class HistoricProcessInstancesAction extends ViewAction<Map<String, Objec
 		// 状态条件
 		AndCondition ac = new AndCondition();
 	
-		return ac;
+		return ac.isEmpty()?null:ac;
 	}
 
 	@Override
@@ -172,7 +177,10 @@ public class HistoricProcessInstancesAction extends ViewAction<Map<String, Objec
 	
 	@Override
 	protected String getHtmlPageJs() {
-		return this.getHtmlPageNamespace() + "-workflow/historicprocessinstance/select.js";
+		return this.getHtmlPageNamespace() + "-workflow/historicprocessinstance/select.js"
+				+","
+				+this.getHtmlPageNamespace() + "-workflow/startprocessinstance/startProcessInstance.js"
+				;
 	}
 
 	// ==高级搜索代码开始==
