@@ -3,12 +3,32 @@
  */
 package cn.bc.workflow.service;
 
+import org.activiti.engine.repository.Deployment;
+
 /**
- * 工作流Service
+ * 工作流常用方法封装的Service
  * 
  * @author dragon
  */
 public interface WorkflowService {
+	/**
+	 * 发布模板库中指定编码的流程（仅支持zip或bar包）
+	 * 
+	 * @param templateCode
+	 *            模板编码，如果含字符":"，则进行分拆，前面部分为编码，后面部分为版本号，如果没有字符":"，将获取当前状态为正常的版本
+	 * @return
+	 */
+	Deployment deployZipFromTemplate(String templateCode);
+
+	/**
+	 * 发布模板库中指定编码的流程（仅支持xml文件）
+	 * 
+	 * @param templateCode
+	 *            模板编码，如果含字符":"，则进行分拆，前面部分为编码，后面部分为版本号，如果没有字符":"，将获取当前状态为正常的版本
+	 * @return
+	 */
+	Deployment deployXmlFromTemplate(String templateCode);
+
 	/**
 	 * 启动指定编码流程的最新版本
 	 * 
@@ -33,4 +53,14 @@ public interface WorkflowService {
 	 *            任务ID
 	 */
 	void completeTask(String taskId);
+
+	/**
+	 * 委派任务
+	 * 
+	 * @param taskId
+	 *            任务ID
+	 * @param toUser
+	 *            所委派给用户的帐号
+	 */
+	void delegateTask(String taskId, String toUser);
 }
