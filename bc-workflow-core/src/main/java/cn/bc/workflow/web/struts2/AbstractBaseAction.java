@@ -1,4 +1,4 @@
-package cn.bc.workflow.struts2;
+package cn.bc.workflow.web.struts2;
 
 import java.util.Map;
 
@@ -9,35 +9,35 @@ import org.activiti.engine.RuntimeService;
 import org.activiti.engine.TaskService;
 import org.apache.struts2.interceptor.RequestAware;
 import org.apache.struts2.interceptor.SessionAware;
-import org.commontemplate.util.Assert;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.config.BeanDefinition;
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Controller;
 
 import cn.bc.identity.web.SystemContext;
+import cn.bc.web.ui.json.Json;
 
 import com.opensymphony.xwork2.ActionSupport;
 
 /**
- * 流程工作空间处理Action
+ * 流程处理Action的基类
  * 
  * @author dragon
  * 
  */
-@Scope(BeanDefinition.SCOPE_PROTOTYPE)
-@Controller
-public class WorkspaceAction extends ActionSupport implements SessionAware,
-		RequestAware {
+public abstract class AbstractBaseAction extends ActionSupport implements
+		SessionAware, RequestAware {
 	private static final long serialVersionUID = 1L;
 	protected Map<String, Object> session;
 	protected Map<String, Object> request;
 
-	private RuntimeService runtimeService;
-	private FormService formService;
-	private IdentityService identityService;
-	private TaskService taskService;
-	private HistoryService historyService;
+	protected RuntimeService runtimeService;
+	protected FormService formService;
+	protected IdentityService identityService;
+	protected TaskService taskService;
+	protected HistoryService historyService;
+
+	public String json;// json
+	public String id;// 任务、流程实例等的id，视具体情况而定
+	public String key;// 任务、流程的编码，视具体情况而定
+	public String ver;// 任务、流程的版本号，视具体情况而定
 
 	@Autowired
 	public void setRuntimeService(RuntimeService runtimeService) {
@@ -72,8 +72,22 @@ public class WorkspaceAction extends ActionSupport implements SessionAware,
 		this.request = request;
 	}
 
+	/**
+	 * 获取当前的系统上下文
+	 * 
+	 * @return
+	 */
 	public SystemContext getContext() {
 		return (SystemContext) this.session.get(SystemContext.KEY);
+	}
+
+	/**
+	 * 获取当前用户的帐号
+	 * 
+	 * @return
+	 */
+	public String getCurrentUserAccount() {
+		return getContext().getUser().getCode();
 	}
 
 	/**
@@ -87,17 +101,44 @@ public class WorkspaceAction extends ActionSupport implements SessionAware,
 				getText("key.role.bc.workflow"));
 	}
 
-	public String id;// 流程实例的id
+	/**
+	 * 创建处理成功的json信息
+	 * 
+	 * @param msg
+	 *            信息
+	 * @return
+	 */
+	protected Json createSuceessMsg(String msg) {
+		Json json = new Json();
+		json.put("suceess", true);
+		json.put("msg", msg);
+		return json;
+	}
 
 	/**
-	 * 打开工作空间
+	 * 创建处理失败的json信息
 	 * 
+	 * @param msg
+	 *            信息
 	 * @return
-	 * @throws Exception
 	 */
-	public String open() throws Exception {
-		Assert.assertNotEmpty(id);
+	protected Json createFailureMsg(String msg) {
+		Json json = new Json();
+		json.put("suceess", false);
+		json.put("msg", msg);
+		return json;
+	}
 
-		return SUCCESS;
+	/**
+	 * 创建处理失败的json信息
+	 * 
+	 * @param e
+	 * @return
+	 */
+	protected Json createFailureMsg(Exception e) {
+		Json json = new Json();
+		json.put("suceess", false);
+		json.put("msg", e.getMessage());
+		return json;
 	}
 }
