@@ -5,6 +5,8 @@ import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Controller;
 
+import cn.bc.web.ui.json.Json;
+
 /**
  * 流程处理Action
  * 
@@ -27,14 +29,13 @@ public class WorkflowAction extends AbstractBaseAction {
 			// key为流程的编码
 			Assert.assertNotEmpty(key);
 
-			// 当前用户帐号
-			// String currentUserAccount = getCurrentUserAccount();
-
-			// 完成任务：TODO 表单信息的处理
-			this.runtimeService.startProcessInstanceByKey(key);
+			// 完成任务
+			String processInstanceId = this.workflowService.startFlowByKey(key);
 
 			// 返回信息
-			json = createSuceessMsg("启动成功！").toString();
+			Json json = createSuceessMsg("启动成功！");
+			json.put("processInstance", processInstanceId);// 流程实例id
+			this.json = json.toString();
 		} catch (Exception e) {
 			json = createFailureMsg(e).toString();
 		}
@@ -53,11 +54,8 @@ public class WorkflowAction extends AbstractBaseAction {
 			// id为任务的id
 			Assert.assertNotEmpty(id);
 
-			// 当前用户帐号
-			String currentUserAccount = getCurrentUserAccount();
-
-			// 领取任务：TODO 表单信息的处理
-			this.taskService.claim(id, currentUserAccount);
+			// 领取任务
+			this.workflowService.claimTask(id);
 
 			// 返回信息
 			json = createSuceessMsg("任务领取成功！").toString();
@@ -79,10 +77,7 @@ public class WorkflowAction extends AbstractBaseAction {
 			// id为任务的id
 			Assert.assertNotEmpty(id);
 
-			// 当前用户帐号
-			// String currentUserAccount = getCurrentUserAccount();
-
-			// 完成任务：TODO 表单信息的处理
+			// 完成任务
 			this.taskService.complete(id);
 
 			// 返回信息

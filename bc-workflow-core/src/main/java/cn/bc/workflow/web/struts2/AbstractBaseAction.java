@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import cn.bc.identity.web.SystemContext;
 import cn.bc.web.ui.json.Json;
+import cn.bc.workflow.service.WorkflowService;
 
 import com.opensymphony.xwork2.ActionSupport;
 
@@ -28,6 +29,7 @@ public abstract class AbstractBaseAction extends ActionSupport implements
 	protected Map<String, Object> session;
 	protected Map<String, Object> request;
 
+	protected WorkflowService workflowService;
 	protected RuntimeService runtimeService;
 	protected FormService formService;
 	protected IdentityService identityService;
@@ -38,6 +40,10 @@ public abstract class AbstractBaseAction extends ActionSupport implements
 	public String id;// 任务、流程实例等的id，视具体情况而定
 	public String key;// 任务、流程的编码，视具体情况而定
 	public String ver;// 任务、流程的版本号，视具体情况而定
+
+	public void setWorkflowService(WorkflowService workflowService) {
+		this.workflowService = workflowService;
+	}
 
 	@Autowired
 	public void setRuntimeService(RuntimeService runtimeService) {
