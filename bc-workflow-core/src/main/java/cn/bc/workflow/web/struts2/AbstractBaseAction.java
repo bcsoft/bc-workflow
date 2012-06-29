@@ -26,6 +26,7 @@ import com.opensymphony.xwork2.ActionSupport;
 public abstract class AbstractBaseAction extends ActionSupport implements
 		SessionAware, RequestAware {
 	private static final long serialVersionUID = 1L;
+	public static final String JSON = "json";
 	protected Map<String, Object> session;
 	protected Map<String, Object> request;
 
@@ -41,6 +42,7 @@ public abstract class AbstractBaseAction extends ActionSupport implements
 	public String key;// 任务、流程的编码，视具体情况而定
 	public String ver;// 任务、流程的版本号，视具体情况而定
 
+	@Autowired
 	public void setWorkflowService(WorkflowService workflowService) {
 		this.workflowService = workflowService;
 	}

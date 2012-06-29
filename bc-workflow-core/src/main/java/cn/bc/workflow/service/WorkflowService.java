@@ -30,6 +30,23 @@ public interface WorkflowService {
 	Deployment deployXmlFromTemplate(String templateCode);
 
 	/**
+	 * 删除指定的发布历史
+	 * 
+	 * @param deploymentId
+	 * @throwns RuntimeException 如果有相应的流程在运行、有运行历史、有定时任务，就会抛出异常
+	 */
+	void deleteDeployment(String deploymentId);
+
+	/**
+	 * 删除指定的发布历史
+	 * 
+	 * @param deploymentId
+	 * @param cascade
+	 *            是否级联删除所有历史信息
+	 */
+	void deleteDeployment(String deploymentId, boolean cascade);
+
+	/**
 	 * 启动指定编码流程的最新版本
 	 * 
 	 * @param key

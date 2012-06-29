@@ -79,20 +79,20 @@ public class SelectStartProcessInstanceAction extends AbstractSelectPageAction<M
 		List<Column> columns = new ArrayList<Column>();
 		columns.add(new IdColumn4MapKey("a.id_", "id"));
 		columns.add(new TextColumn4MapKey("a.name_", "name",
-				getText("startProcdef.name")).setSortable(true)
+				getText("flow.name")).setSortable(true)
 				.setUseTitleFromLabel(true));
 		columns.add(new TextColumn4MapKey("a.version_", "version",
-				getText("startProcdef.version"), 100).setUseTitleFromLabel(true));
+				getText("flow.version"), 100).setUseTitleFromLabel(true));
 		columns.add(new TextColumn4MapKey("c.deploy_time", "deploy_time",
-				getText("startProcdef.deployTime"),150).setUseTitleFromLabel(true)
-				.setValueFormater(new CalendarFormater("yyyy-MM-dd hh:MM:ss")));
+				getText("flow.deployTime"),150).setUseTitleFromLabel(true)
+				.setValueFormater(new CalendarFormater("yyyy-MM-dd HH:MM:ss")));
 		columns.add(new HiddenColumn4MapKey("key", "key"));
 		return columns;
 	}
 
 	@Override
 	protected String getHtmlPageTitle() {
-		return this.getText("selectStartProcdef");
+		return this.getText("flow.select.title");
 	}
 
 	@Override
@@ -129,12 +129,12 @@ public class SelectStartProcessInstanceAction extends AbstractSelectPageAction<M
 	
 	@Override
 	protected String getHtmlPageJs() {
-		return this.getHtmlPageNamespace() + "/startprocessinstance/select.js";
+		return this.getHtmlPageNamespace() + "/select/select.js";
 	}
 
 	@Override
 	protected String getClickOkMethod() {
-		return "bc.startProcessInstanceSelectDialog.clickOk";
+		return "bc.flow.selectDialog.clickOk";
 	}
 
 	@Override
@@ -150,7 +150,7 @@ public class SelectStartProcessInstanceAction extends AbstractSelectPageAction<M
 	@Override
 	protected HtmlPage buildHtmlPage() {
 		return super.buildHtmlPage().setNamespace(
-				this.getHtmlPageNamespace() + "/selectStartProcessInstance");
+				this.getHtmlPageNamespace() + "/select");
 	}
 
 }

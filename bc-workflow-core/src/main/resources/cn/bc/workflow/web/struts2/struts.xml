@@ -9,10 +9,20 @@
 			<result name="success">/bc-workflow/workspace/workspace.jsp</result>
 		</action>
 	</package>
+	
+	<!-- 流程常用处理 -->
 	<package name="workflow" extends="bc-default" namespace="/bc-workflow/workflow">
+		<action name="deleteDeployment" class="workflowAction" method="deleteDeployment" />
 		<action name="deploy" class="workflowAction" method="deploy" />
 		<action name="startFlow" class="workflowAction" method="startFlow" />
 		<action name="claimTask" class="workflowAction" method="claimTask" />
 		<action name="completeTask" class="workflowAction" method="completeTask" />
+	</package>
+	
+	<!-- 选择流程 -->
+	<package name="selectWorkflow" extends="bc-default" namespace="/bc-workflow/select">
+		<action name="list" class="selectStartProcessInstanceAction" method="list"/>
+		<action name="data" class="selectStartProcessInstanceAction" method="data"/>
+		<action name="paging" class="selectStartProcessInstanceAction" method="paging"/>
 	</package>
 </struts>

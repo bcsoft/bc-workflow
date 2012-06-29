@@ -145,7 +145,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 		String extension = template.getTemplateType().getExtension();
 		if (!("zip".equalsIgnoreCase(extension) || "bar"
 				.equalsIgnoreCase(extension))) {
-			throw new CoreException("template type must be zip or bar. code"
+			throw new CoreException("template type must be zip or bar. code="
 					+ templateCode);
 		}
 
@@ -171,7 +171,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 		String extension = template.getTemplateType().getExtension();
 		if (!("xml".equalsIgnoreCase(extension) || "bpmn"
 				.equalsIgnoreCase(extension))) {
-			throw new CoreException("template type must be xml or bpmn. code"
+			throw new CoreException("template type must be xml or bpmn. code="
 					+ templateCode);
 		}
 
@@ -190,5 +190,13 @@ public class WorkflowServiceImpl implements WorkflowService {
 		Deployment d = repositoryService.createDeployment().name(name)
 				.addInputStream(code, xmlFile).deploy();
 		return d;
+	}
+
+	public void deleteDeployment(String deploymentId) {
+		repositoryService.deleteDeployment(deploymentId);
+	}
+
+	public void deleteDeployment(String deploymentId, boolean cascade) {
+		repositoryService.deleteDeployment(deploymentId, cascade);
 	}
 }

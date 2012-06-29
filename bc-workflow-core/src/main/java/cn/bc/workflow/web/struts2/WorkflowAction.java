@@ -22,6 +22,7 @@ public class WorkflowAction extends AbstractBaseAction {
 	private static final long serialVersionUID = 1L;
 	public String toUser;
 	public String type;
+	public boolean cascade;
 
 	/**
 	 * 发布流程(xml、zip或bar包)
@@ -31,14 +32,15 @@ public class WorkflowAction extends AbstractBaseAction {
 	 */
 	public String deploy() throws Exception {
 		try {
-			// key为流程的编码
+			// key为模板的编码
 			Assert.assertNotEmpty(key);
 
-			// 完成任务
+			// 发布流程
 			Deployment deploy;
-			if ("xml".equalsIgnoreCase(type)) {
+			if ("xml".equalsIgnoreCase(type)) {// xml模板
 				deploy = this.workflowService.deployXmlFromTemplate(key);
-			} else if ("xml".equalsIgnoreCase(type)) {
+			} else if ("zip".equalsIgnoreCase(type)
+					|| "bar".equalsIgnoreCase(type)) {// zip或bar模板
 				deploy = this.workflowService.deployZipFromTemplate(key);
 			} else {
 				throw new CoreException("不支持的发布类型：type=" + type + ",key=" + key);
@@ -57,7 +59,30 @@ public class WorkflowAction extends AbstractBaseAction {
 			json = createFailureMsg(e).toString();
 		}
 
-		return SUCCESS;
+		return JSON;
+	}
+
+	/**
+	 * 删除指定的发布历史
+	 * 
+	 * @return
+	 * @throws Exception
+	 */
+	public String deleteDeployment() throws Exception {
+		try {
+			// id为发布历史的id
+			Assert.assertNotEmpty(id);
+
+			// 删除发布的流程
+			this.workflowService.deleteDeployment(id, cascade);
+
+			// 返回信息
+			this.json = createSuceessMsg("流程发布历史删除成功！").toString();
+		} catch (Exception e) {
+			json = createFailureMsg(e).toString();
+		}
+
+		return JSON;
 	}
 
 	/**
@@ -82,7 +107,7 @@ public class WorkflowAction extends AbstractBaseAction {
 			json = createFailureMsg(e).toString();
 		}
 
-		return SUCCESS;
+		return JSON;
 	}
 
 	/**
@@ -105,7 +130,7 @@ public class WorkflowAction extends AbstractBaseAction {
 			json = createFailureMsg(e).toString();
 		}
 
-		return SUCCESS;
+		return JSON;
 	}
 
 	/**
@@ -128,7 +153,7 @@ public class WorkflowAction extends AbstractBaseAction {
 			json = createFailureMsg(e).toString();
 		}
 
-		return SUCCESS;
+		return JSON;
 	}
 
 	/**
@@ -154,6 +179,6 @@ public class WorkflowAction extends AbstractBaseAction {
 			json = createFailureMsg(e).toString();
 		}
 
-		return SUCCESS;
+		return JSON;
 	}
 }

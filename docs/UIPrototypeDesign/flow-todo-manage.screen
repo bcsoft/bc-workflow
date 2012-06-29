@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <model:Screen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:model="http://wireframesketcher.com/1.0/model.ecore">
   <widgets xsi:type="model:WidgetGroup" id="13" x="8" y="8" measuredWidth="745" measuredHeight="161">
-    <widgets xsi:type="model:Window" id="1" y="24" width="745" height="129" text="待办监控信息" measuredWidth="745" measuredHeight="129" minimizeButton="true" maximizeButton="true"/>
+    <widgets xsi:type="model:Window" id="1" y="24" width="745" height="129" text="待办监控" measuredWidth="745" measuredHeight="129" minimizeButton="true" maximizeButton="true"/>
     <widgets xsi:type="model:HLine" id="2" y="86" width="665" measuredWidth="665" measuredHeight="6"/>
     <widgets xsi:type="model:Table" id="5" y="88" width="745" text="(w:30). ,(w:40). 发送人,(w:40). 发送时间,(w:40).待办人,标题,(w:40). 分类,(w:60).办理期限,(w:60). 签领时间&#xA;,小明,2012-01-01 08:00,张三,{checked}{user}{alarm}确认交车日期,交车流程,2012-02-01 10:30,2012-01-01 10:00&#xA;,小明,2012-01-01 08:00,李四,{unchecked}{usergroup}确认交车日期,交车流程," measuredWidth="745" measuredHeight="73" alternative="#eeeeee">
       <font/>
