@@ -11,10 +11,6 @@
         http://www.springframework.org/schema/tx/spring-tx-3.0.xsd
         http://www.springframework.org/schema/aop
         http://www.springframework.org/schema/aop/spring-aop-3.0.xsd">
-	<!-- 自定义Activiti的配置元素 -->
-	<bean id="customUserManager" class="cn.bc.workflow.activiti.CustomUserManager"/>
-	<bean id="customGroupManager" class="cn.bc.workflow.activiti.CustomGroupManager"/>
 	<!-- todoService -->
 	<bean id="todoService" class="cn.bc.workflow.todo.service.TodoServiceImpl" />
-	
 </beans>
