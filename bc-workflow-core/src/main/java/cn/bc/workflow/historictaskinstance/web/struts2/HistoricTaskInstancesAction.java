@@ -1,4 +1,4 @@
-package cn.bc.workflow.done.web.struts2;
+package cn.bc.workflow.historictaskinstance.web.struts2;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -15,16 +15,19 @@ import cn.bc.core.query.condition.impl.AndCondition;
 import cn.bc.core.query.condition.impl.EqualsCondition;
 import cn.bc.core.query.condition.impl.IsNotNullCondition;
 import cn.bc.core.query.condition.impl.OrderCondition;
+import cn.bc.core.util.DateUtils;
 import cn.bc.db.jdbc.RowMapper;
 import cn.bc.db.jdbc.SqlObject;
 import cn.bc.identity.web.SystemContext;
 import cn.bc.web.formater.CalendarFormater;
 import cn.bc.web.struts2.ViewAction;
 import cn.bc.web.ui.html.grid.Column;
+import cn.bc.web.ui.html.grid.HiddenColumn4MapKey;
 import cn.bc.web.ui.html.grid.IdColumn4MapKey;
 import cn.bc.web.ui.html.grid.TextColumn4MapKey;
 import cn.bc.web.ui.html.page.PageOption;
 import cn.bc.web.ui.html.toolbar.Toolbar;
+import cn.bc.web.ui.html.toolbar.ToolbarButton;
 import cn.bc.web.ui.json.Json;
 
 /**
@@ -36,7 +39,7 @@ import cn.bc.web.ui.json.Json;
 
 @Scope(BeanDefinition.SCOPE_PROTOTYPE)
 @Controller
-public class DonesAction extends ViewAction<Map<String, Object>> {
+public class HistoricTaskInstancesAction extends ViewAction<Map<String, Object>> {
 	private static final long serialVersionUID = 1L;
 	public boolean my = false;// 是否从我的经办
 	public String procInstId;//流程实例id
@@ -58,7 +61,7 @@ public class DonesAction extends ViewAction<Map<String, Object>> {
 		SqlObject<Map<String, Object>> sqlObject = new SqlObject<Map<String, Object>>();
 		// 构建查询语句,where和order by不要包含在sql中(要统一放到condition中)
 		StringBuffer sql = new StringBuffer();
-		sql.append("select a.id_,c.name_ as category,a.name_ as subject,a.start_time_,a.end_time_,d.first_ as receiver,a.duration_");
+		sql.append("select a.id_,c.name_ as category,a.name_ as subject,a.start_time_,a.end_time_,d.first_ as receiver,a.duration_,a.proc_inst_id_");
 		sql.append(" from act_hi_taskinst a");
 		sql.append(" inner join act_hi_procinst b on b.proc_def_id_=a.proc_def_id_");
 		sql.append(" inner join act_re_procdef c on c.id_=a.proc_def_id_");
@@ -82,9 +85,15 @@ public class DonesAction extends ViewAction<Map<String, Object>> {
 				map.put("duration", rs[i++]);
 				if(map.get("end_time")!=null){
 					map.put("status", "完成");
-				}else{
+				}else
 					map.put("status", "未完成");
-				}
+				
+				//格式化耗时
+				if(map.get("duration")!=null)
+					map.put("frmDuration", 
+							DateUtils.getWasteTime(Long.parseLong(map.get("duration").toString())));
+				
+				map.put("procinstid",rs[i++]);
 				return map;
 			}
 		});
@@ -112,8 +121,9 @@ public class DonesAction extends ViewAction<Map<String, Object>> {
 		columns.add(new TextColumn4MapKey("a.end_time_", "end_time",
 				getText("done.endTime"),190).setUseTitleFromLabel(true)
 				.setValueFormater(new CalendarFormater("yyyy-MM-dd hh:mm:ss.SSS")));
-		columns.add(new TextColumn4MapKey("a.duration_", "duration",
+		columns.add(new TextColumn4MapKey("a.duration_", "frmDuration",
 				getText("done.duration")));
+		columns.add(new  HiddenColumn4MapKey("procinstid", "procinstid"));
 		return columns;
 	}
 
@@ -130,20 +140,23 @@ public class DonesAction extends ViewAction<Map<String, Object>> {
 
 	@Override
 	protected String getFormActionName() {
-		return my ? "myDone" : "done";
+		return my ? "myDone" : "historicTaskInstance";
 	}
 
 	@Override
 	protected PageOption getHtmlPageOption() {
 		return super.getHtmlPageOption().setWidth(800).setMinWidth(400)
-				.setHeight(400).setMinHeight(300);
+				.setHeight(400).setMinHeight(300).setMinimizable(false);
 	}
 
 	@Override
 	protected Toolbar getHtmlPageToolbar() {
 		Toolbar tb = new Toolbar();
 		// 查看
-		tb.addButton(this.getDefaultOpenToolbarButton());
+		tb.addButton(new ToolbarButton()
+		.setIcon("ui-icon-arrowthickstop-1-s")
+		.setText(getText("label.read"))
+		.setClick("bc.historicTaskInstanceSelectView.clickOk"));
 
 		// 搜索按钮
 		tb.addButton(this.getDefaultSearchToolbarButton());
@@ -153,6 +166,7 @@ public class DonesAction extends ViewAction<Map<String, Object>> {
 
 	@Override
 	protected Condition getGridSpecalCondition() {
+		
 		// 状态条件
 		AndCondition ac = new AndCondition();
 		
@@ -179,6 +193,16 @@ public class DonesAction extends ViewAction<Map<String, Object>> {
 		}
 		
 		return json;
+	}
+	
+	@Override
+	protected String getGridDblRowMethod() {
+		return "bc.historicTaskInstanceSelectView.clickOk";
+	}
+	
+	@Override
+	protected String getHtmlPageJs() {
+		return this.getHtmlPageNamespace() + "-workflow/historictaskinstance/select.js";
 	}
 
 	// ==高级搜索代码开始==
