@@ -149,7 +149,7 @@ public class HistoricProcessInstancesAction extends
 		tb.addButton(new ToolbarButton().setIcon("ui-icon-play")
 				.setText(getText("flow.start")).setClick("bc.flow.start"));
 		// 查看
-		tb.addButton(new ToolbarButton().setIcon("ui-icon-arrowthickstop-1-s")
+		tb.addButton(new ToolbarButton().setIcon("ui-icon-check")
 				.setText(getText("label.read"))
 				.setClick("bc.historicProcessInstanceSelectView.open"));
 

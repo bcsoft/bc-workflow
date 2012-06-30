@@ -2,6 +2,7 @@ package cn.bc.workflow.historictaskinstance.web.struts2;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -9,17 +10,22 @@ import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Controller;
 
+import cn.bc.BCConstants;
 import cn.bc.core.query.condition.Condition;
 import cn.bc.core.query.condition.Direction;
 import cn.bc.core.query.condition.impl.AndCondition;
 import cn.bc.core.query.condition.impl.EqualsCondition;
+import cn.bc.core.query.condition.impl.InCondition;
 import cn.bc.core.query.condition.impl.IsNotNullCondition;
+import cn.bc.core.query.condition.impl.IsNullCondition;
 import cn.bc.core.query.condition.impl.OrderCondition;
 import cn.bc.core.util.DateUtils;
+import cn.bc.core.util.StringUtils;
 import cn.bc.db.jdbc.RowMapper;
 import cn.bc.db.jdbc.SqlObject;
 import cn.bc.identity.web.SystemContext;
 import cn.bc.web.formater.CalendarFormater;
+import cn.bc.web.formater.EntityStatusFormater;
 import cn.bc.web.struts2.ViewAction;
 import cn.bc.web.ui.html.grid.Column;
 import cn.bc.web.ui.html.grid.HiddenColumn4MapKey;
@@ -42,6 +48,7 @@ import cn.bc.web.ui.json.Json;
 public class HistoricTaskInstancesAction extends
 		ViewAction<Map<String, Object>> {
 	private static final long serialVersionUID = 1L;
+	public String status = String.valueOf(BCConstants.STATUS_ENABLED); 
 	public boolean my = false;// 是否从我的经办
 
 	@Override
@@ -55,7 +62,7 @@ public class HistoricTaskInstancesAction extends
 	@Override
 	protected OrderCondition getGridOrderCondition() {
 		return new OrderCondition("c.name_", Direction.Asc).add(
-				"a.start_time_", Direction.Asc);
+				"a.start_time_", Direction.Desc);
 	}
 
 	@Override
@@ -85,19 +92,18 @@ public class HistoricTaskInstancesAction extends
 				map.put("end_time", rs[i++]);
 				map.put("receiver", rs[i++]);
 				map.put("duration", rs[i++]);
+				//根据结束时间取得状态
 				if (map.get("end_time") != null) {
-					map.put("status", getText("flow.task.status.finished"));
-				} else {
-					map.put("status",
-							getText("flow.task.status.doing"));
-				}
-
+					//已完成
+					map.put("status",BCConstants.STATUS_ENABLED);
+				} else 
+					//未完成
+					map.put("status",BCConstants.STATUS_DISABLED);
 				// 格式化耗时
 				if (map.get("duration") != null)
 					map.put("frmDuration",
 							DateUtils.getWasteTime(Long.parseLong(map.get(
 									"duration").toString())));
-
 				map.put("procinstid", rs[i++]);
 				return map;
 			}
@@ -109,25 +115,38 @@ public class HistoricTaskInstancesAction extends
 	protected List<Column> getGridColumns() {
 		List<Column> columns = new ArrayList<Column>();
 		columns.add(new IdColumn4MapKey("a.id_", "id"));
-		if (!my) {
+		if(!my)
 			columns.add(new TextColumn4MapKey("", "status",
-					getText("flow.task.status"), 60).setSortable(true));
-		}
+					getText("flow.task.status"), 60).setSortable(true)
+					.setValueFormater(new EntityStatusFormater(getStatus())));
 		columns.add(new TextColumn4MapKey("c.name_", "category",
-				getText("flow.task.category"), 120).setSortable(true)
+				getText("flow.task.category"), 160).setSortable(true)
 				.setUseTitleFromLabel(true));
 		columns.add(new TextColumn4MapKey("a.name_", "subject",
 				getText("flow.task.name")).setUseTitleFromLabel(true));
-		columns.add(new TextColumn4MapKey("d.first_", "receiver",
-				getText("flow.task.actor"), 80));
-		columns.add(new TextColumn4MapKey("a.start_time_", "start_time",
-				getText("flow.task.startTime"), 150).setSortable(true)
-				.setUseTitleFromLabel(true)
-				.setValueFormater(new CalendarFormater("yyyy-MM-dd hh:mm:ss")));
-		columns.add(new TextColumn4MapKey("a.end_time_", "end_time",
-				getText("flow.task.endTime"), 150).setSortable(true)
-				.setUseTitleFromLabel(true)
-				.setValueFormater(new CalendarFormater("yyyy-MM-dd hh:mm:ss")));
+		if(!my)
+			columns.add(new TextColumn4MapKey("d.first_", "receiver",
+					getText("flow.task.actor"), 80));
+		
+		if(my){
+			columns.add(new TextColumn4MapKey("a.start_time_", "start_time",
+					getText("flow.task.startTime"), 130).setSortable(true)
+					.setUseTitleFromLabel(true)
+					.setValueFormater(new CalendarFormater("yyyy-MM-dd hh:mm")));
+			columns.add(new TextColumn4MapKey("a.end_time_", "end_time",
+					getText("flow.task.endTime"), 130).setSortable(true)
+					.setUseTitleFromLabel(true)
+					.setValueFormater(new CalendarFormater("yyyy-MM-dd hh:mm")));
+		}else{
+			columns.add(new TextColumn4MapKey("a.start_time_", "start_time",
+					getText("flow.task.startTime"), 150).setSortable(true)
+					.setUseTitleFromLabel(true)
+					.setValueFormater(new CalendarFormater("yyyy-MM-dd hh:mm:ss")));
+			columns.add(new TextColumn4MapKey("a.end_time_", "end_time",
+					getText("flow.task.endTime"), 150).setSortable(true)
+					.setUseTitleFromLabel(true)
+					.setValueFormater(new CalendarFormater("yyyy-MM-dd hh:mm:ss")));
+		}
 		columns.add(new TextColumn4MapKey("a.duration_", "frmDuration",
 				getText("flow.task.duration"), 80).setSortable(true));
 		columns.add(new HiddenColumn4MapKey("procinstid", "procinstid"));
@@ -159,14 +178,33 @@ public class HistoricTaskInstancesAction extends
 	protected Toolbar getHtmlPageToolbar() {
 		Toolbar tb = new Toolbar();
 		// 查看
-		tb.addButton(new ToolbarButton().setIcon("ui-icon-arrowthickstop-1-s")
+		tb.addButton(new ToolbarButton().setIcon("ui-icon-check")
 				.setText(getText("label.read"))
 				.setClick("bc.historicTaskInstanceSelectView.open"));
+		
+		if(!my)
+			tb.addButton(Toolbar.getDefaultToolbarRadioGroup(
+					this.getStatus(), "status", 0,
+					getText("title.click2changeSearchStatus")));
 
 		// 搜索按钮
 		tb.addButton(this.getDefaultSearchToolbarButton());
 
 		return tb;
+	}
+	
+	/**
+	 * 状态值转换:已完成|未完成|全部
+	 * 
+	 */
+	private Map<String, String> getStatus() {
+		Map<String, String> map = new LinkedHashMap<String, String>();
+		map.put(String.valueOf(BCConstants.STATUS_ENABLED),
+				getText("flow.task.status.finished"));
+		map.put(String.valueOf(BCConstants.STATUS_DISABLED),
+				getText("flow.task.status.doing"));
+		map.put("", getText("bc.status.all"));
+		return map;
 	}
 
 	@Override
@@ -179,6 +217,14 @@ public class HistoricTaskInstancesAction extends
 					.getCode()));
 			// 结束时间不能为空
 			ac.add(new IsNotNullCondition("a.end_time_"));
+		}else if(status != null && status.length() > 0) {
+			String[] ss = status.split(",");
+			if (ss.length == 1) {
+				if(ss[0].equals(String.valueOf(BCConstants.STATUS_ENABLED))){
+					ac.add(new IsNotNullCondition("a.end_time_"));
+				}else if(ss[0].equals(String.valueOf(BCConstants.STATUS_DISABLED)))
+					ac.add(new IsNullCondition("a.end_time_"));
+			} 
 		}
 		return ac.isEmpty() ? null : ac;
 	}
@@ -186,6 +232,9 @@ public class HistoricTaskInstancesAction extends
 	@Override
 	protected Json getGridExtrasData() {
 		Json json = new Json();
+		// 状态条件
+		if (status != null && status.length() > 0) 
+			json.put("status", status);
 		if (my)
 			json.put("my", my);
 		return json;
