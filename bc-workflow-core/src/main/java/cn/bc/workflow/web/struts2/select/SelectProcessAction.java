@@ -1,4 +1,4 @@
-package cn.bc.workflow.startprocessinstance.web.struts2;
+package cn.bc.workflow.web.struts2.select;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -27,7 +27,7 @@ import cn.bc.web.ui.html.page.PageOption;
 import cn.bc.web.ui.json.Json;
 
 /**
- * 选择发起流程视图Action
+ * 选择流程视图Action
  * 
  * @author lbj
  * 
@@ -35,7 +35,7 @@ import cn.bc.web.ui.json.Json;
 
 @Scope(BeanDefinition.SCOPE_PROTOTYPE)
 @Controller
-public class SelectStartProcessInstanceAction extends AbstractSelectPageAction<Map<String, Object>> {
+public class SelectProcessAction extends AbstractSelectPageAction<Map<String, Object>> {
 	private static final long serialVersionUID = 1L;
 	public boolean isNewVersion=false;//是否只显示最新版本,否-显示全部版本
 

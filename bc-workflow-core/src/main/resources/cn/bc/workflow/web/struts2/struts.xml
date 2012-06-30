@@ -21,8 +21,8 @@
 	
 	<!-- 选择流程 -->
 	<package name="selectWorkflow" extends="bc-default" namespace="/bc-workflow/select">
-		<action name="list" class="selectStartProcessInstanceAction" method="list"/>
-		<action name="data" class="selectStartProcessInstanceAction" method="data"/>
-		<action name="paging" class="selectStartProcessInstanceAction" method="paging"/>
+		<action name="list" class="selectProcessAction" method="list"/>
+		<action name="data" class="selectProcessAction" method="data"/>
+		<action name="paging" class="selectProcessAction" method="paging"/>
 	</package>
 </struts>
