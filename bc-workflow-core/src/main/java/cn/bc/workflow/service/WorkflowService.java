@@ -4,6 +4,8 @@
 package cn.bc.workflow.service;
 
 import org.activiti.engine.repository.Deployment;
+import org.activiti.engine.repository.ProcessDefinition;
+import org.activiti.engine.runtime.ProcessInstance;
 
 /**
  * 工作流常用方法封装的Service
@@ -80,4 +82,20 @@ public interface WorkflowService {
 	 *            所委派给用户的帐号
 	 */
 	void delegateTask(String taskId, String toUser);
+
+	/**
+	 * 加载指定的流程实例
+	 * 
+	 * @param id
+	 * @return
+	 */
+	ProcessInstance loadInstance(String id);
+
+	/**
+	 * 加载指定的流程定义
+	 * 
+	 * @param id
+	 * @return
+	 */
+	ProcessDefinition loadDefinition(String id);
 }

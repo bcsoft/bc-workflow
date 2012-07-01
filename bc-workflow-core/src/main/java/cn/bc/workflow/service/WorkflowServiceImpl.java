@@ -11,6 +11,7 @@ import org.activiti.engine.RepositoryService;
 import org.activiti.engine.RuntimeService;
 import org.activiti.engine.TaskService;
 import org.activiti.engine.repository.Deployment;
+import org.activiti.engine.repository.ProcessDefinition;
 import org.activiti.engine.runtime.ProcessInstance;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -198,5 +199,15 @@ public class WorkflowServiceImpl implements WorkflowService {
 
 	public void deleteDeployment(String deploymentId, boolean cascade) {
 		repositoryService.deleteDeployment(deploymentId, cascade);
+	}
+
+	public ProcessInstance loadInstance(String id) {
+		return runtimeService.createProcessInstanceQuery()
+				.processInstanceId(id).singleResult();
+	}
+
+	public ProcessDefinition loadDefinition(String id) {
+		return repositoryService.createProcessDefinitionQuery()
+				.processDefinitionId(id).singleResult();
 	}
 }
