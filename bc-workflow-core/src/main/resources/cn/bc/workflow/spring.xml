@@ -18,7 +18,7 @@
 		 -->
 		<aop:pointcut id="workflowServiceMethod"
 			expression="this(cn.bc.workflow.service.WorkflowService)" />
-		<aop:advisor pointcut-ref="crudServiceMethod" advice-ref="workflowServiceTxAdvice" />
+		<aop:advisor pointcut-ref="workflowServiceMethod" advice-ref="workflowServiceTxAdvice" />
 	</aop:config>
 	<tx:advice id="workflowServiceTxAdvice" transaction-manager="transactionManager">
 		<tx:attributes>
