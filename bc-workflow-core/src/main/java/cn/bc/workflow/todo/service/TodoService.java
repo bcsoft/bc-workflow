@@ -37,5 +37,6 @@ public interface TodoService {
 	 * @param excludeId
 	 * @param assignee 
 	 */
+	@Deprecated
 	void doSignTask(Long excludeId, String assignee);
 }
