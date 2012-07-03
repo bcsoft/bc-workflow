@@ -39,17 +39,15 @@ public class TodoSideBarPersonalsAction extends TodoPersonalsAction {
 			
 			for(Map<String, Object> map: list){
 				todoMap = new HashMap<String, Object>();
-				if(null != map.get("group_id_")){ //判断待办类型是否岗位  0:个人,1:岗位
-					todoMap.put("todoType", 1);
-				}else{
-					todoMap.put("todoType", 0);
-				}
+				todoMap.put("taskId", isNullObject(map.get("id_"))); // 任务id
 				if(null != map.get("due_date_")){ //办理期限是否超时. 办理时间为空视为没有超时
 					Date d1 = (Date) map.get("due_date_");
 					Date d2 = new Date();
 					todoMap.put("isTimeOver", d1.before(d2));
+					todoMap.put("dueDate", DateUtils.formatDateTime2Minute((Date)map.get("due_date_")));
 				}else{
 					todoMap.put("isTimeOver", false);
+					todoMap.put("dueDate", null);
 				}
 				todoMap.put("title", isNullObject(map.get("artName")));//待办事项
 				if(null != map.get("create_time_")){
@@ -57,7 +55,13 @@ public class TodoSideBarPersonalsAction extends TodoPersonalsAction {
 					todoMap.put("createTime", DateUtils.formatDate(d3)); //发送时间
 				}
 				todoMap.put("description", isNullObject(map.get("description_")));//附加说明
-				
+				todoMap.put("category",isNullObject(map.get("arpName")));//所属分类
+				todoMap.put("assignee", isNullObject(map.get("assignee_"))); //任务处理人
+//				if(null != map.get("group_id_")){ //判断所属分类,如果是所属岗位的任务:0,个人任务:1
+//					todoMap.put("todoType", 0);
+//				}else{
+//					todoMap.put("todoType", 1);
+//				}
 				todoList.add(todoMap);
 			}
 		}

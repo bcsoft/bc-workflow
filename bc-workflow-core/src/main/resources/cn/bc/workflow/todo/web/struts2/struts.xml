@@ -8,6 +8,9 @@
 		<action name="personals/list" class="todoPersonalsAction" method="list"/>
 		<action name="personals/paging" class="todoPersonalsAction" method="paging"/>
 		<action name="personals/data" class="todoPersonalsAction" method="data"/>
+		<action name="personals/isSigned" class="todoPersonalsAction" method="isSigned"/>
+		<action name="personals/claimTask" class="todoPersonalsAction" method="claimTask"/>
+		
 		<!-- 待办监控 -->
 		<action name="manages/list" class="todoManagesAction" method="list"/>
 		<action name="manages/paging" class="todoManagesAction" method="paging"/>

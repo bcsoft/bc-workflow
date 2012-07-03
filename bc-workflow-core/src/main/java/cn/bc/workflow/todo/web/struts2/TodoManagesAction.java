@@ -55,7 +55,7 @@ public class TodoManagesAction extends ViewAction<Map<String, Object>>{
 	public boolean isReadonly() {
 		// 通用角色
 		SystemContext context = (SystemContext) this.getContext();
-		return !context.hasAnyRole(getText("key.role.bc.common"));
+		return !context.hasAnyRole(getText("key.role.bc.admin"));
 	}
 	
 	@Override
