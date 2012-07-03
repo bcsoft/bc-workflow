@@ -5,6 +5,9 @@
 <struts>
 	<!-- 工作空间 -->
 	<package name="workspace" extends="bc-default" namespace="/bc-workflow/workspace">
+		<action name="design" class="workspaceAction" method="design">
+			<result name="success">/bc-workflow/workspace/workspaceDesign.jsp</result>
+		</action>
 		<action name="open" class="workspaceAction" method="open">
 			<result name="success">/bc-workflow/workspace/workspace.jsp</result>
 		</action>

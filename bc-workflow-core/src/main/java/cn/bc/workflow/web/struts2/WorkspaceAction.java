@@ -23,6 +23,21 @@ public class WorkspaceAction extends AbstractBaseAction {
 	public String title;
 
 	/**
+	 * 打开工作空间设计页面
+	 * 
+	 * @return
+	 * @throws Exception
+	 */
+	public String design() throws Exception {
+		this.title = "工作空间设计";
+
+		// 初始化页面参数
+		this.initPageOption();
+
+		return SUCCESS;
+	}
+
+	/**
 	 * 打开工作空间
 	 * 
 	 * @return
@@ -44,6 +59,7 @@ public class WorkspaceAction extends AbstractBaseAction {
 
 	private void initPageOption() {
 		pageOption = new PageOption();
-		pageOption.setHeight(500).setWidth(700);
+		pageOption.setHeight(500).setWidth(700).setMinimizable(true)
+				.setMaximizable(true).setMinWidth(450).setMinHeight(250);
 	}
 }
