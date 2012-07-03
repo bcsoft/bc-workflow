@@ -5,19 +5,25 @@ package cn.bc.workflow.service;
 
 import java.io.InputStream;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.zip.ZipInputStream;
 
+import org.activiti.engine.HistoryService;
 import org.activiti.engine.IdentityService;
 import org.activiti.engine.RepositoryService;
 import org.activiti.engine.RuntimeService;
 import org.activiti.engine.TaskService;
+import org.activiti.engine.history.HistoricProcessInstance;
 import org.activiti.engine.repository.Deployment;
 import org.activiti.engine.repository.ProcessDefinition;
 import org.activiti.engine.runtime.ProcessInstance;
+import org.activiti.engine.task.Attachment;
+import org.activiti.engine.task.Comment;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.Assert;
 
 import cn.bc.core.exception.CoreException;
 import cn.bc.identity.web.SystemContextHolder;
@@ -40,7 +46,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 	private TaskService taskService;
 
 	// private FormService formService;
-	// private HistoryService historyService;
+	private HistoryService historyService;
 
 	@Autowired
 	public void setTemplateService(TemplateService templateService) {
@@ -67,14 +73,14 @@ public class WorkflowServiceImpl implements WorkflowService {
 		this.taskService = taskService;
 	}
 
+	@Autowired
+	public void setHistoryService(HistoryService historyService) {
+		this.historyService = historyService;
+	}
+
 	// @Autowired
 	// public void setFormService(FormService formService) {
 	// this.formService = formService;
-	// }
-
-	// @Autowired
-	// public void setHistoryService(HistoryService historyService) {
-	// this.historyService = historyService;
 	// }
 
 	/**
@@ -213,13 +219,33 @@ public class WorkflowServiceImpl implements WorkflowService {
 				.processDefinitionId(id).singleResult();
 	}
 
-	public Map<String, Object> findWorkspaceInfo(String instanceId) {
+	public Map<String, Object> findWorkspaceInfo(String processInstanceId) {
+		Assert.notNull(processInstanceId, "流程实例ID不能为空" + processInstanceId);
 		Map<String, Object> info = new HashMap<String, Object>();
 
 		// 获取流程实例信息
-		ProcessInstance instance = runtimeService.createProcessInstanceQuery()
-				.processInstanceId(instanceId).singleResult();
-		if (instance != null) {// 流转中
+		HistoricProcessInstance instance = historyService
+				.createHistoricProcessInstanceQuery()
+				.processInstanceId(processInstanceId).singleResult();
+		Assert.notNull(instance, "找不到指定的流程实例记录：processInstanceId="
+				+ processInstanceId);
+		boolean running = instance.getEndTime() == null;
+		if (running) {// 流转中
+			// ====获取公共信息====
+			
+			// -- 公共表单：TODO
+
+			// -- 公共意见
+			List<Comment> comments = taskService
+					.getProcessInstanceComments(processInstanceId);
+			System.out.println("comments=" + comments);
+
+			// -- 公共附件
+			List<Attachment> attachments = taskService
+					.getProcessInstanceAttachments(processInstanceId);
+			System.out.println("attachments=" + attachments);
+
+			// ====获取待办信息====
 
 		} else {// 已经流转完毕
 

@@ -88,10 +88,10 @@ public interface WorkflowService {
 	/**
 	 * 获取流程实例的工作空间显示信息
 	 * 
-	 * @param instanceId 流程实例的ID
+	 * @param processInstanceId 流程实例的ID
 	 * @return
 	 */
-	Map<String,Object> findWorkspaceInfo(String instanceId);
+	Map<String,Object> findWorkspaceInfo(String processInstanceId);
 
 	/**
 	 * 加载指定的流程实例
