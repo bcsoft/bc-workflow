@@ -89,7 +89,7 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>>{
 		
 		//当前用户是否等于任务待办人 或者 当前用户所在岗位是否等于任务的参与者 前提 该任务的待办人为空
 		return ConditionUtils.mix2OrCondition(userCondition,
-				ConditionUtils.mix2AndCondition(groupCondition,userIsNullCondition).setAddBracket(true));
+				ConditionUtils.mix2AndCondition(groupCondition,userIsNullCondition).setAddBracket(true)).setAddBracket(true);
 	}
 	
 	@Override
@@ -186,7 +186,7 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>>{
 
 	@Override
 	protected String[] getGridSearchFields() {
-		return new String [] {"art.name_","","","arp.name_"};
+		return new String [] {"art.name_","art.description_","art.assignee_","arp.name_"};
 	}
 	
 	@Override
@@ -274,5 +274,17 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>>{
 		
 		this.json = json.toString();
 		return "json";
+	}
+	
+	// ==高级搜索代码开始==	
+	
+	@Override
+	protected boolean useAdvanceSearch() {
+		return true;
+	}
+	
+	@Override
+	protected void initConditionsFrom() throws Exception {
+		
 	}
 }
