@@ -3,6 +3,8 @@
  */
 package cn.bc.workflow.service;
 
+import java.util.Map;
+
 import org.activiti.engine.repository.Deployment;
 import org.activiti.engine.repository.ProcessDefinition;
 import org.activiti.engine.runtime.ProcessInstance;
@@ -82,6 +84,14 @@ public interface WorkflowService {
 	 *            所委派给用户的帐号
 	 */
 	void delegateTask(String taskId, String toUser);
+
+	/**
+	 * 获取流程实例的工作空间显示信息
+	 * 
+	 * @param instanceId 流程实例的ID
+	 * @return
+	 */
+	Map<String,Object> findWorkspaceInfo(String instanceId);
 
 	/**
 	 * 加载指定的流程实例

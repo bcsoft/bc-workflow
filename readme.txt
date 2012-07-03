@@ -6,17 +6,16 @@ bc平台工作流
 
 一) 数据库脚本运行顺序
 建表脚本运行顺序：
-activiti.postgres.create.engine.sql
 activiti.postgres.create.identity.sql
+activiti.postgres.create.engine.sql
 activiti.postgres.create.history.sql
 
 初始化数据的脚本：
-demo.postgres.data.sql
+activiti.postgres.data.bc-workflow.sql
+注：activiti.postgres.data.demo.sql为官方网站上demo的初始化数据，平台中不要执行
 
-删表脚本运行顺序：
-activiti.postgres.drop.history.sql
-activiti.postgres.drop.engine.sql
-activiti.postgres.drop.identity.sql
+删表脚本：
+activiti.postgres.drop..sql
 
 二) 数据库表名规范说明
 activiti所有表名均以"ACT_"开头，第二部分为两个字符的标识，与service API相对应：

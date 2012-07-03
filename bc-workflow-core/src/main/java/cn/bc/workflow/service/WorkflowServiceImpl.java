@@ -4,6 +4,8 @@
 package cn.bc.workflow.service;
 
 import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.zip.ZipInputStream;
 
 import org.activiti.engine.IdentityService;
@@ -209,5 +211,21 @@ public class WorkflowServiceImpl implements WorkflowService {
 	public ProcessDefinition loadDefinition(String id) {
 		return repositoryService.createProcessDefinitionQuery()
 				.processDefinitionId(id).singleResult();
+	}
+
+	public Map<String, Object> findWorkspaceInfo(String instanceId) {
+		Map<String, Object> info = new HashMap<String, Object>();
+
+		// 获取流程实例信息
+		ProcessInstance instance = runtimeService.createProcessInstanceQuery()
+				.processInstanceId(instanceId).singleResult();
+		if (instance != null) {// 流转中
+
+		} else {// 已经流转完毕
+
+		}
+
+		// 返回综合后的信息
+		return info;
 	}
 }
