@@ -15,15 +15,19 @@ import org.activiti.engine.RepositoryService;
 import org.activiti.engine.RuntimeService;
 import org.activiti.engine.TaskService;
 import org.activiti.engine.history.HistoricProcessInstance;
+import org.activiti.engine.history.HistoricTaskInstance;
 import org.activiti.engine.repository.ProcessDefinition;
 import org.activiti.engine.task.Attachment;
 import org.activiti.engine.task.Comment;
+import org.activiti.engine.task.IdentityLink;
+import org.activiti.engine.task.Task;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.Assert;
 
 import cn.bc.core.util.DateUtils;
+import cn.bc.identity.web.SystemContextHolder;
 import cn.bc.template.service.TemplateService;
 
 /**
@@ -78,6 +82,15 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 	// this.formService = formService;
 	// }
 
+	/**
+	 * 获取当前用户的帐号信息
+	 * 
+	 * @return
+	 */
+	private String getCurrentUserAccount() {
+		return SystemContextHolder.get().getUser().getCode();
+	}
+
 	public Map<String, Object> findWorkspaceInfo(String processInstanceId) {
 		Assert.notNull(processInstanceId, "流程实例ID不能为空" + processInstanceId);
 		Map<String, Object> ws = new HashMap<String, Object>();
@@ -98,6 +111,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 
 		// 流转状态
 		boolean flowing = instance.getEndTime() == null;
+		ws.put("flowing", flowing);
 
 		// 流程定义
 		ProcessDefinition definition = repositoryService
@@ -123,25 +137,17 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 		ws.put("commonInfo", buildWSCommonInfo(flowing, instance));
 
 		// 待办信息处理
-		Map<String, Object> todoInfo = new HashMap<String, Object>();
-		List<Map<String, Object>> todoInfoItems = new ArrayList<Map<String, Object>>();
-		todoInfo.put("items", todoInfoItems);
-		ws.put("todoInfo", todoInfo);
-		todoInfoItems.add(new HashMap<String, Object>());
+		ws.put("todoInfo", buildWSTodoInfo(flowing, instance));
 
-		// 经办信息处理
-		Map<String, Object> doneInfo = new HashMap<String, Object>();
-		List<Map<String, Object>> doneInfoItems = new ArrayList<Map<String, Object>>();
-		todoInfo.put("items", doneInfoItems);
-		ws.put("doneInfo", doneInfo);
-		todoInfoItems.add(new HashMap<String, Object>());
+		// 待办信息处理
+		ws.put("doneInfo", buildWSDoneInfo(flowing, instance));
 
 		// 返回综合后的信息
 		return ws;
 	}
 
 	/**
-	 * 构建工作空间公共信息区的信息
+	 * 构建工作空间公共信息
 	 * 
 	 * @param flowing
 	 *            流程是否仍在流转中
@@ -304,5 +310,159 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 			return null;
 		}
 		return buttons.length() > 0 ? buttons.toString() : null;
+	}
+
+	/**
+	 * 构建工作空间待办信息
+	 * 
+	 * @param flowing
+	 *            流程是否仍在流转中
+	 * @param instance
+	 *            流程实例的历史记录
+	 */
+	private Map<String, Object> buildWSTodoInfo(boolean flowing,
+			HistoricProcessInstance instance) {
+		Map<String, Object> info = new LinkedHashMap<String, Object>();
+		List<Map<String, Object>> items = new ArrayList<Map<String, Object>>();// 一级条目列表
+		info.put("items", items);
+		Map<String, Object> item;
+		List<Map<String, Object>> detail;// 详细信息：表单、意见、附件
+		boolean isUserTask;// 是否是个人待办:true-个人待办、false-组待办
+		boolean isMyTask;// 是否是我的个人或组待办
+
+		// 获取待办列表
+		List<Task> tasks = this.taskService.createTaskQuery()
+				.processInstanceId(instance.getId()).orderByTaskCreateTime()
+				.asc().list();
+		for (Task task : tasks) {
+			List<IdentityLink> identityLinks;
+			// 判断任务类型
+			if (task.getAssignee() != null) {
+				isUserTask = true;// 个人待办
+				isMyTask = task.getAssignee().equals(
+						this.getCurrentUserAccount());// 我的待办
+				identityLinks = null;
+			} else {
+				isUserTask = false;// 组待办
+
+				// 获取任务的组关联信息
+				identityLinks = this.taskService.getIdentityLinksForTask(task
+						.getId());
+				isMyTask = judgeIsMyTask(identityLinks);
+			}
+
+			// 任务的基本信息
+			item = new HashMap<String, Object>();
+			items.add(item);
+			item.put("id", task.getId());// 任务id
+			item.put("isUserTask", isUserTask);// 是否是个人待办:true-个人待办、false-组待办
+			item.put("isMyTask", isMyTask);// 是否是我的个人或组待办
+			item.put("link", true);// 链接标题
+			item.put("subject", task.getName());// 标题
+			item.put("buttons", this.buildHeaderDefaultButtons(flowing,
+					isUserTask ? "todo_user" : "todo_group"));// 操作按钮列表
+			item.put("hasButtons", item.get("buttons") != null);// 有否操作按钮
+
+			// 任务的详细信息
+			// -- 创建信息
+			if (isUserTask) {
+				item.put("actor", "待办人：" + task.getAssignee());
+			} else {
+				item.put("actor", "待办岗：" + identityLinks.get(0).getGroupId());// TODO
+			}
+			item.put(
+					"createTime",
+					"发起时间："
+							+ DateUtils.formatDateTime2Minute(task
+									.getCreateTime()));
+			if (task.getDueDate() != null) {
+				item.put(
+						"dueDate",
+						"办理期限："
+								+ DateUtils.formatDateTime2Minute(task
+										.getDueDate()));
+			}
+
+			// -- 表单、附件、意见信息
+			detail = new ArrayList<Map<String, Object>>();// 二级条目列表
+			item.put("detail", detail);
+			// TODO
+		}
+
+		// 返回
+		return info;
+	}
+
+	/**
+	 * 判断当前用户是否与IdentityLink有关
+	 * 
+	 * @param identityLinks
+	 * @return
+	 */
+	private boolean judgeIsMyTask(List<IdentityLink> identityLinks) {
+		// TODO
+		return false;
+	}
+
+	/**
+	 * 构建工作空间已办信息
+	 * 
+	 * @param flowing
+	 *            流程是否仍在流转中
+	 * @param instance
+	 *            流程实例的历史记录
+	 */
+	private Map<String, Object> buildWSDoneInfo(boolean flowing,
+			HistoricProcessInstance instance) {
+		Map<String, Object> info = new LinkedHashMap<String, Object>();
+		List<Map<String, Object>> items = new ArrayList<Map<String, Object>>();// 一级条目列表
+		info.put("items", items);
+		Map<String, Object> item;
+		List<Map<String, Object>> detail;// 详细信息：表单、意见、附件
+
+		// 获取待办列表
+		List<HistoricTaskInstance> tasks = this.historyService
+				.createHistoricTaskInstanceQuery()
+				.processInstanceId(instance.getId())
+				.taskDeleteReason("completed")
+				.orderByHistoricActivityInstanceStartTime().asc().list();
+		for (HistoricTaskInstance task : tasks) {
+			// 任务的基本信息
+			item = new HashMap<String, Object>();
+			items.add(item);
+			item.put("id", task.getId());// 任务id
+			item.put("assignee", task.getAssignee());// 办理人
+			item.put("owner", task.getOwner());// 委托人
+			item.put("link", false);// 链接标题
+			item.put("subject", task.getName());// 标题
+			item.put(
+					"wasteTime",
+					"办理耗时："
+							+ DateUtils.getWasteTimeCN(instance.getStartTime(),
+									instance.getEndTime())
+							+ " (从"
+							+ DateUtils.formatDateTime2Minute(task
+									.getStartTime())
+							+ "到"
+							+ DateUtils.formatDateTime2Minute(task.getEndTime())
+							+ ")");
+			item.put("startTime",
+					DateUtils.formatDateTime2Minute(task.getStartTime()));
+			if (task.getDueDate() != null) {
+				item.put(
+						"dueDate",
+						"办理期限："
+								+ DateUtils.formatDateTime2Minute(task
+										.getDueDate()));
+			}
+
+			// -- 表单、附件、意见信息
+			detail = new ArrayList<Map<String, Object>>();// 二级条目列表
+			item.put("detail", detail);
+			// TODO
+		}
+
+		// 返回
+		return info;
 	}
 }
