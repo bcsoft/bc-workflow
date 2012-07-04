@@ -10,14 +10,14 @@ import org.springframework.transaction.annotation.Transactional;
 @RunWith(SpringJUnit4ClassRunner.class)
 @Transactional
 @ContextConfiguration("classpath:spring-test.xml")
-public class WorkflowServiceImplTest {
+public class WorkspaceServiceImplTest {
 	@Autowired
-	WorkflowService workflowService;
+	WorkspaceService workspaceService;
 
 	@Test
 	public void testFindUserById() {
 		String processInstanceId = "1304";
-		workflowService.findWorkspaceInfo(processInstanceId);
+		workspaceService.findWorkspaceInfo(processInstanceId);
 
 		// Assert.assertNotNull(u);
 		// Assert.assertEquals("admin", u.getId());

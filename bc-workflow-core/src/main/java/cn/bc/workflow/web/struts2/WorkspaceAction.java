@@ -1,13 +1,17 @@
 package cn.bc.workflow.web.struts2;
 
-import org.activiti.engine.repository.ProcessDefinition;
-import org.activiti.engine.runtime.ProcessInstance;
+import java.io.PrintStream;
+import java.util.Map;
+
+import org.apache.geronimo.mail.util.StringBufferOutputStream;
 import org.commontemplate.util.Assert;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Controller;
 
 import cn.bc.web.ui.html.page.PageOption;
+import cn.bc.workflow.service.WorkspaceService;
 
 /**
  * 工作空间Action
@@ -19,8 +23,17 @@ import cn.bc.web.ui.html.page.PageOption;
 @Controller
 public class WorkspaceAction extends AbstractBaseAction {
 	private static final long serialVersionUID = 1L;
-	public PageOption pageOption;
-	public String title;
+	public PageOption pageOption;// 对话框参数配置
+	public String title;// 对话框标题
+	public String error;// 异常的简要描述信息
+	public StringBuffer errorDetail;// 异常的堆栈信息
+	public Map<String, Object> ws;// 包含工作空间所要显示的所有数据
+	private WorkspaceService workspaceService;
+
+	@Autowired
+	public void setWorkspaceService(WorkspaceService workspaceService) {
+		this.workspaceService = workspaceService;
+	}
 
 	/**
 	 * 打开工作空间设计页面
@@ -44,15 +57,27 @@ public class WorkspaceAction extends AbstractBaseAction {
 	 * @throws Exception
 	 */
 	public String open() throws Exception {
-		// id为流程实例的id
-		Assert.assertNotEmpty(id);
-		ProcessInstance instance = workflowService.loadInstance(id);
-		ProcessDefinition definition = workflowService.loadDefinition(instance
-				.getProcessDefinitionId());
-		this.title = definition.getName();
-
 		// 初始化页面参数
 		this.initPageOption();
+
+		try {
+			// this.error = "AAA";
+			this.errorDetail = new StringBuffer(
+					"AAA DDDDDDDDDDDDDDDDDD<br/>	    	cccccccccccccc");
+			// id为流程实例的id
+			Assert.assertNotEmpty(id);
+
+			// 获取工作空间信息
+			this.ws = workspaceService.findWorkspaceInfo(id);
+
+			// 对话框标题
+			this.title = (String) this.ws.get("subject");
+		} catch (Exception e) {
+			this.error = "打开工作空间异常";
+			this.errorDetail = new StringBuffer();
+			e.printStackTrace(new PrintStream(new StringBufferOutputStream(
+					errorDetail)));
+		}
 
 		return SUCCESS;
 	}
