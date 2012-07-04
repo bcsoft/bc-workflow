@@ -40,6 +40,7 @@ public class TodoSideBarPersonalsAction extends TodoPersonalsAction {
 			for(Map<String, Object> map: list){
 				todoMap = new HashMap<String, Object>();
 				todoMap.put("taskId", isNullObject(map.get("id_"))); // 任务id
+				todoMap.put("procInstId", isNullObject(map.get("procInstId"))); // 任务id
 				if(null != map.get("due_date_")){ //办理期限是否超时. 办理时间为空视为没有超时
 					Date d1 = (Date) map.get("due_date_");
 					Date d2 = new Date();

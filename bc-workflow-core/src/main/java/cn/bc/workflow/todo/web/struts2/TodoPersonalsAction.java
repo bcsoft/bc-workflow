@@ -23,6 +23,7 @@ import cn.bc.identity.web.SystemContext;
 import cn.bc.web.formater.CalendarFormater;
 import cn.bc.web.struts2.ViewAction;
 import cn.bc.web.ui.html.grid.Column;
+import cn.bc.web.ui.html.grid.HiddenColumn4MapKey;
 import cn.bc.web.ui.html.grid.IdColumn4MapKey;
 import cn.bc.web.ui.html.grid.TextColumn4MapKey;
 import cn.bc.web.ui.html.page.PageOption;
@@ -141,6 +142,7 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>>{
 	protected List<Column> getGridColumns() {
 		List<Column> columns = new ArrayList<Column>();
 		columns.add(new IdColumn4MapKey("art.id_", "id_"));
+		columns.add(new HiddenColumn4MapKey("procInstId", "procInstId"));
 		// 标题
 		columns.add(new TextColumn4MapKey("art.name_", "artName",
 				getText("todo.personal.artName"), 100).setSortable(true)
@@ -220,7 +222,7 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>>{
 		StringBuffer sql = new StringBuffer();
 		//发送人问题未解决
 		//sql.append("select art.id_,art.name_ artName,art.due_date_,aiu.first_ aiuName,art.create_time_,arp.name_ arpName");
-		sql.append("select art.id_,art.name_ artName,art.due_date_,art.create_time_,arp.name_ arpName");
+		sql.append("select art.id_,art.proc_inst_id_ procInstId,art.name_ artName,art.due_date_,art.create_time_,arp.name_ arpName");
 		sql.append(",art.description_,ari.group_id_,ari.user_id_,art.assignee_");
 		sql.append(" from act_ru_task art");
 		sql.append(" left join act_id_user aiu on art.assignee_ = aiu.id_");
@@ -238,6 +240,7 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>>{
 				Map<String, Object> map = new HashMap<String, Object>();
 				int i = 0;
 				map.put("id_", rs[i++]);
+				map.put("procInstId", rs[i++]); //流程实例id
 				map.put("artName", rs[i++]); // 标题
 				map.put("due_date_", rs[i++]); // 办理期限
 				//map.put("aiuName", rs[i++]); // 发送人
