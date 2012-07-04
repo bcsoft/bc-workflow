@@ -6,6 +6,7 @@ package cn.bc.workflow.service;
 import java.io.InputStream;
 import java.util.zip.ZipInputStream;
 
+import org.activiti.engine.HistoryService;
 import org.activiti.engine.IdentityService;
 import org.activiti.engine.RepositoryService;
 import org.activiti.engine.RuntimeService;
@@ -38,7 +39,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 	private TaskService taskService;
 
 	// private FormService formService;
-	// private HistoryService historyService;
+	private HistoryService historyService;
 
 	@Autowired
 	public void setTemplateService(TemplateService templateService) {
@@ -65,14 +66,14 @@ public class WorkflowServiceImpl implements WorkflowService {
 		this.taskService = taskService;
 	}
 
+	@Autowired
+	public void setHistoryService(HistoryService historyService) {
+		this.historyService = historyService;
+	}
+
 	// @Autowired
 	// public void setFormService(FormService formService) {
 	// this.formService = formService;
-	// }
-
-	// @Autowired
-	// public void setHistoryService(HistoryService historyService) {
-	// this.historyService = historyService;
 	// }
 
 	/**

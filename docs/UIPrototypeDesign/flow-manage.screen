@@ -82,7 +82,7 @@
       <font/>
     </widgets>
     <widgets xsi:type="model:WidgetGroup" id="218" x="79" y="220" measuredWidth="420" measuredHeight="25">
-      <widgets xsi:type="model:TextField" id="219" width="420" text="201204/201204201200000.docx" measuredWidth="420" measuredHeight="25" state="disabled">
+      <widgets xsi:type="model:TextField" id="219" width="420" text="201207/201204201200000.bar" measuredWidth="420" measuredHeight="25" state="disabled">
         <font/>
       </widgets>
       <widgets xsi:type="model:Icon" id="220" x="398" y="5" measuredWidth="16" measuredHeight="16" icon="error (small)"/>
