@@ -4,6 +4,7 @@
 package cn.bc.workflow.service;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -357,7 +358,6 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 			item.put("id", task.getId());// 任务id
 			item.put("isUserTask", isUserTask);// 是否是个人待办:true-个人待办、false-组待办
 			item.put("isMyTask", isMyTask);// 是否是我的个人或组待办
-			item.put("link", true);// 链接标题
 			item.put("subject", task.getName());// 标题
 			item.put("buttons", this.buildHeaderDefaultButtons(flowing,
 					isUserTask ? "todo_user" : "todo_group"));// 操作按钮列表
@@ -382,6 +382,16 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 								+ DateUtils.formatDateTime2Minute(task
 										.getDueDate()));
 			}
+			Date now = new Date();
+			item.put(
+					"wasteTime",
+					"办理耗时："
+							+ DateUtils.getWasteTimeCN(task.getCreateTime(),
+									now)
+							+ " (从"
+							+ DateUtils.formatDateTime2Minute(task
+									.getCreateTime()) + "到"
+							+ DateUtils.formatDateTime2Minute(now) + ")");
 
 			// -- 表单、附件、意见信息
 			detail = new ArrayList<Map<String, Object>>();// 二级条目列表
@@ -438,8 +448,8 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 			item.put(
 					"wasteTime",
 					"办理耗时："
-							+ DateUtils.getWasteTimeCN(instance.getStartTime(),
-									instance.getEndTime())
+							+ DateUtils.getWasteTimeCN(task.getStartTime(),
+									task.getEndTime())
 							+ " (从"
 							+ DateUtils.formatDateTime2Minute(task
 									.getStartTime())
