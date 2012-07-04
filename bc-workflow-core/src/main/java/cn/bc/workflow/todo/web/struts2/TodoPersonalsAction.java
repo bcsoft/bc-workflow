@@ -63,6 +63,21 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>>{
 		return !context.hasAnyRole(getText("key.role.bc.common"));
 	}
 	
+	public boolean isDelegate() {
+		// 任务委托角色
+		SystemContext context = (SystemContext) this.getContext();
+		return context
+				.hasAnyRole(getText("key.role.bc.workflow.delegate"));
+	}
+
+	public boolean isAssign() {
+		// 任务分派角色
+		SystemContext context = (SystemContext) this.getContext();
+		return context
+				.hasAnyRole(getText("key.role.bc.workflow.assign"));
+	}
+
+	
 	@Override
 	protected SqlObject<Map<String, Object>> getSqlObject() {
 		
@@ -99,12 +114,16 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>>{
 		tb.addButton(new ToolbarButton().setIcon("ui-icon-pencil")
 				.setText(getText("label.sign.task"))
 				.setClick("bc.todoView.signTask"));
-		tb.addButton(new ToolbarButton().setIcon("ui-icon-person")
-				.setText(getText("label.delegat.task"))
-				.setClick("bc.todo.delegatTask"));
-		tb.addButton(new ToolbarButton().setIcon("ui-icon-flag")
-				.setText(getText("label.assigned.task"))
-				.setClick("bc.todo.assignedTask"));
+		if(this.isDelegate()){
+			tb.addButton(new ToolbarButton().setIcon("ui-icon-person")
+					.setText(getText("label.delegate.task"))
+					.setClick("bc.todo.delegateTask"));
+		}
+		if(this.isAssign()){
+			tb.addButton(new ToolbarButton().setIcon("ui-icon-flag")
+					.setText(getText("label.assign.task"))
+					.setClick("bc.todo.assignTask"));
+		}
 		
 		// 搜索按钮
 		tb.addButton(getDefaultSearchToolbarButton());
