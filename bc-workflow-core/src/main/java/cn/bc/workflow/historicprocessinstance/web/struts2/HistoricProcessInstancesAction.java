@@ -51,7 +51,7 @@ public class HistoricProcessInstancesAction extends
 
 	@Override
 	protected OrderCondition getGridOrderCondition() {
-		return new OrderCondition("a.start_time_", Direction.Asc);
+		return new OrderCondition("a.end_time_", Direction.Asc).add("a.start_time_", Direction.Desc);
 	}
 
 	@Override

@@ -15,12 +15,10 @@ import cn.bc.core.query.condition.Condition;
 import cn.bc.core.query.condition.Direction;
 import cn.bc.core.query.condition.impl.AndCondition;
 import cn.bc.core.query.condition.impl.EqualsCondition;
-import cn.bc.core.query.condition.impl.InCondition;
 import cn.bc.core.query.condition.impl.IsNotNullCondition;
 import cn.bc.core.query.condition.impl.IsNullCondition;
 import cn.bc.core.query.condition.impl.OrderCondition;
 import cn.bc.core.util.DateUtils;
-import cn.bc.core.util.StringUtils;
 import cn.bc.db.jdbc.RowMapper;
 import cn.bc.db.jdbc.SqlObject;
 import cn.bc.identity.web.SystemContext;
@@ -61,8 +59,7 @@ public class HistoricTaskInstancesAction extends
 
 	@Override
 	protected OrderCondition getGridOrderCondition() {
-		return new OrderCondition("c.name_", Direction.Asc).add(
-				"a.start_time_", Direction.Desc);
+		return new OrderCondition("a.start_time_", Direction.Desc);
 	}
 
 	@Override
