@@ -9,7 +9,7 @@
 			<result name="success">/bc-workflow/workspace/workspaceDesign.jsp</result>
 		</action>
 		<action name="open" class="workspaceAction" method="open">
-			<result name="success">/bc-workflow/workspace/workspaceDesign.jsp</result>
+			<result name="success">/bc-workflow/workspace/workspace.jsp</result>
 		</action>
 	</package>
 	
