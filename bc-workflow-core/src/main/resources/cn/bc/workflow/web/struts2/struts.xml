@@ -9,7 +9,7 @@
 			<result name="success">/bc-workflow/workspace/workspaceDesign.jsp</result>
 		</action>
 		<action name="open" class="workspaceAction" method="open">
-			<result name="success">/bc-workflow/workspace/workspace.jsp</result>
+			<result name="success">/bc-workflow/workspace/workspaceDesign.jsp</result>
 		</action>
 	</package>
 	
@@ -27,5 +27,20 @@
 		<action name="list" class="selectProcessAction" method="list"/>
 		<action name="data" class="selectProcessAction" method="data"/>
 		<action name="paging" class="selectProcessAction" method="paging"/>
+	</package>
+	
+	<!-- 流程意见 -->
+	<package name="workflowcomment" extends="bc-default" namespace="/bc-workflow/comment">
+		<action name="create" class="workflowCommentAction" method="create">
+			<result name="success">/bc-workflow/comment/comment.jsp</result>
+		</action>
+		<action name="edit" class="workflowCommentAction" method="edit">
+			<result name="success">/bc-workflow/comment/comment.jsp</result>
+		</action>
+		<action name="open" class="workflowCommentAction" method="open">
+			<result name="success">/bc-workflow/comment/comment.jsp</result>
+		</action>
+		<action name="save" class="workflowCommentAction" method="save"></action>
+		<action name="delete" class="workflowCommentAction" method="delete"></action>
 	</package>
 </struts>
