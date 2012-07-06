@@ -1,14 +1,26 @@
 package cn.bc.workflow.web.struts2;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.util.Date;
+
 import org.activiti.engine.repository.Deployment;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.struts2.ServletActionContext;
 import org.commontemplate.util.Assert;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Controller;
+import org.springframework.util.StringUtils;
 
 import cn.bc.core.exception.CoreException;
 import cn.bc.core.util.DateUtils;
+import cn.bc.docs.domain.Attach;
+import cn.bc.docs.web.AttachUtils;
 import cn.bc.web.ui.json.Json;
+import cn.bc.web.util.WebUtils;
 
 /**
  * 流程处理Action
@@ -20,9 +32,55 @@ import cn.bc.web.ui.json.Json;
 @Controller
 public class WorkflowAction extends AbstractBaseAction {
 	private static final long serialVersionUID = 1L;
+	private static Log logger = LogFactory.getLog(WorkflowAction.class);
 	public String toUser;
 	public String type;
 	public boolean cascade;
+
+	public String filename;// 下载文件的文件名
+	public String contentType;// 下载文件的大小
+	public long contentLength;
+	public InputStream inputStream;
+	public String n;// [可选]指定下载文件的文件名
+
+	/**
+	 * 查看流程图
+	 * 
+	 * @return
+	 * @throws Exception
+	 */
+	public String diagram() throws Exception {
+		Date startTime = new Date();
+
+		// 下载文件的扩展名
+		String extension = "png";
+
+		// 下载文件的文件名
+		if (this.n == null || this.n.length() == 0)
+			this.n = "instance" + id + "," + extension;
+
+		// debug
+		if (logger.isDebugEnabled()) {
+			logger.debug("n=" + n);
+			logger.debug("extension=" + extension);
+		}
+
+		// 获取资源流
+		this.inputStream = workflowService.getInstanceDiagram(this.id);
+		if (logger.isDebugEnabled())
+			logger.debug("inputStream=" + this.inputStream.getClass());
+		this.contentLength = this.inputStream.available();// 资源大小
+
+		// 设置下载文件的参数
+		this.contentType = AttachUtils.getContentType(extension);
+		this.filename = WebUtils.encodeFileName(
+				ServletActionContext.getRequest(), this.n);
+
+		if (logger.isDebugEnabled()) {
+			logger.debug("wasteTime:" + DateUtils.getWasteTime(startTime));
+		}
+		return SUCCESS;
+	}
 
 	/**
 	 * 发布流程(xml、zip或bar包)

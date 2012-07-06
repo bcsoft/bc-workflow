@@ -5,6 +5,7 @@ import java.util.Map;
 import org.activiti.engine.FormService;
 import org.activiti.engine.HistoryService;
 import org.activiti.engine.IdentityService;
+import org.activiti.engine.RepositoryService;
 import org.activiti.engine.RuntimeService;
 import org.activiti.engine.TaskService;
 import org.apache.struts2.interceptor.RequestAware;
@@ -36,6 +37,7 @@ public abstract class AbstractBaseAction extends ActionSupport implements
 	protected IdentityService identityService;
 	protected TaskService taskService;
 	protected HistoryService historyService;
+	protected RepositoryService repositoryService;
 
 	public String json;// json
 	public String id;// 任务、流程实例等的id，视具体情况而定
@@ -70,6 +72,11 @@ public abstract class AbstractBaseAction extends ActionSupport implements
 	@Autowired
 	public void setHistoryService(HistoryService historyService) {
 		this.historyService = historyService;
+	}
+
+	@Autowired
+	public void setRepositoryService(RepositoryService repositoryService) {
+		this.repositoryService = repositoryService;
 	}
 
 	public void setSession(Map<String, Object> session) {
