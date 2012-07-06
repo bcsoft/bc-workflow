@@ -3,6 +3,7 @@
  */
 package cn.bc.workflow.service;
 
+import org.activiti.engine.impl.persistence.entity.CommentEntity;
 import org.activiti.engine.repository.Deployment;
 import org.activiti.engine.repository.ProcessDefinition;
 import org.activiti.engine.runtime.ProcessInstance;
@@ -98,4 +99,18 @@ public interface WorkflowService {
 	 * @return
 	 */
 	ProcessDefinition loadDefinition(String id);
+	
+	/**
+	 * 修改更新意见
+	 * 
+	 * @param ce 意见实体
+	 */
+	void updateComment(CommentEntity ce);
+	
+	/**
+	 * 删除意见
+	 * 
+	 * @param id
+	 */
+	void deleteComment(String id);
 }
