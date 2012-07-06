@@ -11,31 +11,58 @@
         http://www.springframework.org/schema/tx/spring-tx-3.0.xsd
         http://www.springframework.org/schema/aop
         http://www.springframework.org/schema/aop/spring-aop-3.0.xsd">
+    <!-- WorkFlowCommentDao 配置 -->
+    <bean id="workflowCommentDao" class="cn.bc.workflow.comment.dao.hibernate.jpa.WorkflowCommentDaoImpl"/>
+    
 	<!-- WorkFlowService 配置 -->
-	<bean id="workflowService" class="cn.bc.workflow.service.WorkflowServiceImpl"/>	
+	<bean id="workflowService" class="cn.bc.workflow.service.WorkflowServiceImpl"
+		p:workflowCommentDao-ref="workflowCommentDao"/>	
 	<tx:advice id="workflowServiceTxAdvice" transaction-manager="transactionManager">
 		<tx:attributes>
 			<tx:method name="deploy*" propagation="REQUIRED" read-only="false" />
 			<tx:method name="start*" propagation="REQUIRED" read-only="false" />
-			<tx:method name="claimTask" propagation="REQUIRED" read-only="false" />
-			<tx:method name="completeTask" propagation="REQUIRED" read-only="false" />
-			<tx:method name="delegateTask" propagation="REQUIRED" read-only="false" />
+			<tx:method name="claimTask" propagation="REQUIRED"
+				read-only="false" />
+			<tx:method name="completeTask" propagation="REQUIRED"
+				read-only="false" />
+			<tx:method name="delegateTask" propagation="REQUIRED"
+				read-only="false" />
+			<tx:method name="updateComment" propagation="REQUIRED" read-only="false" />
+			<tx:method name="deleteComment" propagation="REQUIRED" read-only="false" />
 		</tx:attributes>
 	</tx:advice>
 	<aop:config>
-		<aop:pointcut id="workflowServiceMethod" expression="this(cn.bc.workflow.service.WorkflowService)" />
-		<aop:advisor pointcut-ref="workflowServiceMethod" advice-ref="workflowServiceTxAdvice" />
+		<aop:pointcut id="workflowServiceMethod"
+			expression="this(cn.bc.workflow.service.WorkflowService)" />
+		<aop:advisor pointcut-ref="workflowServiceMethod"
+			advice-ref="workflowServiceTxAdvice" />
 	</aop:config>
-	
+
 	<!-- WorkspaceService 配置 -->
-	<bean id="workspaceService" class="cn.bc.workflow.service.WorkspaceServiceImpl"/>	
+	<bean id="workspaceService" class="cn.bc.workflow.service.WorkspaceServiceImpl" />
 	<tx:advice id="workspaceServiceTxAdvice" transaction-manager="transactionManager">
 		<tx:attributes>
 			<tx:method name="find*" propagation="REQUIRED" read-only="true" />
 		</tx:attributes>
 	</tx:advice>
 	<aop:config>
-		<aop:pointcut id="workspaceServiceMethod" expression="this(cn.bc.workflow.service.WorkspaceService)" />
-		<aop:advisor pointcut-ref="workspaceServiceMethod" advice-ref="workspaceServiceTxAdvice" />
+		<aop:pointcut id="workspaceServiceMethod"
+			expression="this(cn.bc.workflow.service.WorkspaceService)" />
+		<aop:advisor pointcut-ref="workspaceServiceMethod"
+			advice-ref="workspaceServiceTxAdvice" />
 	</aop:config>
+
+	<!-- 流转日志 -->
+	<bean id="excutionLogDao" class="cn.bc.workflow.dao.hibernate.jpa.ExcutionLogDaoImpl"
+		p:entityManagerFactory-ref="entityManagerFactory" />
+	<bean id="excutionLogService" class="cn.bc.workflow.service.ExcutionLogServiceImpl" />
+
+	<!-- 通用ExecutionListener监听器：执行日志 -->
+	<bean id="excutionLogListener" class="cn.bc.workflow.activiti.delegate.ExcutionLogListener" />
+
+	<!-- 通用TaskListener监听器：任务日志 -->
+	<bean id="taskLogListener" class="cn.bc.workflow.activiti.delegate.TaskLogListener" />
+
+	<!-- 通用JavaDelegate监听器：任务日志 -->
+	<bean id="javaDelegateLogListener" class="cn.bc.workflow.activiti.delegate.JavaDelegateLogListener" />
 </beans>

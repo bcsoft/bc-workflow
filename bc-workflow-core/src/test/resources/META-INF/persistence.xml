@@ -14,6 +14,8 @@
 		<class>cn.bc.identity.domain.ActorRelation</class>
 		<class>cn.bc.identity.domain.Duty</class>
 		<class>cn.bc.identity.domain.AuthData</class>
+		
+		<class>cn.bc.workflow.domain.ExcutionLog</class>
 
 		<!-- 排除没有在这里声明的注解类:否则报错“nested exception is org.hibernate.DuplicateMappingException: 
 			Duplicate class/entity mapping cn.bc.orm.hibernate.TestDomain” -->
