@@ -47,7 +47,7 @@ public class WorkflowAction extends AbstractBaseAction {
 			}
 
 			// 返回信息
-			Json json = createSuceessMsg("流程发布成功！");
+			Json json = createSuccessMsg("流程发布成功！");
 			Json d = new Json();
 			d.put("id", deploy.getId());
 			d.put("name", deploy.getName());
@@ -77,7 +77,7 @@ public class WorkflowAction extends AbstractBaseAction {
 			this.workflowService.deleteDeployment(id, cascade);
 
 			// 返回信息
-			this.json = createSuceessMsg("流程发布历史删除成功！").toString();
+			this.json = createSuccessMsg("流程发布历史删除成功！").toString();
 		} catch (Exception e) {
 			json = createFailureMsg(e).toString();
 		}
@@ -100,7 +100,7 @@ public class WorkflowAction extends AbstractBaseAction {
 			String processInstanceId = this.workflowService.startFlowByKey(key);
 
 			// 返回信息
-			Json json = createSuceessMsg("启动成功！");
+			Json json = createSuccessMsg("启动成功！");
 			json.put("processInstance", processInstanceId);// 流程实例id
 			this.json = json.toString();
 		} catch (Exception e) {
@@ -125,7 +125,7 @@ public class WorkflowAction extends AbstractBaseAction {
 			this.workflowService.claimTask(id);
 
 			// 返回信息
-			json = createSuceessMsg("任务领取成功！").toString();
+			json = createSuccessMsg("任务领取成功！").toString();
 		} catch (Exception e) {
 			json = createFailureMsg(e).toString();
 		}
@@ -148,7 +148,7 @@ public class WorkflowAction extends AbstractBaseAction {
 			this.workflowService.completeTask(id);
 
 			// 返回信息
-			json = createSuceessMsg("完成任务成功！").toString();
+			json = createSuccessMsg("完成任务成功！").toString();
 		} catch (Exception e) {
 			json = createFailureMsg(e).toString();
 		}
@@ -174,7 +174,7 @@ public class WorkflowAction extends AbstractBaseAction {
 			this.workflowService.delegateTask(id, toUser);
 
 			// 返回信息
-			json = createSuceessMsg("委派任务成功！").toString();
+			json = createSuccessMsg("委派任务成功！").toString();
 		} catch (Exception e) {
 			json = createFailureMsg(e).toString();
 		}

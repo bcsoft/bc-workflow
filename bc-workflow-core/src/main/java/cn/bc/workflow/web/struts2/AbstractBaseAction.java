@@ -116,9 +116,9 @@ public abstract class AbstractBaseAction extends ActionSupport implements
 	 *            信息
 	 * @return
 	 */
-	protected Json createSuceessMsg(String msg) {
+	protected Json createSuccessMsg(String msg) {
 		Json json = new Json();
-		json.put("suceess", true);
+		json.put("success", true);
 		json.put("msg", msg);
 		return json;
 	}
@@ -132,7 +132,7 @@ public abstract class AbstractBaseAction extends ActionSupport implements
 	 */
 	protected Json createFailureMsg(String msg) {
 		Json json = new Json();
-		json.put("suceess", false);
+		json.put("success", false);
 		json.put("msg", msg);
 		return json;
 	}
@@ -145,7 +145,7 @@ public abstract class AbstractBaseAction extends ActionSupport implements
 	 */
 	protected Json createFailureMsg(Exception e) {
 		Json json = new Json();
-		json.put("suceess", false);
+		json.put("success", false);
 		json.put("msg", e.getMessage());
 		return json;
 	}
