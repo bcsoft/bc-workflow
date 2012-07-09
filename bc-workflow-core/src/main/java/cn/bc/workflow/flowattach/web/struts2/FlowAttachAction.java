@@ -27,7 +27,7 @@ import cn.bc.workflow.flowattach.domain.FlowAttach;
 @Controller
 public class FlowAttachAction extends FileEntityAction<Long, FlowAttach> {
 	private static final long serialVersionUID = 1L;
-	public String procId;//流程id
+	public String pid;//流程实例id
 	public String tid;//任务id
 	public boolean common;//是否公共信息
 	public int type;//类型：1-附件，2-意见
@@ -105,7 +105,7 @@ public class FlowAttachAction extends FileEntityAction<Long, FlowAttach> {
 		super.afterCreate(entity);
 		entity.setCommon(common);
 		entity.setType(type);
-		entity.setProcId(procId);
+		entity.setPid(pid);
 		entity.setTid(tid);
 		
 		// uid

@@ -12,9 +12,9 @@
         http://www.springframework.org/schema/aop
         http://www.springframework.org/schema/aop/spring-aop-3.0.xsd">
 	<!-- flowAttachServiceDao -->
-	<bean id="flowAttachDao" class="cn.bc.orm.hibernate.jpa.HibernateCrudJpaDao"
+	<bean id="flowAttachDao" class="cn.bc.workflow.flowattach.dao.hibernate.jpa.FlowAttachDaoImpl"
 		p:entityClass="cn.bc.workflow.flowattach.domain.FlowAttach"
 		p:entityManagerFactory-ref="entityManagerFactory" />
-	<bean id="flowAttachService" class="cn.bc.core.service.DefaultCrudService"
+	<bean id="flowAttachService" class="cn.bc.workflow.flowattach.service.FlowAttachServiceImpl"
 		p:entityClass="cn.bc.workflow.flowattach.domain.FlowAttach" p:crudDao-ref="flowAttachDao" />
 </beans>

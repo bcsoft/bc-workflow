@@ -31,8 +31,8 @@ public class FlowAttach extends FileEntityImpl {
 	/**意见**/
 	public static final int TYPE_COMMENT=2;
 
-	private int Type;//类型：1-附件，2-意见
-	private String procId;
+	private int type;//类型：1-附件，2-意见
+	private String pid;
 	private String tid;//任务id
 	private String path;////附件路径，物理文件保存的相对路径（相对于全局配置的app.data.realPath或app.data.subPath目录下的子路径，如"workflow/attachment/201207/xxxx.doc"）
 	private String subject;// 标题
@@ -40,9 +40,19 @@ public class FlowAttach extends FileEntityImpl {
 	private String desc;// 备注
 	private Long size;// 文件的大小(单位为字节) 默认0
 	private String ext;// 扩展名
-	
+
 	private String uid;
 	
+	
+	@Column(name="PROC_INST_ID_")
+	public String getPid() {
+		return pid;
+	}
+
+	public void setPid(String pid) {
+		this.pid = pid;
+	}
+
 	@Column(name = "UID_")
 	public String getUid() {
 		return uid;
@@ -54,19 +64,13 @@ public class FlowAttach extends FileEntityImpl {
 	
 	@Column(name="TYPE_")
 	public int getType() {
-		return Type;
+		return type;
 	}
+
 	public void setType(int type) {
-		Type = type;
+		this.type = type;
 	}
 	
-	@Column(name="PROC_INST_ID_")
-	public String getProcId() {
-		return procId;
-	}
-	public void setProcId(String procId) {
-		this.procId = procId;
-	}
 	@Column(name="TASK_ID_")
 	public String getTid() {
 		return tid;
