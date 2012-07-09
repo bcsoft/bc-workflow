@@ -11,12 +11,8 @@
         http://www.springframework.org/schema/tx/spring-tx-3.0.xsd
         http://www.springframework.org/schema/aop
         http://www.springframework.org/schema/aop/spring-aop-3.0.xsd">
-    <!-- WorkFlowCommentDao 配置 -->
-    <bean id="workflowCommentDao" class="cn.bc.workflow.comment.dao.hibernate.jpa.WorkflowCommentDaoImpl"/>
-    
 	<!-- WorkFlowService 配置 -->
-	<bean id="workflowService" class="cn.bc.workflow.service.WorkflowServiceImpl"
-		p:workflowCommentDao-ref="workflowCommentDao"/>	
+	<bean id="workflowService" class="cn.bc.workflow.service.WorkflowServiceImpl"/>	
 	<tx:advice id="workflowServiceTxAdvice" transaction-manager="transactionManager">
 		<tx:attributes>
 			<tx:method name="deploy*" propagation="REQUIRED" read-only="false" />
@@ -27,8 +23,6 @@
 				read-only="false" />
 			<tx:method name="delegateTask" propagation="REQUIRED"
 				read-only="false" />
-			<tx:method name="updateComment" propagation="REQUIRED" read-only="false" />
-			<tx:method name="deleteComment" propagation="REQUIRED" read-only="false" />
 		</tx:attributes>
 	</tx:advice>
 	<aop:config>
