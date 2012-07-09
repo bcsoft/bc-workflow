@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE struts PUBLIC
+    "-//Apache Software Foundation//DTD Struts Configuration 2.0//EN"
+    "http://struts.apache.org/dtds/struts-2.0.dtd">
+<struts>
+	<package name="flowattach" extends="bc-default" namespace="/bc-workflow/flowattach">
+		<action name="create" class="flowAttachAction" method="create">
+			<result name="form">/bc-workflow/flowattach/form.jsp</result>
+		</action>
+		<action name="edit" class="flowAttachAction" method="edit">
+			<result name="form">/bc-workflow/flowattach/form.jsp</result>
+		</action>
+		<action name="open" class="flowAttachAction" method="open">
+			<result name="formr">/bc-workflow/flowattach/form.jsp</result>
+		</action>
+		<action name="save" class="flowAttachAction" method="save"/>
+		<action name="delete" class="flowAttachAction" method="delete"/>
+	</package>
+</struts>
