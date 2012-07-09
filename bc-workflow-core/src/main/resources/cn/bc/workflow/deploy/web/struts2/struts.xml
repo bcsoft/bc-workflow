@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE struts PUBLIC
+    "-//Apache Software Foundation//DTD Struts Configuration 2.0//EN"
+    "http://struts.apache.org/dtds/struts-2.0.dtd">
+<struts>
+	<package name="deploy" extends="bc-default" namespace="/bc-workflow">
+		<action name="deploy/create" class="deployAction" method="create">
+			<result name="form">/bc-workflow/deploy/form.jsp</result>
+		</action>
+		<action name="deploy/edit" class="deployAction" method="edit">
+			<result name="form">/bc-workflow/deploy/form.jsp</result>
+		</action>
+		<action name="deploy/open" class="deployAction" method="open">
+			<result name="formr">/bc-workflow/deploy/form.jsp</result>
+		</action>
+		<action name="deploy/save" class="deployAction" method="save"/>
+		
+		<action name="deploys/list" class="deploysAction" method="list"/>
+		<action name="deploys/paging" class="deploysAction" method="paging"/>
+		<action name="deploys/data" class="deploysAction" method="data"/>
+		<action name="deploys/conditions" class="deploysAction" method="conditions">
+			<result name="success">/bc-workflow/deploy/conditions.jsp</result>
+		</action>
+		
+		<action name="deploys/isReleased" class="deploysAction" method="isReleased"/>
+		<action name="deploys/deployRelease" class="deploysAction" method="deployRelease"/>
+		
+		<action name="deploy/isUniqueCodeAndVersion" class="deployAction" method="isUniqueCodeAndVersion"/>
+		<action name="deploy/download" class="deployAction" method="download">
+			<result name="success" type="stream">
+				<!-- 下载文件类型定义 -->
+				<param name="contentType">${contentType}</param>
+				<param name="contentLength">${contentLength}</param>
+				<!-- 下载文件输出流定义 -->
+				<param name="inputName">inputStream</param>
+				<param name="bufferSize">4096</param>
+				<!-- 下载文件处理方法 -->
+				<param name="contentDisposition">attachment; filename="${filename}"</param>
+			</result>
+		</action>
+		
+	</package>
+	
+</struts>

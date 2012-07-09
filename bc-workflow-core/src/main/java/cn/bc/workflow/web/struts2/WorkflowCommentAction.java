@@ -62,7 +62,7 @@ public class WorkflowCommentAction extends AbstractBaseAction {
 				this.workflowService.updateComment(ce);
 			}
 			// 返回信息
-			this.json = createSuceessMsg(getText("form.save.success")).toString();
+			this.json = createSuccessMsg(getText("form.save.success")).toString();
 		} catch (Exception e) {
 			json = createFailureMsg(e).toString();
 		}
@@ -163,7 +163,7 @@ public class WorkflowCommentAction extends AbstractBaseAction {
 		try {
 			workflowService.deleteComment(id);
 			// 返回信息
-			this.json = createSuceessMsg(getText("form.delete.success")).toString();
+			this.json = createSuccessMsg(getText("form.delete.success")).toString();
 		} catch (Exception e) {
 			json = createFailureMsg(e).toString();
 		}

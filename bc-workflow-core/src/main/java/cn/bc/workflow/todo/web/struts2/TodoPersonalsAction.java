@@ -118,12 +118,12 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>>{
 		if(this.isDelegate()){
 			tb.addButton(new ToolbarButton().setIcon("ui-icon-person")
 					.setText(getText("label.delegate.task"))
-					.setClick("bc.todo.delegateTask"));
+					.setClick("bc.todoView.delegateTask"));
 		}
 		if(this.isAssign()){
 			tb.addButton(new ToolbarButton().setIcon("ui-icon-flag")
 					.setText(getText("label.assign.task"))
-					.setClick("bc.todo.assignTask"));
+					.setClick("bc.todoView.assignTask"));
 		}
 		
 		// 搜索按钮

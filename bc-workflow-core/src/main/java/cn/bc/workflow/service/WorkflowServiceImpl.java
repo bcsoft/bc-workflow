@@ -42,9 +42,9 @@ public class WorkflowServiceImpl implements WorkflowService {
 
 	// private FormService formService;
 	private HistoryService historyService;
-	
-	private WorkflowCommentDao workflowCommentDao;//流程意见到
-	
+
+	private WorkflowCommentDao workflowCommentDao;// 流程意见到
+
 	@Autowired
 	public void setWorkflowCommentDao(WorkflowCommentDao workflowCommentDao) {
 		this.workflowCommentDao = workflowCommentDao;
@@ -227,5 +227,28 @@ public class WorkflowServiceImpl implements WorkflowService {
 
 	public void deleteComment(String id) {
 		workflowCommentDao.delete(id);
+	}
+
+	public InputStream getInstanceDiagram(String processInstanceId) {
+		// 获取流程实例
+		ProcessInstance instance = runtimeService.createProcessInstanceQuery()
+				.processInstanceId(processInstanceId).singleResult();
+
+		// 获取流程定义
+		ProcessDefinition definition = repositoryService
+				.createProcessDefinitionQuery()
+				.processDefinitionId(instance.getProcessDefinitionId())
+				.singleResult();
+
+		// 获取发布的资源文件
+		return repositoryService.getResourceAsStream(
+				definition.getDeploymentId(),
+				definition.getDiagramResourceName());
+	}
+
+	public InputStream getDeploymentResource(String deploymentId,
+			String resourceName) {
+		return repositoryService
+				.getResourceAsStream(deploymentId, resourceName);
 	}
 }
