@@ -25,8 +25,11 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.Assert;
 
+import cn.bc.core.exception.CoreException;
 import cn.bc.core.util.DateUtils;
 import cn.bc.core.util.StringUtils;
+import cn.bc.identity.domain.Actor;
+import cn.bc.identity.web.SystemContext;
 import cn.bc.identity.web.SystemContextHolder;
 import cn.bc.template.service.TemplateService;
 import cn.bc.workflow.flowattach.domain.FlowAttach;
@@ -451,6 +454,17 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 	 */
 	private boolean judgeIsMyTask(List<IdentityLink> identityLinks) {
 		// TODO
+		if (identityLinks == null || identityLinks.isEmpty()) {
+			throw new CoreException("丢失岗位用户之间的关联信息了！");
+		}
+
+		List<String> groups = SystemContextHolder.get().getAttr(
+				SystemContext.KEY_GROUPS);
+		for (IdentityLink l : identityLinks) {
+			if (l.getGroupId() != null && groups.contains(l.getGroupId())) {
+				return true;
+			}
+		}
 		return false;
 	}
 
