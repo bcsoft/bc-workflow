@@ -12,6 +12,11 @@
 			<result name="success">/bc-workflow/workspace/workspace.jsp</result>
 		</action>
 	</package>
+	<package name="sidebar" extends="bc-default" namespace="/bc-workflow/sidebar">
+		<action name="design" class="workspaceAction" method="sidebarDesign">
+			<result name="success">/bc-workflow/todo/sidebarDesign.jsp</result>
+		</action>
+	</package>
 	
 	<!-- 流程常用处理 -->
 	<package name="workflow" extends="bc-default" namespace="/bc-workflow/workflow">

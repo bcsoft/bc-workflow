@@ -36,6 +36,21 @@ public class WorkspaceAction extends AbstractBaseAction {
 	}
 
 	/**
+	 * 打开边栏设计页面
+	 * 
+	 * @return
+	 * @throws Exception
+	 */
+	public String sidebarDesign() throws Exception {
+		this.title = "待办边栏设计";
+
+		// 初始化页面参数
+		this.initPageOption();
+
+		return SUCCESS;
+	}
+
+	/**
 	 * 打开工作空间设计页面
 	 * 
 	 * @return

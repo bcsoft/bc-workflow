@@ -10,17 +10,44 @@ import cn.bc.workflow.flowattach.domain.FlowAttach;
 /**
  * 流程附加信息Service
  * 
- * @author lbj
+ * @author dragon
  */
 public interface FlowAttachService {
 	/**
-	 * 获取可用的流程附加信息列表
+	 * 获取流程附加信息列表，不包含流程任务的附加信息
 	 * 
 	 * @param processInstanceId
 	 *            所属流程实例ID
-	 * @param taskId
-	 *            所属流程任务ID，为空代表获取全局流程附加信息
 	 * @return
 	 */
-	List<FlowAttach> find(String processInstanceId, String taskId);
+	List<FlowAttach> findByProcess(String processInstanceId);
+
+	/**
+	 * 获取流程附加信息列表
+	 * 
+	 * @param processInstanceId
+	 *            所属流程实例ID
+	 * @param includeTask
+	 *            是否包含流程任务的附加信息
+	 * @return
+	 */
+	List<FlowAttach> findByProcess(String processInstanceId, boolean includeTask);
+
+	/**
+	 * 获取任务附加信息列表
+	 * 
+	 * @param taskIds
+	 *            任务ID列表
+	 * @return
+	 */
+	List<FlowAttach> findByTask(String[] taskIds);
+
+	/**
+	 * 获取任务附加信息列表
+	 * 
+	 * @param taskId
+	 *            任务ID
+	 * @return
+	 */
+	List<FlowAttach> findByTask(String taskId);
 }
