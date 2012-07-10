@@ -28,7 +28,6 @@ import org.springframework.util.Assert;
 import cn.bc.core.exception.CoreException;
 import cn.bc.core.util.DateUtils;
 import cn.bc.core.util.StringUtils;
-import cn.bc.identity.domain.Actor;
 import cn.bc.identity.web.SystemContext;
 import cn.bc.identity.web.SystemContextHolder;
 import cn.bc.template.service.TemplateService;
@@ -192,36 +191,50 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 		// item.put("detail", detail);// 详细信息
 		// detail.add("小明 " + " " + "2012-01-01 00:00"); // 创建信息 TODO
 
-		// 构建附件条目
-		// List<Attachment> attachments;// 附件列表
-		// if (flowing) {
-		// attachments = taskService.getProcessInstanceAttachments(instance
-		// .getId());
-		// } else {
-		// // TODO 从历史中获取
-		// attachments = null;
-		// }
-		// System.out.println("attachments=" + attachments);
-		// item = new HashMap<String, Object>();
-		// items.add(item);
-		// type = "attach";
-		// item.put("id", "id");// TODO
-		// item.put("type", type);// 信息类型
-		// item.put("iconClass", "ui-icon-link");// 左侧显示的小图标
-		// item.put("link", true);// 链接标题
-		// item.put("subject", "附件：测试附件");// 标题 TODO
-		// item.put("buttons", this.buildItemDefaultButtons(flowing, type));//
-		// 操作按钮列表
-		// item.put("hasButtons", item.get("buttons") != null);// 有否操作按钮
-		// detail = new ArrayList<String>();
-		// item.put("detail", detail);// 详细信息
-		// detail.add("小明 " + " " + "2012-01-01 00:00"); // 创建信息 TODO
-
-		// 构建意见条目
-		List<FlowAttach> flowAttachs = flowAttachService.find(instance.getId(),
-				null);
+		// 构建意见附件条目
+		List<FlowAttach> flowAttachs = flowAttachService.findByProcess(
+				instance.getId(), false);
 		if (logger.isDebugEnabled())
 			logger.debug("flowAttachs=" + flowAttachs);
+		buildFlowAttachsInfo(flowing, items, flowAttachs);
+
+		// 构建统计信息条目
+		item = new HashMap<String, Object>();
+		items.add(item);
+		type = "stat";
+		item.put("id", instance.getId());
+		item.put("type", type);// 信息类型
+		item.put("iconClass", "ui-icon-flag");// 左侧显示的小图标
+		item.put("subject", "统计信息");// 标题
+		item.put("link", false);// 非链接标题
+		item.put("hasButtons", false);// 无操作按钮
+		detail = new ArrayList<String>();
+		item.put("detail", detail);// 详细信息
+		detail.add("发起时间：" + instance.getStartUserId() + " "
+				+ DateUtils.formatDateTime2Minute(instance.getStartTime()));
+		detail.add("结束时间："
+				+ (flowing ? "仍在流转中..." : DateUtils
+						.formatDateTime2Minute(instance.getEndTime())));
+		detail.add("办理耗时："
+				+ (flowing ? DateUtils.getWasteTimeCN(instance.getStartTime())
+						: DateUtils.getWasteTimeCN(instance.getStartTime(),
+								instance.getEndTime())));
+		// detail.add("参与人数：" + "");// TODO
+
+		// 返回
+		return info;
+	}
+
+	/**
+	 * @param flowing
+	 * @param items
+	 * @param flowAttachs
+	 */
+	private void buildFlowAttachsInfo(boolean flowing,
+			List<Map<String, Object>> items, List<FlowAttach> flowAttachs) {
+		Map<String, Object> item;
+		List<String> detail;
+		String type;
 		for (FlowAttach flowAttach : flowAttachs) {
 			item = new HashMap<String, Object>();
 			items.add(item);
@@ -258,32 +271,6 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 			detail.add(flowAttach.getAuthor().getName() + " "
 					+ DateUtils.formatCalendar2Minute(flowAttach.getFileDate())); // 创建信息
 		}
-
-		// 构建统计信息条目
-		item = new HashMap<String, Object>();
-		items.add(item);
-		type = "stat";
-		item.put("id", instance.getId());
-		item.put("type", type);// 信息类型
-		item.put("iconClass", "ui-icon-flag");// 左侧显示的小图标
-		item.put("subject", "统计信息");// 标题
-		item.put("link", false);// 非链接标题
-		item.put("hasButtons", false);// 无操作按钮
-		detail = new ArrayList<String>();
-		item.put("detail", detail);// 详细信息
-		detail.add("发起时间：" + instance.getStartUserId() + " "
-				+ DateUtils.formatDateTime2Minute(instance.getStartTime()));
-		detail.add("结束时间："
-				+ (flowing ? "仍在流转中..." : DateUtils
-						.formatDateTime2Minute(instance.getEndTime())));
-		detail.add("办理耗时："
-				+ (flowing ? DateUtils.getWasteTimeCN(instance.getStartTime())
-						: DateUtils.getWasteTimeCN(instance.getStartTime(),
-								instance.getEndTime())));
-		// detail.add("参与人数：" + "");// TODO
-
-		// 返回
-		return info;
 	}
 
 	/**
@@ -362,10 +349,10 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 	private Map<String, Object> buildWSTodoInfo(boolean flowing,
 			HistoricProcessInstance instance) {
 		Map<String, Object> info = new LinkedHashMap<String, Object>();
-		List<Map<String, Object>> items = new ArrayList<Map<String, Object>>();// 一级条目列表
-		info.put("items", items);
-		Map<String, Object> item;
-		List<Map<String, Object>> detail;// 详细信息：表单、意见、附件
+		List<Map<String, Object>> taskItems = new ArrayList<Map<String, Object>>();// 一级条目列表
+		info.put("tasks", taskItems);
+		Map<String, Object> taskItem;
+		List<Map<String, Object>> items;// 详细信息：表单、意见、附件
 		boolean isUserTask;// 是否是个人待办:true-个人待办、false-组待办
 		boolean isMyTask;// 是否是我的个人或组待办
 
@@ -373,6 +360,18 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 		List<Task> tasks = this.taskService.createTaskQuery()
 				.processInstanceId(instance.getId()).orderByTaskCreateTime()
 				.asc().list();
+
+		// 获取所有任务的意见附件
+		List<String> tids = new ArrayList<String>();
+		for (Task task : tasks) {
+			tids.add(task.getId());
+		}
+		// 构建意见附件条目
+		List<FlowAttach> allFlowAttachs = flowAttachService.findByTask(tids
+				.toArray(new String[] {}));
+
+		// 生成展现用的数据
+		Date now = new Date();
 		for (Task task : tasks) {
 			List<IdentityLink> identityLinks;
 			// 判断任务类型
@@ -391,37 +390,45 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 			}
 
 			// 任务的基本信息
-			item = new HashMap<String, Object>();
-			items.add(item);
-			item.put("id", task.getId());// 任务id
-			item.put("isUserTask", isUserTask);// 是否是个人待办:true-个人待办、false-组待办
-			item.put("isMyTask", isMyTask);// 是否是我的个人或组待办
-			item.put("subject", task.getName());// 标题
-			item.put("buttons", this.buildHeaderDefaultButtons(flowing,
+			taskItem = new HashMap<String, Object>();
+			taskItems.add(taskItem);
+			taskItem.put("id", task.getId());// 任务id
+			taskItem.put("isUserTask", isUserTask);// 是否是个人待办:true-个人待办、false-组待办
+			taskItem.put("isMyTask", isMyTask);// 是否是我的个人或组待办
+			taskItem.put("subject", task.getName());// 标题
+			taskItem.put("buttons", this.buildHeaderDefaultButtons(flowing,
 					isUserTask ? "todo_user" : "todo_group"));// 操作按钮列表
-			item.put("hasButtons", item.get("buttons") != null);// 有否操作按钮
+			taskItem.put("hasButtons", taskItem.get("buttons") != null);// 有否操作按钮
 
 			// 任务的详细信息
-			// -- 创建信息
+			items = new ArrayList<Map<String, Object>>();// 二级条目列表
+			taskItem.put("items", items);
+			
+			// -- 表单信息 TODO
+
+			// -- 意见、附件信息
+			buildFlowAttachsInfo(flowing, items,
+					this.findTaskFlowAttachs(task.getId(), allFlowAttachs));
+
+			// 任务的基本信息
 			if (isUserTask) {
-				item.put("actor", "待办人：" + task.getAssignee());
+				taskItem.put("actor", "待办人：" + task.getAssignee());
 			} else {
-				item.put("actor", "待办岗：" + identityLinks.get(0).getGroupId());// TODO
+				taskItem.put("actor", "待办岗：" + identityLinks.get(0).getGroupId());// TODO
 			}
-			item.put(
+			taskItem.put(
 					"createTime",
 					"发起时间："
 							+ DateUtils.formatDateTime2Minute(task
 									.getCreateTime()));
 			if (task.getDueDate() != null) {
-				item.put(
+				taskItem.put(
 						"dueDate",
 						"办理期限："
 								+ DateUtils.formatDateTime2Minute(task
 										.getDueDate()));
 			}
-			Date now = new Date();
-			item.put(
+			taskItem.put(
 					"wasteTime",
 					"办理耗时："
 							+ DateUtils.getWasteTimeCN(task.getCreateTime(),
@@ -430,15 +437,27 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 							+ DateUtils.formatDateTime2Minute(task
 									.getCreateTime()) + "到"
 							+ DateUtils.formatDateTime2Minute(now) + ")");
-
-			// -- 表单、附件、意见信息
-			detail = new ArrayList<Map<String, Object>>();// 二级条目列表
-			item.put("detail", detail);
-			// TODO
 		}
 
 		// 返回
 		return info;
+	}
+
+	/**
+	 * 筛选出指定任务的意见、附件
+	 * 
+	 * @param taskId
+	 * @param allFlowAttachs
+	 * @return
+	 */
+	private List<FlowAttach> findTaskFlowAttachs(String taskId,
+			List<FlowAttach> allFlowAttachs) {
+		List<FlowAttach> taskFlowAttachs = new ArrayList<FlowAttach>();
+		for (FlowAttach flowAttach : allFlowAttachs) {
+			if (taskId.equals(flowAttach.getTid()))
+				taskFlowAttachs.add(flowAttach);
+		}
+		return taskFlowAttachs;
 	}
 
 	/**
