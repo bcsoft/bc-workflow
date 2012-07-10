@@ -493,10 +493,10 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 	private Map<String, Object> buildWSDoneInfo(boolean flowing,
 			HistoricProcessInstance instance) {
 		Map<String, Object> info = new LinkedHashMap<String, Object>();
-		List<Map<String, Object>> items = new ArrayList<Map<String, Object>>();// 一级条目列表
-		info.put("items", items);
-		Map<String, Object> item;
-		List<Map<String, Object>> detail;// 详细信息：表单、意见、附件
+		List<Map<String, Object>> taskItems = new ArrayList<Map<String, Object>>();// 一级条目列表
+		info.put("tasks", taskItems);
+		Map<String, Object> taskItem;
+		List<Map<String, Object>> items;// 详细信息：表单、意见、附件
 
 		// 获取待办列表
 		List<HistoricTaskInstance> tasks = this.historyService
@@ -504,16 +504,27 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 				.processInstanceId(instance.getId())
 				.taskDeleteReason("completed")
 				.orderByHistoricActivityInstanceStartTime().asc().list();
+
+		// 获取所有任务的意见附件
+		List<String> tids = new ArrayList<String>();
+		for (HistoricTaskInstance task : tasks) {
+			tids.add(task.getId());
+		}
+		// 构建意见附件条目
+		List<FlowAttach> allFlowAttachs = flowAttachService.findByTask(tids
+				.toArray(new String[] {}));
+
+		// 生成展现用的数据
 		for (HistoricTaskInstance task : tasks) {
 			// 任务的基本信息
-			item = new HashMap<String, Object>();
-			items.add(item);
-			item.put("id", task.getId());// 任务id
-			item.put("assignee", task.getAssignee());// 办理人
-			item.put("owner", task.getOwner());// 委托人
-			item.put("link", false);// 链接标题
-			item.put("subject", task.getName());// 标题
-			item.put(
+			taskItem = new HashMap<String, Object>();
+			taskItems.add(taskItem);
+			taskItem.put("id", task.getId());// 任务id
+			taskItem.put("assignee", task.getAssignee());// 办理人
+			taskItem.put("owner", task.getOwner());// 委托人
+			taskItem.put("link", false);// 链接标题
+			taskItem.put("subject", task.getName());// 标题
+			taskItem.put(
 					"wasteTime",
 					"办理耗时："
 							+ DateUtils.getWasteTimeCN(task.getStartTime(),
@@ -524,20 +535,25 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 							+ "到"
 							+ DateUtils.formatDateTime2Minute(task.getEndTime())
 							+ ")");
-			item.put("startTime",
+			taskItem.put("startTime",
 					DateUtils.formatDateTime2Minute(task.getStartTime()));
 			if (task.getDueDate() != null) {
-				item.put(
+				taskItem.put(
 						"dueDate",
 						"办理期限："
 								+ DateUtils.formatDateTime2Minute(task
 										.getDueDate()));
 			}
 
-			// -- 表单、附件、意见信息
-			detail = new ArrayList<Map<String, Object>>();// 二级条目列表
-			item.put("detail", detail);
-			// TODO
+			// 任务的详细信息
+			items = new ArrayList<Map<String, Object>>();// 二级条目列表
+			taskItem.put("items", items);
+			
+			// -- 表单信息 TODO
+
+			// -- 意见、附件信息
+			buildFlowAttachsInfo(false, items,
+					this.findTaskFlowAttachs(task.getId(), allFlowAttachs));
 		}
 
 		// 返回
