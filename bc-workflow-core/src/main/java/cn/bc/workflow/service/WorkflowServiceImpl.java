@@ -24,7 +24,6 @@ import cn.bc.identity.web.SystemContextHolder;
 import cn.bc.template.domain.Template;
 import cn.bc.template.service.TemplateService;
 import cn.bc.workflow.activiti.ActivitiUtils;
-import cn.bc.workflow.comment.dao.WorkflowCommentDao;
 
 /**
  * 工作流Service的实现
@@ -42,13 +41,6 @@ public class WorkflowServiceImpl implements WorkflowService {
 
 	// private FormService formService;
 	private HistoryService historyService;
-
-	private WorkflowCommentDao workflowCommentDao;// 流程意见到
-
-	@Autowired
-	public void setWorkflowCommentDao(WorkflowCommentDao workflowCommentDao) {
-		this.workflowCommentDao = workflowCommentDao;
-	}
 
 	@Autowired
 	public void setTemplateService(TemplateService templateService) {
@@ -219,14 +211,6 @@ public class WorkflowServiceImpl implements WorkflowService {
 	public ProcessDefinition loadDefinition(String id) {
 		return repositoryService.createProcessDefinitionQuery()
 				.processDefinitionId(id).singleResult();
-	}
-
-	public void updateComment(CommentEntity ce) {
-		workflowCommentDao.update(ce);
-	}
-
-	public void deleteComment(String id) {
-		workflowCommentDao.delete(id);
 	}
 
 	public InputStream getInstanceDiagram(String processInstanceId) {

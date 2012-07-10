@@ -18,8 +18,6 @@ import org.activiti.engine.TaskService;
 import org.activiti.engine.history.HistoricProcessInstance;
 import org.activiti.engine.history.HistoricTaskInstance;
 import org.activiti.engine.repository.ProcessDefinition;
-import org.activiti.engine.task.Attachment;
-import org.activiti.engine.task.Comment;
 import org.activiti.engine.task.IdentityLink;
 import org.activiti.engine.task.Task;
 import org.apache.commons.logging.Log;
@@ -27,9 +25,15 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.Assert;
 
+import cn.bc.core.exception.CoreException;
 import cn.bc.core.util.DateUtils;
+import cn.bc.core.util.StringUtils;
+import cn.bc.identity.domain.Actor;
+import cn.bc.identity.web.SystemContext;
 import cn.bc.identity.web.SystemContextHolder;
 import cn.bc.template.service.TemplateService;
+import cn.bc.workflow.flowattach.domain.FlowAttach;
+import cn.bc.workflow.flowattach.service.FlowAttachService;
 
 /**
  * 工作流Service的实现
@@ -44,9 +48,15 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 	private RepositoryService repositoryService;
 	private IdentityService identityService;
 	private TaskService taskService;
+	private FlowAttachService flowAttachService;
 
 	// private FormService formService;
 	private HistoryService historyService;
+
+	@Autowired
+	public void setFlowAttachService(FlowAttachService flowAttachService) {
+		this.flowAttachService = flowAttachService;
+	}
 
 	@Autowired
 	public void setTemplateService(TemplateService templateService) {
@@ -167,72 +177,92 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 		String type;
 
 		// 构建表单条目
-		item = new HashMap<String, Object>();
-		items.add(item);
-		type = "form";
-		item.put("id", "id");// TODO
-		item.put("type", type);// 信息类型
-		item.put("iconClass", "ui-icon-document");// 左侧显示的小图标
-		item.put("link", true);// 链接标题
-		item.put("subject", "表单：测试表单");// 标题 TODO
-		item.put("buttons", this.buildItemDefaultButtons(flowing, type));// 操作按钮列表
-		item.put("hasButtons", item.get("buttons") != null);// 有否操作按钮
-		detail = new ArrayList<String>();
-		item.put("detail", detail);// 详细信息
-		detail.add("小明 " + " " + "2012-01-01 00:00"); // 创建信息 TODO
+		// item = new HashMap<String, Object>();
+		// items.add(item);
+		// type = "form";
+		// item.put("id", "id");// TODO
+		// item.put("type", type);// 信息类型
+		// item.put("iconClass", "ui-icon-document");// 左侧显示的小图标
+		// item.put("link", true);// 链接标题
+		// item.put("subject", "表单：测试表单");// 标题 TODO
+		// item.put("buttons", this.buildItemDefaultButtons(flowing, type));//
+		// 操作按钮列表
+		// item.put("hasButtons", item.get("buttons") != null);// 有否操作按钮
+		// detail = new ArrayList<String>();
+		// item.put("detail", detail);// 详细信息
+		// detail.add("小明 " + " " + "2012-01-01 00:00"); // 创建信息 TODO
 
 		// 构建附件条目
-		List<Attachment> attachments;// 附件列表
-		if (flowing) {
-			attachments = taskService.getProcessInstanceAttachments(instance
-					.getId());
-		} else {
-			// TODO 从历史中获取
-			attachments = null;
-		}
-		System.out.println("attachments=" + attachments);
-		item = new HashMap<String, Object>();
-		items.add(item);
-		type = "attach";
-		item.put("id", "id");// TODO
-		item.put("type", type);// 信息类型
-		item.put("iconClass", "ui-icon-link");// 左侧显示的小图标
-		item.put("link", true);// 链接标题
-		item.put("subject", "附件：测试附件");// 标题 TODO
-		item.put("buttons", this.buildItemDefaultButtons(flowing, type));// 操作按钮列表
-		item.put("hasButtons", item.get("buttons") != null);// 有否操作按钮
-		detail = new ArrayList<String>();
-		item.put("detail", detail);// 详细信息
-		detail.add("小明 " + " " + "2012-01-01 00:00"); // 创建信息 TODO
+		// List<Attachment> attachments;// 附件列表
+		// if (flowing) {
+		// attachments = taskService.getProcessInstanceAttachments(instance
+		// .getId());
+		// } else {
+		// // TODO 从历史中获取
+		// attachments = null;
+		// }
+		// System.out.println("attachments=" + attachments);
+		// item = new HashMap<String, Object>();
+		// items.add(item);
+		// type = "attach";
+		// item.put("id", "id");// TODO
+		// item.put("type", type);// 信息类型
+		// item.put("iconClass", "ui-icon-link");// 左侧显示的小图标
+		// item.put("link", true);// 链接标题
+		// item.put("subject", "附件：测试附件");// 标题 TODO
+		// item.put("buttons", this.buildItemDefaultButtons(flowing, type));//
+		// 操作按钮列表
+		// item.put("hasButtons", item.get("buttons") != null);// 有否操作按钮
+		// detail = new ArrayList<String>();
+		// item.put("detail", detail);// 详细信息
+		// detail.add("小明 " + " " + "2012-01-01 00:00"); // 创建信息 TODO
 
 		// 构建意见条目
-		List<Comment> comments;// 意见列表
-		if (flowing) {
-			comments = taskService.getProcessInstanceComments(instance.getId());
-		} else {
-			// TODO 从历史中获取
-			comments = null;
+		List<FlowAttach> flowAttachs = flowAttachService.find(instance.getId(),
+				null);
+		if (logger.isDebugEnabled())
+			logger.debug("flowAttachs=" + flowAttachs);
+		for (FlowAttach flowAttach : flowAttachs) {
+			item = new HashMap<String, Object>();
+			items.add(item);
+			item.put("id", flowAttach.getId());
+			item.put("pid", flowAttach.getPid());// 流程实例id
+			item.put("tid", flowAttach.getTid());// 任务id
+			if (FlowAttach.TYPE_ATTACHMENT == flowAttach.getType()) {
+				type = "attach";
+				item.put("iconClass", "ui-icon-link");// 左侧显示的小图标
+				item.put("subject", flowAttach.getSubject());// 附件名称
+				item.put("size", flowAttach.getSize() + "");// 附件大小
+				item.put("path", flowAttach.getPath());// 附件相对路径
+				item.put("sizeInfo",
+						StringUtils.formatSize(flowAttach.getSize()));// 附件大小
+			} else if (FlowAttach.TYPE_COMMENT == flowAttach.getType()) {
+				type = "comment";
+				item.put("iconClass", "ui-icon-comment");// 左侧显示的小图标
+				item.put("subject", flowAttach.getDesc());// 意见内容
+			} else {
+				logger.error("未支持的FlowAttach类型:type=" + flowAttach.getType());
+				type = "none";
+				item.put("iconClass", "ui-icon-lock");// 左侧显示的小图标
+				item.put("subject", "(未知类型)");
+			}
+			item.put("type", type);// 信息类型
+			item.put("link", true);// 链接标题
+			item.put("buttons", this.buildItemDefaultButtons(flowing, type));// 操作按钮列表
+			item.put("hasButtons", item.get("buttons") != null);// 有否操作按钮
+
+			// 详细信息
+			detail = new ArrayList<String>();
+			item.put("detail", detail);
+			detail.add(flowAttach.getAuthor().getName() + " "
+					+ DateUtils.formatCalendar2Minute(flowAttach.getFileDate())); // 创建信息
 		}
-		System.out.println("comments=" + comments);
-		item = new HashMap<String, Object>();
-		items.add(item);
-		type = "comment";
-		item.put("id", "id");// TODO
-		item.put("type", type);// 信息类型
-		item.put("iconClass", "ui-icon-comment");// 左侧显示的小图标
-		item.put("link", true);// 链接标题
-		item.put("subject", "意见：测试意见");// 标题 TODO
-		item.put("buttons", this.buildItemDefaultButtons(flowing, type));// 操作按钮列表
-		item.put("hasButtons", item.get("buttons") != null);// 有否操作按钮
-		detail = new ArrayList<String>();
-		item.put("detail", detail);// 详细信息
-		detail.add("小明 " + " " + "2012-01-01 00:00"); // 创建信息 TODO
 
 		// 构建统计信息条目
 		item = new HashMap<String, Object>();
 		items.add(item);
 		type = "stat";
-		item.put("id", "");// TODO
+		item.put("id", instance.getId());
 		item.put("type", type);// 信息类型
 		item.put("iconClass", "ui-icon-flag");// 左侧显示的小图标
 		item.put("subject", "统计信息");// 标题
@@ -249,7 +279,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 				+ (flowing ? DateUtils.getWasteTimeCN(instance.getStartTime())
 						: DateUtils.getWasteTimeCN(instance.getStartTime(),
 								instance.getEndTime())));
-		detail.add("参与人数：" + "");// TODO
+		// detail.add("参与人数：" + "");// TODO
 
 		// 返回
 		return info;
@@ -258,25 +288,37 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 	/**
 	 * 创建默认的表单(form)、意见(comment)、附件(attach)操作按钮
 	 * 
-	 * @param flowing
-	 *            是否流转中
+	 * @param editable
+	 *            是否可编辑
 	 * @param type
 	 *            类型
 	 * @return
 	 */
-	private String buildItemDefaultButtons(boolean flowing, String type) {
+	private String buildItemDefaultButtons(boolean editable, String type) {
 		StringBuffer buttons = new StringBuffer();
-		if (flowing) {
-			buttons.append("<span class='itemOperate edit'><span class='ui-icon ui-icon-pencil'></span><span class='text link'>编辑</span></span>");
+		boolean hasOpen = false;
+		if (editable) {
+			buttons.append(ITEM_BUTTON_EDIT);
 		} else {
-			buttons.append("<span class='itemOperate open'><span class='ui-icon ui-icon-document-b'></span><span class='text link'>查看</span></span>");
+			hasOpen = true;
+			buttons.append(ITEM_BUTTON_OPEN);
 		}
-		buttons.append("<span class='itemOperate download'><span class='ui-icon ui-icon-arrowthickstop-1-s'></span><span class='text link'>下载</span></span>");
-		if (flowing) {
-			buttons.append("<span class='itemOperate delete'><span class='ui-icon ui-icon-closethick'></span><span class='text link'>删除</span></span>");
+		if ("attach".equals(type)) {
+			if (!hasOpen) {
+				buttons.append(ITEM_BUTTON_OPEN);
+			}
+			buttons.append(ITEM_BUTTON_DOWNLOAD);
+		}
+		if (editable) {
+			buttons.append(ITEM_BUTTON_DELETE);
 		}
 		return buttons.length() > 0 ? buttons.toString() : null;
 	}
+
+	private final static String ITEM_BUTTON_OPEN = "<span class='itemOperate open'><span class='ui-icon ui-icon-document-b'></span><span class='text link'>查看</span></span>";
+	private final static String ITEM_BUTTON_EDIT = "<span class='itemOperate edit'><span class='ui-icon ui-icon-pencil'></span><span class='text link'>编辑</span></span>";
+	private final static String ITEM_BUTTON_DELETE = "<span class='itemOperate delete'><span class='ui-icon ui-icon-closethick'></span><span class='text link'>删除</span></span>";
+	private final static String ITEM_BUTTON_DOWNLOAD = "<span class='itemOperate download'><span class='ui-icon ui-icon-arrowthickstop-1-s'></span><span class='text link'>下载</span></span>";
 
 	/**
 	 * 创建默认的公共信息(common)、个人待办信息(todo_user)、岗位待办信息(todo_group)区标题右侧的操作按钮
@@ -412,6 +454,17 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 	 */
 	private boolean judgeIsMyTask(List<IdentityLink> identityLinks) {
 		// TODO
+		if (identityLinks == null || identityLinks.isEmpty()) {
+			throw new CoreException("丢失岗位用户之间的关联信息了！");
+		}
+
+		List<String> groups = SystemContextHolder.get().getAttr(
+				SystemContext.KEY_GROUPS);
+		for (IdentityLink l : identityLinks) {
+			if (l.getGroupId() != null && groups.contains(l.getGroupId())) {
+				return true;
+			}
+		}
 		return false;
 	}
 

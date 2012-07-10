@@ -103,21 +103,6 @@ public interface WorkflowService {
 	ProcessDefinition loadDefinition(String id);
 
 	/**
-	 * 修改更新意见
-	 * 
-	 * @param ce
-	 *            意见实体
-	 */
-	void updateComment(CommentEntity ce);
-
-	/**
-	 * 删除意见
-	 * 
-	 * @param id
-	 */
-	void deleteComment(String id);
-
-	/**
 	 * 获取指定流程实例的流程图资源文件流
 	 * 
 	 * @param processInstanceId
