@@ -239,7 +239,8 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 			} else if (FlowAttach.TYPE_COMMENT == flowAttach.getType()) {
 				type = "comment";
 				item.put("iconClass", "ui-icon-comment");// 左侧显示的小图标
-				item.put("subject", flowAttach.getDesc());// 意见内容
+				item.put("subject", flowAttach.getSubject());// 意见标题
+				item.put("desc", flowAttach.getDesc());// 意见内容
 			} else {
 				logger.error("未支持的FlowAttach类型:type=" + flowAttach.getType());
 				type = "none";
@@ -296,17 +297,11 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 	 */
 	private String buildItemDefaultButtons(boolean editable, String type) {
 		StringBuffer buttons = new StringBuffer();
-		boolean hasOpen = false;
 		if (editable) {
 			buttons.append(ITEM_BUTTON_EDIT);
-		} else {
-			hasOpen = true;
-			buttons.append(ITEM_BUTTON_OPEN);
 		}
+		buttons.append(ITEM_BUTTON_OPEN);
 		if ("attach".equals(type)) {
-			if (!hasOpen) {
-				buttons.append(ITEM_BUTTON_OPEN);
-			}
 			buttons.append(ITEM_BUTTON_DOWNLOAD);
 		}
 		if (editable) {
