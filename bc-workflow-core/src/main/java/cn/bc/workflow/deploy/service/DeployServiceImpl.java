@@ -65,7 +65,7 @@ public class DeployServiceImpl extends DefaultCrudService<Deploy> implements
 		//判断发布类型
 		Deploy deploy = this.deployDao.load(excludeId);
 		Deployment d = null;//流程部署记录
-		if(deploy.getType() == 0){//发布XML
+		if(deploy.getType() == Deploy.TYPE_XML){//发布XML
 			// 获取xml文件流
 			InputStream xmlFile = this.getClass().getResourceAsStream(
 					Attach.DATA_REAL_PATH+"/workflow/deploy/"+deploy.getPath());
@@ -78,7 +78,7 @@ public class DeployServiceImpl extends DefaultCrudService<Deploy> implements
 				e.printStackTrace();
 			}
 
-		}else if(deploy.getType() == 1){//发布BAR
+		}else if(deploy.getType() == Deploy.TYPE_BAR){//发布BAR
 			InputStream barFile = this.getClass().getResourceAsStream(
 					Attach.DATA_REAL_PATH+"/workflow/deploy/"+deploy.getPath());
 			ZipInputStream inputStream = new ZipInputStream(barFile);
