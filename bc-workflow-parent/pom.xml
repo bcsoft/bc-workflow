@@ -91,6 +91,11 @@
 			<version>${framework.version}</version>
 			<scope>compile</scope>
 		</dependency>
+		<dependency>
+			<groupId>cn.bc</groupId>
+			<artifactId>bc-log</artifactId>
+			<version>${framework.version}</version>
+		</dependency>
 
 		<!-- provided -->
 		<dependency>

@@ -16,6 +16,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import cn.bc.core.service.DefaultCrudService;
 import cn.bc.docs.domain.Attach;
 import cn.bc.identity.web.SystemContextHolder;
+import cn.bc.log.domain.OperateLog;
+import cn.bc.log.service.OperateLogService;
 import cn.bc.workflow.deploy.dao.DeployDao;
 import cn.bc.workflow.deploy.domain.Deploy;
 
@@ -29,6 +31,11 @@ public class DeployServiceImpl extends DefaultCrudService<Deploy> implements
 		DeployService {
 	@SuppressWarnings("unused")
 	private static Log logger = LogFactory.getLog(DeployServiceImpl.class);
+	private OperateLogService operateLogService;
+	@Autowired
+	public void setOperateLogService(OperateLogService operateLogService) {
+		this.operateLogService = operateLogService;
+	}
 	@Autowired
 	private RepositoryService repositoryService;
 	
@@ -102,6 +109,11 @@ public class DeployServiceImpl extends DefaultCrudService<Deploy> implements
 			deploy.setDeployer(SystemContextHolder.get().getUserHistory());
 			deploy.setDeployDate(Calendar.getInstance());
 			this.deployDao.save(deploy);//保存
+			
+			// 记录取消发布日志
+			this.operateLogService.saveWorkLog(Deploy.class.getSimpleName(),
+					deploy.getId().toString(),"发布" + deploy.getSubject()
+					+"的流程信息",null,"deploy");
 		}
 		
 	}
@@ -116,11 +128,34 @@ public class DeployServiceImpl extends DefaultCrudService<Deploy> implements
 		if(null != deploy){
 			repositoryService.deleteDeployment(deploy.getDeploymentId());//删除流程部署
 			deploy.setStatus(Deploy.STATUS_NOT_RELEASE);
-			//设置最后修改信息
-			deploy.setModifier(SystemContextHolder.get().getUserHistory());
-			deploy.setModifiedDate(Calendar.getInstance());
+			//设置最后取消信息
+			deploy.setDeployer(SystemContextHolder.get().getUserHistory());
+			deploy.setDeployDate(Calendar.getInstance());
 			this.deployDao.save(deploy);//保存
+			
+			// 记录取消发布日志
+			this.operateLogService.saveWorkLog(Deploy.class.getSimpleName(),
+					deploy.getId().toString(),"取消发布" + deploy.getSubject()
+					+"的流程信息",null,"undeploy");
 		}
+	}
+	
+	@Override
+	public Deploy save(Deploy entity){
+		boolean isNew = entity.isNew();
+		entity = this.deployDao.save(entity);
+		if (isNew) {
+			// 记录新建日志
+			this.operateLogService.saveWorkLog(Deploy.class.getSimpleName(),
+					entity.getId().toString(),"新建" + entity.getSubject()
+					+"的流程信息",null,OperateLog.OPERATE_CREATE);
+		}else{
+			// 记录更新日志
+			this.operateLogService.saveWorkLog(Deploy.class.getSimpleName(),
+					entity.getId().toString(),"更新" + entity.getSubject()
+					+"的流程信息",null,OperateLog.OPERATE_UPDATE);
+		}
+		return entity;
 	}
 
 }

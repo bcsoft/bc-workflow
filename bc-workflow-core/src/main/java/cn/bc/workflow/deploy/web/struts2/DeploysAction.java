@@ -116,10 +116,10 @@ public class DeploysAction extends ViewAction<Map<String, Object>> {
 		List<Column> columns = new ArrayList<Column>();
 		columns.add(new IdColumn4MapKey("d.id", "id"));
 		columns.add(new TextColumn4MapKey("a.status_", "status",
-				getText("deploy.status"), 40).setSortable(true)
+				getText("deploy.status"), 50).setSortable(true)
 				.setValueFormater(new KeyValueFormater(this.getStatuses())));
 		columns.add(new TextColumn4MapKey("d.order_", "orderNo",
-				getText("deploy.order"), 60).setSortable(true));
+				getText("deploy.order"), 50).setSortable(true));
 		columns.add(new TextColumn4MapKey("d.category", "category",
 				getText("deploy.category"), 150).setUseTitleFromLabel(true));
 		columns.add(new TextColumn4MapKey("d.type_", "type",
@@ -130,19 +130,19 @@ public class DeploysAction extends ViewAction<Map<String, Object>> {
 		columns.add(new TextColumn4MapKey("d.source", "source",
 				getText("deploy.source"), 150).setUseTitleFromLabel(true));
 		columns.add(new TextColumn4MapKey("d.code", "code",
-				getText("deploy.code"), 200).setSortable(true)
+				getText("deploy.code"), 100).setSortable(true)
 				.setUseTitleFromLabel(true));
 		columns.add(new TextColumn4MapKey("d.version_", "version",
-				getText("deploy.version"), 100).setUseTitleFromLabel(true));
+				getText("deploy.version"), 50).setUseTitleFromLabel(true));
 		columns.add(new TextColumn4MapKey("d.path", "path",
-				getText("deploy.tfpath")).setUseTitleFromLabel(true));
+				getText("deploy.tfpath"), 250).setUseTitleFromLabel(true));
 		columns.add(new TextColumn4MapKey("d.size_", "size",
-				getText("deploy.file.size"),110).setUseTitleFromLabel(true)
+				getText("deploy.file.size"),65).setUseTitleFromLabel(true)
 				.setValueFormater(new FileSizeFormater()));
 		columns.add(new TextColumn4MapKey("d.desc_", "desc_",
 				getText("deploy.desc"), 100).setUseTitleFromLabel(true));
 		columns.add(new TextColumn4MapKey("ap.actor_name", "pname",
-				getText("deploy.deployer"), 80));
+				getText("deploy.deployer"), 130));
 		columns.add(new TextColumn4MapKey("d.deploy_date", "deploy_date",
 				getText("deploy.deployDate"), 130)
 				.setValueFormater(new CalendarFormater("yyyy-MM-dd HH:mm")));
