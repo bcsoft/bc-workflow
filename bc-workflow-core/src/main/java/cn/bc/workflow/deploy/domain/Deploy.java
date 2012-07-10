@@ -4,9 +4,13 @@
 package cn.bc.workflow.deploy.domain;
 
 import java.io.File;
+import java.util.Calendar;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
@@ -14,6 +18,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import cn.bc.docs.domain.Attach;
+import cn.bc.identity.domain.ActorHistory;
 import cn.bc.identity.domain.RichFileEntityImpl;
 
 /**
@@ -41,6 +46,7 @@ public class Deploy extends RichFileEntityImpl {
 	/** 类型：BAR*/
 	public static final int TYPE_BAR = 1;
 	
+	private String deploymentId; // 对应act_re_deployment 的id_
 	private int type; // 0:XML,1:BRA
 	private String orderNo;// 排序号
 	private String code;// 编码
@@ -51,8 +57,18 @@ public class Deploy extends RichFileEntityImpl {
 	private String category;// 所属分类
 	private Long size;// 文件的大小(单位为字节) 默认0
 	private String source;//原始文件名
+	private Calendar deployDate;// 最后部署时间
+	private ActorHistory deployer;// 最后部署人
 
-	
+	@Column(name = "DEPLOYMENT_ID")
+	public String getDeploymentId() {
+		return deploymentId;
+	}
+
+	public void setDeploymentId(String deploymentId) {
+		this.deploymentId = deploymentId;
+	}
+
 	@Column(name = "TYPE_")
 	public int getType() {
 		return type;
@@ -137,7 +153,27 @@ public class Deploy extends RichFileEntityImpl {
 	public void setSource(String source) {
 		this.source = source;
 	}
+	
+	@Column(name = "DEPLOY_DATE")
+	public Calendar getDeployDate() {
+		return deployDate;
+	}
 
+	public void setDeployDate(Calendar deployDate) {
+		this.deployDate = deployDate;
+	}
+	
+	@ManyToOne(fetch = FetchType.EAGER, optional = true)
+	@JoinColumn(name = "DEPLOYER_ID", referencedColumnName = "ID")
+	public ActorHistory getDeployer() {
+		return deployer;
+	}
+
+	public void setDeployer(ActorHistory deployer) {
+		this.deployer = deployer;
+	}
+
+	
 	/**
 	 * 获取模板的附件长度
 	 * <p>
@@ -153,5 +189,6 @@ public class Deploy extends RichFileEntityImpl {
 		File file = new File(p);
 		return file.length();
 	}
+
 
 }

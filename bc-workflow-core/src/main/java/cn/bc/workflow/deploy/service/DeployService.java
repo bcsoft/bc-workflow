@@ -35,15 +35,6 @@ public interface DeployService extends CrudService<Deploy> {
 	 */
 	public boolean isUniqueCodeAndVersion(Long currentId, String code,String version);
 
-
-	/**
-	 * 保存方法，自动将同编码的另外一条状态为正常的模板转为禁用
-	 * 
-	 * @param deploy
-	 * @return
-	 */
-	public void saveTpl(Deploy deploy);
-	
 	/**
 	 * 查找模板分类
 	 * @return
@@ -58,22 +49,16 @@ public interface DeployService extends CrudService<Deploy> {
 	public Long isReleased(Long excludeId);
 
 	/**
-	 * 发布吧部署流程需要部署流程id,标题,物理文件路径,原文件名称 (XML)
+	 * 发布部署流程需要部署流程id
 	 * @param excludeId
-	 * @param subject
-	 * @param source
-	 * @param path
 	 */
-	public void deployRelease4XML(Long excludeId, String subject, String source, String path);
+	public void dodeployRelease(Long excludeId);
 
 	/**
-	 * 发布吧部署流程需要部署流程id,标题,物理文件路径,原文件名称 (BAR)
+	 * 取消部署需要部署流程id
 	 * @param excludeId
-	 * @param subject
-	 * @param source
-	 * @param path
 	 */
-	public void deployRelease4BAR(Long excludeId, String subject, String source, String path);
+	public void dodeployCancel(Long excludeId);
 
 	
 }

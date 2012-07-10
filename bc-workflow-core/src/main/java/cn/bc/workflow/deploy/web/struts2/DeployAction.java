@@ -1,5 +1,9 @@
 package cn.bc.workflow.deploy.web.struts2;
 
+import java.util.Calendar;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
@@ -25,6 +29,7 @@ import cn.bc.workflow.deploy.service.DeployService;
 public class DeployAction extends FileEntityAction<Long, Deploy> {
 	private static final long serialVersionUID = 1L;
 	private DeployService deployService;
+	public Map<String, String> statusesValue;
 
 	@Autowired
 	public void setDeployService(DeployService deployService) {
@@ -89,6 +94,28 @@ public class DeployAction extends FileEntityAction<Long, Deploy> {
 		this.deployService.save(deploy);
 		this.afterSave(deploy);
 		return "saveSuccess";
+	}
+	
+	@Override
+	protected void initForm(boolean editable) throws Exception {
+		super.initForm(editable);
+		SystemContext context = getSystyemContext();
+		Deploy e = this.getE();
+		e.setDeployer(context.getUserHistory());
+		e.setDeployDate(Calendar.getInstance());
+		// 状态列表
+		statusesValue = this.getStatuses();
+	}
+	
+	// 状态键值转换
+	private Map<String, String> getStatuses() {
+		Map<String, String> statuses = new LinkedHashMap<String, String>();
+		statuses.put(String.valueOf(Deploy.STATUS_RELEASED),
+				getText("deploy.status.released"));
+		statuses.put(String.valueOf(Deploy.STATUS_NOT_RELEASE),
+				getText("deploy.status.not.release"));
+		statuses.put("", getText("deploy.status.all"));
+		return statuses;
 	}
 
 	public Long id;// 部署id
