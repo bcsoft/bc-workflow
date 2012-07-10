@@ -44,7 +44,7 @@ public class FlowAttach extends FileEntityImpl {
 	private String uid;
 	
 	
-	@Column(name="PROC_INST_ID_")
+	@Column(name="PID")
 	public String getPid() {
 		return pid;
 	}
@@ -71,7 +71,7 @@ public class FlowAttach extends FileEntityImpl {
 		this.type = type;
 	}
 	
-	@Column(name="TASK_ID_")
+	@Column(name="TID")
 	public String getTid() {
 		return tid;
 	}
@@ -113,7 +113,7 @@ public class FlowAttach extends FileEntityImpl {
 	public void setSize(Long size) {
 		this.size = size;
 	}
-	@Column(name="EXT_")
+	@Column(name="EXT")
 	public String getExt() {
 		return ext;
 	}
