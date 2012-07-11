@@ -23,7 +23,8 @@
 		</action>
 		
 		<action name="deploys/isReleased" class="deploysAction" method="isReleased"/>
-		<action name="deploys/deployRelease" class="deploysAction" method="deployRelease"/>
+		<action name="deploys/dodeployRelease" class="deploysAction" method="dodeployRelease"/>
+		<action name="deploys/dodeployCancel" class="deploysAction" method="dodeployCancel"/>
 		
 		<action name="deploy/isUniqueCodeAndVersion" class="deployAction" method="isUniqueCodeAndVersion"/>
 		<action name="deploy/download" class="deployAction" method="download">

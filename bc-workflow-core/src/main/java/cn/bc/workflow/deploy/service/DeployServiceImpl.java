@@ -1,18 +1,23 @@
 package cn.bc.workflow.deploy.service;
 
+import java.io.IOException;
 import java.io.InputStream;
+import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
 import java.util.zip.ZipInputStream;
 
 import org.activiti.engine.RepositoryService;
+import org.activiti.engine.repository.Deployment;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import cn.bc.BCConstants;
 import cn.bc.core.service.DefaultCrudService;
 import cn.bc.docs.domain.Attach;
+import cn.bc.identity.web.SystemContextHolder;
+import cn.bc.log.domain.OperateLog;
+import cn.bc.log.service.OperateLogService;
 import cn.bc.workflow.deploy.dao.DeployDao;
 import cn.bc.workflow.deploy.domain.Deploy;
 
@@ -26,6 +31,11 @@ public class DeployServiceImpl extends DefaultCrudService<Deploy> implements
 		DeployService {
 	@SuppressWarnings("unused")
 	private static Log logger = LogFactory.getLog(DeployServiceImpl.class);
+	private OperateLogService operateLogService;
+	@Autowired
+	public void setOperateLogService(OperateLogService operateLogService) {
+		this.operateLogService = operateLogService;
+	}
 	@Autowired
 	private RepositoryService repositoryService;
 	
@@ -45,14 +55,6 @@ public class DeployServiceImpl extends DefaultCrudService<Deploy> implements
 		return this.deployDao.isUniqueCodeAndVersion(currentId, code,version);
 	}
 
-	public void saveTpl(Deploy deploy) {
-		Deploy oldTpl= this.deployDao.loadByCodeAndId(deploy.getCode(),deploy.getId());
-		if(oldTpl!=null){
-			oldTpl.setStatus(BCConstants.STATUS_DISABLED);
-			this.deployDao.save(oldTpl);
-		}
-		this.deployDao.save(oldTpl);
-	}
 
 	public List<Map<String, String>> findCategoryOption() {
 		return this.deployDao.findCategoryOption();
@@ -63,52 +65,97 @@ public class DeployServiceImpl extends DefaultCrudService<Deploy> implements
 	}
 
 	/**
-	 * 发布吧部署流程需要部署流程id,标题,物理文件路径,原文件名称 (XML)
+	 * 发布部署流程需要部署流程id
 	 * @param excludeId
-	 * @param subject
-	 * @param source
-	 * @param path
 	 */
-	public void deployRelease4XML(Long excludeId, String subject,String source,String path) {
-		// 获取xml文件流
-		InputStream xmlFile = this.getClass().getResourceAsStream(
-				Attach.DATA_REAL_PATH+"/workflow/deploy/"+path);
-		// 发布xml
-		org.activiti.engine.repository.Deployment d = repositoryService
-				.createDeployment().name(subject)
-				.addInputStream(source, xmlFile).deploy();
+	public void dodeployRelease(Long excludeId) {
+		//判断发布类型
+		Deploy deploy = this.deployDao.load(excludeId);
+		Deployment d = null;//流程部署记录
+		if(deploy.getType() == Deploy.TYPE_XML){//发布XML
+			// 获取xml文件流
+			InputStream xmlFile = this.getClass().getResourceAsStream(
+					Attach.DATA_REAL_PATH+"/workflow/deploy/"+deploy.getPath());
+			// 发布xml
+			d = repositoryService.createDeployment().name(deploy.getSource())
+					.addInputStream(deploy.getSource(), xmlFile).deploy();
+			try {
+				xmlFile.close(); //释放文件
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+
+		}else if(deploy.getType() == Deploy.TYPE_BAR){//发布BAR
+			InputStream barFile = this.getClass().getResourceAsStream(
+					Attach.DATA_REAL_PATH+"/workflow/deploy/"+deploy.getPath());
+			ZipInputStream inputStream = new ZipInputStream(barFile);
+			
+			// 发布bar
+			d = repositoryService.createDeployment().name(deploy.getSource())
+					.addZipInputStream(inputStream).deploy();
+			try {
+				inputStream.close();//释放文件
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
 		
 		if(null != d){//发布成功 
-			Deploy deploy = this.deployDao.load(excludeId);
-			deploy.setStatus(Deploy.STATUS_RELEASED); //设置为发布状态
+			//保存deploymentId
+			deploy.setDeploymentId(d.getId());
+			//设置为发布状态
+			deploy.setStatus(Deploy.STATUS_RELEASED); 
+			//设置最后发布信息
+			deploy.setDeployer(SystemContextHolder.get().getUserHistory());
+			deploy.setDeployDate(Calendar.getInstance());
 			this.deployDao.save(deploy);//保存
+			
+			// 记录取消发布日志
+			this.operateLogService.saveWorkLog(Deploy.class.getSimpleName(),
+					deploy.getId().toString(),"发布" + deploy.getSubject()
+					+"的流程信息",null,"deploy");
 		}
+		
 	}
 
 	/**
-	 * 发布吧部署流程需要部署流程id,标题,物理文件路径,原文件名称 (BAR)
+	 * 取消部署需要部署流程id
 	 * @param excludeId
-	 * @param subject
-	 * @param source
-	 * @param path
 	 */
-	public void deployRelease4BAR(Long excludeId, String subject,
-			String source, String path) {
-		// 获取bar包
-		InputStream barFile = this.getClass().getResourceAsStream(
-				Attach.DATA_REAL_PATH+"/workflow/deploy/"+path);
-		ZipInputStream inputStream = new ZipInputStream(barFile);
-		// 发布bar
-		
-		org.activiti.engine.repository.Deployment d = repositoryService
-				.createDeployment().name(subject)
-				.addZipInputStream(inputStream).deploy();
-		
-		if(null != d){//发布成功 
-			Deploy deploy = this.deployDao.load(excludeId);
-			deploy.setStatus(Deploy.STATUS_RELEASED); //设置为发布状态
+	public void dodeployCancel(Long excludeId) {
+		//判断发布类型
+		Deploy deploy = this.deployDao.load(excludeId);
+		if(null != deploy){
+			repositoryService.deleteDeployment(deploy.getDeploymentId());//删除流程部署
+			deploy.setStatus(Deploy.STATUS_NOT_RELEASE);
+			//设置最后取消信息
+			deploy.setDeployer(SystemContextHolder.get().getUserHistory());
+			deploy.setDeployDate(Calendar.getInstance());
 			this.deployDao.save(deploy);//保存
+			
+			// 记录取消发布日志
+			this.operateLogService.saveWorkLog(Deploy.class.getSimpleName(),
+					deploy.getId().toString(),"取消发布" + deploy.getSubject()
+					+"的流程信息",null,"undeploy");
 		}
+	}
+	
+	@Override
+	public Deploy save(Deploy entity){
+		boolean isNew = entity.isNew();
+		entity = this.deployDao.save(entity);
+		if (isNew) {
+			// 记录新建日志
+			this.operateLogService.saveWorkLog(Deploy.class.getSimpleName(),
+					entity.getId().toString(),"新建" + entity.getSubject()
+					+"的流程信息",null,OperateLog.OPERATE_CREATE);
+		}else{
+			// 记录更新日志
+			this.operateLogService.saveWorkLog(Deploy.class.getSimpleName(),
+					entity.getId().toString(),"更新" + entity.getSubject()
+					+"的流程信息",null,OperateLog.OPERATE_UPDATE);
+		}
+		return entity;
 	}
 
 }
