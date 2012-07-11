@@ -23,9 +23,10 @@ import cn.bc.identity.domain.FileEntityImpl;
 public class FlowAttach extends FileEntityImpl {
 	private static final long serialVersionUID = 1L;
 	public static String ATTACH_TYPE=FlowAttach.class.getSimpleName();
+	
+	private String uid;
 	/** 附件存储的子路径，开头末尾不要带"/" */
 	public static String DATA_SUB_PATH = "workflow/attachment";
-	
 	/**附件**/
 	public static final int TYPE_ATTACHMENT=1;
 	/**意见**/
@@ -40,10 +41,17 @@ public class FlowAttach extends FileEntityImpl {
 	private String desc;// 备注
 	private Long size;// 文件的大小(单位为字节) 默认0
 	private String ext;// 扩展名
+	private Boolean formatted;//附件是否需要格式化,类型为意见时字段为空
+	
+	@Column(name = "FORMATTED")
+	public Boolean getFormatted() {
+		return formatted;
+	}
 
-	private String uid;
-	
-	
+	public void setFormatted(Boolean formatted) {
+		this.formatted = formatted;
+	}
+
 	@Column(name="PID")
 	public String getPid() {
 		return pid;

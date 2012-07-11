@@ -5,6 +5,7 @@ package cn.bc.workflow.flowattach.service;
 
 import java.util.List;
 
+import cn.bc.core.service.CrudService;
 import cn.bc.workflow.flowattach.domain.FlowAttach;
 
 /**
@@ -12,7 +13,7 @@ import cn.bc.workflow.flowattach.domain.FlowAttach;
  * 
  * @author lbj
  */
-public interface FlowAttachService {
+public interface FlowAttachService extends CrudService<FlowAttach> {
 	/**
 	 * 获取可用的流程附加信息列表
 	 * 
@@ -23,4 +24,11 @@ public interface FlowAttachService {
 	 * @return
 	 */
 	List<FlowAttach> find(String processInstanceId, String taskId);
+	
+	/**
+	 * 获取流程实例名称
+	 * @param pid 流程实例id
+	 * @return
+	 */
+	public String getProcInstName(String pid);
 }

@@ -46,4 +46,8 @@ public class FlowAttachServiceImpl extends DefaultCrudService<FlowAttach>
 				Direction.Asc));
 		return this.createQuery().condition(and).list();
 	}
+
+	public String getProcInstName(String pid) {
+		return flowAttachDao.getProcInstName(pid);
+	}
 }

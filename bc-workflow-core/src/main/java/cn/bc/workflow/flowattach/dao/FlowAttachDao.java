@@ -14,4 +14,10 @@ import cn.bc.workflow.flowattach.domain.FlowAttach;
  */
 public interface FlowAttachDao extends CrudDao<FlowAttach> {
 
+	/**
+	 * 获取流程实例名称
+	 * @param pid 流程实例id
+	 * @return
+	 */
+	public String getProcInstName(String pid);
 }
