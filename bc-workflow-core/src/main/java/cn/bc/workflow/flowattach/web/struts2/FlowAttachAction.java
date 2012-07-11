@@ -48,7 +48,6 @@ public class FlowAttachAction extends FileEntityAction<Long, FlowAttach> {
 	public boolean common;//是否公共信息
 	public int type;//类型：1-附件，2-意见
 	
-	@SuppressWarnings("unused")
 	private FlowAttachService flowAttachService;
 	private ActorHistoryService actorHistroyService;
 	private TemplateService templateService;
@@ -201,7 +200,7 @@ public class FlowAttachAction extends FileEntityAction<Long, FlowAttach> {
 			// 上传文件存储的绝对路径
 			String appRealDir=Attach.DATA_REAL_PATH+"/"+FlowAttach.DATA_SUB_PATH;
 			// 所保存文件所在的目录的绝对路径名
-			String realFileDir=appRealDir+'/'+subFolder;
+			String realFileDir=appRealDir+"/"+subFolder;
 			// 构建文件要保存到的目录
 			File _fileDir = new File(realFileDir);
 			if (!_fileDir.exists()) {
@@ -218,7 +217,8 @@ public class FlowAttachAction extends FileEntityAction<Long, FlowAttach> {
 			// 上下文
 			SystemContext sc=(SystemContext) this.getContext();
 			// 保存附件记录                                                                //标识此附件从模板中添加
-			saveAttachLog(t.getSubject(),"FlowAttachFromTemplate",uid,sc,extension,t.getSize(),now,subFolder+'/'+fileName,false);
+			saveAttachLog(t.getSubject(),"FlowAttachFromTemplate",uid,sc,extension,t.getSize()
+					,now,FlowAttach.DATA_SUB_PATH+"/"+subFolder+"/"+fileName,true);
 			
 			// 保存到文件
 			OutputStream out = new BufferedOutputStream(new FileOutputStream(realFilePath));

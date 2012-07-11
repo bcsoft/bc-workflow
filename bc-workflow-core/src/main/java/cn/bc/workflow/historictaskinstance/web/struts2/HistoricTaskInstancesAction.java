@@ -92,10 +92,10 @@ public class HistoricTaskInstancesAction extends
 				//根据结束时间取得状态
 				if (map.get("end_time") != null) {
 					//已完成
-					map.put("status",BCConstants.STATUS_ENABLED);
+					map.put("status",BCConstants.STATUS_DISABLED);
 				} else 
 					//未完成
-					map.put("status",BCConstants.STATUS_DISABLED);
+					map.put("status",BCConstants.STATUS_ENABLED);
 				// 格式化耗时
 				if (map.get("duration") != null)
 					map.put("frmDuration",
@@ -181,7 +181,7 @@ public class HistoricTaskInstancesAction extends
 		
 		if(!my)
 			tb.addButton(Toolbar.getDefaultToolbarRadioGroup(
-					this.getStatus(), "status", 0,
+					this.getStatus(), "status", BCConstants.STATUS_ENABLED,
 					getText("title.click2changeSearchStatus")));
 
 		// 搜索按钮
@@ -197,9 +197,9 @@ public class HistoricTaskInstancesAction extends
 	private Map<String, String> getStatus() {
 		Map<String, String> map = new LinkedHashMap<String, String>();
 		map.put(String.valueOf(BCConstants.STATUS_ENABLED),
-				getText("flow.task.status.finished"));
-		map.put(String.valueOf(BCConstants.STATUS_DISABLED),
 				getText("flow.task.status.doing"));
+		map.put(String.valueOf(BCConstants.STATUS_DISABLED),
+				getText("flow.task.status.finished"));
 		map.put("", getText("bc.status.all"));
 		return map;
 	}
@@ -218,9 +218,9 @@ public class HistoricTaskInstancesAction extends
 			String[] ss = status.split(",");
 			if (ss.length == 1) {
 				if(ss[0].equals(String.valueOf(BCConstants.STATUS_ENABLED))){
-					ac.add(new IsNotNullCondition("a.end_time_"));
-				}else if(ss[0].equals(String.valueOf(BCConstants.STATUS_DISABLED)))
 					ac.add(new IsNullCondition("a.end_time_"));
+				}else if(ss[0].equals(String.valueOf(BCConstants.STATUS_DISABLED)))
+					ac.add(new IsNotNullCondition("a.end_time_"));
 			} 
 		}
 		return ac.isEmpty() ? null : ac;

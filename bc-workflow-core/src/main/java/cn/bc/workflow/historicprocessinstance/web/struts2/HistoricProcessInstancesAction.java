@@ -2,6 +2,7 @@ package cn.bc.workflow.historicprocessinstance.web.struts2;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -9,15 +10,19 @@ import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Controller;
 
+import cn.bc.BCConstants;
 import cn.bc.core.query.condition.Condition;
 import cn.bc.core.query.condition.Direction;
 import cn.bc.core.query.condition.impl.AndCondition;
+import cn.bc.core.query.condition.impl.IsNotNullCondition;
+import cn.bc.core.query.condition.impl.IsNullCondition;
 import cn.bc.core.query.condition.impl.OrderCondition;
 import cn.bc.core.util.DateUtils;
 import cn.bc.db.jdbc.RowMapper;
 import cn.bc.db.jdbc.SqlObject;
 import cn.bc.identity.web.SystemContext;
 import cn.bc.web.formater.CalendarFormater;
+import cn.bc.web.formater.EntityStatusFormater;
 import cn.bc.web.struts2.ViewAction;
 import cn.bc.web.ui.html.grid.Column;
 import cn.bc.web.ui.html.grid.HiddenColumn4MapKey;
@@ -40,6 +45,7 @@ import cn.bc.web.ui.json.Json;
 public class HistoricProcessInstancesAction extends
 		ViewAction<Map<String, Object>> {
 	private static final long serialVersionUID = 1L;
+	public String status = String.valueOf(BCConstants.STATUS_ENABLED); 
 
 	@Override
 	public boolean isReadonly() {
@@ -51,7 +57,7 @@ public class HistoricProcessInstancesAction extends
 
 	@Override
 	protected OrderCondition getGridOrderCondition() {
-		return new OrderCondition("a.end_time_", Direction.Asc).add("a.start_time_", Direction.Desc);
+		return new OrderCondition("a.start_time_", Direction.Desc);
 	}
 
 	@Override
@@ -61,6 +67,7 @@ public class HistoricProcessInstancesAction extends
 		StringBuffer sql = new StringBuffer();
 
 		sql.append("select a.id_,b.name_ as category,a.start_time_,a.end_time_,a.duration_,a.proc_inst_id_");
+		sql.append(",b.version_ as version,b.key_ as key");
 		sql.append(" from act_hi_procinst a");
 		sql.append(" INNER JOIN act_re_procdef b on b.id_=a.proc_def_id_");
 		sqlObject.setSql(sql.toString());
@@ -79,12 +86,10 @@ public class HistoricProcessInstancesAction extends
 				map.put("end_time", rs[i++]);
 				map.put("duration", rs[i++]);
 				if (map.get("end_time") != null) {
-					map.put("status", getText("flow.instance.status.finished"));
-				} else {
-					map.put("status",
-							getText("flow.instance.status.processing"));
-				}
-
+					map.put("status", BCConstants.STATUS_DISABLED);
+				} else 
+					map.put("status",BCConstants.STATUS_ENABLED);
+				
 				// 格式化耗时
 				if (map.get("duration") != null)
 					map.put("frmDuration",
@@ -92,6 +97,8 @@ public class HistoricProcessInstancesAction extends
 									"duration").toString())));
 
 				map.put("procinstid", rs[i++]);
+				map.put("version", rs[i++]);
+				map.put("key", rs[i++]);
 				return map;
 			}
 		});
@@ -103,9 +110,16 @@ public class HistoricProcessInstancesAction extends
 		List<Column> columns = new ArrayList<Column>();
 		columns.add(new IdColumn4MapKey("a.id_", "id"));
 		columns.add(new TextColumn4MapKey("", "status",
-				getText("flow.instance.status"), 60).setSortable(true));
+				getText("flow.instance.status"), 60).setSortable(true)
+				.setValueFormater(new EntityStatusFormater(getStatus())));
 		columns.add(new TextColumn4MapKey("b.name_", "category",
 				getText("flow.instance.name")).setSortable(true)
+				.setUseTitleFromLabel(true));
+		columns.add(new TextColumn4MapKey("b.version_", "version",
+				getText("flow.instance.version"),50).setSortable(true)
+				.setUseTitleFromLabel(true));
+		columns.add(new TextColumn4MapKey("b.key_", "key",
+				getText("flow.instance.key"),180).setSortable(true)
 				.setUseTitleFromLabel(true));
 		columns.add(new TextColumn4MapKey("a.start_time_", "start_time",
 				getText("flow.instance.startTime"), 150).setSortable(true)
@@ -120,6 +134,20 @@ public class HistoricProcessInstancesAction extends
 		columns.add(new HiddenColumn4MapKey("procinstid", "procinstid"));
 		return columns;
 	}
+	
+	/**
+	 * 状态值转换:流转中|已完成|全部
+	 * 
+	 */
+	private Map<String, String> getStatus() {
+		Map<String, String> map = new LinkedHashMap<String, String>();
+		map.put(String.valueOf(BCConstants.STATUS_ENABLED),
+				getText("flow.instance.status.processing"));
+		map.put(String.valueOf(BCConstants.STATUS_DISABLED),
+				getText("flow.instance.status.finished"));
+		map.put("", getText("bc.status.all"));
+		return map;
+	}
 
 	@Override
 	protected String getGridRowLabelExpression() {
@@ -128,7 +156,7 @@ public class HistoricProcessInstancesAction extends
 
 	@Override
 	protected String[] getGridSearchFields() {
-		return new String[] { "b.name_" };
+		return new String[] { "b.name_","b.key_" };
 	}
 
 	@Override
@@ -139,7 +167,7 @@ public class HistoricProcessInstancesAction extends
 	@Override
 	protected PageOption getHtmlPageOption() {
 		return super.getHtmlPageOption().setWidth(800).setMinWidth(400)
-				.setHeight(400).setMinHeight(300).setMinimizable(false);
+				.setHeight(400).setMinHeight(300);
 	}
 
 	@Override
@@ -147,11 +175,15 @@ public class HistoricProcessInstancesAction extends
 		Toolbar tb = new Toolbar();
 		// 发起流程
 		tb.addButton(new ToolbarButton().setIcon("ui-icon-play")
-				.setText(getText("flow.start")).setClick("bc.flow.start"));
+				.setText(getText("flow.start")).setClick("bc.historicProcessInstanceSelectView.startflow"));
 		// 查看
 		tb.addButton(new ToolbarButton().setIcon("ui-icon-check")
 				.setText(getText("label.read"))
 				.setClick("bc.historicProcessInstanceSelectView.open"));
+		
+		tb.addButton(Toolbar.getDefaultToolbarRadioGroup(
+				this.getStatus(), "status", BCConstants.STATUS_ENABLED,
+				getText("title.click2changeSearchStatus")));
 
 		// 搜索按钮
 		tb.addButton(this.getDefaultSearchToolbarButton());
@@ -163,14 +195,24 @@ public class HistoricProcessInstancesAction extends
 	protected Condition getGridSpecalCondition() {
 		// 状态条件
 		AndCondition ac = new AndCondition();
-
+		if(status != null && status.length() > 0) {
+			String[] ss = status.split(",");
+			if (ss.length == 1) {
+				if(ss[0].equals(String.valueOf(BCConstants.STATUS_ENABLED))){
+					ac.add(new IsNullCondition("a.end_time_"));
+				}else if(ss[0].equals(String.valueOf(BCConstants.STATUS_DISABLED)))
+					ac.add(new IsNotNullCondition("a.end_time_"));
+			} 
+		}
 		return ac.isEmpty() ? null : ac;
 	}
 
 	@Override
 	protected Json getGridExtrasData() {
 		Json json = new Json();
-
+		// 状态条件
+		if (status != null && status.length() > 0) 
+			json.put("status", status);
 		return json;
 	}
 
