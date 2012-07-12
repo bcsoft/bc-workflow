@@ -4,6 +4,7 @@
 package cn.bc.workflow.service;
 
 import java.io.InputStream;
+import java.util.Map;
 import java.util.zip.ZipInputStream;
 
 import org.activiti.engine.HistoryService;
@@ -234,5 +235,15 @@ public class WorkflowServiceImpl implements WorkflowService {
 			String resourceName) {
 		return repositoryService
 				.getResourceAsStream(deploymentId, resourceName);
+	}
+
+	public Map<String, Object> getInstanceParams(String processInstanceId) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	public Map<String, Object> getTaskParams(String taskId) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 }

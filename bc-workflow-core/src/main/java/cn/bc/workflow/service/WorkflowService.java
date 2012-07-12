@@ -4,8 +4,8 @@
 package cn.bc.workflow.service;
 
 import java.io.InputStream;
+import java.util.Map;
 
-import org.activiti.engine.impl.persistence.entity.CommentEntity;
 import org.activiti.engine.repository.Deployment;
 import org.activiti.engine.repository.ProcessDefinition;
 import org.activiti.engine.runtime.ProcessInstance;
@@ -121,4 +121,22 @@ public interface WorkflowService {
 	 * @return
 	 */
 	InputStream getDeploymentResource(String deploymentId, String resourceName);
+	
+	/**
+	 * 获取指定流程实例公共信息的键值替换参数
+	 * 
+	 * @param processInstanceId
+	 * 
+	 * @return
+	 */
+	Map<String, Object> getInstanceParams(String processInstanceId);
+	
+	/**
+	 * 获取指定任务的键值替换参数
+	 * 
+	 * @param taskId
+	 * 
+	 * @return
+	 */
+	Map<String, Object> getTaskParams(String taskId);
 }
