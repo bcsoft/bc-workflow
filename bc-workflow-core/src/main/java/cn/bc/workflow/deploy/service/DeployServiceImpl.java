@@ -119,14 +119,20 @@ public class DeployServiceImpl extends DefaultCrudService<Deploy> implements
 	}
 
 	/**
-	 * 取消部署需要部署流程id
+	 * 取消部署需要部署流程id,isCascade(是否级联取消)
 	 * @param excludeId
+	 * @param isCascade
 	 */
-	public void dodeployCancel(Long excludeId) {
+	public void dodeployCancel(Long excludeId,Boolean isCascade) {
 		//判断发布类型
 		Deploy deploy = this.deployDao.load(excludeId);
 		if(null != deploy){
-			repositoryService.deleteDeployment(deploy.getDeploymentId());//删除流程部署
+			if(isCascade){
+				repositoryService.deleteDeployment(deploy.getDeploymentId(),true);//级联删除流程
+			}else{
+				repositoryService.deleteDeployment(deploy.getDeploymentId());//删除流程
+			}
+			
 			deploy.setStatus(Deploy.STATUS_NOT_RELEASE);
 			//设置最后取消信息
 			deploy.setDeployer(SystemContextHolder.get().getUserHistory());
@@ -138,6 +144,15 @@ public class DeployServiceImpl extends DefaultCrudService<Deploy> implements
 					deploy.getId().toString(),"取消发布" + deploy.getSubject()
 					+"的流程信息",null,"undeploy");
 		}
+	}
+	
+	/**
+	 * 通过流程id判断此信息是否已发起
+	 * @param excludeId
+	 * @return
+	 */
+	public Long isStarted(String deploymentId) {
+		return this.deployDao.isStarted(deploymentId);
 	}
 	
 	@Override

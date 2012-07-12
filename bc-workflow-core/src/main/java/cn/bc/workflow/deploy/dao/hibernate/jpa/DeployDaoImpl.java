@@ -37,7 +37,6 @@ public class DeployDaoImpl extends HibernateCrudJpaDao<Deploy> implements
 		this.jdbcTemplate = new JdbcTemplate(dataSource);
 	}
 
-	
 	public Deploy loadByCode(String code) {
 		if (code == null)
 			return null;
@@ -113,6 +112,22 @@ public class DeployDaoImpl extends HibernateCrudJpaDao<Deploy> implements
 		Long id = null;
 		String sql = "select d.id from bc_wf_deploy d where d.id='"+excludeId+"'" +
 				"and d.status_="+Deploy.STATUS_RELEASED;
+		try {
+			id = this.jdbcTemplate.queryForLong(sql);
+		} catch (EmptyResultDataAccessException e) {
+			e.getStackTrace();
+		}
+		return id;
+	}
+
+	/**
+	 * 通过流程id判断此信息是否已发起
+	 * @param excludeId
+	 * @return
+	 */
+	public Long isStarted(String deploymentId) {
+		Long id = null;
+		String sql = "select ard.id_ from act_re_deployment ard where ard.id_='"+deploymentId+"'";
 		try {
 			id = this.jdbcTemplate.queryForLong(sql);
 		} catch (EmptyResultDataAccessException e) {

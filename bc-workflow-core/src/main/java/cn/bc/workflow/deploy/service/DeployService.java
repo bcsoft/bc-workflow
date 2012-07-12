@@ -55,10 +55,18 @@ public interface DeployService extends CrudService<Deploy> {
 	public void dodeployRelease(Long excludeId);
 
 	/**
-	 * 取消部署需要部署流程id
+	 * 取消部署需要部署流程id,isCascade(是否级联取消)
 	 * @param excludeId
+	 * @param isCascade
 	 */
-	public void dodeployCancel(Long excludeId);
+	public void dodeployCancel(Long excludeId,Boolean isCascade);
+
+	/**
+	 * 通过流程id判断此信息是否已发起
+	 * @param excludeId
+	 * @return
+	 */
+	public Long isStarted(String deploymentId);
 
 	
 }

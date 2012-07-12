@@ -1,6 +1,7 @@
 package cn.bc.workflow.todo.web.struts2;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,12 +15,15 @@ import cn.bc.core.Page;
 import cn.bc.core.query.Query;
 import cn.bc.core.query.condition.Condition;
 import cn.bc.core.query.condition.ConditionUtils;
+import cn.bc.core.query.condition.Direction;
 import cn.bc.core.query.condition.impl.EqualsCondition;
 import cn.bc.core.query.condition.impl.InCondition;
 import cn.bc.core.query.condition.impl.IsNullCondition;
+import cn.bc.core.query.condition.impl.OrderCondition;
 import cn.bc.db.jdbc.RowMapper;
 import cn.bc.db.jdbc.SqlObject;
 import cn.bc.identity.web.SystemContext;
+import cn.bc.web.formater.AbstractFormater;
 import cn.bc.web.formater.CalendarFormater;
 import cn.bc.web.struts2.ViewAction;
 import cn.bc.web.ui.html.grid.Column;
@@ -88,6 +92,11 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>>{
 	}
 	
 	@Override
+	protected OrderCondition getGridOrderCondition() {
+		return new OrderCondition("art.create_time_",Direction.Desc);
+	}
+	
+	@Override
 	protected Condition getGridSpecalCondition() {
 		// 查找当前登录用户条件
 		SystemContext context = (SystemContext) this.getContext();
@@ -142,14 +151,45 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>>{
 	protected List<Column> getGridColumns() {
 		List<Column> columns = new ArrayList<Column>();
 		columns.add(new IdColumn4MapKey("art.id_", "id_"));
-		columns.add(new HiddenColumn4MapKey("procInstId", "procInstId"));
 		// 标题
 		columns.add(new TextColumn4MapKey("art.name_", "artName",
-				getText("todo.personal.artName"), 100).setSortable(true)
-				.setUseTitleFromLabel(true));
+				getText("todo.personal.artName"), 250).setSortable(true)
+				.setUseTitleFromLabel(true)
+				.setValueFormater(new AbstractFormater<String>() {
+
+					@Override
+					public String format(Object context, Object value) {
+						@SuppressWarnings("unchecked")
+						Map<String, Object> task = (Map<String, Object>) context;
+						boolean flag = false;
+						if(task.get("due_date_") != null){//办理时间是否过期
+							Date d1 = (Date) task.get("due_date_");
+							Date d2 = new Date();
+							flag = d1.before(d2);
+						}
+						if(task.get("assignee_") == null){//岗位任务
+							if(flag){
+								return "<div style=\"\"><span style=\"float: left;\" title=\"此任务已过期\" class=\"ui-icon ui-icon-clock\"></span>" +
+										"<span style=\"float: left;\" title=\"岗位任务\" class=\"ui-icon ui-icon-person\"></span>"
+										+"&nbsp;"+"<span>"+task.get("artName")+"</span>"+"</div>";
+							}else{
+								return "<div style=\"\"><span style=\"float: left;\" title=\"岗位任务\" class=\"ui-icon ui-icon-person\"></span>"
+										+"&nbsp;"+"<span>"+task.get("artName")+"</span>"+"</div>";
+							}
+						}else{//个人任务
+							if(flag){
+								return "<div style=\"\"><span style=\"float: left;\" title=\"此任务已过期\" class=\"ui-icon ui-icon-clock\"></span>"
+										+"&nbsp;"+"<span>"+task.get("artName")+"</span>"+"</div>";
+							}else{
+								return (String) task.get("artName");
+							}
+						}
+					}
+					
+				}));
 		// 办理期限
 		columns.add(new TextColumn4MapKey("art.due_date_", "due_date_",
-				getText("todo.personal.dueDate"), 90).setSortable(true)
+				getText("todo.personal.dueDate"), 120).setSortable(true)
 				.setValueFormater(new CalendarFormater("yyyy-MM-dd HH:mm")));
 		// 附加说明
 		columns.add(new TextColumn4MapKey("art.description_", "description_",
@@ -159,11 +199,13 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>>{
 //				getText("todo.personal.aiuName"), 60).setSortable(true));
 		// 发送时间
 		columns.add(new TextColumn4MapKey("art.create_time_", "create_time_",
-				getText("todo.personal.createTime"), 90).setSortable(true)
+				getText("todo.personal.createTime"), 120).setSortable(true)
 				.setValueFormater(new CalendarFormater("yyyy-MM-dd HH:mm")));
 		// 分类
 		columns.add(new TextColumn4MapKey("arpName", "arpName",
 				getText("todo.personal.arpName"), 70).setSortable(true));
+		columns.add(new HiddenColumn4MapKey("procInstId", "procInstId"));
+		columns.add(new HiddenColumn4MapKey("assignee", "assignee_"));
 
 		return columns;
 	}
@@ -212,7 +254,9 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>>{
 	
 	@Override
 	protected String getHtmlPageJs() {
-		return this.getContextPath() + "/bc-workflow/todo/view.js";
+		return this.getContextPath() + "/bc-workflow/todo/view.js"+","+
+				this.getContextPath() + "/bc/identity/identity.js"
+				;
 	}
 	
 	private static SqlObject<Map<String, Object>> getTodoPersonalData (){
