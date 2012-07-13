@@ -1,9 +1,7 @@
 package cn.bc.workflow.flowattach.web.struts2;
 
-import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
-import java.io.OutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 
@@ -12,6 +10,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Controller;
+import org.springframework.util.FileCopyUtils;
 import org.springframework.util.StringUtils;
 
 import cn.bc.core.util.DateUtils;
@@ -184,15 +183,6 @@ public class FlowAttachAction extends FileEntityAction<Long, FlowAttach> {
 		}
 		
 		try{
-			int i=(int)t.getSize();
-			// 模板流文件流
-			byte buffer[] = new byte[ i];
-			int j = 0;
-			while (j < i) {
-				int k = t.getInputStream().read(buffer, j, i - j);
-				j += k;
-			}
-			
 			//声明当前日期时间
 			Calendar now = Calendar.getInstance();
 			// 文件存储的相对路径（年月），避免超出目录内文件数的限制
@@ -219,11 +209,12 @@ public class FlowAttachAction extends FileEntityAction<Long, FlowAttach> {
 			// 保存附件记录                                                                //标识此附件从模板中添加
 			saveAttachLog(t.getSubject(),"FlowAttachFromTemplate",uid,sc,extension,t.getSize()
 					,now,FlowAttach.DATA_SUB_PATH+"/"+subFolder+"/"+fileName,true);
+			// 直接复制附件
+			if (logger.isInfoEnabled())
+				logger.info("pure copy file");
+			FileCopyUtils.copy(t.getInputStream(), new FileOutputStream(
+					realFilePath));
 			
-			// 保存到文件
-			OutputStream out = new BufferedOutputStream(new FileOutputStream(realFilePath));
-			out.write(buffer);
-			out.close();
 			json.put("path",subFolder+'/'+fileName);
 			json.put("success", true);
 			json.put("msg", getText("flowAttach.success"));
@@ -277,9 +268,29 @@ public class FlowAttachAction extends FileEntityAction<Long, FlowAttach> {
 	}
 	// ##-------从模板中添加附件-----结束-------##
 	
+	//就在流程实例名称
 	public String loadProcInstName(){
 		Json json=new Json();
 		json.put("name", flowAttachService.getProcInstName(pid));
+		this.json=json.toString();
+		return "json";
+	}
+	
+	//加载一个附件信息
+	public String loadOneAttach4id(){
+		Json json=new Json();
+		FlowAttach fa=flowAttachService.load(this.getId());
+		if(fa==null){
+			json.put("success", false);
+			json.put("msg", "flowAttach.lose");
+		}else{
+			json.put("success", true);
+			json.put("subject", fa.getSubject());
+			json.put("ext",fa.getExt());
+			json.put("path", fa.getPath());
+			json.put("uid", fa.getUid());
+			json.put("formatted", fa.getFormatted());
+		}
 		this.json=json.toString();
 		return "json";
 	}

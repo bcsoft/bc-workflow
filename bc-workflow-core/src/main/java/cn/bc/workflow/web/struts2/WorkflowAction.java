@@ -215,7 +215,7 @@ public class WorkflowAction extends AbstractBaseAction {
 	}
 
 	/**
-	 * 委派任务
+	 * 委托任务
 	 * 
 	 * @return
 	 * @throws Exception
@@ -225,18 +225,44 @@ public class WorkflowAction extends AbstractBaseAction {
 			// id为任务的id
 			Assert.assertNotEmpty(id);
 
-			// 委派给的用户
+			// 委托给的用户
 			Assert.assertNotEmpty(toUser);
 
-			// 委派任务
+			// 委托任务
 			this.workflowService.delegateTask(id, toUser);
 
 			// 返回信息
-			json = createSuccessMsg("委派任务成功！").toString();
+			json = createSuccessMsg("委托任务成功！").toString();
 		} catch (Exception e) {
 			json = createFailureMsg(e).toString();
 		}
 
+		return JSON;
+	}
+	
+	/**
+	 * 分派任务
+	 * 
+	 * @return
+	 * @throws Exception
+	 */
+	public String assignTask() throws Exception {
+		try {
+			// id为任务的id
+			Assert.assertNotEmpty(id);
+			
+			// 分派给的用户
+			Assert.assertNotEmpty(toUser);
+			
+			// 分派任务
+			this.workflowService.assignTask(id, toUser);
+			
+			// 返回信息
+			json = createSuccessMsg("分派任务成功！").toString();
+		} catch (Exception e) {
+			json = createFailureMsg(e).toString();
+		}
+		
 		return JSON;
 	}
 }

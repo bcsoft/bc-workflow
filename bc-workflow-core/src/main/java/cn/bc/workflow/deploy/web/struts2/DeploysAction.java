@@ -56,6 +56,14 @@ public class DeploysAction extends ViewAction<Map<String, Object>> {
 		return !context.hasAnyRole(getText("key.role.bc.workflow.deploy"),
 				getText("key.role.bc.admin"));
 	}
+	
+	public boolean isCascade() {
+		// 流程部署级联删除管理
+		SystemContext context = (SystemContext) this.getContext();
+		return context
+				.hasAnyRole(getText("key.role.bc.workflow.deploy.cascade"));
+	}
+
 
 	@Override
 	protected OrderCondition getGridOrderCondition() {
@@ -221,14 +229,22 @@ public class DeploysAction extends ViewAction<Map<String, Object>> {
 
 			// 编辑按钮
 			tb.addButton(this.getDefaultEditToolbarButton());
-
+			
+			//发布
 			tb.addButton(new ToolbarButton().setIcon("ui-icon-person")
 					.setText(getText("label.deploy.release"))
 					.setClick("bc.deploy.release"));
-			
-			tb.addButton(new ToolbarButton().setIcon("ui-icon-person")
+			//取消发布
+			tb.addButton(new ToolbarButton().setIcon("ui-icon-trash")
 					.setText(getText("label.deploy.releaseCancel"))
 					.setClick("bc.deploy.releaseCancel"));
+			
+			if(this.isCascade()){
+				//级联取消发布
+				tb.addButton(new ToolbarButton().setIcon("ui-icon-trash")
+						.setText(getText("label.deploy.cascadeCancel"))
+						.setClick("bc.deploy.cascadeCancel"));
+			}
 		}
 		
 		// 状态按钮组
@@ -268,6 +284,7 @@ public class DeploysAction extends ViewAction<Map<String, Object>> {
 	
 	public String json;
 	private Long excludeId;
+	private Boolean isCascade;//是否级联删除
 	
 	public Long getExcludeId() {
 		return excludeId;
@@ -277,6 +294,14 @@ public class DeploysAction extends ViewAction<Map<String, Object>> {
 		this.excludeId = excludeId;
 	}
 	
+	public Boolean getIsCascade() {
+		return isCascade;
+	}
+
+	public void setIsCascade(Boolean isCascade) {
+		this.isCascade = isCascade;
+	}
+
 	/** 检查用户选择的流程是否已经发布 **/
 	public String isReleased() {
 		Json json = new Json();
@@ -302,16 +327,32 @@ public class DeploysAction extends ViewAction<Map<String, Object>> {
 		return "json";
 	}
 	
+	/** 检查用户选择的流程是否已经发布 **/
+	public String isStarted() {
+		Json json = new Json();
+		Deploy deploy = this.deployService.load(this.excludeId);
+		Long excludeId = this.deployService.isStarted(deploy.getDeploymentId());
+		if(excludeId != null){//已发起的流程id
+			json.put("id", excludeId);
+			json.put("started", "true");
+			json.put("msg", getText("deploy.msg.started"));
+		}else{//未发布
+			json.put("started", "false");
+		}
+		this.json = json.toString();
+		return "json";
+	}
+	
 	/** 取消发布 **/
 	public String dodeployCancel(){
 		Json json = new Json();
-		this.deployService.dodeployCancel(this.excludeId);
+		this.deployService.dodeployCancel(this.excludeId,isCascade);
 		json.put("msg", getText("deploy.msg.cancel.success"));
 		json.put("id", this.excludeId);
 		this.json = json.toString();
 		return "json";
 	}
-
+	
 	// ==高级搜索代码开始==
 	@Override
 	protected boolean useAdvanceSearch() {

@@ -23,6 +23,7 @@
 		</action>
 		
 		<action name="deploys/isReleased" class="deploysAction" method="isReleased"/>
+		<action name="deploys/isStarted" class="deploysAction" method="isStarted"/>
 		<action name="deploys/dodeployRelease" class="deploysAction" method="dodeployRelease"/>
 		<action name="deploys/dodeployCancel" class="deploysAction" method="dodeployCancel"/>
 		
