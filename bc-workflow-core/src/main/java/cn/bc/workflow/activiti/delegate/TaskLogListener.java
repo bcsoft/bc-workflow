@@ -69,7 +69,11 @@ public class TaskLogListener implements TaskListener {
 				TaskFormHandler fh = d.getTaskFormHandler();
 				if (fh != null) {
 					TaskFormData fd = fh.createTaskForm(task);
-					log.setForm(fd != null ? fd.getFormKey() : "");
+					if (fd != null && fd.getFormKey() != null) {
+						log.setForm(fd.getFormKey());
+						delegateTask.setVariableLocal("formKey",
+								fd.getFormKey());// 将formKey当作流程变量记下
+					}
 				}
 			}
 		}

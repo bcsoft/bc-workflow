@@ -92,3 +92,15 @@ org.activiti.engine.delegate.JavaDelegate
     读取任务信息时，同时读取表单属性和流程变量信息，如果发现有formkey，将这些信息当做上下文，读取formkey指向的模板，然后用那些
 参数进行格式化，再展现给用户。经办表单只读，待办表单对待办人则可编辑。
 
+）表单formkey的格式：
+[来源类型]::[显示方式]::[配置值]
+来源类型 -- default（默认）、tpl(从模板获取)、url（通过url获取）
+显示方式 -- nested（嵌套显示，默认）、seperate（独立窗口显示）
+
+) 自定义表单引擎的方法
+activiti的默认表单引擎为： org.activiti.engine.impl.form.FormEngine and org.activiti.engine.impl.form.JuelFormEngine
+ProcessEngineConfiguration.customFormEngines
+网上某篇自定义表单的文章：https://github.com/peholmst/VaadinActivitiDemo/wiki/Custom-Forms
+JUEL不支持Loop的：http://forums.activiti.org/en/viewtopic.php?f=6&t=314&p=1292&hilit=juel+juel+foreach#p1292
+
+

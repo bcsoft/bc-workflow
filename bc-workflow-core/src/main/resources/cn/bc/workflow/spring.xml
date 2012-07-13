@@ -46,6 +46,9 @@
 			advice-ref="workspaceServiceTxAdvice" />
 	</aop:config>
 
+	<!-- 自定义的表单引擎 -->
+	<bean id="bcFormEngine" class="cn.bc.workflow.activiti.form.BcFormEngine" />
+
 	<!-- 流转日志 -->
 	<bean id="excutionLogDao" class="cn.bc.workflow.dao.hibernate.jpa.ExcutionLogDaoImpl"
 		p:entityManagerFactory-ref="entityManagerFactory" />
