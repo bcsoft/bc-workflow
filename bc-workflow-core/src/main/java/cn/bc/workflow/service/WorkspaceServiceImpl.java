@@ -35,6 +35,7 @@ import cn.bc.identity.web.SystemContext;
 import cn.bc.identity.web.SystemContextHolder;
 import cn.bc.template.service.TemplateService;
 import cn.bc.web.util.WebUtils;
+import cn.bc.workflow.activiti.form.BcFormEngine;
 import cn.bc.workflow.flowattach.domain.FlowAttach;
 import cn.bc.workflow.flowattach.service.FlowAttachService;
 
@@ -257,27 +258,42 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 		detail = new ArrayList<String>();
 		item.put("detail", detail);
 		// detail.add("[表单信息]");
-		String html;
-		int index = formKey.indexOf("::");
-		if (index != -1) {// 特殊配置：[来源类型]::[显示方式]::[配置值]
-			String[] ss = formKey.split("::");
-			if (ss.length != 3) {
-				throw new CoreException("任务的formKey配置格式不正确：taskId="
-						+ task.getId() + ",taskName=" + task.getName()
-						+ ",formKey=" + formKey);
-			}
-			item.put("form_key", formKey);
-			item.put("form_type", ss[0]);
-			item.put("form_seperate", "seperate".equals(ss[1]));
-			html = "";
-		} else {// 默认的简易配置
-			Object form = this.formService.getRenderedTaskForm(task.getId());
-			html = (form != null ? form.toString() : "");
 
-			Map<String, Object> args = new HashMap<String, Object>();
-			args.put("root", WebUtils.rootPath);
-			html = TemplateUtils.format(html, args);
+		int index = formKey.lastIndexOf(":");
+		String engine, from, key;
+		boolean seperate;
+		if (index != -1) {
+			String[] ss = formKey.substring(0, index).split(":");
+			key = formKey.substring(index + 1);
+			engine = ss[0];
+			if (ss.length == 1) {// engine:
+				seperate = false;
+				from = "resource";
+			} else if (ss.length == 2) {// engine:from:
+				seperate = false;
+				from = ss[1];
+			} else if (ss.length == 3) {// engine:seperate:from:
+				seperate = "true".equalsIgnoreCase(ss[1]);
+				from = ss[2];
+			} else {
+				throw new CoreException("unsupport config type:formKey="
+						+ formKey);
+			}
+		} else {
+			key = formKey;
+			engine = "default";
+			from = "resource";
+			seperate = false;
 		}
+		item.put("form_engine", engine);
+		item.put("form_from", from);// form
+		item.put("form_key", key);
+		item.put("form_seperate", seperate);
+		
+		String html = (String) this.formService.getRenderedTaskForm(task.getId(),
+				BcFormEngine.NAME);
+		item.put("form_html", html);
+
 		detail.add(html);
 	}
 
