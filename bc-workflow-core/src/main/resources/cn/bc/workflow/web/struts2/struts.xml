@@ -25,6 +25,8 @@
 		<action name="startFlow" class="workflowAction" method="startFlow" />
 		<action name="claimTask" class="workflowAction" method="claimTask" />
 		<action name="completeTask" class="workflowAction" method="completeTask" />
+		<action name="delegateTask" class="workflowAction" method="delegateTask" />
+		<action name="assignTask" class="workflowAction" method="assignTask" />
 		<action name="diagram" class="workflowAction" method="diagram">
 			<result name="success" type="stream">
 				<!-- 下载文件类型定义 -->

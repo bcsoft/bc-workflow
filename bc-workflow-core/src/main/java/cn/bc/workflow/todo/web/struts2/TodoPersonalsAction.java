@@ -206,6 +206,7 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>>{
 				getText("todo.personal.arpName"), 70).setSortable(true));
 		columns.add(new HiddenColumn4MapKey("procInstId", "procInstId"));
 		columns.add(new HiddenColumn4MapKey("assignee", "assignee_"));
+		columns.add(new HiddenColumn4MapKey("groupId", "group_id_"));//岗位任务
 
 		return columns;
 	}

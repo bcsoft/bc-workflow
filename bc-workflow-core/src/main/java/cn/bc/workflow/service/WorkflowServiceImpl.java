@@ -139,6 +139,14 @@ public class WorkflowServiceImpl implements WorkflowService {
 
 		this.taskService.delegateTask(taskId, toUser);
 	}
+	
+	public void assignTask(String taskId, String toUser) {
+		// 设置Activiti认证用户
+		setAuthenticatedUser();
+		
+		// 领取任务：TODO 表单信息的处理
+		this.taskService.claim(taskId, toUser);
+	}
 
 	public Deployment deployZipFromTemplate(String templateCode) {
 		// 获取模板
@@ -246,4 +254,5 @@ public class WorkflowServiceImpl implements WorkflowService {
 		// TODO Auto-generated method stub
 		return null;
 	}
+
 }
