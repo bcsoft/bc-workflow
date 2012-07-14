@@ -16,6 +16,7 @@ import cn.bc.core.query.condition.impl.AndCondition;
 import cn.bc.core.query.condition.impl.EqualsCondition;
 import cn.bc.core.query.condition.impl.InCondition;
 import cn.bc.core.query.condition.impl.IsNullCondition;
+import cn.bc.core.query.condition.impl.OrCondition;
 import cn.bc.core.query.condition.impl.OrderCondition;
 import cn.bc.core.service.DefaultCrudService;
 import cn.bc.workflow.flowattach.dao.FlowAttachDao;
@@ -48,7 +49,8 @@ public class FlowAttachServiceImpl extends DefaultCrudService<FlowAttach>
 		AndCondition and = new AndCondition();
 		and.add(new EqualsCondition("pid", processInstanceId));
 		if (!includeTask) {
-			and.add(new IsNullCondition("tid"));
+			and.add(new OrCondition().add(new IsNullCondition("tid")).add(
+					new EqualsCondition("tid", "")));
 		}
 		and.add(new OrderCondition("type", Direction.Asc).add("fileDate",
 				Direction.Asc));
