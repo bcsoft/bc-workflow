@@ -1,6 +1,7 @@
 package cn.bc.workflow.activiti.form;
 
 import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -173,12 +174,15 @@ public class BcFormEngine implements FormEngine {
 		VariableScope variableScope = task.getExecution();
 
 		// 设置一些全局变量
-		args.put("contextPath", WebUtils.rootPath);// 上下文路径
-		args.put("now", DateUtils.formatCalendar2Second(Calendar.getInstance()));// 当前时间
+		args.put("rootPath", WebUtils.rootPath);// 上下文路径
+		Date now = new Date();// 当前时间
+		args.put("now", DateUtils.formatDateTime(now));
+		args.put("now2d", DateUtils.formatDate(now));
+		args.put("now2m", DateUtils.formatDateTime2Minute(now));
 
-//		// 全局流程变量
-//		Map<String, Object> gvs = variableScope.getVariables();
-//		args.putAll(gvs);
+		// // 全局流程变量
+		// Map<String, Object> gvs = variableScope.getVariables();
+		// args.putAll(gvs);
 
 		// 本地流程变量：会自动获取全局流程变量（如果本地无）
 		Map<String, Object> lvs = variableScope.getVariablesLocal();
