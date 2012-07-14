@@ -53,7 +53,7 @@ public class TodoSideBarPersonalsAction extends TodoPersonalsAction {
 				todoMap.put("title", isNullObject(map.get("artName")));//待办事项
 				if(null != map.get("create_time_")){
 					Date d3 = (Date) map.get("create_time_");
-					todoMap.put("createTime", DateUtils.formatDate(d3)); //发送时间
+					todoMap.put("createTime", DateUtils.formatDateTime(d3)); //发送时间
 				}
 				todoMap.put("description", isNullObject(map.get("description_")));//附加说明
 				todoMap.put("category",isNullObject(map.get("arpName")));//所属分类
