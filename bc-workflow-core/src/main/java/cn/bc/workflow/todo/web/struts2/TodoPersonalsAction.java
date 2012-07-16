@@ -100,7 +100,8 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>>{
 	protected Condition getGridSpecalCondition() {
 		// 查找当前登录用户条件
 		SystemContext context = (SystemContext) this.getContext();
-		Condition userCondition = new EqualsCondition("art.assignee_",context.getUser().getCode()); 
+		Condition assigneeCondition = new EqualsCondition("art.assignee_",context.getUser().getCode()); //act_ru_task 任务表
+		Condition userCondition = new EqualsCondition("ari.user_id_",context.getUser().getCode()); //act_ru_identitylink 参与成员表
 		
 		Condition groupCondition = null;
 		//获取当前登录用户所在岗位的code列表
@@ -110,11 +111,16 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>>{
 		}else{
 			groupCondition = new EqualsCondition("ari.group_id_","");
 		}
-		Condition userIsNullCondition = new IsNullCondition("art.assignee_");
+		Condition assigneeIsNullCondition = new IsNullCondition("art.assignee_");
 		
 		//当前用户是否等于任务待办人 或者 当前用户所在岗位是否等于任务的参与者 前提 该任务的待办人为空
-		return ConditionUtils.mix2OrCondition(userCondition,
-				ConditionUtils.mix2AndCondition(groupCondition,userIsNullCondition).setAddBracket(true)).setAddBracket(true);
+		return ConditionUtils.mix2OrCondition(
+				assigneeCondition,
+				ConditionUtils.mix2AndCondition(
+						ConditionUtils.mix2OrCondition(groupCondition,
+								userCondition).setAddBracket(true),
+						assigneeIsNullCondition).setAddBracket(true))
+				.setAddBracket(true);
 	}
 	
 	@Override
