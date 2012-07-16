@@ -68,8 +68,9 @@ public class HistoricTaskInstancesAction extends
 		// 构建查询语句,where和order by不要包含在sql中(要统一放到condition中)
 		StringBuffer sql = new StringBuffer();
 		sql.append("select a.id_,c.name_ as category,a.name_ as subject,a.start_time_,a.end_time_,d.first_ as receiver,a.duration_,a.proc_inst_id_");
+		sql.append(",a.task_def_key_");
 		sql.append(" from act_hi_taskinst a");
-		sql.append(" inner join act_hi_procinst b on b.proc_def_id_=a.proc_def_id_");
+		sql.append(" inner join act_hi_procinst b on b.proc_inst_id_=a.proc_inst_id_");
 		sql.append(" inner join act_re_procdef c on c.id_=a.proc_def_id_");
 		sql.append(" left join act_id_user d on d.id_=a.assignee_");
 		sqlObject.setSql(sql.toString());
@@ -102,6 +103,7 @@ public class HistoricTaskInstancesAction extends
 							DateUtils.getWasteTime(Long.parseLong(map.get(
 									"duration").toString())));
 				map.put("procinstid", rs[i++]);
+				map.put("taskdefkey", rs[i++]);
 				return map;
 			}
 		});
@@ -121,10 +123,12 @@ public class HistoricTaskInstancesAction extends
 				.setUseTitleFromLabel(true));
 		columns.add(new TextColumn4MapKey("a.name_", "subject",
 				getText("flow.task.name")).setUseTitleFromLabel(true));
-		if(!my)
+		if(!my){
 			columns.add(new TextColumn4MapKey("d.first_", "receiver",
 					getText("flow.task.actor"), 80));
-		
+			columns.add(new TextColumn4MapKey("a.task_def_key_", "taskdefkey",
+					"任务key值", 80));
+		}
 		if(my){
 			columns.add(new TextColumn4MapKey("a.start_time_", "start_time",
 					getText("flow.task.startTime"), 130).setSortable(true)
