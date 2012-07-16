@@ -12,7 +12,7 @@
         http://www.springframework.org/schema/aop
         http://www.springframework.org/schema/aop/spring-aop-3.0.xsd">
 	<!-- WorkFlowService 配置 -->
-	<bean id="workflowService" class="cn.bc.workflow.service.WorkflowServiceImpl"/>	
+	<bean id="workflowService" class="cn.bc.workflow.service.WorkflowServiceImpl" />
 	<tx:advice id="workflowServiceTxAdvice" transaction-manager="transactionManager">
 		<tx:attributes>
 			<tx:method name="deploy*" propagation="REQUIRED" read-only="false" />
@@ -54,12 +54,16 @@
 		p:entityManagerFactory-ref="entityManagerFactory" />
 	<bean id="excutionLogService" class="cn.bc.workflow.service.ExcutionLogServiceImpl" />
 
+	<!-- 通用流程实例监听器：执行日志 -->
+	<bean id="processLogListener" class="cn.bc.workflow.activiti.delegate.ProcessLogListener" />
+
 	<!-- 通用ExecutionListener监听器：执行日志 -->
 	<bean id="excutionLogListener" class="cn.bc.workflow.activiti.delegate.ExcutionLogListener" />
 
-	<!-- 通用TaskListener监听器：任务日志 -->
+	<!-- 通用任务实例监听器：任务日志 -->
 	<bean id="taskLogListener" class="cn.bc.workflow.activiti.delegate.TaskLogListener" />
 
 	<!-- 通用JavaDelegate监听器：任务日志 -->
-	<bean id="javaDelegateLogListener" class="cn.bc.workflow.activiti.delegate.JavaDelegateLogListener" />
+	<bean id="javaDelegateLogListener"
+		class="cn.bc.workflow.activiti.delegate.JavaDelegateLogListener" />
 </beans>
