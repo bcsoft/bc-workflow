@@ -1,4 +1,4 @@
-package cn.bc.workflow.test.activiti;
+package cn.bc.workflow.activiti.test;
 
 import org.junit.runners.model.FrameworkMethod;
 import org.springframework.test.annotation.Rollback;
