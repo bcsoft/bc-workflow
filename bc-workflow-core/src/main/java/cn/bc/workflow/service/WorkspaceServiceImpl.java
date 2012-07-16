@@ -10,11 +10,13 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.activiti.engine.FormService;
 import org.activiti.engine.HistoryService;
 import org.activiti.engine.IdentityService;
 import org.activiti.engine.RepositoryService;
 import org.activiti.engine.RuntimeService;
 import org.activiti.engine.TaskService;
+import org.activiti.engine.form.TaskFormData;
 import org.activiti.engine.history.HistoricProcessInstance;
 import org.activiti.engine.history.HistoricTaskInstance;
 import org.activiti.engine.repository.ProcessDefinition;
@@ -28,9 +30,12 @@ import org.springframework.util.Assert;
 import cn.bc.core.exception.CoreException;
 import cn.bc.core.util.DateUtils;
 import cn.bc.core.util.StringUtils;
+import cn.bc.core.util.TemplateUtils;
 import cn.bc.identity.web.SystemContext;
 import cn.bc.identity.web.SystemContextHolder;
 import cn.bc.template.service.TemplateService;
+import cn.bc.web.util.WebUtils;
+import cn.bc.workflow.activiti.form.BcFormEngine;
 import cn.bc.workflow.flowattach.domain.FlowAttach;
 import cn.bc.workflow.flowattach.service.FlowAttachService;
 
@@ -47,10 +52,9 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 	private RepositoryService repositoryService;
 	private IdentityService identityService;
 	private TaskService taskService;
-	private FlowAttachService flowAttachService;
-
-	// private FormService formService;
+	private FormService formService;
 	private HistoryService historyService;
+	private FlowAttachService flowAttachService;
 
 	@Autowired
 	public void setFlowAttachService(FlowAttachService flowAttachService) {
@@ -87,10 +91,10 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 		this.historyService = historyService;
 	}
 
-	// @Autowired
-	// public void setFormService(FormService formService) {
-	// this.formService = formService;
-	// }
+	@Autowired
+	public void setFormService(FormService formService) {
+		this.formService = formService;
+	}
 
 	/**
 	 * 获取当前用户的帐号信息
@@ -225,6 +229,88 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 		return info;
 	}
 
+	private void buildFormInfo(boolean flowing,
+			List<Map<String, Object>> items, Task task) {
+		String formKey = this.getTaskFormKey(task);
+		if (formKey == null || formKey.length() == 0)
+			return;
+		if (logger.isDebugEnabled()) {
+			logger.debug("taskId=" + task.getId() + ",formKey=" + formKey);
+		}
+
+		// 表单基本信息
+		Map<String, Object> item;
+		List<String> detail;
+		String type = "form";
+		item = new HashMap<String, Object>();
+		items.add(item);
+		item.put("id", task.getId());
+		item.put("pid", task.getProcessInstanceId());// 流程实例id
+		item.put("tid", task.getId());// 任务id
+		item.put("type", type);// 信息类型
+		item.put("link", false);// 链接标题
+		item.put("buttons", this.buildItemDefaultButtons(flowing, type));// 操作按钮列表
+		item.put("hasButtons", item.get("buttons") != null);// 有否操作按钮
+		item.put("iconClass", "ui-icon-document");// 左侧显示的小图标
+		item.put("subject", "完成任务前需要你处理如下信息：");// 标题信息
+
+		// 表单html
+		detail = new ArrayList<String>();
+		item.put("detail", detail);
+		// detail.add("[表单信息]");
+
+		int index = formKey.lastIndexOf(":");
+		String engine, from, key;
+		boolean seperate;
+		if (index != -1) {
+			String[] ss = formKey.substring(0, index).split(":");
+			key = formKey.substring(index + 1);
+			engine = ss[0];
+			if (ss.length == 1) {// engine:
+				seperate = false;
+				from = "resource";
+			} else if (ss.length == 2) {// engine:from:
+				seperate = false;
+				from = ss[1];
+			} else if (ss.length == 3) {// engine:seperate:from:
+				seperate = "true".equalsIgnoreCase(ss[1]);
+				from = ss[2];
+			} else {
+				throw new CoreException("unsupport config type:formKey="
+						+ formKey);
+			}
+		} else {
+			key = formKey;
+			engine = "default";
+			from = "resource";
+			seperate = false;
+		}
+		item.put("form_engine", engine);
+		item.put("form_from", from);// form
+		item.put("form_key", key);
+		item.put("form_seperate", seperate);
+		
+		String html = (String) this.formService.getRenderedTaskForm(task.getId(),
+				BcFormEngine.NAME);
+		item.put("form_html", html);
+
+		detail.add(html);
+	}
+
+	/**
+	 * 获取用户的表单配置
+	 * 
+	 * @param _task
+	 * @return
+	 */
+	private String getTaskFormKey(Task _task) {
+		TaskFormData d = formService.getTaskFormData(_task.getId());
+		if (d != null)
+			return d.getFormKey();
+		else
+			return null;
+	}
+
 	/**
 	 * @param flowing
 	 * @param items
@@ -291,7 +377,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 		if ("attach".equals(type)) {
 			buttons.append(ITEM_BUTTON_DOWNLOAD);
 		}
-		if (editable) {
+		if (editable && !"form".equals(type)) {
 			buttons.append(ITEM_BUTTON_DELETE);
 		}
 		return buttons.length() > 0 ? buttons.toString() : null;
@@ -399,12 +485,15 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 			taskItem.put("buttons", this.buildHeaderDefaultButtons(flowing,
 					isUserTask ? "todo_user" : "todo_group"));// 操作按钮列表
 			taskItem.put("hasButtons", taskItem.get("buttons") != null);// 有否操作按钮
+			taskItem.put("formKey",
+					taskService.getVariableLocal(task.getId(), "formKey"));// 记录formKey
 
 			// 任务的详细信息
 			items = new ArrayList<Map<String, Object>>();// 二级条目列表
 			taskItem.put("items", items);
-			
+
 			// -- 表单信息 TODO
+			buildFormInfo(flowing, items, task);
 
 			// -- 意见、附件信息
 			buildFlowAttachsInfo(flowing, items,
@@ -414,7 +503,8 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 			if (isUserTask) {
 				taskItem.put("actor", "待办人：" + task.getAssignee());
 			} else {
-				taskItem.put("actor", "待办岗：" + identityLinks.get(0).getGroupId());// TODO
+				taskItem.put("actor", "待办岗："
+						+ identityLinks.get(0).getGroupId());// TODO
 			}
 			taskItem.put(
 					"createTime",
@@ -548,7 +638,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 			// 任务的详细信息
 			items = new ArrayList<Map<String, Object>>();// 二级条目列表
 			taskItem.put("items", items);
-			
+
 			// -- 表单信息 TODO
 
 			// -- 意见、附件信息

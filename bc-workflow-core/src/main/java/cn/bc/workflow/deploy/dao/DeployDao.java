@@ -56,4 +56,11 @@ public interface DeployDao extends CrudDao<Deploy> {
 	 * @return
 	 */
 	public Long isReleased(Long excludeId);
+
+	/**
+	 * 通过流程id判断此信息是否已发起
+	 * @param excludeId
+	 * @return
+	 */
+	public Long isStarted(String deploymentId);
 }
