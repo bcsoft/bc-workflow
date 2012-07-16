@@ -67,9 +67,10 @@ public class HistoricProcessInstancesAction extends
 		StringBuffer sql = new StringBuffer();
 
 		sql.append("select a.id_,b.name_ as category,a.start_time_,a.end_time_,a.duration_,a.proc_inst_id_");
-		sql.append(",b.version_ as version,b.key_ as key");
+		sql.append(",b.version_ as version,b.key_ as key,c.first_");
 		sql.append(" from act_hi_procinst a");
-		sql.append(" INNER JOIN act_re_procdef b on b.id_=a.proc_def_id_");
+		sql.append(" inner join act_re_procdef b on b.id_=a.proc_def_id_");
+		sql.append(" left join act_id_user c on c.id_=a.start_user_id_");
 		sqlObject.setSql(sql.toString());
 
 		// 注入参数
@@ -99,6 +100,7 @@ public class HistoricProcessInstancesAction extends
 				map.put("procinstid", rs[i++]);
 				map.put("version", rs[i++]);
 				map.put("key", rs[i++]);
+				map.put("startName", rs[i++]);//发起人
 				return map;
 			}
 		});
@@ -112,6 +114,10 @@ public class HistoricProcessInstancesAction extends
 		columns.add(new TextColumn4MapKey("", "status",
 				getText("flow.instance.status"), 60).setSortable(true)
 				.setValueFormater(new EntityStatusFormater(getStatus())));
+		//发起人
+		columns.add(new TextColumn4MapKey("a.first_", "startName",
+				getText("flow.instance.startName"),80).setSortable(true)
+				.setUseTitleFromLabel(true));
 		columns.add(new TextColumn4MapKey("b.name_", "category",
 				getText("flow.instance.name")).setSortable(true)
 				.setUseTitleFromLabel(true));
@@ -156,7 +162,7 @@ public class HistoricProcessInstancesAction extends
 
 	@Override
 	protected String[] getGridSearchFields() {
-		return new String[] { "b.name_","b.key_" };
+		return new String[] { "b.name_","b.key_","c.first_" };
 	}
 
 	@Override
