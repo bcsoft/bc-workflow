@@ -12,6 +12,7 @@ import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 
+import cn.bc.BCConstants;
 import cn.bc.core.exception.CoreException;
 import cn.bc.identity.domain.Actor;
 import cn.bc.identity.domain.ActorRelation;
@@ -56,8 +57,7 @@ public abstract class AbstractAssign2GroupOrUserListener implements
 	}
 
 	public void notify(DelegateTask delegateTask) {
-		Long orgId = (Long) delegateTask.getVariableLocal(this
-				.getVariableName());
+		Long orgId = (Long) delegateTask.getVariable(this.getVariableName());
 		if (logger.isDebugEnabled()) {
 			logger.debug("variableName=" + getVariableName());
 			logger.debug("groupName=" + getGroupName());
@@ -74,7 +74,11 @@ public abstract class AbstractAssign2GroupOrUserListener implements
 		// 获取岗位信息
 		List<Actor> groups = actorService.findFollowerWithName(orgId,
 				getGroupName(), new Integer[] { ActorRelation.TYPE_BELONG },
-				new Integer[] { Actor.TYPE_GROUP });
+				new Integer[] { Actor.TYPE_GROUP },
+				new Integer[] { BCConstants.STATUS_ENABLED });
+		if (logger.isDebugEnabled()) {
+			logger.debug("groups.size=" + groups.size());
+		}
 		if (groups.isEmpty()) {
 			throw new CoreException("id=" + orgId + "的单位没有配置名称为“"
 					+ getGroupName() + "”的岗位");
@@ -83,14 +87,24 @@ public abstract class AbstractAssign2GroupOrUserListener implements
 					+ getGroupName() + "”的岗位");
 		}
 		Actor group = groups.get(0);
+		if (logger.isDebugEnabled()) {
+			logger.debug("group=" + group.getCode() + "," + group.getName());
+		}
 
 		// 获取用户信息
 		List<Actor> users = actorService.findFollower(group.getId(),
 				new Integer[] { ActorRelation.TYPE_BELONG },
 				new Integer[] { Actor.TYPE_USER });
+		if (logger.isDebugEnabled()) {
+			logger.debug("users.size=" + users.size());
+		}
 
 		if (users.size() == 1) {// 直接分派到用户
 			delegateTask.setAssignee(users.get(0).getCode());
+			if (logger.isDebugEnabled()) {
+				logger.debug("user=" + users.get(0).getCode() + ","
+						+ users.get(0).getName());
+			}
 		} else {// 分派到岗位
 			delegateTask.addCandidateGroup(group.getCode());
 		}
