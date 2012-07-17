@@ -1,11 +1,12 @@
 package cn.bc.workflow.activiti.form;
 
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.activiti.engine.ActivitiException;
 import org.activiti.engine.delegate.VariableScope;
@@ -24,7 +25,9 @@ import org.springframework.util.FileCopyUtils;
 
 import cn.bc.core.exception.CoreException;
 import cn.bc.core.util.DateUtils;
+import cn.bc.core.util.JsonUtils;
 import cn.bc.core.util.TemplateUtils;
+import cn.bc.docs.domain.Attach;
 import cn.bc.template.domain.Template;
 import cn.bc.template.service.TemplateService;
 import cn.bc.template.util.FreeMarkerUtils;
@@ -131,13 +134,16 @@ public class BcFormEngine implements FormEngine {
 	private String formatForm(FormData formInstance, String engine,
 			String source) {
 		String form;
+
+		// 格式化
 		if ("fm".equalsIgnoreCase(engine)
 				|| "freemarker".equalsIgnoreCase(engine)) {// 使用freemarker模板引擎
-			form = formatFormByFreeMarker(source, (TaskFormData) formInstance);
+			Map<String, Object> args = getFormatArgs((TaskFormData) formInstance);// 读取变量
+			form = FreeMarkerUtils.format(source, args);
 		} else if ("ct".equalsIgnoreCase(engine)
 				|| "commontemplate".equalsIgnoreCase(engine)) {// 使用commontemplate模板引擎
-			form = formatFormByCommonTemplate(source,
-					(TaskFormData) formInstance);
+			Map<String, Object> args = getFormatArgs((TaskFormData) formInstance);// 读取变量
+			form = TemplateUtils.format(source, args);
 		} else {// 使用activiti的默认方式格式化
 			form = formatFormByActivitiDefault(source,
 					(TaskFormData) formInstance);
@@ -155,33 +161,19 @@ public class BcFormEngine implements FormEngine {
 				task.getExecution());
 	}
 
-	private String formatFormByFreeMarker(String source, TaskFormData taskForm) {
-		// 读取变量
-		Map<String, Object> args = getFormatArgs(taskForm);
-
-		// 格式化
-		return FreeMarkerUtils.format(source, args);
-	}
-
-	private String formatFormByCommonTemplate(String source,
-			TaskFormData taskForm) {
-		// 读取变量
-		Map<String, Object> args = getFormatArgs(taskForm);
-		// 格式化
-		return TemplateUtils.format(source, args);
-	}
-
 	private Map<String, Object> getFormatArgs(TaskFormData taskForm) {
 		Map<String, Object> args = new HashMap<String, Object>();
 		TaskEntity task = (TaskEntity) taskForm.getTask();
 		VariableScope variableScope = task.getExecution();
 
 		// 设置一些全局变量
-		args.put("rootPath", WebUtils.rootPath);// 上下文路径
-		Date now = new Date();// 当前时间
-		args.put("now", DateUtils.formatDateTime(now));
-		args.put("now2d", DateUtils.formatDate(now));
-		args.put("now2m", DateUtils.formatDateTime2Minute(now));
+		Calendar now = Calendar.getInstance();// 当前时间
+		args.put("now", DateUtils.formatCalendar2Second(now));
+		args.put("now2d", DateUtils.formatCalendar2Day(now));
+		args.put("now2m", DateUtils.formatCalendar2Minute(now));
+		args.put("year", now.get(Calendar.YEAR) + "");
+		args.put("month", (now.get(Calendar.MONTH) + 1) + "");
+		args.put("day", now.get(Calendar.DAY_OF_MONTH));
 
 		// // 全局流程变量
 		// Map<String, Object> gvs = variableScope.getVariables();
@@ -189,7 +181,21 @@ public class BcFormEngine implements FormEngine {
 
 		// 本地流程变量：会自动获取全局流程变量（如果本地无）
 		Map<String, Object> lvs = variableScope.getVariablesLocal();
-		args.putAll(lvs);
+		for (Entry<String, Object> e : lvs.entrySet()) {
+			if (e.getKey().startsWith("list_")
+					&& e.getValue() instanceof String) {// 将字符串转化为List
+				args.put(e.getKey(),
+						JsonUtils.toCollection((String) e.getValue()));
+			} else if (e.getKey().startsWith("map_")
+					&& e.getValue() instanceof String) {// 将字符串转化为Map
+				args.put(e.getKey(), JsonUtils.toMap((String) e.getValue()));
+			} else if (e.getKey().startsWith("array_")
+					&& e.getValue() instanceof String) {// 将字符串转化为数组
+				args.put(e.getKey(), JsonUtils.toArray((String) e.getValue()));
+			} else {
+				args.put(e.getKey(), e.getValue());
+			}
+		}
 
 		if (logger.isDebugEnabled()) {
 			logger.debug("args=" + args);
@@ -212,6 +218,8 @@ public class BcFormEngine implements FormEngine {
 			sourceFormString = loadFormTemplateByTemplate(key);
 		} else if ("url".equalsIgnoreCase(from)) {// 使用URL方式 TODO
 			sourceFormString = loadFormTemplateByUrl(key);
+		} else if ("file".equalsIgnoreCase(from)) {// 使用服务器文件方式
+			sourceFormString = loadFormTemplateByFile(key);
 		} else if ("res".equalsIgnoreCase(from)) {// 从类资源中获取
 			sourceFormString = loadFormTemplateByClassResource(key);
 		} else {// 默认使用activiti的方法加载资源
@@ -219,6 +227,24 @@ public class BcFormEngine implements FormEngine {
 					key);
 		}
 		return sourceFormString;
+	}
+
+	private String loadFormTemplateByFile(String key) {
+		// 替换路径
+		if (key.startsWith("$")) {
+			key = key.replace("${dataDir}", Attach.DATA_REAL_PATH);
+			key = key.replace("${appDir}", WebUtils.rootPath);
+		} else {// 当作相对路径处理
+			key = WebUtils.rootPath + (key.startsWith("/") ? key : "/" + key);
+		}
+		// 获取文件流
+		try {
+			InputStream file = new FileInputStream(key);
+			return new String(FileCopyUtils.copyToByteArray(file));
+		} catch (IOException e) {
+			logger.warn(e.getMessage(), e);
+			throw new CoreException(e.getMessage(), e);
+		}
 	}
 
 	private String loadFormTemplateByClassResource(String key) {
@@ -233,7 +259,7 @@ public class BcFormEngine implements FormEngine {
 	}
 
 	private String loadFormTemplateByUrl(String key) {
-		// TODO 
+		// TODO
 		// 如果直接使用HttpClient或Jsoup对URL执行请求，session的同步需要处理
 		throw new CoreException("unsupport method:loadFormTemplateByUrl");
 	}
