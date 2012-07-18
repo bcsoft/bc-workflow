@@ -278,7 +278,7 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>>{
 		sql.append(" from act_ru_task art");
 		sql.append(" left join act_id_user aiu on art.assignee_ = aiu.id_");
 		sql.append(" left join act_re_procdef arp on art.proc_def_id_ = arp.id_");
-		sql.append(" inner join act_ru_identitylink ari on art.id_ = ari.task_id_");
+		sql.append(" left join act_ru_identitylink ari on art.id_ = ari.task_id_");
 		
 		sqlObject.setSql(sql.toString());
 		
