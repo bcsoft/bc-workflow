@@ -1,5 +1,7 @@
 package cn.bc.workflow.service;
 
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
 
 import cn.bc.core.service.DefaultCrudService;
@@ -35,5 +37,17 @@ public class ExcutionLogServiceImpl extends DefaultCrudService<ExcutionLog>
 		ExcutionLog log = excutionLogDao.loadByTask(taskId,
 				ExcutionLog.TYPE_TASK_INSTANCE_CREATE);
 		return actorHistoryDao.load(log.getAuthorId());
+	}
+
+	public Map<String, String> findTaskFormKeys(String processInstanceId) {
+		return excutionLogDao.findTaskFormKeys(processInstanceId);
+	}
+
+	public String findTaskFormKey(String taskId) {
+		return excutionLogDao.findTaskFormKey(taskId);
+	}
+
+	public Map<String, Object> findTaskVariables(String taskId) {
+		return this.excutionLogDao.findTaskVariables(taskId);
 	}
 }

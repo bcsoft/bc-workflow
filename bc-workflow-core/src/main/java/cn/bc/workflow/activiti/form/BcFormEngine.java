@@ -111,6 +111,7 @@ public class BcFormEngine implements FormEngine {
 		// 获取模板的原始内容
 		String sourceFormString = loadFormTemplate(formInstance, from, key);
 		if (logger.isDebugEnabled()) {
+			logger.debug("seperate=" + seperate);
 			logger.debug("key=" + key);
 			logger.debug("source=" + sourceFormString);
 		}

@@ -46,8 +46,24 @@
 			advice-ref="workspaceServiceTxAdvice" />
 	</aop:config>
 
+	<!-- WorkflowFormService 配置 -->
+	<bean id="workflowFormService" class="cn.bc.workflow.service.WorkflowFormServiceImpl" />
+	<tx:advice id="workflowFormServiceTxAdvice"
+		transaction-manager="transactionManager">
+		<tx:attributes>
+			<tx:method name="get*" propagation="REQUIRED" read-only="true" />
+		</tx:attributes>
+	</tx:advice>
+	<aop:config>
+		<aop:pointcut id="workflowFormServiceMethod"
+			expression="this(cn.bc.workflow.service.WorkflowFormService)" />
+		<aop:advisor pointcut-ref="workflowFormServiceMethod"
+			advice-ref="workflowFormServiceTxAdvice" />
+	</aop:config>
+
 	<!-- 自定义的表单引擎 -->
 	<bean id="bcFormEngine" class="cn.bc.workflow.activiti.form.BcFormEngine" />
+	<bean id="bcFormService" class="cn.bc.workflow.activiti.FormServiceImpl" />
 
 	<!-- 流转日志 -->
 	<bean id="excutionLogDao" class="cn.bc.workflow.dao.hibernate.jpa.ExcutionLogDaoImpl"
