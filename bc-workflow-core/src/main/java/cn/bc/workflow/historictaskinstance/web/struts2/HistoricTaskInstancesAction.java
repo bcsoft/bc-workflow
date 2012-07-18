@@ -172,7 +172,7 @@ public class HistoricTaskInstancesAction extends
 	@Override
 	protected PageOption getHtmlPageOption() {
 		return super.getHtmlPageOption().setWidth(800).setMinWidth(400)
-				.setHeight(400).setMinHeight(300).setMinimizable(false);
+				.setHeight(400).setMinHeight(300);
 	}
 
 	@Override
