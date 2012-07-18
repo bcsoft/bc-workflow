@@ -18,6 +18,9 @@
 		<action name="manages/list" class="todoManagesAction" method="list"/>
 		<action name="manages/paging" class="todoManagesAction" method="paging"/>
 		<action name="manages/data" class="todoManagesAction" method="data"/>
+		<action name="manages/conditions" class="todoManagesAction" method="conditions">
+			<result name="success">/bc-workflow/todo/conditions.jsp</result>
+		</action>
 		
 		<!-- 待办边栏-->
 		<action name="personals/sidebar" class="todoSideBarPersonalsAction" >
