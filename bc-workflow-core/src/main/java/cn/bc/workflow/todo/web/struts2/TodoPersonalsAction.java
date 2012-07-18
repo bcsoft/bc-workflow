@@ -102,25 +102,23 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>>{
 		SystemContext context = (SystemContext) this.getContext();
 		Condition assigneeCondition = new EqualsCondition("art.assignee_",context.getUser().getCode()); //act_ru_task 任务表
 		Condition userCondition = new EqualsCondition("ari.user_id_",context.getUser().getCode()); //act_ru_identitylink 参与成员表
+		Condition ariTypeCondition = new EqualsCondition("ari.type_","candidate"); //act_ru_identitylink 参与成员表了性
 		
 		Condition groupCondition = null;
 		//获取当前登录用户所在岗位的code列表
 		List<String> list = context.getAttr(SystemContext.KEY_GROUPS);
 		if(null != list && list.size() > 0){
 			groupCondition = new InCondition("ari.group_id_",list);
-		}else{
-			groupCondition = new EqualsCondition("ari.group_id_","");
 		}
 		Condition assigneeIsNullCondition = new IsNullCondition("art.assignee_");
 		
 		//当前用户是否等于任务待办人 或者 当前用户所在岗位是否等于任务的参与者 前提 该任务的待办人为空
-		return ConditionUtils.mix2OrCondition(
-				assigneeCondition,
-				ConditionUtils.mix2AndCondition(
-						ConditionUtils.mix2OrCondition(groupCondition,
-								userCondition).setAddBracket(true),
-						assigneeIsNullCondition).setAddBracket(true))
-				.setAddBracket(true);
+		return ConditionUtils.mix2OrCondition(assigneeCondition
+				,ConditionUtils.mix2AndCondition(assigneeIsNullCondition,ariTypeCondition
+						,ConditionUtils.mix2AndCondition(ConditionUtils.mix2OrCondition(userCondition,groupCondition).setAddBracket(true)
+								)
+						).setAddBracket(true)
+				);
 	}
 	
 	@Override
@@ -212,7 +210,8 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>>{
 				getText("todo.personal.arpName"), 70).setSortable(true));
 		columns.add(new HiddenColumn4MapKey("procInstId", "procInstId"));
 		columns.add(new HiddenColumn4MapKey("assignee", "assignee_"));
-		columns.add(new HiddenColumn4MapKey("groupId", "group_id_"));//岗位任务
+		columns.add(new HiddenColumn4MapKey("isCandidate", "isCandidate"));//是否岗位任务
+		columns.add(new HiddenColumn4MapKey("groupIds", "groupIds"));//候选岗位列表
 
 		return columns;
 	}
@@ -273,12 +272,13 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>>{
 		StringBuffer sql = new StringBuffer();
 		//发送人问题未解决
 		//sql.append("select art.id_,art.name_ artName,art.due_date_,aiu.first_ aiuName,art.create_time_,arp.name_ arpName");
-		sql.append("select art.id_,art.proc_inst_id_ procInstId,art.name_ artName,art.due_date_,art.create_time_,arp.name_ arpName");
-		sql.append(",art.description_,ari.group_id_,ari.user_id_,art.assignee_");
+		sql.append("select distinct art.id_,art.proc_inst_id_ procInstId,art.name_ artName,art.due_date_,art.create_time_,arp.name_ arpName,art.description_,art.assignee_");
+		sql.append(",(case when (select count(*) from act_ru_task rt inner join act_ru_identitylink ri on rt.id_ = ri.task_id_ where rt.assignee_ is null) > 0 then TRUE else FALSE end) isCandidate");
+		sql.append(",(select string_agg(ri2.group_id_,',') from act_ru_task rt2 inner join act_ru_identitylink ri2 on rt2.id_ = ri2.task_id_ where rt2.id_ = art.id_) groupIds");
 		sql.append(" from act_ru_task art");
 		sql.append(" left join act_id_user aiu on art.assignee_ = aiu.id_");
 		sql.append(" left join act_re_procdef arp on art.proc_def_id_ = arp.id_");
-		sql.append(" left join act_ru_identitylink ari on art.id_ = ari.task_id_");
+		sql.append(" inner join act_ru_identitylink ari on art.id_ = ari.task_id_");
 		
 		sqlObject.setSql(sql.toString());
 		
@@ -298,9 +298,9 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>>{
 				map.put("create_time_", rs[i++]); //  发送时间
 				map.put("arpName", rs[i++]); //  分类
 				map.put("description_", rs[i++]); // 附加说明
-				map.put("group_id_", rs[i++]); //  参与者岗位code
-				map.put("user_id_", rs[i++]); //  参与人岗位code
 				map.put("assignee_", rs[i++]); //  任务处理人code
+				map.put("isCandidate", rs[i++]); //  是否存在候选人或岗位
+				map.put("groupIds", rs[i++]); //  候选岗位列表
 				return map;
 			}
 		});
