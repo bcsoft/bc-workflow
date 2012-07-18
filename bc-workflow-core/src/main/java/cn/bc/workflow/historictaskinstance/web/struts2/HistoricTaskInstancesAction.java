@@ -133,20 +133,20 @@ public class HistoricTaskInstancesAction extends
 			columns.add(new TextColumn4MapKey("a.start_time_", "start_time",
 					getText("flow.task.startTime"), 130).setSortable(true)
 					.setUseTitleFromLabel(true)
-					.setValueFormater(new CalendarFormater("yyyy-MM-dd hh:mm")));
+					.setValueFormater(new CalendarFormater("yyyy-MM-dd HH:mm")));
 			columns.add(new TextColumn4MapKey("a.end_time_", "end_time",
 					getText("flow.task.endTime"), 130).setSortable(true)
 					.setUseTitleFromLabel(true)
-					.setValueFormater(new CalendarFormater("yyyy-MM-dd hh:mm")));
+					.setValueFormater(new CalendarFormater("yyyy-MM-dd HH:mm")));
 		}else{
 			columns.add(new TextColumn4MapKey("a.start_time_", "start_time",
 					getText("flow.task.startTime"), 150).setSortable(true)
 					.setUseTitleFromLabel(true)
-					.setValueFormater(new CalendarFormater("yyyy-MM-dd hh:mm:ss")));
+					.setValueFormater(new CalendarFormater("yyyy-MM-dd HH:mm:ss")));
 			columns.add(new TextColumn4MapKey("a.end_time_", "end_time",
 					getText("flow.task.endTime"), 150).setSortable(true)
 					.setUseTitleFromLabel(true)
-					.setValueFormater(new CalendarFormater("yyyy-MM-dd hh:mm:ss")));
+					.setValueFormater(new CalendarFormater("yyyy-MM-dd HH:mm:ss")));
 		}
 		columns.add(new TextColumn4MapKey("a.duration_", "frmDuration",
 				getText("flow.task.duration"), 80).setSortable(true));
@@ -172,7 +172,7 @@ public class HistoricTaskInstancesAction extends
 	@Override
 	protected PageOption getHtmlPageOption() {
 		return super.getHtmlPageOption().setWidth(800).setMinWidth(400)
-				.setHeight(400).setMinHeight(300).setMinimizable(false);
+				.setHeight(400).setMinHeight(300);
 	}
 
 	@Override
@@ -249,7 +249,12 @@ public class HistoricTaskInstancesAction extends
 	@Override
 	protected String getHtmlPageJs() {
 		return this.getHtmlPageNamespace()
-				+ "-workflow/historictaskinstance/select.js";
+				+ "/historictaskinstance/select.js";
+	}
+	
+	@Override
+	protected String getHtmlPageNamespace(){
+		return this.getContextPath() + "/bc-workflow";
 	}
 
 	// ==高级搜索代码开始==

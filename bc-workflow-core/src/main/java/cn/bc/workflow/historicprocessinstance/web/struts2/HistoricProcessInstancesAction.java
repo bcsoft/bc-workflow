@@ -130,11 +130,11 @@ public class HistoricProcessInstancesAction extends
 		columns.add(new TextColumn4MapKey("a.start_time_", "start_time",
 				getText("flow.instance.startTime"), 150).setSortable(true)
 				.setUseTitleFromLabel(true)
-				.setValueFormater(new CalendarFormater("yyyy-MM-dd hh:mm:ss")));
+				.setValueFormater(new CalendarFormater("yyyy-MM-dd HH:mm:ss")));
 		columns.add(new TextColumn4MapKey("a.end_time_", "end_time",
 				getText("flow.instance.endTime"), 150).setSortable(true)
 				.setUseTitleFromLabel(true)
-				.setValueFormater(new CalendarFormater("yyyy-MM-dd hh:mm:ss")));
+				.setValueFormater(new CalendarFormater("yyyy-MM-dd HH:mm:ss")));
 		columns.add(new TextColumn4MapKey("a.duration_", "frmDuration",
 				getText("flow.instance.duration"), 80).setSortable(true));
 		columns.add(new HiddenColumn4MapKey("procinstid", "procinstid"));
@@ -230,7 +230,12 @@ public class HistoricProcessInstancesAction extends
 	@Override
 	protected String getHtmlPageJs() {
 		return this.getHtmlPageNamespace()
-				+ "-workflow/historicprocessinstance/select.js";
+				+ "/historicprocessinstance/select.js";
+	}
+	
+	@Override
+	protected String getHtmlPageNamespace(){
+		return this.getContextPath() + "/bc-workflow";
 	}
 
 	// ==高级搜索代码开始==
