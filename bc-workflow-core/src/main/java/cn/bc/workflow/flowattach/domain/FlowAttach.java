@@ -43,6 +43,18 @@ public class FlowAttach extends FileEntityImpl {
 	private String ext;// 扩展名
 	private Boolean formatted;//附件是否需要格式化,类型为意见时字段为空
 	
+	private Long templateId;//模板id
+	
+	
+	@Column(name = "TEMPLATE_ID")
+	public Long getTemplateId() {
+		return templateId;
+	}
+
+	public void setTemplateId(Long templateId) {
+		this.templateId = templateId;
+	}
+
 	@Column(name = "FORMATTED")
 	public Boolean getFormatted() {
 		return formatted;
