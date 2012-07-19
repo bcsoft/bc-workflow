@@ -242,7 +242,7 @@ public class WorkflowAction extends AbstractBaseAction {
 		variables[0] = globalVariables;
 		variables[1] = localVariables;
 		for (Map<String, Object> m : data) {
-			if ("process".equals(m.get("scope"))) {// 全局
+			if ("global".equals(m.get("scope"))) {// 全局
 				globalVariables.put((String) m.get("name"), StringUtils
 						.convertValueByType((String) m.get("type"),
 								(String) m.get("value")));
