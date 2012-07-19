@@ -12,11 +12,8 @@ import java.util.Map;
 
 import org.activiti.engine.FormService;
 import org.activiti.engine.HistoryService;
-import org.activiti.engine.IdentityService;
 import org.activiti.engine.RepositoryService;
-import org.activiti.engine.RuntimeService;
 import org.activiti.engine.TaskService;
-import org.activiti.engine.form.TaskFormData;
 import org.activiti.engine.history.HistoricProcessInstance;
 import org.activiti.engine.history.HistoricTaskInstance;
 import org.activiti.engine.repository.ProcessDefinition;
@@ -30,12 +27,8 @@ import org.springframework.util.Assert;
 import cn.bc.core.exception.CoreException;
 import cn.bc.core.util.DateUtils;
 import cn.bc.core.util.StringUtils;
-import cn.bc.core.util.TemplateUtils;
 import cn.bc.identity.web.SystemContext;
 import cn.bc.identity.web.SystemContextHolder;
-import cn.bc.template.service.TemplateService;
-import cn.bc.web.util.WebUtils;
-import cn.bc.workflow.activiti.form.BcFormEngine;
 import cn.bc.workflow.flowattach.domain.FlowAttach;
 import cn.bc.workflow.flowattach.service.FlowAttachService;
 
@@ -47,14 +40,18 @@ import cn.bc.workflow.flowattach.service.FlowAttachService;
 public class WorkspaceServiceImpl implements WorkspaceService {
 	private static final Log logger = LogFactory
 			.getLog(WorkspaceServiceImpl.class);
-	private TemplateService templateService;
-	private RuntimeService runtimeService;
 	private RepositoryService repositoryService;
-	private IdentityService identityService;
 	private TaskService taskService;
 	private FormService formService;
 	private HistoryService historyService;
 	private FlowAttachService flowAttachService;
+	private ExcutionLogService excutionLogService;
+	private WorkflowFormService workflowFormService;
+
+	@Autowired
+	public void setWorkflowFormService(WorkflowFormService workflowFormService) {
+		this.workflowFormService = workflowFormService;
+	}
 
 	@Autowired
 	public void setFlowAttachService(FlowAttachService flowAttachService) {
@@ -62,23 +59,8 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 	}
 
 	@Autowired
-	public void setTemplateService(TemplateService templateService) {
-		this.templateService = templateService;
-	}
-
-	@Autowired
-	public void setRuntimeService(RuntimeService runtimeService) {
-		this.runtimeService = runtimeService;
-	}
-
-	@Autowired
 	public void setRepositoryService(RepositoryService repositoryService) {
 		this.repositoryService = repositoryService;
-	}
-
-	@Autowired
-	public void setIdentityService(IdentityService identityService) {
-		this.identityService = identityService;
 	}
 
 	@Autowired
@@ -94,6 +76,11 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 	@Autowired
 	public void setFormService(FormService formService) {
 		this.formService = formService;
+	}
+
+	@Autowired
+	public void setExcutionLogService(ExcutionLogService excutionLogService) {
+		this.excutionLogService = excutionLogService;
 	}
 
 	/**
@@ -230,12 +217,12 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 	}
 
 	private void buildFormInfo(boolean flowing,
-			List<Map<String, Object>> items, Task task) {
-		String formKey = this.getTaskFormKey(task);
+			List<Map<String, Object>> items, String processInstanceId,
+			String taskId, String formKey, boolean readonly) {
 		if (formKey == null || formKey.length() == 0)
 			return;
 		if (logger.isDebugEnabled()) {
-			logger.debug("taskId=" + task.getId() + ",formKey=" + formKey);
+			logger.debug("taskId=" + taskId + ",formKey=" + formKey);
 		}
 
 		// 表单基本信息
@@ -244,9 +231,9 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 		String type = "form";
 		item = new HashMap<String, Object>();
 		items.add(item);
-		item.put("id", task.getId());
-		item.put("pid", task.getProcessInstanceId());// 流程实例id
-		item.put("tid", task.getId());// 任务id
+		item.put("id", taskId);
+		item.put("pid", processInstanceId);// 流程实例id
+		item.put("tid", taskId);// 任务id
 		item.put("type", type);// 信息类型
 		item.put("link", false);// 链接标题
 		item.put("buttons", this.buildItemDefaultButtons(flowing, type));// 操作按钮列表
@@ -289,26 +276,12 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 		item.put("form_from", from);// form
 		item.put("form_key", key);
 		item.put("form_seperate", seperate);
-		
-		String html = (String) this.formService.getRenderedTaskForm(task.getId(),
-				BcFormEngine.NAME);
+
+		String html = (String) this.workflowFormService.getRenderedTaskForm(
+				taskId, readonly);
 		item.put("form_html", html);
 
 		detail.add(html);
-	}
-
-	/**
-	 * 获取用户的表单配置
-	 * 
-	 * @param _task
-	 * @return
-	 */
-	private String getTaskFormKey(Task _task) {
-		TaskFormData d = formService.getTaskFormData(_task.getId());
-		if (d != null)
-			return d.getFormKey();
-		else
-			return null;
 	}
 
 	/**
@@ -456,6 +429,10 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 		List<FlowAttach> allFlowAttachs = flowAttachService.findByTask(tids
 				.toArray(new String[] {}));
 
+		// 获取表单formKey
+		Map<String, String> formKeys = excutionLogService
+				.findTaskFormKeys(instance.getId());
+
 		// 生成展现用的数据
 		Date now = new Date();
 		for (Task task : tasks) {
@@ -492,14 +469,15 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 			items = new ArrayList<Map<String, Object>>();// 二级条目列表
 			taskItem.put("items", items);
 
-			// -- 表单信息 TODO
-			buildFormInfo(flowing, items, task);
+			// -- 表单信息
+			buildFormInfo(flowing, items, task.getProcessInstanceId(),
+					task.getId(), formKeys.get(task.getId()), !isMyTask);
 
 			// -- 意见、附件信息
 			buildFlowAttachsInfo(flowing, items,
 					this.findTaskFlowAttachs(task.getId(), allFlowAttachs));
 
-			// 任务的基本信息
+			// 任务的汇总信息
 			if (isUserTask) {
 				taskItem.put("actor", "待办人：" + task.getAssignee());
 			} else {
@@ -604,6 +582,10 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 		List<FlowAttach> allFlowAttachs = flowAttachService.findByTask(tids
 				.toArray(new String[] {}));
 
+		// 获取表单formKey
+		Map<String, String> formKeys = excutionLogService
+				.findTaskFormKeys(instance.getId());
+
 		// 生成展现用的数据
 		for (HistoricTaskInstance task : tasks) {
 			// 任务的基本信息
@@ -614,6 +596,23 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 			taskItem.put("owner", task.getOwner());// 委托人
 			taskItem.put("link", false);// 链接标题
 			taskItem.put("subject", task.getName());// 标题
+			taskItem.put("hasButtons", false);// 有否操作按钮
+			taskItem.put("formKey",
+					excutionLogService.findTaskFormKey(task.getId()));// 记录formKey
+
+			// 任务的详细信息
+			items = new ArrayList<Map<String, Object>>();// 二级条目列表
+			taskItem.put("items", items);
+
+			// -- 表单信息
+			buildFormInfo(flowing, items, task.getProcessInstanceId(),
+					task.getId(), formKeys.get(task.getId()), true);
+
+			// -- 意见、附件信息
+			buildFlowAttachsInfo(false, items,
+					this.findTaskFlowAttachs(task.getId(), allFlowAttachs));
+
+			// 任务的汇总信息
 			taskItem.put(
 					"wasteTime",
 					"办理耗时："
@@ -634,16 +633,6 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 								+ DateUtils.formatDateTime2Minute(task
 										.getDueDate()));
 			}
-
-			// 任务的详细信息
-			items = new ArrayList<Map<String, Object>>();// 二级条目列表
-			taskItem.put("items", items);
-
-			// -- 表单信息 TODO
-
-			// -- 意见、附件信息
-			buildFlowAttachsInfo(false, items,
-					this.findTaskFlowAttachs(task.getId(), allFlowAttachs));
 		}
 
 		// 返回

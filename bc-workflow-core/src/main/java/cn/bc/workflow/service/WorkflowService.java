@@ -67,7 +67,7 @@ public interface WorkflowService {
 	 *            任务ID
 	 */
 	void claimTask(String taskId);
-	
+
 	/**
 	 * 完成任务
 	 * 
@@ -75,6 +75,19 @@ public interface WorkflowService {
 	 *            任务ID
 	 */
 	void completeTask(String taskId);
+
+	/**
+	 * 完成任务
+	 * 
+	 * @param taskId
+	 *            任务ID
+	 * @param globalVariables
+	 *            全局流程变量
+	 * @param localVariables
+	 *            本地流程变量
+	 */
+	void completeTask(String taskId, Map<String, Object> globalVariables,
+			Map<String, Object> localVariables);
 
 	/**
 	 * 委派任务
@@ -85,16 +98,16 @@ public interface WorkflowService {
 	 *            所委派给用户的帐号
 	 */
 	void delegateTask(String taskId, String toUser);
-	
+
 	/**
-	 *  分派任务
+	 * 分派任务
 	 * 
 	 * @param taskId
 	 *            任务ID
 	 * @param toUser
 	 *            分派给当前岗位任务的用户
 	 */
-	void assignTask(String taskId,String toUser);
+	void assignTask(String taskId, String toUser);
 
 	/**
 	 * 加载指定的流程实例
@@ -131,7 +144,7 @@ public interface WorkflowService {
 	 * @return
 	 */
 	InputStream getDeploymentResource(String deploymentId, String resourceName);
-	
+
 	/**
 	 * 获取指定流程实例公共信息的键值替换参数
 	 * 
@@ -140,7 +153,7 @@ public interface WorkflowService {
 	 * @return
 	 */
 	Map<String, Object> getInstanceParams(String processInstanceId);
-	
+
 	/**
 	 * 获取指定任务的键值替换参数
 	 * 

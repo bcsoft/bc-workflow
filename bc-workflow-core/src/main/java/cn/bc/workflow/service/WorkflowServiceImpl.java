@@ -7,12 +7,10 @@ import java.io.InputStream;
 import java.util.Map;
 import java.util.zip.ZipInputStream;
 
-import org.activiti.engine.HistoryService;
 import org.activiti.engine.IdentityService;
 import org.activiti.engine.RepositoryService;
 import org.activiti.engine.RuntimeService;
 import org.activiti.engine.TaskService;
-import org.activiti.engine.impl.persistence.entity.CommentEntity;
 import org.activiti.engine.repository.Deployment;
 import org.activiti.engine.repository.ProcessDefinition;
 import org.activiti.engine.runtime.ProcessInstance;
@@ -41,7 +39,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 	private TaskService taskService;
 
 	// private FormService formService;
-	private HistoryService historyService;
+	// private HistoryService historyService;
 
 	@Autowired
 	public void setTemplateService(TemplateService templateService) {
@@ -68,10 +66,10 @@ public class WorkflowServiceImpl implements WorkflowService {
 		this.taskService = taskService;
 	}
 
-	@Autowired
-	public void setHistoryService(HistoryService historyService) {
-		this.historyService = historyService;
-	}
+	// @Autowired
+	// public void setHistoryService(HistoryService historyService) {
+	// this.historyService = historyService;
+	// }
 
 	// @Autowired
 	// public void setFormService(FormService formService) {
@@ -126,10 +124,29 @@ public class WorkflowServiceImpl implements WorkflowService {
 	}
 
 	public void completeTask(String taskId) {
+		this.completeTask(taskId, null, null);
+	}
+
+	public void completeTask(String taskId,
+			Map<String, Object> globalVariables,
+			Map<String, Object> localVariables) {
 		// 设置Activiti认证用户
 		setAuthenticatedUser();
 
-		// 完成任务：TODO 表单信息的处理
+		if (logger.isDebugEnabled()) {
+			logger.debug("globalVariables=" + globalVariables);
+			logger.debug("localVariables=" + localVariables);
+		}
+
+		// 设置全局流程变量
+		if (globalVariables != null && !globalVariables.isEmpty())
+			this.taskService.setVariables(taskId, globalVariables);
+
+		// 设置本地流程变量
+		if (localVariables != null && !localVariables.isEmpty())
+			this.taskService.setVariablesLocal(taskId, localVariables);
+
+		// 完成任务
 		this.taskService.complete(taskId);
 	}
 
@@ -139,11 +156,11 @@ public class WorkflowServiceImpl implements WorkflowService {
 
 		this.taskService.delegateTask(taskId, toUser);
 	}
-	
+
 	public void assignTask(String taskId, String toUser) {
 		// 设置Activiti认证用户
 		setAuthenticatedUser();
-		
+
 		// 领取任务：TODO 表单信息的处理
 		this.taskService.claim(taskId, toUser);
 	}

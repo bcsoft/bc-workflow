@@ -81,6 +81,13 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>>{
 		return context
 				.hasAnyRole(getText("key.role.bc.workflow.assign"));
 	}
+	
+	public boolean isStart() {
+		// 课发起流程角色
+		SystemContext context = (SystemContext) this.getContext();
+		return context
+				.hasAnyRole(getText("key.role.bc.workflow.start"));
+	}
 
 	
 	@Override
@@ -139,6 +146,11 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>>{
 					.setClick("bc.todoView.assignTask"));
 		}
 		
+		if(this.isStart()){
+			// 发起流程
+			tb.addButton(new ToolbarButton().setIcon("ui-icon-play")
+					.setText(getText("flow.start")).setClick("bc.historicProcessInstanceSelectView.startflow"));
+		}
 		// 搜索按钮
 		tb.addButton(getDefaultSearchToolbarButton());
 		
@@ -261,7 +273,8 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>>{
 	@Override
 	protected String getHtmlPageJs() {
 		return this.getContextPath() + "/bc-workflow/todo/view.js"+","+
-				this.getContextPath() + "/bc/identity/identity.js"
+				this.getContextPath() + "/bc/identity/identity.js" +","+
+					this.getContextPath() + "/bc-workflow/historicprocessinstance/select.js"
 				;
 	}
 	

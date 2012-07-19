@@ -1,9 +1,10 @@
 package cn.bc.workflow.web.struts2;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.InputStream;
+import java.util.Collection;
 import java.util.Date;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import org.activiti.engine.repository.Deployment;
 import org.apache.commons.logging.Log;
@@ -13,11 +14,11 @@ import org.commontemplate.util.Assert;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Controller;
-import org.springframework.util.StringUtils;
 
 import cn.bc.core.exception.CoreException;
 import cn.bc.core.util.DateUtils;
-import cn.bc.docs.domain.Attach;
+import cn.bc.core.util.JsonUtils;
+import cn.bc.core.util.StringUtils;
 import cn.bc.docs.web.AttachUtils;
 import cn.bc.web.ui.json.Json;
 import cn.bc.web.util.WebUtils;
@@ -42,6 +43,12 @@ public class WorkflowAction extends AbstractBaseAction {
 	public long contentLength;
 	public InputStream inputStream;
 	public String n;// [可选]指定下载文件的文件名
+
+	/**
+	 * 任务的表单数据，使用标准的Json数据格式：[{name:"",value:"",type:"int|long|string|date|...",
+	 * scope:"process|task"}]
+	 */
+	public String formData;
 
 	/**
 	 * 查看流程图
@@ -197,13 +204,17 @@ public class WorkflowAction extends AbstractBaseAction {
 	 * @return
 	 * @throws Exception
 	 */
+	@SuppressWarnings("unchecked")
 	public String completeTask() throws Exception {
 		try {
 			// id为任务的id
 			Assert.assertNotEmpty(id);
 
 			// 完成任务
-			this.workflowService.completeTask(id);
+			Object[] variables = buildFormVariables();
+			this.workflowService.completeTask(id,
+					(Map<String, Object>) variables[0],
+					(Map<String, Object>) variables[1]);
 
 			// 返回信息
 			json = createSuccessMsg("完成任务成功！").toString();
@@ -212,6 +223,39 @@ public class WorkflowAction extends AbstractBaseAction {
 		}
 
 		return JSON;
+	}
+
+	/**
+	 * 根据表单数据构建相应的流程变量
+	 * 
+	 * @return
+	 */
+	private Object[] buildFormVariables() {
+		if (this.formData == null || this.formData.length() == 0)
+			return new Object[2];
+
+		Collection<Map<String, Object>> data = JsonUtils
+				.toCollection(this.formData);
+		Object[] variables = new Object[2];
+		Map<String, Object> globalVariables = new LinkedHashMap<String, Object>();
+		Map<String, Object> localVariables = new LinkedHashMap<String, Object>();
+		variables[0] = globalVariables;
+		variables[1] = localVariables;
+		for (Map<String, Object> m : data) {
+			if ("global".equals(m.get("scope"))) {// 全局
+				globalVariables.put((String) m.get("name"), StringUtils
+						.convertValueByType((String) m.get("type"),
+								(String) m.get("value")));
+			} else if ("local".equals(m.get("scope"))) {// 本地
+				globalVariables.put((String) m.get("name"), StringUtils
+						.convertValueByType((String) m.get("type"),
+								(String) m.get("value")));
+			} else {
+				throw new CoreException("unsupport formData scope:"
+						+ m.get("scope"));
+			}
+		}
+		return variables;
 	}
 
 	/**
@@ -239,7 +283,7 @@ public class WorkflowAction extends AbstractBaseAction {
 
 		return JSON;
 	}
-	
+
 	/**
 	 * 分派任务
 	 * 
@@ -250,19 +294,19 @@ public class WorkflowAction extends AbstractBaseAction {
 		try {
 			// id为任务的id
 			Assert.assertNotEmpty(id);
-			
+
 			// 分派给的用户
 			Assert.assertNotEmpty(toUser);
-			
+
 			// 分派任务
 			this.workflowService.assignTask(id, toUser);
-			
+
 			// 返回信息
 			json = createSuccessMsg("分派任务成功！").toString();
 		} catch (Exception e) {
 			json = createFailureMsg(e).toString();
 		}
-		
+
 		return JSON;
 	}
 }
