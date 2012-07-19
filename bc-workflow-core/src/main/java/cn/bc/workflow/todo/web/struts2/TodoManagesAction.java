@@ -10,6 +10,8 @@ import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Controller;
 
+import cn.bc.core.query.condition.Direction;
+import cn.bc.core.query.condition.impl.OrderCondition;
 import cn.bc.db.jdbc.RowMapper;
 import cn.bc.db.jdbc.SqlObject;
 import cn.bc.identity.web.SystemContext;
@@ -59,6 +61,11 @@ public class TodoManagesAction extends ViewAction<Map<String, Object>>{
 		// 通用角色
 		SystemContext context = (SystemContext) this.getContext();
 		return !context.hasAnyRole(getText("key.role.bc.admin"));
+	}
+	
+	@Override
+	protected OrderCondition getGridOrderCondition() {
+		return new OrderCondition("art.create_time_",Direction.Desc);
 	}
 	
 	@Override

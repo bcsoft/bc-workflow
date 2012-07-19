@@ -4,6 +4,7 @@
 package cn.bc.workflow.service;
 
 import java.io.InputStream;
+import java.util.Calendar;
 import java.util.Map;
 import java.util.zip.ZipInputStream;
 
@@ -14,15 +15,20 @@ import org.activiti.engine.TaskService;
 import org.activiti.engine.repository.Deployment;
 import org.activiti.engine.repository.ProcessDefinition;
 import org.activiti.engine.runtime.ProcessInstance;
+import org.activiti.engine.task.Task;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import cn.bc.core.exception.CoreException;
+import cn.bc.core.util.DateUtils;
+import cn.bc.identity.domain.ActorHistory;
+import cn.bc.identity.service.ActorHistoryService;
 import cn.bc.identity.web.SystemContextHolder;
 import cn.bc.template.domain.Template;
 import cn.bc.template.service.TemplateService;
 import cn.bc.workflow.activiti.ActivitiUtils;
+import cn.bc.workflow.domain.ExcutionLog;
 
 /**
  * 工作流Service的实现
@@ -37,6 +43,8 @@ public class WorkflowServiceImpl implements WorkflowService {
 	private RepositoryService repositoryService;
 	private IdentityService identityService;
 	private TaskService taskService;
+	private ExcutionLogService excutionLogService;
+	private ActorHistoryService actorHistoryServer;
 
 	// private FormService formService;
 	// private HistoryService historyService;
@@ -66,6 +74,16 @@ public class WorkflowServiceImpl implements WorkflowService {
 		this.taskService = taskService;
 	}
 
+	@Autowired
+	public void setExcutionLogService(ExcutionLogService excutionLogService) {
+		this.excutionLogService = excutionLogService;
+	}
+	
+	@Autowired
+	public void setActorHistoryServer(ActorHistoryService actorHistoryServer) {
+		this.actorHistoryServer = actorHistoryServer;
+	}
+	
 	// @Autowired
 	// public void setHistoryService(HistoryService historyService) {
 	// this.historyService = historyService;
@@ -121,6 +139,33 @@ public class WorkflowServiceImpl implements WorkflowService {
 
 		// 领取任务：TODO 表单信息的处理
 		this.taskService.claim(taskId, getCurrentUserAccount());
+		
+		//加载当前任务
+		Task task = taskService.createTaskQuery().taskId(taskId).singleResult();
+		
+		// 创建执行日志
+		ExcutionLog log = new ExcutionLog();
+		log.setFileDate(Calendar.getInstance());
+		ActorHistory h = SystemContextHolder.get().getUserHistory();
+		log.setAuthorId(h.getId());
+		log.setAuthorCode(h.getCode());
+		log.setAuthorName(h.getName());
+		
+		// 处理人信息
+		log.setAssigneeId(h.getId());
+		log.setAssigneeCode(h.getCode());
+		log.setAssigneeName(h.getName());
+		
+		log.setListener("custom");//自定义
+		log.setExcutionId(task.getExecutionId());
+		log.setType(ExcutionLog.TYPE_TASK_INSTANCE_CLAIM);
+		log.setProcessInstanceId(task.getProcessInstanceId());
+		log.setTaskInstanceId(task.getId());
+		
+		String date = DateUtils.formatCalendar2Minute(log.getFileDate());
+		log.setDescription(h.getName()+"在"+date+"签领了任务");
+		//保存
+		this.excutionLogService.save(log);
 	}
 
 	public void completeTask(String taskId) {
@@ -148,13 +193,19 @@ public class WorkflowServiceImpl implements WorkflowService {
 
 		// 完成任务
 		this.taskService.complete(taskId);
+		
 	}
-
+	
 	public void delegateTask(String taskId, String toUser) {
 		// 设置Activiti认证用户
 		setAuthenticatedUser();
-
+		
+		// 委托任务
 		this.taskService.delegateTask(taskId, toUser);
+		
+		//保存excutionlog信息
+		saveExcutionLogInfo4DelegateAndAssign(taskId,toUser
+				,ExcutionLog.TYPE_TASK_INSTANCE_DELEGATE,"委托给");
 	}
 
 	public void assignTask(String taskId, String toUser) {
@@ -163,6 +214,42 @@ public class WorkflowServiceImpl implements WorkflowService {
 
 		// 领取任务：TODO 表单信息的处理
 		this.taskService.claim(taskId, toUser);
+
+		//保存excutionlog信息
+		saveExcutionLogInfo4DelegateAndAssign(taskId,toUser
+				,ExcutionLog.TYPE_TASK_INSTANCE_ASSIGN,"分派给");
+	}
+	
+	/**  委托,分派操作保存excutionlog信息 */
+	public void saveExcutionLogInfo4DelegateAndAssign(String taskId,String toUser
+			,String type,String msg){
+		//加载当前任务
+		Task task = taskService.createTaskQuery().taskId(taskId).singleResult();
+		
+		// 创建执行日志
+		ExcutionLog log = new ExcutionLog();
+		log.setFileDate(Calendar.getInstance());
+		ActorHistory h = SystemContextHolder.get().getUserHistory();
+		log.setAuthorId(h.getId());
+		log.setAuthorCode(h.getCode());
+		log.setAuthorName(h.getName());
+		
+		// 处理人信息
+		ActorHistory h2 = actorHistoryServer.loadByCode(toUser);
+		log.setAssigneeId(h2.getId());
+		log.setAssigneeCode(h2.getCode());
+		log.setAssigneeName(h2.getName());
+		
+		log.setListener("custom");//自定义
+		log.setExcutionId(task.getExecutionId());
+		log.setType(type);
+		log.setProcessInstanceId(task.getProcessInstanceId());
+		log.setTaskInstanceId(task.getId());
+		
+		String date = DateUtils.formatCalendar2Minute(log.getFileDate());
+		log.setDescription(h.getName()+"在"+date+"将任务"+msg+h2.getName());
+		//保存
+		this.excutionLogService.save(log);
 	}
 
 	public Deployment deployZipFromTemplate(String templateCode) {

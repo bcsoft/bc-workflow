@@ -46,11 +46,19 @@ public class ExcutionLog extends EntityImpl {
 			+ TaskListener.EVENTNAME_ASSIGNMENT;
 	/** 类型:领取任务 */
 	public static final String TYPE_TASK_INSTANCE_CLAIM = "task_claim";
+	/** 类型:委托任务 */
+	public static final String TYPE_TASK_INSTANCE_DELEGATE = "task_delegate";
+	/** 类型:分派任务 */
+	public static final String TYPE_TASK_INSTANCE_ASSIGN = "task_assign";
 
 	private Calendar fileDate;// 创建时间
 	private Long authorId;// 创建人ID(对应ActoryHistory表的ID)
 	private String authorCode;// 创建人帐号
 	private String authorName;// 创建人姓名
+	
+	private Long assigneeId;// 处理人ID(对应ActoryHistory表的ID)
+	private String assigneeCode;// 处理人帐号
+	private String assigneeName;// 处理人姓名
 
 	private String type;// 日志类型：参考TYPE_XXX常数的定义
 	private String listener;// 监听器类型
@@ -95,6 +103,33 @@ public class ExcutionLog extends EntityImpl {
 
 	public void setAuthorName(String authorName) {
 		this.authorName = authorName;
+	}
+	
+	@Column(name = "ASSIGNEE_ID")
+	public Long getAssigneeId() {
+		return assigneeId;
+	}
+
+	public void setAssigneeId(Long assigneeId) {
+		this.assigneeId = assigneeId;
+	}
+
+	@Column(name = "ASSIGNEE_CODE")
+	public String getAssigneeCode() {
+		return assigneeCode;
+	}
+
+	public void setAssigneeCode(String assigneeCode) {
+		this.assigneeCode = assigneeCode;
+	}
+
+	@Column(name = "ASSIGNEE_NAME")
+	public String getAssigneeName() {
+		return assigneeName;
+	}
+
+	public void setAssigneeName(String assigneeName) {
+		this.assigneeName = assigneeName;
 	}
 
 	@Column(name = "TYPE_")
