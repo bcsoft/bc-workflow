@@ -21,7 +21,7 @@ import cn.bc.workflow.domain.ExcutionLog;
 import cn.bc.workflow.service.ExcutionLogService;
 
 /**
- * 记录任务日志的监听器
+ * 记录任务执行日志的监听器：create创建、assignment分配、complete完成
  * 
  * @author dragon
  * 
@@ -37,7 +37,8 @@ public class TaskLogListener implements TaskListener {
 
 	public void notify(DelegateTask delegateTask) {
 		if (logger.isDebugEnabled()) {
-			logger.debug("class=" + delegateTask.getClass());
+			logger.debug("execution=" + delegateTask.getClass());
+			logger.debug("this=" + this.getClass());
 			logger.debug("id=" + delegateTask.getId());
 			logger.debug("eventName=" + delegateTask.getEventName());
 			logger.debug("processInstanceId"
@@ -57,7 +58,7 @@ public class TaskLogListener implements TaskListener {
 
 		log.setListener(delegateTask.getClass().getName());
 		log.setExcutionId(delegateTask.getExecutionId());
-		log.setType("task_" + delegateTask.getEventName());
+		log.setType(getLogTypePrefix() + delegateTask.getEventName());
 		log.setProcessInstanceId(delegateTask.getProcessInstanceId());
 		log.setTaskInstanceId(delegateTask.getId());
 
@@ -66,6 +67,7 @@ public class TaskLogListener implements TaskListener {
 			TaskEntity task = (TaskEntity) delegateTask;
 			TaskDefinition d = task.getTaskDefinition();
 			if (d != null) {
+				log.setCode(d.getKey());// 任务的编码
 				TaskFormHandler fh = d.getTaskFormHandler();
 				if (fh != null) {
 					TaskFormData fd = fh.createTaskForm(task);
@@ -78,6 +80,16 @@ public class TaskLogListener implements TaskListener {
 			}
 		}
 
+		// 保存日志
 		excutionLogService.save(log);
+	}
+
+	/**
+	 * 获取日志类型的前缀
+	 * 
+	 * @return
+	 */
+	protected String getLogTypePrefix() {
+		return "task_";
 	}
 }

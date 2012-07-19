@@ -34,7 +34,8 @@ public class JavaDelegateLogListener implements JavaDelegate {
 
 	public void execute(DelegateExecution execution) throws Exception {
 		if (logger.isDebugEnabled()) {
-			logger.debug("class=" + execution.getClass());
+			logger.debug("execution=" + execution.getClass());
+			logger.debug("this=" + this.getClass());
 			logger.debug("id=" + execution.getId());
 			logger.debug("eventName=" + execution.getEventName());
 			logger.debug("processInstanceId" + execution.getProcessInstanceId());
@@ -52,7 +53,7 @@ public class JavaDelegateLogListener implements JavaDelegate {
 
 		log.setListener(execution.getClass().getName());
 		log.setExcutionId(execution.getId());
-		log.setType("excution_" + execution.getEventName());
+		log.setType("javaDelegate_" + execution.getEventName());
 		log.setProcessInstanceId(execution.getProcessInstanceId());
 		excutionLogService.save(log);
 	}
