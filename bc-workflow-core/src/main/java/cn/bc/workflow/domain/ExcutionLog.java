@@ -67,7 +67,16 @@ public class ExcutionLog extends EntityImpl {
 	private String taskInstanceId;// 任务实例ID
 	private String form;// 流程、任务表单formKey的值
 
+	private String code;// 编码：对应任务、流向的definitionKey
 	private String description;// 其它信息
+
+	public String getCode() {
+		return code;
+	}
+
+	public void setCode(String code) {
+		this.code = code;
+	}
 
 	@Column(name = "FILE_DATE")
 	public Calendar getFileDate() {
