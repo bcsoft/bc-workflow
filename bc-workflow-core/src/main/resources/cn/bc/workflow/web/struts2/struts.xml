@@ -55,4 +55,11 @@
 		<action name="data" class="selectProcessAction" method="data"/>
 		<action name="paging" class="selectProcessAction" method="paging"/>
 	</package>
+	
+	<!-- 选择用户 -->
+	<package name="selectUsers4Flow" extends="bc-default" namespace="/bc-workflow/selectUsers">
+		<action name="list" class="selectUsers4FlowAction" method="list"/>
+		<action name="data" class="selectUsers4FlowAction" method="data"/>
+		<action name="paging" class="selectUsers4FlowAction" method="paging"/>
+	</package>
 </struts>

@@ -7,6 +7,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.activiti.engine.repository.Deployment;
+import org.activiti.engine.task.Task;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.struts2.ServletActionContext;
@@ -189,8 +190,12 @@ public class WorkflowAction extends AbstractBaseAction {
 			// 领取任务
 			this.workflowService.claimTask(id);
 
+			Task task = taskService.createTaskQuery().taskId(id).singleResult();
 			// 返回信息
-			json = createSuccessMsg("任务领取成功！").toString();
+			Json json = createSuccessMsg("任务领取成功！");
+			json.put("pId", task.getProcessInstanceId()); // 流程实例id
+			json.put("name", task.getName());
+			this.json = json.toString();
 		} catch (Exception e) {
 			json = createFailureMsg(e).toString();
 		}

@@ -274,6 +274,7 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>>{
 	protected String getHtmlPageJs() {
 		return this.getContextPath() + "/bc-workflow/todo/view.js"+","+
 				this.getContextPath() + "/bc/identity/identity.js" +","+
+				this.getContextPath() + "/bc-workflow/select/selectUsers.js" +","+
 					this.getContextPath() + "/bc-workflow/historicprocessinstance/select.js"
 				;
 	}
