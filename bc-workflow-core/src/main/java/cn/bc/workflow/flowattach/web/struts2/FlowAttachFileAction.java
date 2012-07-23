@@ -32,6 +32,7 @@ import cn.bc.docs.service.AttachService;
 import cn.bc.docs.util.OfficeUtils;
 import cn.bc.docs.web.AttachUtils;
 import cn.bc.identity.web.SystemContextHolder;
+import cn.bc.template.service.TemplateService;
 import cn.bc.template.service.TemplateTypeService;
 import cn.bc.template.util.DocxUtils;
 import cn.bc.template.util.XlsUtils;
@@ -39,7 +40,6 @@ import cn.bc.template.util.XlsxUtils;
 import cn.bc.web.util.WebUtils;
 import cn.bc.workflow.flowattach.domain.FlowAttach;
 import cn.bc.workflow.flowattach.service.FlowAttachService;
-import cn.bc.workflow.service.WorkflowService;
 
 import com.opensymphony.xwork2.ActionSupport;
 
@@ -57,8 +57,8 @@ public class FlowAttachFileAction extends ActionSupport {
 	private static final long serialVersionUID = 1L;
 	private AttachService attachService;
 	private FlowAttachService flowAttachService;
-	private WorkflowService workflowService;
 	private TemplateTypeService templateTypeService;
+	private TemplateService templateService;
 
 	@Autowired
 	public void setAttachService(AttachService attachService) {
@@ -71,13 +71,13 @@ public class FlowAttachFileAction extends ActionSupport {
 	}
 
 	@Autowired
-	public void setWorkflowService(WorkflowService workflowService) {
-		this.workflowService = workflowService;
-	}
-
-	@Autowired
 	public void setTemplateTypeService(TemplateTypeService templateTypeService) {
 		this.templateTypeService = templateTypeService;
+	}
+	
+	@Autowired
+	public void setTemplateService(TemplateService templateService) {
+		this.templateService = templateService;
 	}
 
 	public Long id;// 流程附件id
@@ -326,12 +326,18 @@ public class FlowAttachFileAction extends ActionSupport {
 		Map<String, Object> params=null;
 		// 获取文件中的${XXXX}占位标记的键名列表
 		List<String> markers=null;
+		
+		//
+		Map<String, Object> mapFormatSql=new HashMap<String, Object>();
 		// 获取替换参数
 		if (flowAttach.isCommon()) {
-			params = workflowService.getInstanceParams(flowAttach.getPid());
-		} else
-			params = workflowService.getInstanceParams(flowAttach.getTid());
-		
+			mapFormatSql.put("pid", flowAttach.getPid());
+			params = templateService.getMapParams(flowAttach.getTemplateId(), mapFormatSql);
+		} else{
+			mapFormatSql.put("tid", flowAttach.getPid());
+			params = templateService.getMapParams(flowAttach.getTemplateId(), mapFormatSql);
+		}
+			
 		if (params == null || params.size() == 0)
 			params = new HashMap<String, Object>();
 		
