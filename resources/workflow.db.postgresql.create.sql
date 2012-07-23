@@ -1,0 +1,1 @@
+-- ##BC平台workflow的 postgresql 建表脚本##
