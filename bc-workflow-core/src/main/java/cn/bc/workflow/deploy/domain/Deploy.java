@@ -5,12 +5,16 @@ package cn.bc.workflow.deploy.domain;
 
 import java.io.File;
 import java.util.Calendar;
+import java.util.Set;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
+import javax.persistence.OrderBy;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
@@ -18,6 +22,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 import cn.bc.docs.domain.Attach;
+import cn.bc.identity.domain.Actor;
 import cn.bc.identity.domain.ActorHistory;
 import cn.bc.identity.domain.RichFileEntityImpl;
 
@@ -59,6 +64,19 @@ public class Deploy extends RichFileEntityImpl {
 	private String source;//原始文件名
 	private Calendar deployDate;// 最后部署时间
 	private ActorHistory deployer;// 最后部署人
+	
+	private Set<Actor> users;// 使用人，为空代表所有人均可使用
+
+	@ManyToMany(fetch = FetchType.EAGER)
+	@JoinTable(name = "BC_WF_DEPLOY_ACTOR", joinColumns = @JoinColumn(name = "DID", referencedColumnName = "ID"), inverseJoinColumns = @JoinColumn(name = "AID", referencedColumnName = "ID"))
+	@OrderBy("orderNo asc")
+	public Set<Actor> getUsers() {
+		return users;
+	}
+	
+	public void setUsers(Set<Actor> users) {
+		this.users = users;
+	}
 
 	@Column(name = "DEPLOYMENT_ID")
 	public String getDeploymentId() {

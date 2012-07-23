@@ -47,6 +47,7 @@ import cn.bc.workflow.deploy.service.DeployService;
 public class DeploysAction extends ViewAction<Map<String, Object>> {
 	private static final long serialVersionUID = 1L;
 	public String status = String.valueOf(Deploy.STATUS_RELEASED);
+	public boolean my=false;
 
 	@Override
 	public boolean isReadonly() {
@@ -80,6 +81,7 @@ public class DeploysAction extends ViewAction<Map<String, Object>> {
 		sql.append(",au.actor_name as uname,d.file_date,am.actor_name as mname");
 		sql.append(",d.modified_date,d.status_ as status,d.version_ as version");
 		sql.append(",d.category,d.size_ as size,ap.actor_name as pname,d.deploy_date");
+		sql.append(",getdeployuser(d.id)");
 		sql.append(" from bc_wf_deploy d");
 		sql.append(" inner join bc_identity_actor_history au on au.id=d.author_id ");
 		sql.append(" left join bc_identity_actor_history am on am.id=d.modifier_id");
@@ -113,6 +115,7 @@ public class DeploysAction extends ViewAction<Map<String, Object>> {
 				map.put("size", rs[i++]);
 				map.put("pname", rs[i++]);
 				map.put("deploy_date", rs[i++]);
+				map.put("users", rs[i++]);	
 				return map;
 			}
 		});
@@ -140,6 +143,10 @@ public class DeploysAction extends ViewAction<Map<String, Object>> {
 		columns.add(new TextColumn4MapKey("d.code", "code",
 				getText("deploy.code"), 100).setSortable(true)
 				.setUseTitleFromLabel(true));
+		if(!my){
+			columns.add(new TextColumn4MapKey("", "users",
+					getText("deploy.user"),120).setUseTitleFromLabel(true));
+		}
 		columns.add(new TextColumn4MapKey("d.version_", "version",
 				getText("deploy.version"), 50).setUseTitleFromLabel(true));
 		columns.add(new TextColumn4MapKey("d.path", "path",

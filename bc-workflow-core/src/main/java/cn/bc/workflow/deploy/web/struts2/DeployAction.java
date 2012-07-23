@@ -1,14 +1,18 @@
 package cn.bc.workflow.deploy.web.struts2;
 
 import java.util.Calendar;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Controller;
 
+import cn.bc.identity.domain.Actor;
+import cn.bc.identity.service.ActorService;
 import cn.bc.identity.web.SystemContext;
 import cn.bc.identity.web.struts2.FileEntityAction;
 import cn.bc.web.ui.html.page.ButtonOption;
@@ -29,13 +33,24 @@ import cn.bc.workflow.deploy.service.DeployService;
 public class DeployAction extends FileEntityAction<Long, Deploy> {
 	private static final long serialVersionUID = 1L;
 	private DeployService deployService;
+	private ActorService actorService;
+	
 	public Map<String, String> statusesValue;
+	
+	public String assignUserIds;// 分配的用户id，多个id用逗号连接
+	public Set<Actor> ownedUsers;// 已分配的用户
 
 	@Autowired
 	public void setDeployService(DeployService deployService) {
 		this.deployService = deployService;
 		this.setCrudService(deployService);
 	}
+	
+	@Autowired
+	public void setActorService(ActorService actorService) {
+		this.actorService = actorService;
+	}
+	
 	@Override
 	public boolean isReadonly() {
 		// 模板管理员或系统管理员
@@ -77,11 +92,51 @@ public class DeployAction extends FileEntityAction<Long, Deploy> {
 	@Override
 	protected void afterEdit(Deploy entity) {
 		super.afterEdit(entity);
+		
+		// 加载已分配的用户
+		this.ownedUsers =entity.getUsers();
 	}
 
 	@Override
 	protected void afterOpen(Deploy entity) {
 		super.afterOpen(entity);
+		
+		// 加载已分配的用户
+		this.ownedUsers =entity.getUsers();
+	}
+	
+	@Override
+	protected void beforeSave(Deploy entity) {
+		super.beforeSave(entity);
+		// 处理分配的用户
+		Long[] userIds = null;
+		if (this.assignUserIds != null && this.assignUserIds.length() > 0) {
+			String[] uIds = this.assignUserIds.split(",");
+			userIds = new Long[uIds.length];
+			for (int i = 0; i < uIds.length; i++) {
+				userIds[i] = new Long(uIds[i]);
+			}
+		}
+
+		if(userIds!=null&&userIds.length>0){
+			Set<Actor> users=null;
+			Actor user=null;
+			for(int i=0;i<userIds.length;i++){
+				if(i==0){
+					users=new HashSet<Actor>();
+				}
+				user=this.actorService.load(userIds[i]);
+				users.add(user);
+			}
+			
+			if(this.getE().getUsers()!=null){
+				this.getE().getUsers().clear();
+				this.getE().getUsers().addAll(users);
+			}else{
+				this.getE().setUsers(users);
+			}
+			
+		}
 	}
 
 	@Override
