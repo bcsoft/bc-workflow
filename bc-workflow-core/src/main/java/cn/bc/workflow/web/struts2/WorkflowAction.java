@@ -252,7 +252,7 @@ public class WorkflowAction extends AbstractBaseAction {
 						.convertValueByType((String) m.get("type"),
 								(String) m.get("value")));
 			} else if ("local".equals(m.get("scope"))) {// 本地
-				globalVariables.put((String) m.get("name"), StringUtils
+				localVariables.put((String) m.get("name"), StringUtils
 						.convertValueByType((String) m.get("type"),
 								(String) m.get("value")));
 			} else {
