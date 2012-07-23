@@ -25,14 +25,15 @@ import cn.bc.core.EntityImpl;
 public class ExcutionLog extends EntityImpl {
 	private static final long serialVersionUID = 1L;
 
-	/** 类型:流程、活动的启动 */
-	public static final String TYPE_EXCUTION_START = "excution_"
+	/** 类型:流程的启动 */
+	public static final String TYPE_PROCESS_START = "process_"
 			+ ExecutionListener.EVENTNAME_START;
-	/** 类型:流程、活动的结束 */
-	public static final String TYPE_EXCUTION_END = "excution_"
+	/** 类型:流程的结束 */
+	public static final String TYPE_PROCESS_END = "process_"
 			+ ExecutionListener.EVENTNAME_END;
-	/** 类型:分支的跳转 */
-	public static final String TYPE_EXCUTION_TAKE = "excution_"
+
+	/** 类型:分支的执行 */
+	public static final String TYPE_FLOW_TAKE = "flow_"
 			+ ExecutionListener.EVENTNAME_TAKE;
 
 	/** 类型:创建任务 */
@@ -51,11 +52,21 @@ public class ExcutionLog extends EntityImpl {
 	/** 类型:分派任务 */
 	public static final String TYPE_TASK_INSTANCE_ASSIGN = "task_assign";
 
+	/** 类型:活动的启动 */
+	public static final String TYPE_EXCUTION_START = "excution_"
+			+ ExecutionListener.EVENTNAME_START;
+	/** 类型:活动的结束 */
+	public static final String TYPE_EXCUTION_END = "excution_"
+			+ ExecutionListener.EVENTNAME_END;
+	/** 类型:活动的跳转 */
+	public static final String TYPE_EXCUTION_TAKE = "excution_"
+			+ ExecutionListener.EVENTNAME_TAKE;
+
 	private Calendar fileDate;// 创建时间
 	private Long authorId;// 创建人ID(对应ActoryHistory表的ID)
 	private String authorCode;// 创建人帐号
 	private String authorName;// 创建人姓名
-	
+
 	private Long assigneeId;// 处理人ID(对应ActoryHistory表的ID)
 	private String assigneeCode;// 处理人帐号
 	private String assigneeName;// 处理人姓名
@@ -113,7 +124,7 @@ public class ExcutionLog extends EntityImpl {
 	public void setAuthorName(String authorName) {
 		this.authorName = authorName;
 	}
-	
+
 	@Column(name = "ASSIGNEE_ID")
 	public Long getAssigneeId() {
 		return assigneeId;
