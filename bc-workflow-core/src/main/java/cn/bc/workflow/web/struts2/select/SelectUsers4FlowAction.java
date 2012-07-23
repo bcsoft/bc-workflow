@@ -231,7 +231,7 @@ public class SelectUsers4FlowAction extends
 
 	@Override
 	protected String getClickOkMethod() {
-		return "bc.flow.selectUserDialog.clickOk";
+		return "bc.selectUsers4Flow.clickOk";
 	}
 
 	@Override
