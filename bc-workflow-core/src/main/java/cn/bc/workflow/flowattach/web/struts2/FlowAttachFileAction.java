@@ -74,6 +74,11 @@ public class FlowAttachFileAction extends ActionSupport {
 	public void setTemplateTypeService(TemplateTypeService templateTypeService) {
 		this.templateTypeService = templateTypeService;
 	}
+	
+	@Autowired
+	public void setTemplateService(TemplateService templateService) {
+		this.templateService = templateService;
+	}
 
 	public Long id;// 流程附件id
 
