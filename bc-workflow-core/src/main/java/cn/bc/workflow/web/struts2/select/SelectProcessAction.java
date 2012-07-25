@@ -10,12 +10,15 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Controller;
 
 import cn.bc.core.query.condition.Condition;
+import cn.bc.core.query.condition.ConditionUtils;
 import cn.bc.core.query.condition.Direction;
-import cn.bc.core.query.condition.impl.AndCondition;
+import cn.bc.core.query.condition.impl.EqualsCondition;
+import cn.bc.core.query.condition.impl.InCondition;
 import cn.bc.core.query.condition.impl.OrderCondition;
 import cn.bc.core.query.condition.impl.QlCondition;
 import cn.bc.db.jdbc.RowMapper;
 import cn.bc.db.jdbc.SqlObject;
+import cn.bc.identity.web.SystemContext;
 import cn.bc.web.formater.CalendarFormater;
 import cn.bc.web.struts2.AbstractSelectPageAction;
 import cn.bc.web.ui.html.grid.Column;
@@ -38,7 +41,21 @@ import cn.bc.web.ui.json.Json;
 public class SelectProcessAction extends AbstractSelectPageAction<Map<String, Object>> {
 	private static final long serialVersionUID = 1L;
 	public boolean isNewVersion=false;//是否只显示最新版本,否-显示全部版本
+	
+	public boolean isNewVersion() {
+		return isNewVersion;
+	}
 
+	public void setNewVersion(boolean isNewVersion) {
+		this.isNewVersion = isNewVersion;
+	}
+	
+	public boolean isManager() {
+		SystemContext context = (SystemContext) this.getContext();
+		// 配置权限：、超级管理员
+		return !context.hasAnyRole(getText("key.role.bc.admin"),
+				getText("key.role.bc.workflow"));
+	}
 
 	@Override
 	protected OrderCondition getGridOrderCondition() {
@@ -53,6 +70,9 @@ public class SelectProcessAction extends AbstractSelectPageAction<Map<String, Ob
 		sql.append("select a.id_,a.name_,a.version_,c.deploy_time_,a.key_");
 		sql.append(" from act_re_procdef a");
 		sql.append(" inner join act_re_deployment c on c.id_=a.deployment_id_");
+		sql.append(" INNER join bc_wf_deploy e on e.deployment_id=c.id_");
+		sql.append(" INNER JOIN bc_wf_deploy_actor da on da.did=e.id");
+
 		sqlObject.setSql(sql.toString());
 		
 		// 注入参数
@@ -85,7 +105,7 @@ public class SelectProcessAction extends AbstractSelectPageAction<Map<String, Ob
 				getText("flow.version"), 100).setUseTitleFromLabel(true));
 		columns.add(new TextColumn4MapKey("c.deploy_time", "deploy_time",
 				getText("flow.deployTime"),150).setUseTitleFromLabel(true)
-				.setValueFormater(new CalendarFormater("yyyy-MM-dd HH:MM:ss")));
+				.setValueFormater(new CalendarFormater("yyyy-MM-dd HH:mm:ss")));
 		columns.add(new HiddenColumn4MapKey("key", "key"));
 		return columns;
 	}
@@ -108,15 +128,34 @@ public class SelectProcessAction extends AbstractSelectPageAction<Map<String, Ob
 
 	@Override
 	protected Condition getGridSpecalCondition() {
-		// 状态条件
-		AndCondition ac = new AndCondition();
+//		// 状态条件
+//		AndCondition ac = new AndCondition();
+//		
+//		if(isNewVersion)
+//			ac.add(
+//					new QlCondition("not exists(select 0 from act_re_procdef b where a.key_=b.key_ and a.version_<b.version_)"
+//							,(Object[])null));
+//
+//		return ac.isEmpty()?null:ac;
 		
-		if(isNewVersion)
-			ac.add(
-					new QlCondition("not exists(select 0 from act_re_procdef b where a.key_=b.key_ and a.version_<b.version_)"
-							,(Object[])null));
-
-		return ac.isEmpty()?null:ac;
+		// 查找当前登录用户条件
+		SystemContext context = (SystemContext) this.getContext();
+		Long [] ids = context.getAttr(SystemContext.KEY_ANCESTORS);
+		Condition isNewVersionCondition = null; //显示最新版本
+		Condition userCondition = null; //当前登录用户id
+		Condition groupCondition = null; //当前用户岗位列表
+		
+		if(isNewVersion){
+			isNewVersionCondition = new QlCondition(
+					"not exists(select 0 from act_re_procdef b where a.key_=b.key_ and a.version_<b.version_)",
+					(Object[]) null);
+			if(!isManager()){
+				userCondition = new EqualsCondition("da.aid",context.getUser().getId());
+				groupCondition = new InCondition("da.aid",ids);
+			}
+		}
+		return ConditionUtils.mix2AndCondition(isNewVersionCondition,
+				ConditionUtils.mix2OrCondition(userCondition,groupCondition).setAddBracket(true));
 	}
 
 	@Override
