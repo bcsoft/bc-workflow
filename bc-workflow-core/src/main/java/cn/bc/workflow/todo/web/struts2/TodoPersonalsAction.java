@@ -83,7 +83,7 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>>{
 	}
 	
 	public boolean isStart() {
-		// 课发起流程角色
+		// 可发起流程角色
 		SystemContext context = (SystemContext) this.getContext();
 		return context
 				.hasAnyRole(getText("key.role.bc.workflow.start"));
@@ -132,6 +132,12 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>>{
 	protected Toolbar getHtmlPageToolbar() {
 		Toolbar tb = new Toolbar();
 		
+		if(this.isStart()){
+			// 发起流程
+			tb.addButton(new ToolbarButton().setIcon("ui-icon-play")
+					.setText(getText("flow.start")).setClick("bc.todoView.startflow"));
+		}
+		
 		tb.addButton(new ToolbarButton().setIcon("ui-icon-pencil")
 				.setText(getText("label.sign.task"))
 				.setClick("bc.todoView.signTask"));
@@ -146,11 +152,6 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>>{
 					.setClick("bc.todoView.assignTask"));
 		}
 		
-		if(this.isStart()){
-			// 发起流程
-			tb.addButton(new ToolbarButton().setIcon("ui-icon-play")
-					.setText(getText("flow.start")).setClick("bc.historicProcessInstanceSelectView.startflow"));
-		}
 		// 搜索按钮
 		tb.addButton(getDefaultSearchToolbarButton());
 		
