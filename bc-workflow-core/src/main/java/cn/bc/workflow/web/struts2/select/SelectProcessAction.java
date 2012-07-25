@@ -41,6 +41,7 @@ import cn.bc.web.ui.json.Json;
 public class SelectProcessAction extends AbstractSelectPageAction<Map<String, Object>> {
 	private static final long serialVersionUID = 1L;
 	public boolean isNewVersion=false;//是否只显示最新版本,否-显示全部版本
+	private boolean constraint; //发起权限控制
 	
 	public boolean isNewVersion() {
 		return isNewVersion;
@@ -50,11 +51,18 @@ public class SelectProcessAction extends AbstractSelectPageAction<Map<String, Ob
 		this.isNewVersion = isNewVersion;
 	}
 	
+	public boolean isConstraint() {
+		return constraint;
+	}
+
+	public void setConstraint(boolean constraint) {
+		this.constraint = constraint;
+	}
+
 	public boolean isManager() {
 		SystemContext context = (SystemContext) this.getContext();
 		// 配置权限：、超级管理员
-		return !context.hasAnyRole(getText("key.role.bc.admin"),
-				getText("key.role.bc.workflow"));
+		return !context.hasAnyRole(getText("key.role.bc.workflow"));
 	}
 
 	@Override
@@ -71,7 +79,7 @@ public class SelectProcessAction extends AbstractSelectPageAction<Map<String, Ob
 		sql.append(" from act_re_procdef a");
 		sql.append(" inner join act_re_deployment c on c.id_=a.deployment_id_");
 		sql.append(" INNER join bc_wf_deploy e on e.deployment_id=c.id_");
-		sql.append(" INNER JOIN bc_wf_deploy_actor da on da.did=e.id");
+		sql.append(" left JOIN bc_wf_deploy_actor da on da.did=e.id");
 
 		sqlObject.setSql(sql.toString());
 		
@@ -142,20 +150,28 @@ public class SelectProcessAction extends AbstractSelectPageAction<Map<String, Ob
 		SystemContext context = (SystemContext) this.getContext();
 		Long [] ids = context.getAttr(SystemContext.KEY_ANCESTORS);
 		Condition isNewVersionCondition = null; //显示最新版本
+		Condition isUsersCondition = null; //发布是否分配使用者
 		Condition userCondition = null; //当前登录用户id
 		Condition groupCondition = null; //当前用户岗位列表
 		
-		if(isNewVersion){
-			isNewVersionCondition = new QlCondition(
-					"not exists(select 0 from act_re_procdef b where a.key_=b.key_ and a.version_<b.version_)",
-					(Object[]) null);
-			if(!isManager()){
-				userCondition = new EqualsCondition("da.aid",context.getUser().getId());
-				groupCondition = new InCondition("da.aid",ids);
+		
+		if(isManager() && constraint == true){
+			isUsersCondition = new QlCondition("e.id not in(select wda.did from  bc_wf_deploy_actor wda)"
+					, (Object[]) null);
+			userCondition = new EqualsCondition("da.aid",context.getUser().getId());
+			groupCondition = new InCondition("da.aid",ids);
+			if(isNewVersion){
+				isNewVersionCondition = new QlCondition(//不是流程管理员并且有权限限制
+						"not exists(select 0 from act_re_procdef b where a.key_=b.key_ and a.version_<b.version_)",
+						(Object[]) null);
 			}
+			return ConditionUtils.mix2AndCondition(isNewVersionCondition,
+					ConditionUtils.mix2OrCondition(isUsersCondition,userCondition,groupCondition).setAddBracket(true));
+		}else if(!isManager() && constraint == false){//是流程管理员并且没有权限限制
+			return ConditionUtils.mix2AndCondition(isNewVersionCondition);
+		}else{
+			return null;
 		}
-		return ConditionUtils.mix2AndCondition(isNewVersionCondition,
-				ConditionUtils.mix2OrCondition(userCondition,groupCondition).setAddBracket(true));
 	}
 
 	@Override
