@@ -464,6 +464,8 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 			taskItem.put("hasButtons", taskItem.get("buttons") != null);// 有否操作按钮
 			taskItem.put("formKey",
 					taskService.getVariableLocal(task.getId(), "formKey"));// 记录formKey
+			taskItem.put("desc", task.getDescription());// 任务描述说明
+			taskItem.put("priority", task.getPriority());// 任务优先级
 
 			// 任务的详细信息
 			items = new ArrayList<Map<String, Object>>();// 二级条目列表
@@ -599,6 +601,8 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 			taskItem.put("hasButtons", false);// 有否操作按钮
 			taskItem.put("formKey",
 					excutionLogService.findTaskFormKey(task.getId()));// 记录formKey
+			taskItem.put("desc", task.getDescription());// 任务描述说明
+			taskItem.put("priority", task.getPriority());// 任务优先级
 
 			// 任务的详细信息
 			items = new ArrayList<Map<String, Object>>();// 二级条目列表
