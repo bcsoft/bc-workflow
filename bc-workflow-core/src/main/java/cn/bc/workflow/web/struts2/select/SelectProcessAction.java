@@ -75,7 +75,7 @@ public class SelectProcessAction extends AbstractSelectPageAction<Map<String, Ob
 		SqlObject<Map<String, Object>> sqlObject = new SqlObject<Map<String, Object>>();
 		// 构建查询语句,where和order by不要包含在sql中(要统一放到condition中)
 		StringBuffer sql = new StringBuffer();
-		sql.append("select a.id_,a.name_,a.version_,c.deploy_time_,a.key_");
+		sql.append("select distinct a.id_,a.name_,a.version_,c.deploy_time_,a.key_");
 		sql.append(" from act_re_procdef a");
 		sql.append(" inner join act_re_deployment c on c.id_=a.deployment_id_");
 		sql.append(" INNER join bc_wf_deploy e on e.deployment_id=c.id_");
