@@ -1,14 +1,17 @@
 package cn.bc.workflow.dao.hibernate.jpa;
 
-import java.util.Calendar;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.activiti.engine.FormService;
 import org.activiti.engine.HistoryService;
 import org.activiti.engine.TaskService;
+import org.activiti.engine.form.FormProperty;
+import org.activiti.engine.form.TaskFormData;
 import org.activiti.engine.history.HistoricDetail;
+import org.activiti.engine.history.HistoricFormProperty;
 import org.activiti.engine.history.HistoricProcessInstance;
 import org.activiti.engine.history.HistoricTaskInstance;
 import org.activiti.engine.history.HistoricVariableUpdate;
@@ -22,7 +25,6 @@ import org.springframework.context.ApplicationContextAware;
 import cn.bc.core.exception.CoreException;
 import cn.bc.core.query.condition.impl.AndCondition;
 import cn.bc.core.query.condition.impl.EqualsCondition;
-import cn.bc.core.util.DateUtils;
 import cn.bc.core.util.JsonUtils;
 import cn.bc.orm.hibernate.jpa.HibernateCrudJpaDao;
 import cn.bc.orm.hibernate.jpa.HibernateJpaNativeQuery;
@@ -47,6 +49,10 @@ public class ExcutionLogDaoImpl extends HibernateCrudJpaDao<ExcutionLog>
 
 	public HistoryService getHistoryService() {
 		return applicationContext.getBean(HistoryService.class);
+	}
+
+	public FormService getFormService() {
+		return applicationContext.getBean(FormService.class);
 	}
 
 	public TaskService getTaskService() {
@@ -113,6 +119,7 @@ public class ExcutionLogDaoImpl extends HibernateCrudJpaDao<ExcutionLog>
 		if (task == null) {
 			throw new CoreException("can't find taskHistory: id=" + taskId);
 		}
+		boolean isCompletedTask = task.getEndTime() != null;
 		HistoricProcessInstance pi = getHistoryService()
 				.createHistoricProcessInstanceQuery()
 				.processInstanceId(task.getProcessInstanceId()).singleResult();
@@ -142,6 +149,33 @@ public class ExcutionLogDaoImpl extends HibernateCrudJpaDao<ExcutionLog>
 		}
 		if (logger.isDebugEnabled()) {
 			logger.debug("params0=" + params);
+		}
+
+		// 任务的表单属性:使用固定的前缀"f_"+属性的key作为变量的名称
+		String prefix = "";
+		if (isCompletedTask) {// 从历史中查
+			detail = getHistoryService().createHistoricDetailQuery()
+					.taskId(taskId).formProperties().list();
+			HistoricFormProperty fp;
+			for (HistoricDetail hd : detail) {
+				fp = (HistoricFormProperty) hd;
+				params.put(prefix + fp.getPropertyId(), fp.getPropertyValue());
+			}
+		} else {// 从流转中查
+			TaskFormData taskFormData = getFormService()
+					.getTaskFormData(taskId);
+			if (taskFormData != null
+					&& taskFormData.getFormProperties() != null) {
+				for (FormProperty fp : taskFormData.getFormProperties()) {
+					params.put(prefix + fp.getId(), fp.getValue());
+				}
+			}
+		}
+		// params.put("f", detail != null ? detail : new
+		// ArrayList<HistoricDetail>());
+		if (logger.isDebugEnabled()) {
+			logger.debug("formProperties.size=" + detail != null ? detail
+					.size() : 0);
 		}
 
 		// 转换特殊类型的变量的值
