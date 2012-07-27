@@ -5,6 +5,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceException;
+
 import org.activiti.engine.FormService;
 import org.activiti.engine.HistoryService;
 import org.activiti.engine.TaskService;
@@ -21,6 +24,7 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.orm.jpa.JpaCallback;
 
 import cn.bc.core.exception.CoreException;
 import cn.bc.core.query.condition.impl.AndCondition;
@@ -180,21 +184,59 @@ public class ExcutionLogDaoImpl extends HibernateCrudJpaDao<ExcutionLog>
 
 		// 转换特殊类型的变量的值
 		for (Entry<String, Object> e : params.entrySet()) {
-			if (e.getKey().startsWith("list_")
-					&& e.getValue() instanceof String) {// 将字符串转化为List
-				e.setValue(JsonUtils.toCollection((String) e.getValue()));
-			} else if (e.getKey().startsWith("map_")
-					&& e.getValue() instanceof String) {// 将字符串转化为Map
-				e.setValue(JsonUtils.toMap((String) e.getValue()));
-			} else if (e.getKey().startsWith("array_")
-					&& e.getValue() instanceof String) {// 将字符串转化为数组
-				e.setValue(JsonUtils.toArray((String) e.getValue()));
-			}
+			convertSpecialKeyValue(e);
 		}
 		if (logger.isDebugEnabled()) {
 			logger.debug("params1=" + params);
 		}
 
 		return params;
+	}
+
+	public Object getTaskVariableLocal(final String taskId,
+			final String variableName) {
+		final String sql = "select id_,text_,var_type_ from act_hi_detail where type_ = 'VariableUpdate' and task_id_ = ? and name_ = ?";
+		if (logger.isDebugEnabled()) {
+			logger.debug("sql=" + sql);
+			logger.debug("taskId=" + taskId);
+			logger.debug("variableName=" + variableName);
+		}
+		List<Object[]> r = this.getJpaTemplate().execute(
+				new JpaCallback<List<Object[]>>() {
+					@SuppressWarnings("unchecked")
+					public List<Object[]> doInJpa(EntityManager em)
+							throws PersistenceException {
+						javax.persistence.Query query = createSqlQuery(em, sql,
+								new Object[] { taskId, variableName });
+						return (List<Object[]>) query.getResultList();
+					}
+				});
+		if (logger.isDebugEnabled())
+			logger.debug("r=" + r);
+		if (r == null || r.isEmpty()) {
+			return null;
+		} else {
+			if (r.size() > 1) {
+				logger.warn("more than one result return: size=" + r.size());
+			}
+			return r.get(0)[1];
+		}
+	}
+
+	/**
+	 * 特殊流程变量值的转换
+	 * 
+	 * @param v
+	 */
+	private void convertSpecialKeyValue(Entry<String, Object> e) {
+		if (e.getKey().startsWith("list_") && e.getValue() instanceof String) {// 将字符串转化为List
+			e.setValue(JsonUtils.toCollection((String) e.getValue()));
+		} else if (e.getKey().startsWith("map_")
+				&& e.getValue() instanceof String) {// 将字符串转化为Map
+			e.setValue(JsonUtils.toMap((String) e.getValue()));
+		} else if (e.getKey().startsWith("array_")
+				&& e.getValue() instanceof String) {// 将字符串转化为数组
+			e.setValue(JsonUtils.toArray((String) e.getValue()));
+		}
 	}
 }

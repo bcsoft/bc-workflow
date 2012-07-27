@@ -4,14 +4,22 @@
 package cn.bc.workflow.service;
 
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.zip.ZipInputStream;
 
+import org.activiti.engine.HistoryService;
 import org.activiti.engine.IdentityService;
 import org.activiti.engine.RepositoryService;
 import org.activiti.engine.RuntimeService;
 import org.activiti.engine.TaskService;
+import org.activiti.engine.history.HistoricDetail;
+import org.activiti.engine.history.HistoricProcessInstance;
+import org.activiti.engine.history.HistoricTaskInstance;
+import org.activiti.engine.history.HistoricVariableUpdate;
 import org.activiti.engine.repository.Deployment;
 import org.activiti.engine.repository.ProcessDefinition;
 import org.activiti.engine.runtime.ProcessInstance;
@@ -19,16 +27,21 @@ import org.activiti.engine.task.Task;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.Assert;
 
 import cn.bc.core.exception.CoreException;
 import cn.bc.core.util.DateUtils;
+import cn.bc.core.util.JsonUtils;
 import cn.bc.identity.domain.ActorHistory;
 import cn.bc.identity.service.ActorHistoryService;
+import cn.bc.identity.service.ActorService;
 import cn.bc.identity.web.SystemContextHolder;
 import cn.bc.template.domain.Template;
 import cn.bc.template.service.TemplateService;
 import cn.bc.workflow.activiti.ActivitiUtils;
 import cn.bc.workflow.domain.ExcutionLog;
+import cn.bc.workflow.flowattach.domain.FlowAttach;
+import cn.bc.workflow.flowattach.service.FlowAttachService;
 
 /**
  * 工作流Service的实现
@@ -44,10 +57,17 @@ public class WorkflowServiceImpl implements WorkflowService {
 	private IdentityService identityService;
 	private TaskService taskService;
 	private ExcutionLogService excutionLogService;
-	private ActorHistoryService actorHistoryServer;
+	private ActorHistoryService actorHistoryService;
+	private ActorService actorService;
+	private FlowAttachService flowAttachService;
 
 	// private FormService formService;
-	// private HistoryService historyService;
+	private HistoryService historyService;
+
+	@Autowired
+	public void setFlowAttachService(FlowAttachService flowAttachService) {
+		this.flowAttachService = flowAttachService;
+	}
 
 	@Autowired
 	public void setTemplateService(TemplateService templateService) {
@@ -78,16 +98,21 @@ public class WorkflowServiceImpl implements WorkflowService {
 	public void setExcutionLogService(ExcutionLogService excutionLogService) {
 		this.excutionLogService = excutionLogService;
 	}
-	
+
 	@Autowired
-	public void setActorHistoryServer(ActorHistoryService actorHistoryServer) {
-		this.actorHistoryServer = actorHistoryServer;
+	public void setActorHistoryService(ActorHistoryService actorHistoryService) {
+		this.actorHistoryService = actorHistoryService;
 	}
-	
-	// @Autowired
-	// public void setHistoryService(HistoryService historyService) {
-	// this.historyService = historyService;
-	// }
+
+	@Autowired
+	public void setActorService(ActorService actorService) {
+		this.actorService = actorService;
+	}
+
+	@Autowired
+	public void setHistoryService(HistoryService historyService) {
+		this.historyService = historyService;
+	}
 
 	// @Autowired
 	// public void setFormService(FormService formService) {
@@ -139,10 +164,10 @@ public class WorkflowServiceImpl implements WorkflowService {
 
 		// 领取任务：TODO 表单信息的处理
 		this.taskService.claim(taskId, getCurrentUserAccount());
-		
-		//加载当前任务
+
+		// 加载当前任务
 		Task task = taskService.createTaskQuery().taskId(taskId).singleResult();
-		
+
 		// 创建执行日志
 		ExcutionLog log = new ExcutionLog();
 		log.setFileDate(Calendar.getInstance());
@@ -150,22 +175,22 @@ public class WorkflowServiceImpl implements WorkflowService {
 		log.setAuthorId(h.getId());
 		log.setAuthorCode(h.getCode());
 		log.setAuthorName(h.getName());
-		
+
 		// 处理人信息
 		log.setAssigneeId(h.getId());
 		log.setAssigneeCode(h.getCode());
 		log.setAssigneeName(h.getName());
-		
-		log.setListener("custom");//自定义
+
+		log.setListener("custom");// 自定义
 		log.setExcutionId(task.getExecutionId());
 		log.setType(ExcutionLog.TYPE_TASK_INSTANCE_CLAIM);
 		log.setProcessInstanceId(task.getProcessInstanceId());
 		log.setTaskInstanceId(task.getId());
 		log.setCode(task.getTaskDefinitionKey());
-		
+
 		String date = DateUtils.formatCalendar2Minute(log.getFileDate());
-		log.setDescription(h.getName()+"在"+date+"签领了任务");
-		//保存
+		log.setDescription(h.getName() + "在" + date + "签领了任务");
+		// 保存
 		this.excutionLogService.save(log);
 	}
 
@@ -194,19 +219,19 @@ public class WorkflowServiceImpl implements WorkflowService {
 
 		// 完成任务
 		this.taskService.complete(taskId);
-		
+
 	}
-	
+
 	public void delegateTask(String taskId, String toUser) {
 		// 设置Activiti认证用户
 		setAuthenticatedUser();
-		
+
 		// 委托任务
 		this.taskService.delegateTask(taskId, toUser);
-		
-		//保存excutionlog信息
-		saveExcutionLogInfo4DelegateAndAssign(taskId,toUser
-				,ExcutionLog.TYPE_TASK_INSTANCE_DELEGATE,"委托给");
+
+		// 保存excutionlog信息
+		saveExcutionLogInfo4DelegateAndAssign(taskId, toUser,
+				ExcutionLog.TYPE_TASK_INSTANCE_DELEGATE, "委托给");
 	}
 
 	public void assignTask(String taskId, String toUser) {
@@ -216,17 +241,17 @@ public class WorkflowServiceImpl implements WorkflowService {
 		// 领取任务：TODO 表单信息的处理
 		this.taskService.claim(taskId, toUser);
 
-		//保存excutionlog信息
-		saveExcutionLogInfo4DelegateAndAssign(taskId,toUser
-				,ExcutionLog.TYPE_TASK_INSTANCE_ASSIGN,"分派给");
+		// 保存excutionlog信息
+		saveExcutionLogInfo4DelegateAndAssign(taskId, toUser,
+				ExcutionLog.TYPE_TASK_INSTANCE_ASSIGN, "分派给");
 	}
-	
-	/**  委托,分派操作保存excutionlog信息 */
-	public void saveExcutionLogInfo4DelegateAndAssign(String taskId,String toUser
-			,String type,String msg){
-		//加载当前任务
+
+	/** 委托,分派操作保存excutionlog信息 */
+	public void saveExcutionLogInfo4DelegateAndAssign(String taskId,
+			String toUser, String type, String msg) {
+		// 加载当前任务
 		Task task = taskService.createTaskQuery().taskId(taskId).singleResult();
-		
+
 		// 创建执行日志
 		ExcutionLog log = new ExcutionLog();
 		log.setFileDate(Calendar.getInstance());
@@ -234,23 +259,24 @@ public class WorkflowServiceImpl implements WorkflowService {
 		log.setAuthorId(h.getId());
 		log.setAuthorCode(h.getCode());
 		log.setAuthorName(h.getName());
-		
+
 		// 处理人信息
-		ActorHistory h2 = actorHistoryServer.loadByCode(toUser);
+		ActorHistory h2 = actorHistoryService.loadByCode(toUser);
 		log.setAssigneeId(h2.getId());
 		log.setAssigneeCode(h2.getCode());
 		log.setAssigneeName(h2.getName());
-		
-		log.setListener("custom");//自定义
+
+		log.setListener("custom");// 自定义
 		log.setExcutionId(task.getExecutionId());
 		log.setType(type);
 		log.setProcessInstanceId(task.getProcessInstanceId());
 		log.setTaskInstanceId(task.getId());
 		log.setCode(task.getTaskDefinitionKey());
-		
+
 		String date = DateUtils.formatCalendar2Minute(log.getFileDate());
-		log.setDescription(h.getName()+"在"+date+"将任务"+msg+h2.getName());
-		//保存
+		log.setDescription(h.getName() + "在" + date + "将任务" + msg
+				+ h2.getName());
+		// 保存
 		this.excutionLogService.save(log);
 	}
 
@@ -351,14 +377,164 @@ public class WorkflowServiceImpl implements WorkflowService {
 				.getResourceAsStream(deploymentId, resourceName);
 	}
 
-	public Map<String, Object> getInstanceParams(String processInstanceId) {
-		// TODO Auto-generated method stub
-		return null;
+	public Map<String, Object> getProcessHistoryParams(
+			String processInstanceId) {
+		Assert.notNull(processInstanceId,
+				"process instance id must not to be null:" + processInstanceId);
+		Map<String, Object> params = new HashMap<String, Object>();
+		Map<String, Object> taskParams, variableParams;
+
+		// 流程实例
+		HistoricProcessInstance pi = historyService
+				.createHistoricProcessInstanceQuery()
+				.processInstanceId(processInstanceId).singleResult();
+		Assert.notNull(pi, "找不到指定的流程实例记录：processInstanceId="
+				+ processInstanceId);
+		params.put("id", pi.getId());
+		params.put("pdid", pi.getProcessDefinitionId());
+		params.put("startUser", pi.getStartUserId());
+		params.put("businessKey", pi.getBusinessKey());
+		params.put("startTime", pi.getStartTime());
+		params.put("endTime", pi.getEndTime());
+		params.put("duration", pi.getDurationInMillis());
+		params.put("deleteReason", pi.getDeleteReason());
+
+		// 流程定义
+		ProcessDefinition pd = repositoryService.createProcessDefinitionQuery()
+				.processDefinitionId(pi.getProcessDefinitionId())
+				.singleResult();
+		params.put("category", pd.getCategory());
+		params.put("key", pd.getKey());
+		params.put("name", pd.getName());
+		params.put("version", pd.getVersion());
+
+		// 流程变量
+		HistoricVariableUpdate v;
+		List<HistoricDetail> variables = historyService
+				.createHistoricDetailQuery()
+				.processInstanceId(processInstanceId).variableUpdates()
+				.orderByTime().asc().list();
+		variableParams = new HashMap<String, Object>();
+		for (HistoricDetail hd : variables) {
+			v = (HistoricVariableUpdate) hd;
+			variableParams.put(v.getVariableName(),
+					convertSpecialValiableValue(v));
+		}
+		params.put("vs", variableParams);
+
+		// 全局意见
+		List<FlowAttach> comments = flowAttachService.findCommentsByProcess(
+				processInstanceId, false);
+		params.put("comments", comments);
+		if (logger.isDebugEnabled()) {
+			logger.debug("comments.size=" + comments.size());
+		}
+		params.put("comments_str", buildCommentsString(comments));
+
+		// 经办任务
+		String taskCode;
+		List<HistoricTaskInstance> tasks = this.historyService
+				.createHistoricTaskInstanceQuery()
+				.processInstanceId(processInstanceId)
+				.taskDeleteReason("completed")
+				.orderByHistoricActivityInstanceStartTime().asc().list();
+		// 获取所有任务的意见
+		String[] tids = new String[tasks.size()];
+		for (int i = 0; i < tasks.size(); i++) {
+			tids[i] = tasks.get(i).getId();
+		}
+		List<FlowAttach> allComments = flowAttachService
+				.findCommentsByTask(tids);
+		for (HistoricTaskInstance task : tasks) {
+			taskCode = task.getTaskDefinitionKey();
+			taskParams = new HashMap<String, Object>();
+			taskParams.put("id", task.getId());
+			taskParams.put("owner", task.getOwner());
+			taskParams.put("assignee", task.getAssignee());
+			taskParams.put("desc", task.getDescription());
+			taskParams.put("dueDate", task.getDueDate());
+			taskParams.put("priority", task.getPriority());
+			taskParams.put("startTime", task.getStartTime());
+			taskParams.put("endTime", task.getEndTime());
+			taskParams.put("duration", task.getDurationInMillis());
+			taskParams.put("deleteReason", task.getDeleteReason());
+
+			// 任务的本地流程变量
+			variables = historyService.createHistoricDetailQuery()
+					.processInstanceId(processInstanceId).taskId(task.getId())
+					.variableUpdates().orderByTime().asc().list();
+			variableParams = new HashMap<String, Object>();
+			for (HistoricDetail hd : variables) {
+				v = (HistoricVariableUpdate) hd;
+				variableParams.put(v.getVariableName(),
+						convertSpecialValiableValue(v));
+			}
+			taskParams.put("vs", variableParams);
+
+			// 任务的意见
+			comments = findTaskFlowAttachs(task.getId(), allComments);
+			taskParams.put("comments", comments);
+			taskParams.put("comments_str", buildCommentsString(comments));
+
+			// add：如果一个节点产生多个实例，只会有最后执行任务的相关信息
+			params.put(taskCode, taskParams);
+		}
+
+		return params;
 	}
 
-	public Map<String, Object> getTaskParams(String taskId) {
-		// TODO Auto-generated method stub
-		return null;
+	/**
+	 * 特殊流程变量值的转换
+	 * 
+	 * @param v
+	 * @return
+	 */
+	private Object convertSpecialValiableValue(HistoricVariableUpdate v) {
+		if (v.getVariableName().startsWith("list_")
+				&& v.getValue() instanceof String) {// 将字符串转化为List
+			return JsonUtils.toCollection((String) v.getValue());
+		} else if (v.getVariableName().startsWith("map_")
+				&& v.getValue() instanceof String) {// 将字符串转化为Map
+			return JsonUtils.toMap((String) v.getValue());
+		} else if (v.getVariableName().startsWith("array_")
+				&& v.getValue() instanceof String) {// 将字符串转化为数组
+			return JsonUtils.toArray((String) v.getValue());
+		} else {
+			return v.getValue();
+		}
+	}
+
+	/**
+	 * @param comments
+	 * @return
+	 */
+	private StringBuffer buildCommentsString(List<FlowAttach> comments) {
+		StringBuffer comments_str;
+		comments_str = new StringBuffer();
+		for (FlowAttach comment : comments) {
+			// 意见的字符串表示：“[姓名1] [时间1] [标题1]\r\n[姓名2] [时间2] [标题2]...”
+			comments_str.append(comment.getAuthor().getName() + " "
+					+ DateUtils.formatCalendar2Minute(comment.getFileDate())
+					+ " " + comment.getSubject() + "\r\n");
+		}
+		return comments_str;
+	}
+
+	/**
+	 * 筛选出指定任务的意见、附件
+	 * 
+	 * @param taskId
+	 * @param allFlowAttachs
+	 * @return
+	 */
+	private List<FlowAttach> findTaskFlowAttachs(String taskId,
+			List<FlowAttach> allFlowAttachs) {
+		List<FlowAttach> taskFlowAttachs = new ArrayList<FlowAttach>();
+		for (FlowAttach flowAttach : allFlowAttachs) {
+			if (taskId.equals(flowAttach.getTid()))
+				taskFlowAttachs.add(flowAttach);
+		}
+		return taskFlowAttachs;
 	}
 
 }

@@ -50,4 +50,8 @@ public class ExcutionLogServiceImpl extends DefaultCrudService<ExcutionLog>
 	public Map<String, Object> findTaskVariables(String taskId) {
 		return this.excutionLogDao.findTaskVariables(taskId);
 	}
+
+	public Object getTaskVariableLocal(String taskId, String variableName) {
+		return this.excutionLogDao.getTaskVariableLocal(taskId, variableName);
+	}
 }

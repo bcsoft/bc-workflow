@@ -22,11 +22,13 @@ import org.activiti.engine.task.Task;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.util.Assert;
 
 import cn.bc.core.exception.CoreException;
 import cn.bc.core.util.DateUtils;
 import cn.bc.core.util.StringUtils;
+import cn.bc.identity.service.ActorService;
 import cn.bc.identity.web.SystemContext;
 import cn.bc.identity.web.SystemContextHolder;
 import cn.bc.workflow.flowattach.domain.FlowAttach;
@@ -47,6 +49,13 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 	private FlowAttachService flowAttachService;
 	private ExcutionLogService excutionLogService;
 	private WorkflowFormService workflowFormService;
+	private ActorService actorService;
+
+	@Autowired
+	public void setActorService(
+			@Qualifier(value = "actorService") ActorService actorService) {
+		this.actorService = actorService;
+	}
 
 	@Autowired
 	public void setWorkflowFormService(WorkflowFormService workflowFormService) {
@@ -105,7 +114,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 		ws.put("id", instance.getId());
 		ws.put("businessKey", instance.getBusinessKey());
 		ws.put("deleteReason", instance.getDeleteReason());
-		ws.put("startUser", instance.getStartUserId());
+		ws.put("startUser", getActorNameByCode(instance.getStartUserId()));
 		ws.put("startTime", instance.getStartTime());
 		ws.put("endTime", instance.getEndTime());
 		ws.put("duration", instance.getDurationInMillis());
@@ -201,7 +210,8 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 		item.put("hasButtons", false);// 无操作按钮
 		detail = new ArrayList<String>();
 		item.put("detail", detail);// 详细信息
-		detail.add("发起时间：" + instance.getStartUserId() + " "
+		detail.add("发起时间：" + getActorNameByCode(instance.getStartUserId())
+				+ " "
 				+ DateUtils.formatDateTime2Minute(instance.getStartTime()));
 		detail.add("结束时间："
 				+ (flowing ? "仍在流转中..." : DateUtils
@@ -214,6 +224,17 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 
 		// 返回
 		return info;
+	}
+
+	/**
+	 * 根据用户帐号获取用户的姓名
+	 * 
+	 * @param userCode
+	 *            用户帐号
+	 * @return
+	 */
+	private String getActorNameByCode(String userCode) {
+		return actorService.loadActorNameByCode(userCode);
 	}
 
 	private void buildFormInfo(boolean flowing,
@@ -435,6 +456,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 
 		// 生成展现用的数据
 		Date now = new Date();
+		Object subject;
 		for (Task task : tasks) {
 			List<IdentityLink> identityLinks;
 			// 判断任务类型
@@ -449,6 +471,11 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 				// 获取任务的组关联信息
 				identityLinks = this.taskService.getIdentityLinksForTask(task
 						.getId());
+				if (identityLinks == null || identityLinks.isEmpty()) {
+					throw new CoreException(
+							"can't find membership from table act_ru_identitylink: taskId="
+									+ task.getId());
+				}
 				isMyTask = judgeIsMyTask(identityLinks);
 			}
 
@@ -458,7 +485,12 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 			taskItem.put("id", task.getId());// 任务id
 			taskItem.put("isUserTask", isUserTask);// 是否是个人待办:true-个人待办、false-组待办
 			taskItem.put("isMyTask", isMyTask);// 是否是我的个人或组待办
-			taskItem.put("subject", task.getName());// 标题
+			subject = taskService.getVariableLocal(task.getId(), "subject");
+			if (subject != null) {
+				taskItem.put("subject", subject);// 标题
+			} else {
+				taskItem.put("subject", task.getName());// 标题
+			}
 			taskItem.put("buttons", this.buildHeaderDefaultButtons(flowing,
 					isUserTask ? "todo_user" : "todo_group"));// 操作按钮列表
 			taskItem.put("hasButtons", taskItem.get("buttons") != null);// 有否操作按钮
@@ -481,10 +513,11 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 
 			// 任务的汇总信息
 			if (isUserTask) {
-				taskItem.put("actor", "待办人：" + task.getAssignee());
+				taskItem.put("actor",
+						"待办人：" + getActorNameByCode(task.getAssignee()));
 			} else {
 				taskItem.put("actor", "待办岗："
-						+ identityLinks.get(0).getGroupId());// TODO
+						+ getActorNameByCode(identityLinks.get(0).getGroupId()));
 			}
 			taskItem.put(
 					"createTime",
@@ -537,9 +570,9 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 	 * @return
 	 */
 	private boolean judgeIsMyTask(List<IdentityLink> identityLinks) {
-		// TODO
 		if (identityLinks == null || identityLinks.isEmpty()) {
-			throw new CoreException("丢失岗位用户之间的关联信息了！");
+			throw new CoreException(
+					"argument identityLinks can't be null or empty");
 		}
 
 		List<String> groups = SystemContextHolder.get().getAttr(
@@ -589,15 +622,22 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 				.findTaskFormKeys(instance.getId());
 
 		// 生成展现用的数据
+		Object subject;
 		for (HistoricTaskInstance task : tasks) {
 			// 任务的基本信息
 			taskItem = new HashMap<String, Object>();
 			taskItems.add(taskItem);
 			taskItem.put("id", task.getId());// 任务id
-			taskItem.put("assignee", task.getAssignee());// 办理人
-			taskItem.put("owner", task.getOwner());// 委托人
+			taskItem.put("assignee", getActorNameByCode(task.getAssignee()));// 办理人
+			taskItem.put("owner", getActorNameByCode(task.getOwner()));// 委托人
 			taskItem.put("link", false);// 链接标题
-			taskItem.put("subject", task.getName());// 标题
+			subject = excutionLogService.getTaskVariableLocal(task.getId(),
+					"subject");
+			if (subject != null) {
+				taskItem.put("subject", subject);// 标题
+			} else {
+				taskItem.put("subject", task.getName());// 标题
+			}
 			taskItem.put("hasButtons", false);// 有否操作按钮
 			taskItem.put("formKey",
 					excutionLogService.findTaskFormKey(task.getId()));// 记录formKey
