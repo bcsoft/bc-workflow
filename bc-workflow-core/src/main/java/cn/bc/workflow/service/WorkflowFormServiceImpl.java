@@ -113,9 +113,13 @@ public class WorkflowFormServiceImpl implements WorkflowFormService {
 		params.put("now", DateUtils.formatCalendar2Second(now));
 		params.put("now2d", DateUtils.formatCalendar2Day(now));
 		params.put("now2m", DateUtils.formatCalendar2Minute(now));
-		params.put("year", now.get(Calendar.YEAR) + "");
-		params.put("month", (now.get(Calendar.MONTH) + 1) + "");
+		params.put("year", now.get(Calendar.YEAR)+"");
+		params.put("month", now.get(Calendar.MONTH) + 1);
 		params.put("day", now.get(Calendar.DAY_OF_MONTH));
+		//加一个月
+		now.add(Calendar.MONTH, 1);
+		params.put("nextMonth",now.get(Calendar.MONTH) + 1);
+		params.put("nextMonthOfYear", now.get(Calendar.YEAR)+"");
 
 		// 获取任务的流程变量
 		Map<String, Object> vs = this.excutionLogService
