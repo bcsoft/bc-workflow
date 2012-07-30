@@ -371,14 +371,29 @@ public class WorkflowServiceImpl implements WorkflowService {
 				definition.getDiagramResourceName());
 	}
 
+	public InputStream getDeploymentDiagram(String deploymentId) {
+		// 获取流程定义
+		ProcessDefinition definition = repositoryService
+				.createProcessDefinitionQuery().deploymentId(deploymentId)
+				.singleResult();
+
+		if (definition == null) {
+			throw new CoreException(
+					"can't find ProcessDefinition: deploymentId=" + deploymentId);
+		}
+
+		// 获取流程图的png资源文件
+		return getDeploymentResource(deploymentId,
+				definition.getDiagramResourceName());
+	}
+
 	public InputStream getDeploymentResource(String deploymentId,
 			String resourceName) {
 		return repositoryService
 				.getResourceAsStream(deploymentId, resourceName);
 	}
 
-	public Map<String, Object> getProcessHistoryParams(
-			String processInstanceId) {
+	public Map<String, Object> getProcessHistoryParams(String processInstanceId) {
 		Assert.notNull(processInstanceId,
 				"process instance id must not to be null:" + processInstanceId);
 		Map<String, Object> params = new HashMap<String, Object>();

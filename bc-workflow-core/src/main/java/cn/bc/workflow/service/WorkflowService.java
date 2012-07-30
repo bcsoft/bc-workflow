@@ -135,6 +135,15 @@ public interface WorkflowService {
 	InputStream getInstanceDiagram(String processInstanceId);
 
 	/**
+	 * 获取指定流程部署的流程图资源文件流
+	 * 
+	 * @param deploymentId
+	 *            流程部署ID
+	 * @return
+	 */
+	InputStream getDeploymentDiagram(String deploymentId);
+
+	/**
 	 * 获取指定流程部署的相关资源文件流
 	 * 
 	 * @param deploymentId

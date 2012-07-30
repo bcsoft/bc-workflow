@@ -28,7 +28,7 @@
 		<action name="deploys/dodeployCancel" class="deploysAction" method="dodeployCancel"/>
 		
 		<action name="deploy/isUniqueCodeAndVersion" class="deployAction" method="isUniqueCodeAndVersion"/>
-		<action name="deploy/download" class="deployAction" method="download">
+		<action name="deploy/diagram" class="deployAction" method="diagram">
 			<result name="success" type="stream">
 				<!-- 下载文件类型定义 -->
 				<param name="contentType">${contentType}</param>
@@ -37,10 +37,8 @@
 				<param name="inputName">inputStream</param>
 				<param name="bufferSize">4096</param>
 				<!-- 下载文件处理方法 -->
-				<param name="contentDisposition">attachment; filename="${filename}"</param>
+				<param name="contentDisposition">inline; filename="${filename}"</param>
 			</result>
 		</action>
-		
 	</package>
-	
 </struts>
