@@ -30,7 +30,6 @@ import cn.bc.workflow.deploy.domain.Deploy;
  */
 public class DeployServiceImpl extends DefaultCrudService<Deploy> implements
 		DeployService {
-	@SuppressWarnings("unused")
 	private static Log logger = LogFactory.getLog(DeployServiceImpl.class);
 	private OperateLogService operateLogService;
 
@@ -145,6 +144,9 @@ public class DeployServiceImpl extends DefaultCrudService<Deploy> implements
 			// 设置最后取消信息
 			deploy.setDeployer(SystemContextHolder.get().getUserHistory());
 			deploy.setDeployDate(Calendar.getInstance());
+			//清空与 [act_re_deployment]表外键关联的id
+			deploy.setDeploymentId(null); 
+			
 			this.deployDao.save(deploy);// 保存
 
 			// 记录取消发布日志
