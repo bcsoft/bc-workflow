@@ -291,7 +291,7 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>>{
 		sql.append(",(case when (select count(*) from act_ru_task rt inner join act_ru_identitylink ri on rt.id_ = ri.task_id_ where rt.assignee_ is null) > 0 then TRUE else FALSE end) isCandidate");
 		sql.append(",(select string_agg(ri2.group_id_,',') from act_ru_task rt2 inner join act_ru_identitylink ri2 on rt2.id_ = ri2.task_id_ where rt2.id_ = art.id_) groupIds");
 		sql.append(" from act_ru_task art");
-		sql.append(" left join act_id_user aiu on art.assignee_ = aiu.id_");
+		//sql.append(" left join act_id_user aiu on art.assignee_ = aiu.id_");
 		sql.append(" left join act_re_procdef arp on art.proc_def_id_ = arp.id_");
 		sql.append(" left join act_ru_identitylink ari on art.id_ = ari.task_id_");
 		
