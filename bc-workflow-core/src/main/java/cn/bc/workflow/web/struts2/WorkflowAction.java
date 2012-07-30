@@ -65,7 +65,7 @@ public class WorkflowAction extends AbstractBaseAction {
 
 		// 下载文件的文件名
 		if (this.n == null || this.n.length() == 0)
-			this.n = "instance" + id + "," + extension;
+			this.n = "instance" + id + "." + extension;
 
 		// debug
 		if (logger.isDebugEnabled()) {
