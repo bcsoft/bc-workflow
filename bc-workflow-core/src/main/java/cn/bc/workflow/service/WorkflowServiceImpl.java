@@ -34,7 +34,6 @@ import cn.bc.core.util.DateUtils;
 import cn.bc.core.util.JsonUtils;
 import cn.bc.identity.domain.ActorHistory;
 import cn.bc.identity.service.ActorHistoryService;
-import cn.bc.identity.service.ActorService;
 import cn.bc.identity.web.SystemContextHolder;
 import cn.bc.template.domain.Template;
 import cn.bc.template.service.TemplateService;
@@ -58,7 +57,6 @@ public class WorkflowServiceImpl implements WorkflowService {
 	private TaskService taskService;
 	private ExcutionLogService excutionLogService;
 	private ActorHistoryService actorHistoryService;
-	private ActorService actorService;
 	private FlowAttachService flowAttachService;
 
 	// private FormService formService;
@@ -102,11 +100,6 @@ public class WorkflowServiceImpl implements WorkflowService {
 	@Autowired
 	public void setActorHistoryService(ActorHistoryService actorHistoryService) {
 		this.actorHistoryService = actorHistoryService;
-	}
-
-	@Autowired
-	public void setActorService(ActorService actorService) {
-		this.actorService = actorService;
 	}
 
 	@Autowired
@@ -356,8 +349,15 @@ public class WorkflowServiceImpl implements WorkflowService {
 
 	public InputStream getInstanceDiagram(String processInstanceId) {
 		// 获取流程实例
-		ProcessInstance instance = runtimeService.createProcessInstanceQuery()
+		HistoricProcessInstance instance = historyService
+				.createHistoricProcessInstanceQuery()
 				.processInstanceId(processInstanceId).singleResult();
+
+		if (instance == null) {
+			throw new CoreException(
+					"can't find HistoricProcessInstance: processInstanceId="
+							+ processInstanceId);
+		}
 
 		// 获取流程定义
 		ProcessDefinition definition = repositoryService
@@ -379,7 +379,8 @@ public class WorkflowServiceImpl implements WorkflowService {
 
 		if (definition == null) {
 			throw new CoreException(
-					"can't find ProcessDefinition: deploymentId=" + deploymentId);
+					"can't find ProcessDefinition: deploymentId="
+							+ deploymentId);
 		}
 
 		// 获取流程图的png资源文件
