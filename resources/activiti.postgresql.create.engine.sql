@@ -19,6 +19,9 @@ values ('schema.history', 'create(5.9)', 1);
 insert into ACT_GE_PROPERTY
 values ('next.dbid', '1000', 1);
 
+insert into ACT_GE_PROPERTY
+values ('historyLevel', '3', 1);
+
 create table ACT_GE_BYTEARRAY (
     ID_ varchar(64),
     REV_ integer,
