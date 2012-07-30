@@ -67,10 +67,10 @@ public class HistoricProcessInstancesAction extends
 		StringBuffer sql = new StringBuffer();
 
 		sql.append("select a.id_,b.name_ as category,a.start_time_,a.end_time_,a.duration_,a.proc_inst_id_");
-		sql.append(",b.version_ as version,b.key_ as key,c.first_");
+		sql.append(",b.version_ as version,b.key_ as key,c.name");
 		sql.append(" from act_hi_procinst a");
 		sql.append(" inner join act_re_procdef b on b.id_=a.proc_def_id_");
-		sql.append(" left join act_id_user c on c.id_=a.start_user_id_");
+		sql.append(" left join bc_identity_actor c on c.code=a.start_user_id_");
 		sqlObject.setSql(sql.toString());
 
 		// 注入参数
