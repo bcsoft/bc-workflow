@@ -79,7 +79,7 @@ public class TodoManagesAction extends ViewAction<Map<String, Object>>{
 		sql.append(",(select string_agg(aig.name_,',') from act_ru_task rt2 inner join act_ru_identitylink ri2 on rt2.id_ = ri2.task_id_ inner join act_id_group aig on ri2.group_id_ = aig.id_ where rt2.id_ = art.id_)groupIds");
 		sql.append(",(select string_agg(aiu.first_,',') from act_ru_task rt3 inner join act_ru_identitylink ri3 on rt3.id_ = ri3.task_id_ inner join act_id_user aiu on ri3.user_id_ = aiu.id_ where rt3.id_ = art.id_)userIds");
 		sql.append(" from act_ru_task art");
-		sql.append(" left join act_id_user aiu on art.assignee_ = aiu.id_");
+		sql.append(" left join bc_identity_actor aiu on art.assignee_ = aiu.code");
 		sql.append(" left join act_re_procdef arp on art.proc_def_id_ = arp.id_");
 		sql.append(" left join act_ru_identitylink ari on art.id_ = ari.task_id_");
 		
