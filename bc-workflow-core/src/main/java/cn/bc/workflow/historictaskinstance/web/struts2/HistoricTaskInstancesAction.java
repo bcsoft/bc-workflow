@@ -67,12 +67,12 @@ public class HistoricTaskInstancesAction extends
 		SqlObject<Map<String, Object>> sqlObject = new SqlObject<Map<String, Object>>();
 		// 构建查询语句,where和order by不要包含在sql中(要统一放到condition中)
 		StringBuffer sql = new StringBuffer();
-		sql.append("select a.id_,c.name_ as category,a.name_ as subject,a.start_time_,a.end_time_,d.first_ as receiver,a.duration_,a.proc_inst_id_");
+		sql.append("select a.id_,c.name_ as category,a.name_ as subject,a.start_time_,a.end_time_,d.name as receiver,a.duration_,a.proc_inst_id_");
 		sql.append(",a.task_def_key_");
 		sql.append(" from act_hi_taskinst a");
 		sql.append(" inner join act_hi_procinst b on b.proc_inst_id_=a.proc_inst_id_");
 		sql.append(" inner join act_re_procdef c on c.id_=a.proc_def_id_");
-		sql.append(" left join act_id_user d on d.id_=a.assignee_");
+		sql.append(" left join bc_identity_actor d on d.code=a.assignee_");
 		sqlObject.setSql(sql.toString());
 
 		// 注入参数
