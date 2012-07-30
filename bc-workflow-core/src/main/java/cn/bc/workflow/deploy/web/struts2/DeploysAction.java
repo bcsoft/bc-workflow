@@ -133,29 +133,29 @@ public class DeploysAction extends ViewAction<Map<String, Object>> {
 				getText("deploy.order"), 50).setSortable(true));
 		columns.add(new TextColumn4MapKey("d.category", "category",
 				getText("deploy.category"), 150).setUseTitleFromLabel(true));
-		columns.add(new TextColumn4MapKey("d.type_", "type",
-				getText("deploy.type"), 250).setUseTitleFromLabel(true)
-				.setValueFormater(new KeyValueFormater(this.getTypes())));
 		columns.add(new TextColumn4MapKey("d.subject", "subject",
-				getText("deploy.tfsubject"), 250).setUseTitleFromLabel(true));
-		columns.add(new TextColumn4MapKey("d.source", "source",
-				getText("deploy.source"), 150).setUseTitleFromLabel(true));
-		columns.add(new TextColumn4MapKey("d.code", "code",
-				getText("deploy.code"), 100).setSortable(true)
-				.setUseTitleFromLabel(true));
+				getText("deploy.tfsubject"),200).setUseTitleFromLabel(true));
+		columns.add(new TextColumn4MapKey("d.version_", "version",
+				getText("deploy.version"), 50).setUseTitleFromLabel(true));
+//		columns.add(new TextColumn4MapKey("d.source", "source",
+//				getText("deploy.source"), 150).setUseTitleFromLabel(true));
 		if(!my){
 			columns.add(new TextColumn4MapKey("", "users",
 					getText("deploy.user"),120).setUseTitleFromLabel(true));
 		}
-		columns.add(new TextColumn4MapKey("d.version_", "version",
-				getText("deploy.version"), 50).setUseTitleFromLabel(true));
-		columns.add(new TextColumn4MapKey("d.path", "path",
-				getText("deploy.tfpath"), 250).setUseTitleFromLabel(true));
-		columns.add(new TextColumn4MapKey("d.size_", "size",
-				getText("deploy.file.size"),65).setUseTitleFromLabel(true)
-				.setValueFormater(new FileSizeFormater()));
-		columns.add(new TextColumn4MapKey("d.desc_", "desc_",
-				getText("deploy.desc"), 100).setUseTitleFromLabel(true));
+		columns.add(new TextColumn4MapKey("d.type_", "type",
+				getText("deploy.type"), 70).setUseTitleFromLabel(true)
+				.setValueFormater(new KeyValueFormater(this.getTypes())));
+		columns.add(new TextColumn4MapKey("d.code", "code",
+				getText("deploy.code"), 150).setSortable(true)
+				.setUseTitleFromLabel(true));
+//		columns.add(new TextColumn4MapKey("d.path", "path",
+//				getText("deploy.tfpath"), 250).setUseTitleFromLabel(true));
+//		columns.add(new TextColumn4MapKey("d.size_", "size",
+//				getText("deploy.file.size"),65).setUseTitleFromLabel(true)
+//				.setValueFormater(new FileSizeFormater()));
+//		columns.add(new TextColumn4MapKey("d.desc_", "desc_",
+//				getText("deploy.desc"), 100).setUseTitleFromLabel(true));
 		columns.add(new TextColumn4MapKey("ap.actor_name", "pname",
 				getText("deploy.deployer"), 130));
 		columns.add(new TextColumn4MapKey("d.deploy_date", "deploy_date",
@@ -164,13 +164,13 @@ public class DeploysAction extends ViewAction<Map<String, Object>> {
 		columns.add(new TextColumn4MapKey("au.actor_name", "uname",
 				getText("deploy.author"), 80));
 		columns.add(new TextColumn4MapKey("d.file_date", "file_date",
-				getText("deploy.fileDate"), 130)
+				getText("deploy.fileDate")).setUseTitleFromLabel(true)
 				.setValueFormater(new CalendarFormater("yyyy-MM-dd HH:mm")));
-		columns.add(new TextColumn4MapKey("am.actor_name", "mname",
-				getText("deploy.modifier"), 80));
-		columns.add(new TextColumn4MapKey("d.modified_date", "modified_date",
-				getText("deploy.modifiedDate"), 130)
-				.setValueFormater(new CalendarFormater("yyyy-MM-dd HH:mm")));
+//		columns.add(new TextColumn4MapKey("am.actor_name", "mname",
+//				getText("deploy.modifier"), 80));
+//		columns.add(new TextColumn4MapKey("d.modified_date", "modified_date",
+//				getText("deploy.modifiedDate"), 130)
+//				.setValueFormater(new CalendarFormater("yyyy-MM-dd HH:mm")));
 		columns.add(new HiddenColumn4MapKey("uid", "uid"));
 		columns.add(new HiddenColumn4MapKey("status", "status"));
 		return columns;
@@ -192,9 +192,9 @@ public class DeploysAction extends ViewAction<Map<String, Object>> {
 	private Map<String, String> getTypes() {
 		Map<String, String> statuses = new LinkedHashMap<String, String>();
 		statuses.put(String.valueOf(Deploy.TYPE_XML),
-				getText("deploy.type.xml"));
+				getText("deploy.type.xml.short"));
 		statuses.put(String.valueOf(Deploy.TYPE_BAR),
-				getText("deploy.type.bar"));
+				getText("deploy.type.bar.short"));
 		return statuses;
 	}
 	
