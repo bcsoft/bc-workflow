@@ -167,7 +167,8 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 	private Map<String, Object> buildWSCommonInfo(boolean flowing,
 			HistoricProcessInstance instance) {
 		Map<String, Object> info = new LinkedHashMap<String, Object>();
-		info.put("buttons", this.buildHeaderDefaultButtons(flowing, "common"));// 操作按钮列表
+		info.put("buttons",
+				this.buildHeaderDefaultButtons(flowing, "common", false));// 操作按钮列表
 		info.put("hasButtons", info.get("buttons") != null);// 有否操作按钮
 		List<Map<String, Object>> items = new ArrayList<Map<String, Object>>();// 一级条目列表
 		info.put("items", items);
@@ -389,9 +390,12 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 	 *            是否流转中
 	 * @param type
 	 *            类型
+	 * @param isMyTask
+	 *            是否是我的个人或岗位待办
 	 * @return
 	 */
-	private String buildHeaderDefaultButtons(boolean flowing, String type) {
+	private String buildHeaderDefaultButtons(boolean flowing, String type,
+			boolean isMyTask) {
 		StringBuffer buttons = new StringBuffer();
 		if ("common".equals(type)) {
 			buttons.append("<span class='mainOperate flowImage'><span class='ui-icon ui-icon-image'></span><span class='text link'>查看流程图</span></span>");
@@ -402,15 +406,21 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 			buttons.append("<span class='mainOperate excutionLog'><span class='ui-icon ui-icon-tag' title='查看流转日志'></span></span>");
 		} else if ("todo_user".equals(type)) {
 			if (flowing) {
+				if (SystemContextHolder.get()
+						.hasAnyRole("BC_WORKFLOW_DELEGATE"))// 有权限才能委派任务
+					buttons.append("<span class='mainOperate delegate'><span class='ui-icon ui-icon-person'></span><span class='text link'>委派任务</span></span>");
+
 				buttons.append("<span class='mainOperate addComment'><span class='ui-icon ui-icon-document'></span><span class='text link'>添加意见</span></span>");
 				buttons.append("<span class='mainOperate addAttach'><span class='ui-icon ui-icon-arrowthick-1-n'></span><span class='text link'>添加附件</span></span>");
-				buttons.append("<span class='mainOperate delegate'><span class='ui-icon ui-icon-person'></span><span class='text link'>委派任务</span></span>");
 				buttons.append("<span class='mainOperate finish'><span class='ui-icon ui-icon-check'></span><span class='text link'>完成办理</span></span>");
 			}
 		} else if ("todo_group".equals(type)) {
 			if (flowing) {
-				buttons.append("<span class='mainOperate assign'><span class='ui-icon ui-icon-person'></span><span class='text link'>分派任务</span></span>");
-				buttons.append("<span class='mainOperate claim'><span class='ui-icon ui-icon-check'></span><span class='text link'>签领任务</span></span>");
+				if (SystemContextHolder.get().hasAnyRole("BC_WORKFLOW_ASSIGN"))// 有权限才能分派任务
+					buttons.append("<span class='mainOperate assign'><span class='ui-icon ui-icon-person'></span><span class='text link'>分派任务</span></span>");
+
+				if (isMyTask)
+					buttons.append("<span class='mainOperate claim'><span class='ui-icon ui-icon-check'></span><span class='text link'>签领任务</span></span>");
 			}
 		} else {
 			return null;
@@ -492,7 +502,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 				taskItem.put("subject", task.getName());// 标题
 			}
 			taskItem.put("buttons", this.buildHeaderDefaultButtons(flowing,
-					isUserTask ? "todo_user" : "todo_group"));// 操作按钮列表
+					isUserTask ? "todo_user" : "todo_group", isMyTask));// 操作按钮列表
 			taskItem.put("hasButtons", taskItem.get("buttons") != null);// 有否操作按钮
 			taskItem.put("formKey",
 					taskService.getVariableLocal(task.getId(), "formKey"));// 记录formKey
@@ -505,7 +515,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 
 			// -- 表单信息
 			buildFormInfo(flowing, items, task.getProcessInstanceId(),
-					task.getId(), formKeys.get(task.getId()), !isMyTask);
+					task.getId(), formKeys.get(task.getId()), !isUserTask);
 
 			// -- 意见、附件信息
 			buildFlowAttachsInfo(flowing, items,
