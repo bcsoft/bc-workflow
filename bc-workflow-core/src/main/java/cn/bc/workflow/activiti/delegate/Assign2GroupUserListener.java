@@ -47,6 +47,11 @@ public class Assign2GroupUserListener implements TaskListener {
 	private Expression groupName;
 
 	/**
+	 * 如果orgVariableName变量没有设置，是否使用initiator流程变量指定的人
+	 */
+	private Expression null2initiator;
+
+	/**
 	 * 保存组织ID的流程变量名(必须为全局变量)
 	 */
 	private Expression orgVariableName;
@@ -79,6 +84,27 @@ public class Assign2GroupUserListener implements TaskListener {
 		} else {// 按岗位名称获取岗位
 			Long orgId = (Long) delegateTask.getVariable(orgVariableName
 					.getExpressionText());
+			if (orgId == null) {// 处理手动发起流程的情况
+				if (null2initiator != null
+						&& "true".equals(null2initiator.getExpressionText())) {
+					// 将任务直接分派到流程的发起人
+					String initiator = (String) delegateTask
+							.getVariable("initiator");
+					if (logger.isDebugEnabled()) {
+						logger.debug("initiator:user=" + initiator);
+					}
+					if (initiator == null)
+						throw new CoreException("没有配置流程的发起人信息，无法分配任务：taskId="
+								+ delegateTask.getId());
+
+					delegateTask.setAssignee(initiator);
+					return;
+				} else {
+					throw new CoreException(
+							"没有找到记录岗位所在单位ID的流程变量值：orgVariableName="
+									+ orgVariableName.getExpressionText());
+				}
+			}
 			groups = actorService.findFollowerWithName(orgId,
 					groupName.getExpressionText(),
 					new Integer[] { ActorRelation.TYPE_BELONG },
