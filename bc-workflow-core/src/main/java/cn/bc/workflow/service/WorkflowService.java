@@ -10,6 +10,8 @@ import org.activiti.engine.repository.Deployment;
 import org.activiti.engine.repository.ProcessDefinition;
 import org.activiti.engine.runtime.ProcessInstance;
 
+import cn.bc.identity.domain.ActorHistory;
+
 /**
  * 工作流常用方法封装的Service
  * 
@@ -96,8 +98,9 @@ public interface WorkflowService {
 	 *            任务ID
 	 * @param toUser
 	 *            所委派给用户的帐号
+	 * @return 
 	 */
-	void delegateTask(String taskId, String toUser);
+	ActorHistory delegateTask(String taskId, String toUser);
 
 	/**
 	 * 分派任务
@@ -107,7 +110,7 @@ public interface WorkflowService {
 	 * @param toUser
 	 *            分派给当前岗位任务的用户
 	 */
-	void assignTask(String taskId, String toUser);
+	ActorHistory assignTask(String taskId, String toUser);
 
 	/**
 	 * 加载指定的流程实例
