@@ -35,8 +35,8 @@ import cn.bc.workflow.service.ExcutionLogService;
  */
 public class TaskLogListener implements TaskListener {
 	private static final Log logger = LogFactory.getLog(TaskLogListener.class);
-	private ActorHistoryService actorHistoryService;
-	private ExcutionLogService excutionLogService;
+	protected ActorHistoryService actorHistoryService;
+	protected ExcutionLogService excutionLogService;
 
 	public TaskLogListener() {
 		actorHistoryService = SpringUtils.getBean(ActorHistoryService.class);
@@ -68,8 +68,41 @@ public class TaskLogListener implements TaskListener {
 		log.setExcutionId(delegateTask.getExecutionId());
 		log.setType(getLogTypePrefix() + delegateTask.getEventName());
 		log.setProcessInstanceId(delegateTask.getProcessInstanceId());
-		log.setTaskInstanceId(delegateTask.getId());
 
+		// 任务的ID、编码、名称
+		log.setTaskInstanceId(delegateTask.getId());
+		log.setExcutionCode(delegateTask.getTaskDefinitionKey());
+		log.setExcutionName(delegateTask.getName());
+
+		// 记录办理人信息
+		buildAssigneeInfo(delegateTask, log);
+
+		// 记录任务的表单key
+		if (delegateTask instanceof TaskEntity) {
+			TaskEntity task = (TaskEntity) delegateTask;
+			TaskDefinition d = task.getTaskDefinition();
+			if (d != null) {
+				TaskFormHandler fh = d.getTaskFormHandler();
+				if (fh != null) {
+					TaskFormData fd = fh.createTaskForm(task);
+					if (fd != null && fd.getFormKey() != null) {
+						log.setFormKey(fd.getFormKey());
+						delegateTask.setVariableLocal("formKey",
+								fd.getFormKey());// 将formKey当作流程变量记下
+					}
+				}
+			}
+		}
+
+		// 保存日志
+		excutionLogService.save(log);
+	}
+
+	/**
+	 * @param delegateTask
+	 * @param log
+	 */
+	protected void buildAssigneeInfo(DelegateTask delegateTask, ExcutionLog log) {
 		// 判断任务类型
 		if (delegateTask.getAssignee() != null) {// 分配到人的任务
 			ActorHistory ah = actorHistoryService.loadByCode(delegateTask
@@ -95,29 +128,9 @@ public class TaskLogListener implements TaskListener {
 			log.setAssigneeCode(StringUtils
 					.collectionToCommaDelimitedString(codes));
 			log.setAssigneeName(StringUtils
-					.collectionToCommaDelimitedString(actorHistoryService.findNames(codes)));// TODO names
+					.collectionToCommaDelimitedString(actorHistoryService
+							.findNames(codes)));// TODO names
 		}
-
-		// 记录任务的表单key
-		if (delegateTask instanceof TaskEntity) {
-			TaskEntity task = (TaskEntity) delegateTask;
-			TaskDefinition d = task.getTaskDefinition();
-			if (d != null) {
-				log.setCode(d.getKey());// 任务的编码
-				TaskFormHandler fh = d.getTaskFormHandler();
-				if (fh != null) {
-					TaskFormData fd = fh.createTaskForm(task);
-					if (fd != null && fd.getFormKey() != null) {
-						log.setForm(fd.getFormKey());
-						delegateTask.setVariableLocal("formKey",
-								fd.getFormKey());// 将formKey当作流程变量记下
-					}
-				}
-			}
-		}
-
-		// 保存日志
-		excutionLogService.save(log);
 	}
 
 	/**

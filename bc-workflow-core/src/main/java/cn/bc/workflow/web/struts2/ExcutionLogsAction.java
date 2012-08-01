@@ -52,7 +52,7 @@ public class ExcutionLogsAction extends ViewAction<Map<String, Object>> {
 
 	@Override
 	protected OrderCondition getGridDefaultOrderCondition() {
-		return new OrderCondition("l.file_date", Direction.Desc);
+		return new OrderCondition("l.file_date", Direction.Asc);
 	}
 
 	@Override
@@ -62,10 +62,9 @@ public class ExcutionLogsAction extends ViewAction<Map<String, Object>> {
 		// 构建查询语句,where和order by不要包含在sql中(要统一放到condition中)
 		StringBuffer sql = new StringBuffer();
 		sql.append("select l.id id, l.type_, l.listenter,l.eid,l.pid");
-		sql.append(",tid tid,t.task_def_key_ tkey,t.name_ tname, l.form_ form");
+		sql.append(",tid tid,l.ecode tkey,l.ename tname, l.formkey form");
 		sql.append(",l.assignee_name assignee_name,l.author_id author_id, l.author_code author_code, l.author_name author_name, l.file_date file_date");
 		sql.append(" from bc_wf_excution_log l");
-		sql.append(" left join act_hi_taskinst t on t.id_=l.tid");
 		sqlObject.setSql(sql.toString());
 
 		// 注入参数
@@ -83,9 +82,9 @@ public class ExcutionLogsAction extends ViewAction<Map<String, Object>> {
 				map.put("pid", rs[i++]);
 
 				map.put("task_id", rs[i++]);
-				map.put("task_key", rs[i++]);
-				map.put("task_name", rs[i++]);
-				map.put("task_form", rs[i++]);
+				map.put("ecode", rs[i++]);
+				map.put("ename", rs[i++]);
+				map.put("formkey", rs[i++]);
 
 				map.put("assignee_name", rs[i++]);
 				map.put("author_id", rs[i++]);
@@ -115,7 +114,7 @@ public class ExcutionLogsAction extends ViewAction<Map<String, Object>> {
 		columns.add(new TextColumn4MapKey("l.author_name", "author_name",
 				getText("flow.log.author_name"), 70).setSortable(true));
 		columns.add(new TextColumn4MapKey("l.type_", "type",
-				getText("flow.log.type"), 65).setSortable(true)
+				getText("flow.log.type"), 80).setSortable(true)
 				.setUseTitleFromLabel(true)
 				.setValueFormater(new AbstractFormater<String>() {
 					@Override
@@ -123,17 +122,17 @@ public class ExcutionLogsAction extends ViewAction<Map<String, Object>> {
 						return getText("flow.log.type." + (String) value);
 					}
 				}));
-		columns.add(new TextColumn4MapKey("t.name_", "task_name",
-				getText("flow.log.task_name"), 200).setSortable(true)
+		columns.add(new TextColumn4MapKey("l.ename", "ename",
+				getText("flow.log.ename"), 200).setSortable(true)
 				.setUseTitleFromLabel(true));
 		columns.add(new TextColumn4MapKey("t.assignee_name", "assignee_name",
 				getText("flow.log.assignee_name"), 150).setSortable(true)
 				.setUseTitleFromLabel(true));
-		columns.add(new TextColumn4MapKey("t.task_def_key_", "task_key",
-				getText("flow.log.task_key"), 100).setSortable(true)
+		columns.add(new TextColumn4MapKey("l.ecode", "ecode",
+				getText("flow.log.ecode"), 180).setSortable(true)
 				.setUseTitleFromLabel(true));
-		columns.add(new TextColumn4MapKey("l.form_", "task_form",
-				getText("flow.log.task_form")).setSortable(true)
+		columns.add(new TextColumn4MapKey("l.formkey", "formkey",
+				getText("flow.log.formkey")).setSortable(true)
 				.setUseTitleFromLabel(true));
 		columns.add(new TextColumn4MapKey("l.listenter", "listenter",
 				getText("flow.log.listenter"), 90).setSortable(true)
@@ -145,7 +144,7 @@ public class ExcutionLogsAction extends ViewAction<Map<String, Object>> {
 
 	@Override
 	protected String[] getGridSearchFields() {
-		return new String[] { "t.task_def_key_", "l.author_name", "t.name_",
+		return new String[] { "l.ecode", "l.author_name", "l.ename",
 				"l.pid", "l.type_" };
 	}
 

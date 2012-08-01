@@ -73,20 +73,33 @@ public class ExcutionLog extends EntityImpl {
 
 	private String type;// 日志类型：参考TYPE_XXX常数的定义
 	private String listener;// 监听器类型
-	private String excutionId;// 执行实例ID
+	private String formKey;// 流程、任务表单formKey的值
+
+	private String excutionId;// 执行实例的ID
+	private String excutionCode;// 执行实例的编码：对应流程、任务、流向的definitionKey
+	private String excutionName;// 执行实例的名称：对应流程、任务、流向的名称
+
 	private String processInstanceId;// 流程实例ID
 	private String taskInstanceId;// 任务实例ID
-	private String form;// 流程、任务表单formKey的值
 
-	private String code;// 编码：对应任务、流向的definitionKey
 	private String description;// 其它信息
 
-	public String getCode() {
-		return code;
+	@Column(name = "ECODE")
+	public String getExcutionCode() {
+		return excutionCode;
 	}
 
-	public void setCode(String code) {
-		this.code = code;
+	public void setExcutionCode(String excutionCode) {
+		this.excutionCode = excutionCode;
+	}
+
+	@Column(name = "ENAME")
+	public String getExcutionName() {
+		return excutionName;
+	}
+
+	public void setExcutionName(String excutionName) {
+		this.excutionName = excutionName;
 	}
 
 	@Column(name = "FILE_DATE")
@@ -197,13 +210,13 @@ public class ExcutionLog extends EntityImpl {
 		this.taskInstanceId = taskInstanceId;
 	}
 
-	@Column(name = "FORM_")
-	public String getForm() {
-		return form;
+	@Column(name = "FORMKEY")
+	public String getFormKey() {
+		return formKey;
 	}
 
-	public void setForm(String form) {
-		this.form = form;
+	public void setFormKey(String formKey) {
+		this.formKey = formKey;
 	}
 
 	@Column(name = "DESC_")

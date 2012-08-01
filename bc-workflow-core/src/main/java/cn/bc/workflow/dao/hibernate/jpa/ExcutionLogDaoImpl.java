@@ -79,7 +79,7 @@ public class ExcutionLogDaoImpl extends HibernateCrudJpaDao<ExcutionLog>
 	public String findTaskFormKey(String taskId) {
 		if (taskId == null || taskId.length() == 0)
 			return null;
-		String hql = "select id,form_ from bc_wf_excution_log where tid=?";
+		String hql = "select id,formkey from bc_wf_excution_log where tid=?";
 		if (logger.isDebugEnabled()) {
 			logger.debug("hql=" + hql);
 			logger.debug("taskId=" + taskId);
@@ -96,7 +96,7 @@ public class ExcutionLogDaoImpl extends HibernateCrudJpaDao<ExcutionLog>
 	public Map<String, String> findTaskFormKeys(String processInstanceId) {
 		if (processInstanceId == null || processInstanceId.length() == 0)
 			return new LinkedHashMap<String, String>();
-		String hql = "select tid, form_ from bc_wf_excution_log where pid=? and tid is not null and form_ is not null order by file_date";
+		String hql = "select tid, formkey from bc_wf_excution_log where pid=? and tid is not null and formkey is not null order by file_date";
 		if (logger.isDebugEnabled()) {
 			logger.debug("hql=" + hql);
 			logger.debug("args=" + processInstanceId);

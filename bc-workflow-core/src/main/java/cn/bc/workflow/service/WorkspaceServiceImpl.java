@@ -221,6 +221,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 				+ (flowing ? DateUtils.getWasteTimeCN(instance.getStartTime())
 						: DateUtils.getWasteTimeCN(instance.getStartTime(),
 								instance.getEndTime())));
+		detail.add("流程版本：" + instance.getProcessDefinitionId());
 		// detail.add("参与人数：" + "");// TODO
 
 		// 返回
@@ -515,7 +516,8 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 
 			// -- 表单信息
 			buildFormInfo(flowing, items, task.getProcessInstanceId(),
-					task.getId(), formKeys.get(task.getId()), !(isUserTask && isMyTask));
+					task.getId(), formKeys.get(task.getId()),
+					!(isUserTask && isMyTask));
 
 			// -- 意见、附件信息
 			buildFlowAttachsInfo(flowing, items,

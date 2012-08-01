@@ -179,7 +179,8 @@ public class WorkflowServiceImpl implements WorkflowService {
 		log.setType(ExcutionLog.TYPE_TASK_INSTANCE_CLAIM);
 		log.setProcessInstanceId(task.getProcessInstanceId());
 		log.setTaskInstanceId(task.getId());
-		log.setCode(task.getTaskDefinitionKey());
+		log.setExcutionCode(task.getTaskDefinitionKey());
+		log.setExcutionName(task.getName());
 
 		String date = DateUtils.formatCalendar2Minute(log.getFileDate());
 		log.setDescription(h.getName() + "在" + date + "签领了任务");
@@ -268,7 +269,8 @@ public class WorkflowServiceImpl implements WorkflowService {
 		log.setType(type);
 		log.setProcessInstanceId(task.getProcessInstanceId());
 		log.setTaskInstanceId(task.getId());
-		log.setCode(task.getTaskDefinitionKey());
+		log.setExcutionCode(task.getTaskDefinitionKey());
+		log.setExcutionName(task.getName());
 
 		String date = DateUtils.formatCalendar2Minute(log.getFileDate());
 		log.setDescription(h.getName() + "在" + date + "成功将任务" + msg

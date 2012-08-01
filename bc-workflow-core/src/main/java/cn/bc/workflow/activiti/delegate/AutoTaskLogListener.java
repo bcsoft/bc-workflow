@@ -3,34 +3,45 @@
  */
 package cn.bc.workflow.activiti.delegate;
 
+import java.util.Map;
+
 import org.activiti.engine.delegate.DelegateExecution;
 import org.activiti.engine.impl.persistence.entity.ExecutionEntity;
 
 import cn.bc.workflow.domain.ExcutionLog;
 
 /**
- * 记录流程实例的启动、结束日志的监听器
+ * ServiceTask任务执行日志的监听器：start开始、end结束
  * 
  * @author dragon
  * 
  */
-public class ProcessLogListener extends ExcutionLogListener {
-	@Override
+public class AutoTaskLogListener extends ExcutionLogListener {
+	public AutoTaskLogListener() {
+		super();
+	}
+
+	/**
+	 * 获取日志类型的前缀
+	 * 
+	 * @return
+	 */
 	protected String getLogTypePrefix() {
-		return "process_";
+		return "autoTask_";
 	}
 
 	@Override
 	protected ExcutionLog buildExcutionLog(DelegateExecution execution) {
 		ExcutionLog log = super.buildExcutionLog(execution);
-
-		// 记录流程的编码
 		if (execution instanceof ExecutionEntity) {
 			ExecutionEntity e = (ExecutionEntity) execution;
-			log.setExcutionCode(e.getProcessDefinitionId());
-			log.setExcutionName(e.getProcessDefinition().getName());
+			log.setExcutionCode(e.getActivityId());
+			if (e.getActivity() != null
+					&& e.getActivity().getProperties() != null) {
+				Map<String, Object> map = e.getActivity().getProperties();
+				log.setExcutionName((String) map.get("name"));
+			}
 		}
-
 		return log;
 	}
 }
