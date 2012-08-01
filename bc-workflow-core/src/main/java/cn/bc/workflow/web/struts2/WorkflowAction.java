@@ -21,6 +21,7 @@ import cn.bc.core.util.DateUtils;
 import cn.bc.core.util.JsonUtils;
 import cn.bc.core.util.StringUtils;
 import cn.bc.docs.web.AttachUtils;
+import cn.bc.identity.domain.ActorHistory;
 import cn.bc.web.ui.json.Json;
 import cn.bc.web.util.WebUtils;
 
@@ -278,10 +279,10 @@ public class WorkflowAction extends AbstractBaseAction {
 			Assert.assertNotEmpty(toUser);
 
 			// 委托任务
-			this.workflowService.delegateTask(id, toUser);
+			ActorHistory ah = this.workflowService.delegateTask(id, toUser); 
 
 			// 返回信息
-			json = createSuccessMsg("委托任务成功！").toString();
+			json = createSuccessMsg("已成功将任务委托给"+ah.getName()).toString();
 		} catch (Exception e) {
 			json = createFailureMsg(e).toString();
 		}
@@ -304,10 +305,10 @@ public class WorkflowAction extends AbstractBaseAction {
 			Assert.assertNotEmpty(toUser);
 
 			// 分派任务
-			this.workflowService.assignTask(id, toUser);
+			ActorHistory ah = this.workflowService.assignTask(id, toUser);
 
 			// 返回信息
-			json = createSuccessMsg("分派任务成功！").toString();
+			json = createSuccessMsg("已成功将任务分派给"+ah.getName()).toString();
 		} catch (Exception e) {
 			json = createFailureMsg(e).toString();
 		}
