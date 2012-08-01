@@ -18,6 +18,7 @@ import cn.bc.core.query.condition.impl.EqualsCondition;
 import cn.bc.core.query.condition.impl.OrderCondition;
 import cn.bc.db.jdbc.RowMapper;
 import cn.bc.db.jdbc.SqlObject;
+import cn.bc.web.formater.AbstractFormater;
 import cn.bc.web.formater.CalendarFormater;
 import cn.bc.web.struts2.ViewAction;
 import cn.bc.web.ui.html.grid.Column;
@@ -62,7 +63,7 @@ public class ExcutionLogsAction extends ViewAction<Map<String, Object>> {
 		StringBuffer sql = new StringBuffer();
 		sql.append("select l.id id, l.type_, l.listenter,l.eid,l.pid");
 		sql.append(",tid tid,t.task_def_key_ tkey,t.name_ tname, l.form_ form");
-		sql.append(",l.author_id author_id, l.author_code author_code, l.author_name author_name, l.file_date file_date");
+		sql.append(",l.assignee_name assignee_name,l.author_id author_id, l.author_code author_code, l.author_name author_name, l.file_date file_date");
 		sql.append(" from bc_wf_excution_log l");
 		sql.append(" left join act_hi_taskinst t on t.id_=l.tid");
 		sqlObject.setSql(sql.toString());
@@ -86,6 +87,7 @@ public class ExcutionLogsAction extends ViewAction<Map<String, Object>> {
 				map.put("task_name", rs[i++]);
 				map.put("task_form", rs[i++]);
 
+				map.put("assignee_name", rs[i++]);
 				map.put("author_id", rs[i++]);
 				map.put("author_code", rs[i++]);
 				map.put("author_name", rs[i++]);
@@ -111,18 +113,27 @@ public class ExcutionLogsAction extends ViewAction<Map<String, Object>> {
 				getText("flow.log.file_date"), 145).setSortable(true)
 				.setValueFormater(new CalendarFormater("yyyy-MM-dd HH:mm:ss")));
 		columns.add(new TextColumn4MapKey("l.author_name", "author_name",
-				getText("flow.log.author_name"), 80).setSortable(true));
+				getText("flow.log.author_name"), 70).setSortable(true));
+		columns.add(new TextColumn4MapKey("l.type_", "type",
+				getText("flow.log.type"), 80).setSortable(true)
+				.setUseTitleFromLabel(true)
+				.setValueFormater(new AbstractFormater<String>() {
+					@Override
+					public String format(Object context, Object value) {
+						return getText("flow.log.type." + (String) value);
+					}
+				}));
 		columns.add(new TextColumn4MapKey("t.name_", "task_name",
-				getText("flow.log.task_name")).setSortable(true)
+				getText("flow.log.task_name"), 200).setSortable(true)
+				.setUseTitleFromLabel(true));
+		columns.add(new TextColumn4MapKey("t.assignee_name", "assignee_name",
+				getText("flow.log.assignee_name"), 70).setSortable(true)
 				.setUseTitleFromLabel(true));
 		columns.add(new TextColumn4MapKey("t.task_def_key_", "task_key",
 				getText("flow.log.task_key"), 100).setSortable(true)
 				.setUseTitleFromLabel(true));
 		columns.add(new TextColumn4MapKey("l.form_", "task_form",
-				getText("flow.log.task_form"), 150).setSortable(true)
-				.setUseTitleFromLabel(true));
-		columns.add(new TextColumn4MapKey("l.type_", "type",
-				getText("flow.log.type"), 100).setSortable(true)
+				getText("flow.log.task_form")).setSortable(true)
 				.setUseTitleFromLabel(true));
 		columns.add(new TextColumn4MapKey("l.listenter", "listenter",
 				getText("flow.log.listenter"), 90).setSortable(true)
@@ -140,7 +151,7 @@ public class ExcutionLogsAction extends ViewAction<Map<String, Object>> {
 
 	@Override
 	protected PageOption getHtmlPageOption() {
-		return super.getHtmlPageOption().setWidth(600).setMinWidth(400)
+		return super.getHtmlPageOption().setWidth(650).setMinWidth(400)
 				.setHeight(400).setMinHeight(200);
 	}
 
