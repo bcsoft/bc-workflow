@@ -405,7 +405,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 			}
 			buttons.append("<span class='mainOperate excutionLog'><span class='ui-icon ui-icon-tag' title='查看流转日志'></span></span>");
 		} else if ("todo_user".equals(type)) {
-			if (flowing) {
+			if (flowing && isMyTask) {
 				if (SystemContextHolder.get()
 						.hasAnyRole("BC_WORKFLOW_DELEGATE"))// 有权限才能委派任务
 					buttons.append("<span class='mainOperate delegate'><span class='ui-icon ui-icon-person'></span><span class='text link'>委派任务</span></span>");
@@ -515,7 +515,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 
 			// -- 表单信息
 			buildFormInfo(flowing, items, task.getProcessInstanceId(),
-					task.getId(), formKeys.get(task.getId()), !isUserTask);
+					task.getId(), formKeys.get(task.getId()), !(isUserTask && isMyTask));
 
 			// -- 意见、附件信息
 			buildFlowAttachsInfo(flowing, items,
