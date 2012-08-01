@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
-import org.activiti.engine.TaskService;
 import org.activiti.engine.delegate.DelegateTask;
 import org.activiti.engine.delegate.TaskListener;
 import org.activiti.engine.form.TaskFormData;
@@ -18,10 +17,10 @@ import org.activiti.engine.impl.task.TaskDefinition;
 import org.activiti.engine.task.IdentityLink;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.util.StringUtils;
 
 import cn.bc.core.exception.CoreException;
+import cn.bc.core.util.SpringUtils;
 import cn.bc.identity.domain.ActorHistory;
 import cn.bc.identity.service.ActorHistoryService;
 import cn.bc.identity.web.SystemContextHolder;
@@ -38,21 +37,10 @@ public class TaskLogListener implements TaskListener {
 	private static final Log logger = LogFactory.getLog(TaskLogListener.class);
 	private ActorHistoryService actorHistoryService;
 	private ExcutionLogService excutionLogService;
-	private TaskService taskService;
 
-	@Autowired
-	public void setExcutionLogService(ExcutionLogService excutionLogService) {
-		this.excutionLogService = excutionLogService;
-	}
-
-	@Autowired
-	public void setActorHistoryService(ActorHistoryService actorHistoryService) {
-		this.actorHistoryService = actorHistoryService;
-	}
-
-	@Autowired
-	public void setTaskService(TaskService taskService) {
-		this.taskService = taskService;
+	public TaskLogListener() {
+		actorHistoryService = SpringUtils.getBean(ActorHistoryService.class);
+		excutionLogService = SpringUtils.getBean(ExcutionLogService.class);
 	}
 
 	public void notify(DelegateTask delegateTask) {
@@ -107,7 +95,7 @@ public class TaskLogListener implements TaskListener {
 			log.setAssigneeCode(StringUtils
 					.collectionToCommaDelimitedString(codes));
 			log.setAssigneeName(StringUtils
-					.collectionToCommaDelimitedString(codes));// TODO names
+					.collectionToCommaDelimitedString(actorHistoryService.findNames(codes)));// TODO names
 		}
 
 		// 记录任务的表单key

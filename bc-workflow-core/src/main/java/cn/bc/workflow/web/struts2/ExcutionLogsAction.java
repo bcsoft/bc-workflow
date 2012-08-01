@@ -115,7 +115,7 @@ public class ExcutionLogsAction extends ViewAction<Map<String, Object>> {
 		columns.add(new TextColumn4MapKey("l.author_name", "author_name",
 				getText("flow.log.author_name"), 70).setSortable(true));
 		columns.add(new TextColumn4MapKey("l.type_", "type",
-				getText("flow.log.type"), 80).setSortable(true)
+				getText("flow.log.type"), 65).setSortable(true)
 				.setUseTitleFromLabel(true)
 				.setValueFormater(new AbstractFormater<String>() {
 					@Override
@@ -127,7 +127,7 @@ public class ExcutionLogsAction extends ViewAction<Map<String, Object>> {
 				getText("flow.log.task_name"), 200).setSortable(true)
 				.setUseTitleFromLabel(true));
 		columns.add(new TextColumn4MapKey("t.assignee_name", "assignee_name",
-				getText("flow.log.assignee_name"), 70).setSortable(true)
+				getText("flow.log.assignee_name"), 150).setSortable(true)
 				.setUseTitleFromLabel(true));
 		columns.add(new TextColumn4MapKey("t.task_def_key_", "task_key",
 				getText("flow.log.task_key"), 100).setSortable(true)
@@ -151,7 +151,7 @@ public class ExcutionLogsAction extends ViewAction<Map<String, Object>> {
 
 	@Override
 	protected PageOption getHtmlPageOption() {
-		return super.getHtmlPageOption().setWidth(650).setMinWidth(400)
+		return super.getHtmlPageOption().setWidth(720).setMinWidth(400)
 				.setHeight(400).setMinHeight(200);
 	}
 
