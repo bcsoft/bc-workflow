@@ -82,8 +82,8 @@ public class Assign2GroupUserListener implements TaskListener {
 						+ groupCode.getExpressionText() + "”的岗位");
 			}
 		} else {// 按岗位名称获取岗位
-			Long orgId = (Long) delegateTask.getVariable(orgVariableName
-					.getExpressionText());
+			Long orgId = orgVariableName!=null?(Long) delegateTask.getVariable(orgVariableName
+					.getExpressionText()):null;
 			if (orgId == null) {// 处理手动发起流程的情况
 				if (null2initiator != null
 						&& "true".equals(null2initiator.getExpressionText())) {
