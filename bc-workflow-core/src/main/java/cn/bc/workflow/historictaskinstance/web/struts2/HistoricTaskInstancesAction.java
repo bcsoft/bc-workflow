@@ -127,7 +127,7 @@ public class HistoricTaskInstancesAction extends
 			columns.add(new TextColumn4MapKey("d.first_", "receiver",
 					getText("flow.task.actor"), 80));
 			columns.add(new TextColumn4MapKey("a.task_def_key_", "taskdefkey",
-					"任务key值", 80));
+					"任务key值", 80).setUseTitleFromLabel(true));
 		}
 		if(my){
 			columns.add(new TextColumn4MapKey("a.start_time_", "start_time",
