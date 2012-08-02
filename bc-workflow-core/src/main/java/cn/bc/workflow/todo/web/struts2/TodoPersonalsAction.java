@@ -186,16 +186,16 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>>{
 						}
 						if(task.get("assignee_") == null){//岗位任务
 							if(flag){
-								return "<div style=\"\"><span style=\"float: left;\" title=\"此任务已过期\" class=\"ui-icon ui-icon-clock\"></span>" +
+								return "<div title=\""+task.get("artName")+"\" style=\"\"><span style=\"float: left;\" title=\"此任务已过期\" class=\"ui-icon ui-icon-clock\"></span>" +
 										"<span style=\"float: left;\" title=\"岗位任务\" class=\"ui-icon ui-icon-person\"></span>"
 										+"&nbsp;"+"<span>"+task.get("artName")+"</span>"+"</div>";
 							}else{
-								return "<div style=\"\"><span style=\"float: left;\" title=\"岗位任务\" class=\"ui-icon ui-icon-person\"></span>"
+								return "<div title=\""+task.get("artName")+"\" style=\"\"><span style=\"float: left;\" title=\"岗位任务\" class=\"ui-icon ui-icon-person\"></span>"
 										+"&nbsp;"+"<span>"+task.get("artName")+"</span>"+"</div>";
 							}
 						}else{//个人任务
 							if(flag){
-								return "<div style=\"\"><span style=\"float: left;\" title=\"此任务已过期\" class=\"ui-icon ui-icon-clock\"></span>"
+								return "<div title=\""+task.get("artName")+" style=\"\"><span style=\"float: left;\" title=\"此任务已过期\" class=\"ui-icon ui-icon-clock\"></span>"
 										+"&nbsp;"+"<span>"+task.get("artName")+"</span>"+"</div>";
 							}else{
 								return (String) task.get("artName");
