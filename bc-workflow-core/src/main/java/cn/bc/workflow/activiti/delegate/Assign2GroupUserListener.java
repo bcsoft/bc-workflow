@@ -99,17 +99,27 @@ public class Assign2GroupUserListener implements TaskListener {
 
 					delegateTask.setAssignee(initiator);
 					return;
-				} else {
-					throw new CoreException(
-							"没有找到记录岗位所在单位ID的流程变量值：orgVariableName="
-									+ orgVariableName.getExpressionText());
+				} else {// 通过岗位名称查找岗位
+					// throw new CoreException(
+					// "没有找到记录岗位所在单位ID的流程变量值：orgVariableName="
+					// + orgVariableName.getExpressionText());
+					if (logger.isWarnEnabled())
+						logger.warn("find groups without orgId: groupName="
+								+ (groupName != null ? groupName
+										.getExpressionText() : null));
+					groups = actorService.findByName(
+							groupName.getExpressionText(),
+							new Integer[] { Actor.TYPE_GROUP },
+							new Integer[] { BCConstants.STATUS_ENABLED });
 				}
+			} else {
+				// 查找指定单位下指定名称的岗位
+				groups = actorService.findFollowerWithName(orgId,
+						groupName.getExpressionText(),
+						new Integer[] { ActorRelation.TYPE_BELONG },
+						new Integer[] { Actor.TYPE_GROUP },
+						new Integer[] { BCConstants.STATUS_ENABLED });
 			}
-			groups = actorService.findFollowerWithName(orgId,
-					groupName.getExpressionText(),
-					new Integer[] { ActorRelation.TYPE_BELONG },
-					new Integer[] { Actor.TYPE_GROUP },
-					new Integer[] { BCConstants.STATUS_ENABLED });
 			if (logger.isDebugEnabled()) {
 				logger.debug("groups.size=" + groups.size());
 			}
