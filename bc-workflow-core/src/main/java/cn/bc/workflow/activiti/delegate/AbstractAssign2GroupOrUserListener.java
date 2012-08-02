@@ -26,7 +26,7 @@ import cn.bc.identity.service.ActorService;
  * </p>
  * 
  * @author dragon
- * 
+ * @deprecated 请使用<code>Assign2GroupUserListener</code>代替此类
  */
 public abstract class AbstractAssign2GroupOrUserListener implements
 		TaskListener {

@@ -3,19 +3,26 @@
  */
 package cn.bc.workflow.activiti.delegate;
 
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.List;
 
 import org.activiti.engine.delegate.DelegateTask;
 import org.activiti.engine.delegate.TaskListener;
 import org.activiti.engine.form.TaskFormData;
 import org.activiti.engine.impl.form.TaskFormHandler;
+import org.activiti.engine.impl.persistence.entity.IdentityLinkEntity;
 import org.activiti.engine.impl.persistence.entity.TaskEntity;
 import org.activiti.engine.impl.task.TaskDefinition;
+import org.activiti.engine.task.IdentityLink;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.StringUtils;
 
+import cn.bc.core.exception.CoreException;
+import cn.bc.core.util.SpringUtils;
 import cn.bc.identity.domain.ActorHistory;
+import cn.bc.identity.service.ActorHistoryService;
 import cn.bc.identity.web.SystemContextHolder;
 import cn.bc.workflow.domain.ExcutionLog;
 import cn.bc.workflow.service.ExcutionLogService;
@@ -28,11 +35,12 @@ import cn.bc.workflow.service.ExcutionLogService;
  */
 public class TaskLogListener implements TaskListener {
 	private static final Log logger = LogFactory.getLog(TaskLogListener.class);
-	private ExcutionLogService excutionLogService;
+	protected ActorHistoryService actorHistoryService;
+	protected ExcutionLogService excutionLogService;
 
-	@Autowired
-	public void setExcutionLogService(ExcutionLogService excutionLogService) {
-		this.excutionLogService = excutionLogService;
+	public TaskLogListener() {
+		actorHistoryService = SpringUtils.getBean(ActorHistoryService.class);
+		excutionLogService = SpringUtils.getBean(ExcutionLogService.class);
 	}
 
 	public void notify(DelegateTask delegateTask) {
@@ -60,19 +68,25 @@ public class TaskLogListener implements TaskListener {
 		log.setExcutionId(delegateTask.getExecutionId());
 		log.setType(getLogTypePrefix() + delegateTask.getEventName());
 		log.setProcessInstanceId(delegateTask.getProcessInstanceId());
+
+		// 任务的ID、编码、名称
 		log.setTaskInstanceId(delegateTask.getId());
+		log.setExcutionCode(delegateTask.getTaskDefinitionKey());
+		log.setExcutionName(delegateTask.getName());
+
+		// 记录办理人信息
+		buildAssigneeInfo(delegateTask, log);
 
 		// 记录任务的表单key
 		if (delegateTask instanceof TaskEntity) {
 			TaskEntity task = (TaskEntity) delegateTask;
 			TaskDefinition d = task.getTaskDefinition();
 			if (d != null) {
-				log.setCode(d.getKey());// 任务的编码
 				TaskFormHandler fh = d.getTaskFormHandler();
 				if (fh != null) {
 					TaskFormData fd = fh.createTaskForm(task);
 					if (fd != null && fd.getFormKey() != null) {
-						log.setForm(fd.getFormKey());
+						log.setFormKey(fd.getFormKey());
 						delegateTask.setVariableLocal("formKey",
 								fd.getFormKey());// 将formKey当作流程变量记下
 					}
@@ -82,6 +96,41 @@ public class TaskLogListener implements TaskListener {
 
 		// 保存日志
 		excutionLogService.save(log);
+	}
+
+	/**
+	 * @param delegateTask
+	 * @param log
+	 */
+	protected void buildAssigneeInfo(DelegateTask delegateTask, ExcutionLog log) {
+		// 判断任务类型
+		if (delegateTask.getAssignee() != null) {// 分配到人的任务
+			ActorHistory ah = actorHistoryService.loadByCode(delegateTask
+					.getAssignee());
+			log.setAssigneeId(ah.getId());
+			log.setAssigneeCode(ah.getCode());
+			log.setAssigneeName(ah.getName());
+		} else {// 分配到候选人或候选岗位的任务
+			// 获取任务的候选者信息
+			TaskEntity task = (TaskEntity) delegateTask;
+			List<IdentityLinkEntity> identityLinks = task.getIdentityLinks();
+			// taskService.getIdentityLinksForTask(delegateTask.getId());
+			if (identityLinks == null || identityLinks.isEmpty()) {
+				throw new CoreException(
+						"can't find membership from table act_ru_identitylink: taskId="
+								+ delegateTask.getId());
+			}
+			List<String> codes = new ArrayList<String>();
+			for (IdentityLink il : identityLinks) {
+				codes.add(il.getGroupId() != null ? il.getGroupId() : il
+						.getUserId());
+			}
+			log.setAssigneeCode(StringUtils
+					.collectionToCommaDelimitedString(codes));
+			log.setAssigneeName(StringUtils
+					.collectionToCommaDelimitedString(actorHistoryService
+							.findNames(codes)));// TODO names
+		}
 	}
 
 	/**
