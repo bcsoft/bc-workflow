@@ -175,11 +175,11 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>> {
 		columns.add(new TextColumn4MapKey("art.create_time_", "create_time_",
 				getText("todo.personal.createTime"), 120).setSortable(true)
 				.setValueFormater(new CalendarFormater("yyyy-MM-dd HH:mm")));
-		// 分类
+		// 主题
 		columns.add(new TextColumn4MapKey("getProcessInstanceSubject(art.proc_inst_id_)", "subject",
-				getText("todo.personal.subject"), 200).setSortable(true)
+				getText("flow.task.subject"), 200).setSortable(true)
 				.setUseTitleFromLabel(true));
-		// 标题
+		// 名称
 		columns.add(new TextColumn4MapKey("art.name_", "artName",
 				getText("todo.personal.artName"), 200).setSortable(true)
 				.setUseTitleFromLabel(true)
@@ -237,7 +237,7 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>> {
 				.setUseTitleFromLabel(true));
 		// 流程
 		columns.add(new TextColumn4MapKey("arpName", "arpName",
-				getText("todo.personal.arpName"), 180).setSortable(true)
+				getText("flow.task.category"), 180).setSortable(true)
 				.setUseTitleFromLabel(true));
 		// // 发送人
 		// columns.add(new TextColumn4MapKey("aiuName", "aiuName",
