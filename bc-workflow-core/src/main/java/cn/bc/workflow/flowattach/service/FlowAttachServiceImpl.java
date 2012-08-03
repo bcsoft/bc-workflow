@@ -60,8 +60,8 @@ public class FlowAttachServiceImpl extends DefaultCrudService<FlowAttach>
 		AndCondition and = new AndCondition();
 		and.add(new EqualsCondition("pid", processInstanceId));
 		if (!includeTask) {
-			and.add(new OrCondition().add(new IsNullCondition("tid")).add(
-					new EqualsCondition("tid", "")));
+			and.add(new OrCondition().add(new IsNullCondition("tid"))
+					.add(new EqualsCondition("tid", "")).setAddBracket(true));
 		}
 		if (types != null && types.length > 0) {
 			if (types.length == 1) {
