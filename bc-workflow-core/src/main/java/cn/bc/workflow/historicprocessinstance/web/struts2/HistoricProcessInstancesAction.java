@@ -6,6 +6,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Controller;
@@ -28,10 +31,13 @@ import cn.bc.web.ui.html.grid.Column;
 import cn.bc.web.ui.html.grid.HiddenColumn4MapKey;
 import cn.bc.web.ui.html.grid.IdColumn4MapKey;
 import cn.bc.web.ui.html.grid.TextColumn4MapKey;
+import cn.bc.web.ui.html.page.HtmlPage;
+import cn.bc.web.ui.html.page.ListPage;
 import cn.bc.web.ui.html.page.PageOption;
 import cn.bc.web.ui.html.toolbar.Toolbar;
 import cn.bc.web.ui.html.toolbar.ToolbarButton;
 import cn.bc.web.ui.json.Json;
+import cn.bc.workflow.service.WorkflowService;
 
 /**
  * 流程监控视图Action
@@ -44,7 +50,16 @@ import cn.bc.web.ui.json.Json;
 @Controller
 public class HistoricProcessInstancesAction extends
 		ViewAction<Map<String, Object>> {
+	private static final Log logger = LogFactory
+			.getLog(HistoricProcessInstancesAction.class);
 	private static final long serialVersionUID = 1L;
+	private WorkflowService workflowService;
+
+	@Autowired
+	public void setWorkflowService(WorkflowService workflowService) {
+		this.workflowService = workflowService;
+	}
+
 	public String status = String.valueOf(BCConstants.STATUS_ENABLED);
 
 	@Override
@@ -188,6 +203,14 @@ public class HistoricProcessInstancesAction extends
 	}
 
 	@Override
+	protected HtmlPage buildHtmlPage() {
+		ListPage listPage = (ListPage) super.buildHtmlPage();
+		listPage.setDeleteUrl(getHtmlPageNamespace()
+				+ "/historicProcessInstances/delete");
+		return listPage;
+	}
+
+	@Override
 	protected Toolbar getHtmlPageToolbar() {
 		Toolbar tb = new Toolbar();
 		// 发起流程
@@ -198,6 +221,12 @@ public class HistoricProcessInstancesAction extends
 		tb.addButton(new ToolbarButton().setIcon("ui-icon-check")
 				.setText(getText("label.read"))
 				.setClick("bc.historicProcessInstanceSelectView.open"));
+
+		// 流程实例级联删除
+		if (((SystemContext) this.getContext())
+				.hasAnyRole("BC_WORKFLOW_INSTANCE_DELETE")) {
+			tb.addButton(this.getDefaultDeleteToolbarButton());
+		}
 
 		tb.addButton(Toolbar.getDefaultToolbarRadioGroup(this.getStatus(),
 				"status", BCConstants.STATUS_ENABLED,
@@ -261,6 +290,30 @@ public class HistoricProcessInstancesAction extends
 	protected void initConditionsFrom() throws Exception {
 
 	}
+
 	// ==高级搜索代码结束==
 
+	public String id;
+
+	/**
+	 * 删除流程实例
+	 * 
+	 * @return
+	 * @throws Exception
+	 */
+	public String delete() throws Exception {
+		Json json = new Json();
+		try {
+			this.workflowService.deleteInstance(id);
+			json.put("success", true);
+			json.put("msg", getText("form.delete.success"));
+		} catch (Exception e) {
+			logger.warn(e.getMessage(), e);
+			json.put("success", false);
+			json.put("msg", e.getMessage());
+			json.put("e", e.getClass().getSimpleName());
+		}
+		this.json = json.toString();
+		return "json";
+	}
 }

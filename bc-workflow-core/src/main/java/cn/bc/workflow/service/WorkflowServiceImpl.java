@@ -226,7 +226,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 		// 保存excutionlog信息
 		saveExcutionLogInfo4DelegateAndAssign(taskId, toUser,
 				ExcutionLog.TYPE_TASK_INSTANCE_DELEGATE, "委托给");
-		
+
 		return this.actorHistoryService.loadByCode(toUser);
 	}
 
@@ -240,7 +240,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 		// 保存excutionlog信息
 		saveExcutionLogInfo4DelegateAndAssign(taskId, toUser,
 				ExcutionLog.TYPE_TASK_INSTANCE_ASSIGN, "分派给");
-		
+
 		return this.actorHistoryService.loadByCode(toUser);
 	}
 
@@ -559,4 +559,27 @@ public class WorkflowServiceImpl implements WorkflowService {
 		return taskFlowAttachs;
 	}
 
+	public void deleteInstance(String instanceId) {
+		if (instanceId == null || instanceId.length() == 0) {
+			throw new CoreException("没有指定要删除的流程实例信息！");
+		}
+		HistoricProcessInstance pi = this.historyService
+				.createHistoricProcessInstanceQuery()
+				.processInstanceId(instanceId).singleResult();
+		if (pi == null) {
+			throw new CoreException("要删除的流程实例在系统总已经不存在：id=" + instanceId);
+		}
+		boolean flowing = pi.getEndTime() == null;
+
+		// 删除流转中数据
+		if (flowing) {
+			this.runtimeService.deleteProcessInstance(instanceId,
+					"force-delete");
+		}
+
+		// 删除历史数据
+		this.historyService.deleteHistoricProcessInstance(instanceId);
+
+		// 删除流转日志、意见、附件 TODO
+	}
 }

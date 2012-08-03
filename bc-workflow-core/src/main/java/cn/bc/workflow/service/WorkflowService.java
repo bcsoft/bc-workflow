@@ -54,6 +54,13 @@ public interface WorkflowService {
 	void deleteDeployment(String deploymentId, boolean cascade);
 
 	/**
+	 * 删除指定的流程实例信息
+	 * 
+	 * @param instanceId
+	 */
+	void deleteInstance(String instanceId);
+
+	/**
 	 * 启动指定编码流程的最新版本
 	 * 
 	 * @param key
@@ -98,7 +105,7 @@ public interface WorkflowService {
 	 *            任务ID
 	 * @param toUser
 	 *            所委派给用户的帐号
-	 * @return 
+	 * @return
 	 */
 	ActorHistory delegateTask(String taskId, String toUser);
 
