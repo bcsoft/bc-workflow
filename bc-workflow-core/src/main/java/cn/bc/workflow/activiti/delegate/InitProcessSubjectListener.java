@@ -36,6 +36,9 @@ public class InitProcessSubjectListener implements ExecutionListener {
 	private Expression subject;
 
 	public void notify(DelegateExecution execution) throws Exception {
+		if (execution.hasVariable("subject"))
+			return;
+
 		Calendar now = Calendar.getInstance();
 		if (subject == null) {
 			if (execution instanceof ExecutionEntity) {
@@ -57,14 +60,15 @@ public class InitProcessSubjectListener implements ExecutionListener {
 
 			// 用freemarker格式化标题
 			String _subject = FreeMarkerUtils.format(
-					subject.getExpressionText(), getDefaultParams());
+					subject.getExpressionText(),
+					getDefaultParams(execution.getVariablesLocal()));
 			execution.setVariable("subject", _subject);
 			if (logger.isDebugEnabled())
 				logger.debug("subject1=" + _subject);
 		}
 	}
 
-	protected Map<String, Object> getDefaultParams() {
+	protected Map<String, Object> getDefaultParams(Map<String, Object> variables) {
 		Map<String, Object> params = new LinkedHashMap<String, Object>();
 
 		// 当前时间
@@ -80,6 +84,10 @@ public class InitProcessSubjectListener implements ExecutionListener {
 		now.add(Calendar.MONTH, 1);
 		params.put("nextMonth", now.get(Calendar.MONTH) + 1);
 		params.put("yearOfNextMonth", now.get(Calendar.YEAR) + "");
+
+		// 添加流程变量
+		params.putAll(variables);
+
 		return params;
 	}
 }
