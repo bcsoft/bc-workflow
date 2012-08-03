@@ -220,7 +220,7 @@ public class DeploysAction extends ViewAction<Map<String, Object>> {
 
 	@Override
 	protected PageOption getHtmlPageOption() {
-		return super.getHtmlPageOption().setWidth(850).setMinWidth(400)
+		return super.getHtmlPageOption().setWidth(890).setMinWidth(400)
 				.setHeight(400).setMinHeight(300);
 	}
 
@@ -249,6 +249,8 @@ public class DeploysAction extends ViewAction<Map<String, Object>> {
 				tb.addButton(new ToolbarButton().setIcon("ui-icon-trash")
 						.setText(getText("label.deploy.cascadeCancel"))
 						.setClick("bc.deploy.cascadeCancel"));
+				// 强制删除
+				tb.addButton(getDefaultDeleteToolbarButton());
 			}
 		}
 

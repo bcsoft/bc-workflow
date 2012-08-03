@@ -2,12 +2,14 @@ package cn.bc.workflow.deploy.service;
 
 import java.io.FileInputStream;
 import java.io.InputStream;
+import java.io.Serializable;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
 import java.util.zip.ZipInputStream;
 
 import org.activiti.engine.RepositoryService;
+import org.activiti.engine.RuntimeService;
 import org.activiti.engine.repository.Deployment;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -32,6 +34,12 @@ public class DeployServiceImpl extends DefaultCrudService<Deploy> implements
 		DeployService {
 	private static Log logger = LogFactory.getLog(DeployServiceImpl.class);
 	private OperateLogService operateLogService;
+	private RuntimeService runtimeService;
+
+	@Autowired
+	public void setRuntimeService(RuntimeService runtimeService) {
+		this.runtimeService = runtimeService;
+	}
 
 	@Autowired
 	public void setOperateLogService(OperateLogService operateLogService) {
@@ -126,12 +134,12 @@ public class DeployServiceImpl extends DefaultCrudService<Deploy> implements
 	/**
 	 * 取消部署需要部署流程id,isCascade(是否级联取消)
 	 * 
-	 * @param excludeId
+	 * @param deploymentId
 	 * @param isCascade
 	 */
-	public void dodeployCancel(Long excludeId, Boolean isCascade) {
+	public void dodeployCancel(Long deploymentId, Boolean isCascade) {
 		// 判断发布类型
-		Deploy deploy = this.deployDao.load(excludeId);
+		Deploy deploy = this.deployDao.load(deploymentId);
 		if (null != deploy) {
 			if (isCascade) {
 				repositoryService.deleteDeployment(deploy.getDeploymentId(),
@@ -144,15 +152,33 @@ public class DeployServiceImpl extends DefaultCrudService<Deploy> implements
 			// 设置最后取消信息
 			deploy.setDeployer(SystemContextHolder.get().getUserHistory());
 			deploy.setDeployDate(Calendar.getInstance());
-			//清空与 [act_re_deployment]表外键关联的id
-			deploy.setDeploymentId(null); 
-			
+			// 清空与 [act_re_deployment]表外键关联的id
+			deploy.setDeploymentId(null);
+
 			this.deployDao.save(deploy);// 保存
 
 			// 记录取消发布日志
 			this.operateLogService.saveWorkLog(Deploy.class.getSimpleName(),
 					deploy.getId().toString(), "取消发布" + deploy.getSubject()
 							+ "的流程信息", null, "undeploy");
+		}
+	}
+
+	@Override
+	public void delete(Serializable id) {
+		// 先级联取消发布
+		this.dodeployCancel((Long) id, true);
+		
+		// 删除流转日志、意见、附件 TODO
+
+		// 后彻底删除
+		super.delete(id);
+	}
+
+	@Override
+	public void delete(Serializable[] ids) {
+		for (Serializable id : ids) {
+			super.delete(id);
 		}
 	}
 
