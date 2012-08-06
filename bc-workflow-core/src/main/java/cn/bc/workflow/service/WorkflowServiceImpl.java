@@ -27,6 +27,7 @@ import org.activiti.engine.task.Task;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.util.Assert;
 
 import cn.bc.core.exception.CoreException;
@@ -34,6 +35,7 @@ import cn.bc.core.util.DateUtils;
 import cn.bc.core.util.JsonUtils;
 import cn.bc.identity.domain.ActorHistory;
 import cn.bc.identity.service.ActorHistoryService;
+import cn.bc.identity.service.ActorService;
 import cn.bc.identity.web.SystemContextHolder;
 import cn.bc.template.domain.Template;
 import cn.bc.template.service.TemplateService;
@@ -58,9 +60,15 @@ public class WorkflowServiceImpl implements WorkflowService {
 	private ExcutionLogService excutionLogService;
 	private ActorHistoryService actorHistoryService;
 	private FlowAttachService flowAttachService;
-
 	// private FormService formService;
 	private HistoryService historyService;
+	private ActorService actorService;
+
+	@Autowired
+	public void setActorService(
+			@Qualifier(value = "actorService") ActorService actorService) {
+		this.actorService = actorService;
+	}
 
 	@Autowired
 	public void setFlowAttachService(FlowAttachService flowAttachService) {
@@ -414,7 +422,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 				+ processInstanceId);
 		params.put("id", pi.getId());
 		params.put("pdid", pi.getProcessDefinitionId());
-		params.put("startUser", pi.getStartUserId());
+		params.put("startUser", getActorNameByCode(pi.getStartUserId()));
 		params.put("businessKey", pi.getBusinessKey());
 		params.put("startTime", pi.getStartTime());
 		params.put("endTime", pi.getEndTime());
@@ -471,8 +479,9 @@ public class WorkflowServiceImpl implements WorkflowService {
 			taskCode = task.getTaskDefinitionKey();
 			taskParams = new HashMap<String, Object>();
 			taskParams.put("id", task.getId());
+			taskParams.put("code", taskCode);
 			taskParams.put("owner", task.getOwner());
-			taskParams.put("assignee", task.getAssignee());
+			taskParams.put("assignee", getActorNameByCode(task.getAssignee()));
 			taskParams.put("desc", task.getDescription());
 			taskParams.put("dueDate", task.getDueDate());
 			taskParams.put("priority", task.getPriority());
@@ -503,6 +512,10 @@ public class WorkflowServiceImpl implements WorkflowService {
 		}
 
 		return params;
+	}
+
+	private Object getActorNameByCode(String userCode) {
+		return actorService.loadActorNameByCode(userCode);
 	}
 
 	/**
