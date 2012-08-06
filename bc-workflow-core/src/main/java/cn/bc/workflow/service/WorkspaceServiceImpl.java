@@ -207,7 +207,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 		item.put("type", type);// 信息类型
 		item.put("iconClass", "ui-icon-flag");// 左侧显示的小图标
 		item.put("subject", "统计信息");// 标题
-		item.put("link", false);// 非链接标题
+		item.put("link", true);// 非链接标题
 		item.put("hasButtons", false);// 无操作按钮
 		detail = new ArrayList<String>();
 		item.put("detail", detail);// 详细信息
