@@ -79,13 +79,13 @@ public class ExcutionLogDaoImpl extends HibernateCrudJpaDao<ExcutionLog>
 	public String findTaskFormKey(String taskId) {
 		if (taskId == null || taskId.length() == 0)
 			return null;
-		String hql = "select id,formkey from bc_wf_excution_log where tid=?";
+		String hql = "select id,formkey from bc_wf_excution_log where tid=? and type_=?";
 		if (logger.isDebugEnabled()) {
 			logger.debug("hql=" + hql);
 			logger.debug("taskId=" + taskId);
 		}
 		List<Object[]> all = HibernateJpaNativeQuery.executeNativeSql(
-				getJpaTemplate(), hql, new Object[] { taskId }, null);
+				getJpaTemplate(), hql, new Object[] { taskId,"task_create" }, null);
 		if (all == null || all.isEmpty()) {
 			return null;
 		} else {
