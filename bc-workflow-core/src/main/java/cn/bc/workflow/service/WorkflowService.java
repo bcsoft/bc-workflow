@@ -4,7 +4,6 @@
 package cn.bc.workflow.service;
 
 import java.io.InputStream;
-import java.util.List;
 import java.util.Map;
 
 import org.activiti.engine.repository.Deployment;
@@ -12,7 +11,6 @@ import org.activiti.engine.repository.ProcessDefinition;
 import org.activiti.engine.runtime.ProcessInstance;
 
 import cn.bc.identity.domain.ActorHistory;
-import cn.bc.workflow.flowattach.domain.FlowAttach;
 
 /**
  * 工作流常用方法封装的Service
@@ -205,4 +203,46 @@ public interface WorkflowService {
 	 * @return
 	 */
 	Map<String, Object> getProcessHistoryParams(String processInstanceId);
+
+	/**
+	 * 获取指定流程实例用于格式化Word模板的键值替换参数
+	 * <ui>
+	 * <li>owner: {String} </li>
+	 * <li>assignee: {String} 办理人</li>
+	 * <li>desc: {String} 附加说明</li>
+	 * <li>dueDate: {Date} 办理期限</li>
+	 * <li>priority: {int} 优先级</li>
+	 * <li>startTime: {Date} 任务发起时间</li>
+	 * <li>endTime: {Date} 任务结束时间</li>
+	 * <li>duration: {Long} 任务耗时(毫秒)</li>
+	 * <li>key: {String} 任务编码</li>
+	 * <li>name: {String} 任务名称</li>
+	 * <li>subject: {String} 任务主题</li>
+	 * <li>vs: {Map<String, Object>} 任务的本地流程变量集(key为流程变量的名称)</li>
+	 * <li>comments: {List<FlowAttach> comments} 任务的意见集</li>
+	 * <li>comments_str: {String} 任务的意见字符串连接</li>
+	 * <li>pi: {Map<String, Object>} 流程实例数据，其值为Map格式：
+	 * 	<ui>
+	 * 		<li>startUser: {String} 流程发起人姓名</li>
+	 * 		<li>startTime: {Date} 流程发起时间</li>
+	 * 		<li>endTime: {Date} 流程结束时间</li>
+	 * 		<li>duration: {Long} 流转耗时(毫秒)</li>
+	 * 		<li>category: {String} 流程所属分类 </li>
+	 * 		<li>key: {String} 流程编码</li>
+	 * 		<li>name: {String} 流程名称</li>
+	 * 		<li>subject: {String} 流程主题</li>
+	 * 		<li>vs: {Map<String, Object>} 流程变量集(key为流程变量的名称)</li>
+	 * 		<li>comments: {List<FlowAttach> comments} 流程意见集</li>
+	 * 		<li>comments_str: {String} 流程意见字符串连接</li>
+	 * 	</ui>
+	 * </li>
+	 * </ui>
+	 * 
+	 * @param taskId 任务实例的ID
+	 * @param withProcessInfo 是否返回流程实例的全局
+	 * 
+	 * @return
+	 */
+	Map<String, Object> getTaskHistoryParams(String taskId, boolean withProcessInfo);
+	Map<String, Object> getTaskHistoryParams(String taskId);
 }
