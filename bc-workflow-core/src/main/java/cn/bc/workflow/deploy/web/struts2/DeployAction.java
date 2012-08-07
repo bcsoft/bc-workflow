@@ -67,11 +67,10 @@ public class DeployAction extends FileEntityAction<Long, Deploy> {
 
 	@Override
 	public boolean isReadonly() {
-		// 模板管理员或系统管理员
+		// 权限控制：流程部署管理、流程管理或系统管理员
 		SystemContext context = (SystemContext) this.getContext();
-		// 配置权限：模板管理员
 		return !context.hasAnyRole(getText("key.role.bc.workflow.deploy"),
-				getText("key.role.bc.admin"));
+				getText("key.role.bc.workflow"), getText("key.role.bc.admin"));
 	}
 
 	@Override
