@@ -492,7 +492,11 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 
 			// 任务的基本信息
 			taskItem = new HashMap<String, Object>();
-			taskItems.add(taskItem);
+			if (isMyTask) {
+				taskItems.add(0, taskItem);
+			} else {
+				taskItems.add(taskItem);
+			}
 			taskItem.put("id", task.getId());// 任务id
 			taskItem.put("isUserTask", isUserTask);// 是否是个人待办:true-个人待办、false-组待办
 			taskItem.put("isMyTask", isMyTask);// 是否是我的个人或组待办
