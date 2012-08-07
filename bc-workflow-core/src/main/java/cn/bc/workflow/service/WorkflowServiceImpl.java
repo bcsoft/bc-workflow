@@ -6,6 +6,7 @@ package cn.bc.workflow.service;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -424,8 +425,8 @@ public class WorkflowServiceImpl implements WorkflowService {
 		params.put("pdid", pi.getProcessDefinitionId());
 		params.put("startUser", getActorNameByCode(pi.getStartUserId()));
 		params.put("businessKey", pi.getBusinessKey());
-		params.put("startTime", pi.getStartTime());
-		params.put("endTime", pi.getEndTime());
+		addDateParam(params, "startTime", pi.getStartTime());
+		addDateParam(params, "endTime", pi.getEndTime());
 		params.put("duration", pi.getDurationInMillis());
 		params.put("deleteReason", pi.getDeleteReason());
 
@@ -485,8 +486,8 @@ public class WorkflowServiceImpl implements WorkflowService {
 			taskParams.put("desc", task.getDescription());
 			taskParams.put("dueDate", task.getDueDate());
 			taskParams.put("priority", task.getPriority());
-			taskParams.put("startTime", task.getStartTime());
-			taskParams.put("endTime", task.getEndTime());
+			addDateParam(taskParams, "startTime", task.getStartTime());
+			addDateParam(taskParams, "endTime", task.getEndTime());
 			taskParams.put("duration", task.getDurationInMillis());
 			taskParams.put("deleteReason", task.getDeleteReason());
 
@@ -512,6 +513,12 @@ public class WorkflowServiceImpl implements WorkflowService {
 		}
 
 		return params;
+	}
+
+	private void addDateParam(Map<String, Object> params, String key, Date date) {
+		params.put(key, date);
+		params.put(key + "2d", DateUtils.formatDate(date));
+		params.put(key + "2m", DateUtils.formatDateTime2Minute(date));
 	}
 
 	private Object getActorNameByCode(String userCode) {
