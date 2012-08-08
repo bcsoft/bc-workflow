@@ -74,10 +74,10 @@ public class TodoManagesAction extends ViewAction<Map<String, Object>>{
 		SqlObject<Map<String, Object>> sqlObject = new SqlObject<Map<String, Object>>();
 		// 构建查询语句,where和order by不要包含在sql中(要统一放到condition中)
 		StringBuffer sql = new StringBuffer();
-		sql.append("select distinct art.id_,art.proc_inst_id_ procInstId,art.name_ artName,art.due_date_,art.create_time_,arp.name_ arpName,art.description_,aiu.first_,art.assignee_");
+		sql.append("select distinct art.id_,art.proc_inst_id_ procInstId,art.name_ artName,art.due_date_,art.create_time_,arp.name_ arpName,art.description_,aiu.name,art.assignee_");
 		sql.append(",(case when (select count(*) from act_ru_task rt inner join act_ru_identitylink ri on rt.id_ = ri.task_id_ where rt.assignee_ is null) > 0 then TRUE else FALSE end) isCandidate");
-		sql.append(",(select string_agg(aig.name_,',') from act_ru_task rt2 inner join act_ru_identitylink ri2 on rt2.id_ = ri2.task_id_ inner join act_id_group aig on ri2.group_id_ = aig.id_ where rt2.id_ = art.id_)groupIds");
-		sql.append(",(select string_agg(aiu.first_,',') from act_ru_task rt3 inner join act_ru_identitylink ri3 on rt3.id_ = ri3.task_id_ inner join act_id_user aiu on ri3.user_id_ = aiu.id_ where rt3.id_ = art.id_)userIds");
+		sql.append(",(select string_agg(aig.name,',') from act_ru_task rt2 inner join act_ru_identitylink ri2 on rt2.id_ = ri2.task_id_ inner join bc_identity_actor aig on ri2.group_id_ = aig.code where rt2.id_ = art.id_) groupIds");
+		sql.append(",(select string_agg(aiu.name,',') from act_ru_task rt3 inner join act_ru_identitylink ri3 on rt3.id_ = ri3.task_id_ inner join bc_identity_actor aiu on ri3.user_id_ = aiu.code where rt3.id_ = art.id_) userIds");
 		sql.append(" from act_ru_task art");
 		sql.append(" left join bc_identity_actor aiu on art.assignee_ = aiu.code");
 		sql.append(" left join act_re_procdef arp on art.proc_def_id_ = arp.id_");
