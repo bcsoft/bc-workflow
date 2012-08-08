@@ -239,7 +239,7 @@ public interface WorkflowService {
 	 * </ui>
 	 * 
 	 * @param taskId 任务实例的ID
-	 * @param withProcessInfo 是否返回流程实例的全局
+	 * @param withProcessInfo 是否返回流程实例的全局数据
 	 * 
 	 * @return
 	 */
