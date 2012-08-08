@@ -170,8 +170,8 @@ public class DeployAction extends FileEntityAction<Long, Deploy> {
 		super.initForm(editable);
 		SystemContext context = getSystyemContext();
 		Deploy e = this.getE();
-		e.setDeployer(context.getUserHistory());
-		e.setDeployDate(Calendar.getInstance());
+		e.setModifier(context.getUserHistory());
+		e.setModifiedDate(Calendar.getInstance());
 		// 状态列表
 		statusesValue = this.getStatuses();
 	}
