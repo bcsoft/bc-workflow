@@ -383,6 +383,11 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 	private final static String ITEM_BUTTON_EDIT = "<span class='itemOperate edit'><span class='ui-icon ui-icon-pencil'></span><span class='text link'>编辑</span></span>";
 	private final static String ITEM_BUTTON_DELETE = "<span class='itemOperate delete'><span class='ui-icon ui-icon-closethick'></span><span class='text link'>删除</span></span>";
 	private final static String ITEM_BUTTON_DOWNLOAD = "<span class='itemOperate download'><span class='ui-icon ui-icon-arrowthickstop-1-s'></span><span class='text link'>下载</span></span>";
+	private final static String ITEM_BUTTON_ADDCOMMENT = "<span class='mainOperate addComment'><span class='ui-icon ui-icon-document'></span><span class='text link'>添加意见</span></span>";
+	private final static String ITEM_BUTTON_ADDATTACH = "<span class='mainOperate addAttach'><span class='ui-icon ui-icon-arrowthick-1-n'></span><span class='text link'>添加附件</span></span>";
+
+	private final static String ITEM_BUTTON_SHOWDIAGRAM = "<span class='mainOperate flowImage'><span class='ui-icon ui-icon-image'></span><span class='text link'>查看流程图</span></span>";
+	private final static String ITEM_BUTTON_SHOWLOG = "<span class='mainOperate excutionLog'><span class='ui-icon ui-icon-tag' title='查看流转日志'></span></span>";
 
 	/**
 	 * 创建默认的公共信息(common)、个人待办信息(todo_user)、岗位待办信息(todo_group)区标题右侧的操作按钮
@@ -399,20 +404,22 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 			boolean isMyTask) {
 		StringBuffer buttons = new StringBuffer();
 		if ("common".equals(type)) {
-			buttons.append("<span class='mainOperate flowImage'><span class='ui-icon ui-icon-image'></span><span class='text link'>查看流程图</span></span>");
-			if (flowing) {
-				buttons.append("<span class='mainOperate addComment'><span class='ui-icon ui-icon-document'></span><span class='text link'>添加意见</span></span>");
-				buttons.append("<span class='mainOperate addAttach'><span class='ui-icon ui-icon-arrowthick-1-n'></span><span class='text link'>添加附件</span></span>");
+			buttons.append(ITEM_BUTTON_SHOWDIAGRAM);// 查看流程图
+			if (flowing
+					&& SystemContextHolder.get().hasAnyRole(
+							"BC_WORKFLOW_ADDGLOBALATTACH")) {// 有权限才能添加全局意见附件
+				buttons.append(ITEM_BUTTON_ADDCOMMENT);// 添加意见
+				buttons.append(ITEM_BUTTON_ADDATTACH);// 添加附件
 			}
-			buttons.append("<span class='mainOperate excutionLog'><span class='ui-icon ui-icon-tag' title='查看流转日志'></span></span>");
+			buttons.append(ITEM_BUTTON_SHOWLOG);// 查看流转日志
 		} else if ("todo_user".equals(type)) {
 			if (flowing && isMyTask) {
 				if (SystemContextHolder.get()
 						.hasAnyRole("BC_WORKFLOW_DELEGATE"))// 有权限才能委派任务
 					buttons.append("<span class='mainOperate delegate'><span class='ui-icon ui-icon-person'></span><span class='text link'>委派任务</span></span>");
 
-				buttons.append("<span class='mainOperate addComment'><span class='ui-icon ui-icon-document'></span><span class='text link'>添加意见</span></span>");
-				buttons.append("<span class='mainOperate addAttach'><span class='ui-icon ui-icon-arrowthick-1-n'></span><span class='text link'>添加附件</span></span>");
+				buttons.append(ITEM_BUTTON_ADDCOMMENT);// 添加意见
+				buttons.append(ITEM_BUTTON_ADDATTACH);// 添加附件
 				buttons.append("<span class='mainOperate finish'><span class='ui-icon ui-icon-check'></span><span class='text link'>完成办理</span></span>");
 			}
 		} else if ("todo_group".equals(type)) {

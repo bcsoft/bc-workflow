@@ -419,8 +419,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 		HistoricProcessInstance pi = historyService
 				.createHistoricProcessInstanceQuery()
 				.processInstanceId(processInstanceId).singleResult();
-		Assert.notNull(pi, "找不到指定的流程实例记录：processInstanceId="
-				+ processInstanceId);
+		Assert.notNull(pi, "can't find process instance:id" + processInstanceId);
 		params.put("id", pi.getId());
 		params.put("pdid", pi.getProcessDefinitionId());
 		params.put("startUser", getActorNameByCode(pi.getStartUserId()));
@@ -510,6 +509,112 @@ public class WorkflowServiceImpl implements WorkflowService {
 
 			// add：如果一个节点产生多个实例，只会有最后执行任务的相关信息
 			params.put(taskCode, taskParams);
+		}
+
+		return params;
+	}
+
+	public Map<String, Object> getTaskHistoryParams(String taskId) {
+		return getTaskHistoryParams(taskId, false);
+	}
+
+	public Map<String, Object> getTaskHistoryParams(String taskId,
+			boolean withProcessInfo) {
+		Assert.notNull(taskId, "task instance id must not to be null:" + taskId);
+		Map<String, Object> params = new HashMap<String, Object>();
+		Map<String, Object> variableParams;
+
+		// 任务实例
+		HistoricTaskInstance task = this.historyService
+				.createHistoricTaskInstanceQuery().taskId(taskId)
+				.singleResult();
+		Assert.notNull(task, "can't find task instance:id=" + taskId);
+		params = new HashMap<String, Object>();
+		params.put("id", task.getId());
+		params.put("code", task.getTaskDefinitionKey());
+		params.put("owner", task.getOwner());
+		params.put("assignee", getActorNameByCode(task.getAssignee()));
+		params.put("desc", task.getDescription());
+		params.put("dueDate", task.getDueDate());
+		params.put("priority", task.getPriority());
+		addDateParam(params, "startTime", task.getStartTime());
+		addDateParam(params, "endTime", task.getEndTime());
+		params.put("duration", task.getDurationInMillis());
+		params.put("deleteReason", task.getDeleteReason());
+
+		// 任务的本地流程变量
+		HistoricVariableUpdate v;
+		List<HistoricDetail> variables = historyService
+				.createHistoricDetailQuery().taskId(taskId).variableUpdates()
+				.orderByTime().asc().list();
+		variableParams = new HashMap<String, Object>();
+		for (HistoricDetail hd : variables) {
+			v = (HistoricVariableUpdate) hd;
+			variableParams.put(v.getVariableName(),
+					convertSpecialValiableValue(v));
+		}
+		params.put("vs", variableParams);
+
+		// 任务的意见
+		List<FlowAttach> comments = flowAttachService
+				.findCommentsByTask(new String[] { taskId });
+		params.put("comments", comments);
+		params.put("comments_str", buildCommentsString(comments));
+
+		if (withProcessInfo) {
+			Map<String, Object> processParams = new HashMap<String, Object>();
+
+			// 流程实例
+			HistoricProcessInstance pi = historyService
+					.createHistoricProcessInstanceQuery()
+					.processInstanceId(task.getProcessInstanceId())
+					.singleResult();
+			Assert.notNull(
+					pi,
+					"can't find process instance:id"
+							+ task.getProcessInstanceId());
+			processParams.put("id", pi.getId());
+			processParams.put("pdid", pi.getProcessDefinitionId());
+			processParams.put("startUser",
+					getActorNameByCode(pi.getStartUserId()));
+			processParams.put("businessKey", pi.getBusinessKey());
+			addDateParam(processParams, "startTime", pi.getStartTime());
+			addDateParam(processParams, "endTime", pi.getEndTime());
+			processParams.put("duration", pi.getDurationInMillis());
+			processParams.put("deleteReason", pi.getDeleteReason());
+
+			// 流程定义
+			ProcessDefinition pd = repositoryService
+					.createProcessDefinitionQuery()
+					.processDefinitionId(pi.getProcessDefinitionId())
+					.singleResult();
+			processParams.put("category", pd.getCategory());
+			processParams.put("key", pd.getKey());
+			processParams.put("name", pd.getName());
+			processParams.put("version", pd.getVersion());
+
+			// 流程变量
+			variables = historyService.createHistoricDetailQuery()
+					.processInstanceId(task.getProcessInstanceId())
+					.variableUpdates().orderByTime().asc().list();
+			variableParams = new HashMap<String, Object>();
+			for (HistoricDetail hd : variables) {
+				v = (HistoricVariableUpdate) hd;
+				variableParams.put(v.getVariableName(),
+						convertSpecialValiableValue(v));
+			}
+			processParams.put("vs", variableParams);
+
+			// 全局意见
+			comments = flowAttachService.findCommentsByProcess(
+					task.getProcessInstanceId(), false);
+			processParams.put("comments", comments);
+			if (logger.isDebugEnabled()) {
+				logger.debug("pi.comments.size=" + comments.size());
+			}
+			processParams.put("pi.comments_str", buildCommentsString(comments));
+
+			params.put("pi", processParams);
 		}
 
 		return params;
