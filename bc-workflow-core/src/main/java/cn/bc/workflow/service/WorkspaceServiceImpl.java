@@ -650,6 +650,8 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 			// 任务的基本信息
 			taskItem = new HashMap<String, Object>();
 			taskItems.add(taskItem);
+			taskItem.put("key", task.getTaskDefinitionKey());// 任务的Key
+			taskItem.put("orderNo", task.getTaskDefinitionKey());// 使用任务的Key作为业务排序号
 			taskItem.put("id", task.getId());// 任务id
 			taskItem.put("assignee", getActorNameByCode(task.getAssignee()));// 办理人
 			taskItem.put("owner", getActorNameByCode(task.getOwner()));// 委托人
@@ -680,6 +682,10 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 					this.findTaskFlowAttachs(task.getId(), allFlowAttachs));
 
 			// 任务的汇总信息
+			taskItem.put("startTime", DateUtils.formatDateTime(task.getStartTime()));// 任务创建时间
+			taskItem.put("endTime", DateUtils.formatDateTime(task.getEndTime()));// 任务完成时间
+			taskItem.put("startTime2m", DateUtils.formatDateTime2Minute(task.getStartTime()));// 任务创建时间
+			taskItem.put("endTime2m", DateUtils.formatDateTime2Minute(task.getEndTime()));// 任务完成时间
 			taskItem.put(
 					"wasteTime",
 					"办理耗时："
@@ -691,8 +697,6 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 							+ "到"
 							+ DateUtils.formatDateTime2Minute(task.getEndTime())
 							+ ")");
-			taskItem.put("startTime",
-					DateUtils.formatDateTime2Minute(task.getStartTime()));
 			if (task.getDueDate() != null) {
 				taskItem.put(
 						"dueDate",
