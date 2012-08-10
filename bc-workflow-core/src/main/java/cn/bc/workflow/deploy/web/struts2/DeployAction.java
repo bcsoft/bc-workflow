@@ -1,7 +1,6 @@
 package cn.bc.workflow.deploy.web.struts2;
 
 import java.io.InputStream;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -122,6 +121,11 @@ public class DeployAction extends FileEntityAction<Long, Deploy> {
 	@Override
 	protected void beforeSave(Deploy entity) {
 		super.beforeSave(entity);
+
+		// 处理发布人
+		if (getE().getDeployer() != null && getE().getDeployer().isNew())
+			getE().setDeployer(null);
+
 		// 处理分配的用户
 		Long[] userIds = null;
 		if (this.assignUserIds != null && this.assignUserIds.length() > 0) {
@@ -168,10 +172,6 @@ public class DeployAction extends FileEntityAction<Long, Deploy> {
 	@Override
 	protected void initForm(boolean editable) throws Exception {
 		super.initForm(editable);
-		SystemContext context = getSystyemContext();
-		Deploy e = this.getE();
-		e.setModifier(context.getUserHistory());
-		e.setModifiedDate(Calendar.getInstance());
 		// 状态列表
 		statusesValue = this.getStatuses();
 	}
