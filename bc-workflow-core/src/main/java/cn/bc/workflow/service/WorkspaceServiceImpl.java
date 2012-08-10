@@ -656,6 +656,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 			taskItem.put("assignee", getActorNameByCode(task.getAssignee()));// 办理人
 			taskItem.put("owner", getActorNameByCode(task.getOwner()));// 委托人
 			taskItem.put("link", false);// 链接标题
+			taskItem.put("name", task.getName());// 名称
 			subject = excutionLogService.getTaskVariableLocal(task.getId(),
 					"subject");
 			if (subject != null) {
@@ -682,10 +683,13 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 					this.findTaskFlowAttachs(task.getId(), allFlowAttachs));
 
 			// 任务的汇总信息
-			taskItem.put("startTime", DateUtils.formatDateTime(task.getStartTime()));// 任务创建时间
+			taskItem.put("startTime",
+					DateUtils.formatDateTime(task.getStartTime()));// 任务创建时间
 			taskItem.put("endTime", DateUtils.formatDateTime(task.getEndTime()));// 任务完成时间
-			taskItem.put("startTime2m", DateUtils.formatDateTime2Minute(task.getStartTime()));// 任务创建时间
-			taskItem.put("endTime2m", DateUtils.formatDateTime2Minute(task.getEndTime()));// 任务完成时间
+			taskItem.put("startTime2m",
+					DateUtils.formatDateTime2Minute(task.getStartTime()));// 任务创建时间
+			taskItem.put("endTime2m",
+					DateUtils.formatDateTime2Minute(task.getEndTime()));// 任务完成时间
 			taskItem.put(
 					"wasteTime",
 					"办理耗时："
@@ -696,7 +700,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 									.getStartTime())
 							+ "到"
 							+ DateUtils.formatDateTime2Minute(task.getEndTime())
-							+ ")");
+							+ ") - " + task.getTaskDefinitionKey());
 			if (task.getDueDate() != null) {
 				taskItem.put(
 						"dueDate",
