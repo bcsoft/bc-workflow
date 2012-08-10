@@ -187,7 +187,7 @@ public class HistoricProcessInstancesAction extends
 
 	@Override
 	protected String[] getGridSearchFields() {
-		return new String[] { "b.name_", "b.key_", "c.first_",
+		return new String[] { "b.name_", "b.key_", "c.name",
 				"getProcessInstanceSubject(a.proc_inst_id_)" };
 	}
 
