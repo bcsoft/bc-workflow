@@ -14,11 +14,17 @@
 		<action name="paging" class="historicTaskInstancesAction" method="paging">
 			<param name="my">true</param>
 		</action>
+		<action name="conditions" class="historicTaskInstancesAction" method="conditions">
+			<result name="success">/bc-workflow/historictaskinstance/conditions.jsp</result>
+		</action>
 	</package>
 	<!-- 任务监控 -->
-	<package name="taskMonitors" extends="bc-default" namespace="/bc-workflow/taskMonitors">
+	<package name="historicTaskInstances" extends="bc-default" namespace="/bc-workflow/historicTaskInstances">
 		<action name="list" class="historicTaskInstancesAction" method="list"/>
 		<action name="data" class="historicTaskInstancesAction" method="data"/>
 		<action name="paging" class="historicTaskInstancesAction" method="paging"/>
+		<action name="conditions" class="historicTaskInstancesAction" method="conditions">
+			<result name="success">/bc-workflow/historictaskinstance/conditions.jsp</result>
+		</action>
 	</package>
 </struts>
