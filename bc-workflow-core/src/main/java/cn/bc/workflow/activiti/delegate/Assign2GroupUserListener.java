@@ -37,6 +37,11 @@ public class Assign2GroupUserListener implements TaskListener {
 			.getLog(Assign2GroupUserListener.class);
 
 	/**
+	 * 岗位只有一个人是直接分配到人
+	 */
+	private Expression onlyOneUser;
+
+	/**
 	 * 岗位编码
 	 */
 	private Expression groupCode;
@@ -82,8 +87,8 @@ public class Assign2GroupUserListener implements TaskListener {
 						+ groupCode.getExpressionText() + "”的岗位");
 			}
 		} else {// 按岗位名称获取岗位
-			Long orgId = orgVariableName!=null?(Long) delegateTask.getVariable(orgVariableName
-					.getExpressionText()):null;
+			Long orgId = orgVariableName != null ? (Long) delegateTask
+					.getVariable(orgVariableName.getExpressionText()) : null;
 			if (orgId == null) {// 处理手动发起流程的情况
 				if (null2initiator != null
 						&& "true".equals(null2initiator.getExpressionText())) {
@@ -144,7 +149,8 @@ public class Assign2GroupUserListener implements TaskListener {
 			logger.debug("users.size=" + users.size());
 		}
 
-		if (users.size() == 1) {// 直接分派到用户
+		if (users.size() == 1 && onlyOneUser != null
+				&& onlyOneUser.getExpressionText().equals("true")) {// 直接分派到用户
 			delegateTask.setAssignee(users.get(0).getCode());
 			if (logger.isDebugEnabled()) {
 				logger.debug("user=" + users.get(0).getCode() + ","
