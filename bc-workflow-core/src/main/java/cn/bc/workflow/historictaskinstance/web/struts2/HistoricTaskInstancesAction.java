@@ -6,6 +6,11 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.activiti.engine.RepositoryService;
+import org.activiti.engine.repository.ProcessDefinition;
+import org.activiti.engine.repository.ProcessDefinitionQuery;
+import org.json.JSONArray;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Controller;
@@ -22,6 +27,7 @@ import cn.bc.core.util.DateUtils;
 import cn.bc.db.jdbc.RowMapper;
 import cn.bc.db.jdbc.SqlObject;
 import cn.bc.identity.web.SystemContext;
+import cn.bc.option.domain.OptionItem;
 import cn.bc.web.formater.CalendarFormater;
 import cn.bc.web.formater.EntityStatusFormater;
 import cn.bc.web.struts2.ViewAction;
@@ -69,11 +75,12 @@ public class HistoricTaskInstancesAction extends
 		StringBuffer sql = new StringBuffer();
 		sql.append("select a.id_,c.name_ as category,a.name_ as name,a.start_time_,a.end_time_,d.name as receiver,a.duration_,a.proc_inst_id_");
 		sql.append(",a.task_def_key_");
-		sql.append(",getProcessInstanceSubject(a.proc_inst_id_) as subject");
+		sql.append(",getProcessInstanceSubject(a.proc_inst_id_) as subject,a.due_date_ due_date");
 		sql.append(" from act_hi_taskinst a");
 		sql.append(" inner join act_hi_procinst b on b.proc_inst_id_=a.proc_inst_id_");
 		sql.append(" inner join act_re_procdef c on c.id_=a.proc_def_id_");
 		sql.append(" left join bc_identity_actor d on d.code=a.assignee_");
+		sql.append(" left join act_re_procdef e on e.id_=a.proc_def_id_");
 		sqlObject.setSql(sql.toString());
 
 		// 注入参数
@@ -106,6 +113,7 @@ public class HistoricTaskInstancesAction extends
 				map.put("procinstid", rs[i++]);
 				map.put("taskdefkey", rs[i++]);
 				map.put("subject", rs[i++]);
+				map.put("due_date", rs[i++]);
 				return map;
 			}
 		});
@@ -135,6 +143,11 @@ public class HistoricTaskInstancesAction extends
 			columns.add(new TextColumn4MapKey("d.first_", "receiver",
 					getText("flow.task.actor"), 80));
 		}
+		//办理期限
+		columns.add(new TextColumn4MapKey("a.due_date_", "due_date",
+				getText("done.dueDate"), 130).setSortable(true)
+				.setUseTitleFromLabel(true)
+				.setValueFormater(new CalendarFormater("yyyy-MM-dd HH:mm")));
 		if (my) {
 			columns.add(new TextColumn4MapKey("a.start_time_", "start_time",
 					getText("flow.task.startTime"), 130).setSortable(true)
@@ -280,12 +293,26 @@ public class HistoricTaskInstancesAction extends
 	// ==高级搜索代码开始==
 	@Override
 	protected boolean useAdvanceSearch() {
-		return false;
+		return true;
 	}
+	@Autowired
+	private RepositoryService repositoryService;
+	
+	public JSONArray processList;
 
 	@Override
 	protected void initConditionsFrom() throws Exception {
-
+		List<ProcessDefinition> list = this.repositoryService
+				.createProcessDefinitionQuery().list();
+		List<Map<String,String>> list2 = new ArrayList<Map<String,String>>();
+		
+		for(ProcessDefinition pd : list){
+			Map<String,String> map = new HashMap<String, String>();
+			map.put("key", pd.getId());
+			map.put("value", pd.getName());
+			list2.add(map);
+		}
+		this.processList = OptionItem.toLabelValues(list2);
 	}
 	// ==高级搜索代码结束==
 
