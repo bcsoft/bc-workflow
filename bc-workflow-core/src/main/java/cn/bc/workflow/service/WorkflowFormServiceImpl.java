@@ -12,7 +12,9 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.activiti.engine.HistoryService;
+import org.activiti.engine.RepositoryService;
 import org.activiti.engine.history.HistoricTaskInstance;
+import org.activiti.engine.repository.ProcessDefinition;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +28,7 @@ import cn.bc.template.domain.Template;
 import cn.bc.template.service.TemplateService;
 import cn.bc.template.util.FreeMarkerUtils;
 import cn.bc.web.util.WebUtils;
+import cn.bc.workflow.deploy.domain.DeployResource;
 
 /**
  * @author dragon
@@ -37,6 +40,7 @@ public class WorkflowFormServiceImpl implements WorkflowFormService {
 	private ExcutionLogService excutionLogService;
 	private TemplateService templateService;
 	private HistoryService historyService;
+	private RepositoryService repositoryService;
 
 	@Autowired
 	public void setTemplateService(TemplateService templateService) {
@@ -51,6 +55,11 @@ public class WorkflowFormServiceImpl implements WorkflowFormService {
 	@Autowired
 	public void setHistoryService(HistoryService historyService) {
 		this.historyService = historyService;
+	}
+	
+	@Autowired
+	public void setRepositoryService(RepositoryService repositoryService) {
+		this.repositoryService = repositoryService;
 	}
 
 	public String getRenderedTaskForm(String taskId, boolean readonly) {
@@ -100,8 +109,13 @@ public class WorkflowFormServiceImpl implements WorkflowFormService {
 			logger.info("seperate=" + seperate);
 		}
 
+		// 添加一些任务的定义参数
+		HistoricTaskInstance task = historyService
+				.createHistoricTaskInstanceQuery().taskId(taskId)
+				.singleResult();
+		
 		// 获取模板的原始内容
-		String sourceFormString = loadFormTemplate(from, key);
+		String sourceFormString = loadFormTemplate(from, key, task.getProcessDefinitionId());
 		if (logger.isDebugEnabled()) {
 			logger.debug("source=" + sourceFormString);
 		}
@@ -131,10 +145,6 @@ public class WorkflowFormServiceImpl implements WorkflowFormService {
 			params.putAll(addParams);
 		}
 
-		// 添加一些任务的定义参数
-		HistoricTaskInstance task = historyService
-				.createHistoricTaskInstanceQuery().taskId(taskId)
-				.singleResult();
 		if (task == null) {
 			throw new CoreException("can't find taskHistory: id=" + taskId);
 		}
@@ -184,7 +194,7 @@ public class WorkflowFormServiceImpl implements WorkflowFormService {
 	 * @param key
 	 * @return
 	 */
-	private String loadFormTemplate(String from, String key) {
+	private String loadFormTemplate(String from, String key, String pdid) {
 		String sourceFormString;
 		if ("tpl".equalsIgnoreCase(from)) {// 从模板中加载资源
 			sourceFormString = loadFormTemplateByTemplate(key);
@@ -194,6 +204,14 @@ public class WorkflowFormServiceImpl implements WorkflowFormService {
 			sourceFormString = loadFormTemplateByFile(key);
 		} else if ("res".equalsIgnoreCase(from)) {// 从类资源中获取
 			sourceFormString = loadFormTemplateByClassResource(key);
+		} else if ("wf".equalsIgnoreCase(from)){// 从部署资源中获取
+			ProcessDefinition p = this.repositoryService
+					.createProcessDefinitionQuery().processDefinitionId(pdid)
+					.singleResult();
+			String pCode = p.getKey();//流程编码
+			
+			sourceFormString = "";
+			//sourceFormString = loadFormTemplateByDeployResource();
 		} else {
 			throw new CoreException("unsupport form type:from=" + from);
 		}
@@ -246,5 +264,30 @@ public class WorkflowFormServiceImpl implements WorkflowFormService {
 		}
 		sourceFormString = template.getContentEx();
 		return sourceFormString;
+	}
+	
+	private String loadFormTemplateByDeployResource(String rCode) {
+		// 获取文件流
+		
+		String path = "/bcdata/"+DeployResource.DATA_SUB_PATH;
+		//InputStream resFile = this.getClass().getResourceAsStream("/" + key);
+		// TODO Auto-generated method stub
+		return null;
+	}
+	
+	/**
+	 * 通过流程实例id,部署资源code
+	 * @param pCode
+	 * @param rCode
+	 * @return
+	 */
+	@SuppressWarnings("unused")
+	private String loadFormTemplateByDeployResource(String pCode,String rCode) {
+		// 获取文件流
+		
+		String path = "/bcdata/"+DeployResource.DATA_SUB_PATH;
+		//InputStream resFile = this.getClass().getResourceAsStream("/" + key);
+		// TODO Auto-generated method stub
+		return null;
 	}
 }
