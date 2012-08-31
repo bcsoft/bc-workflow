@@ -49,4 +49,15 @@ public interface ExcutionLogDao extends CrudDao<ExcutionLog> {
 	 * @return
 	 */
 	String findTaskFormKey(String taskId);
+
+	/**
+	 * 获取任务指定名称的本地流程实例的值
+	 * 
+	 * @param taskId
+	 *            任务ID
+	 * @param variableName
+	 *            变量名
+	 * @return
+	 */
+	Object getTaskVariableLocal(String taskId, String variableName);
 }

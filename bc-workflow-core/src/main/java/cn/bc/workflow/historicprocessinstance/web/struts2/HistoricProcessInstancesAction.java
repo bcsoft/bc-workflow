@@ -6,6 +6,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Controller;
@@ -28,10 +31,13 @@ import cn.bc.web.ui.html.grid.Column;
 import cn.bc.web.ui.html.grid.HiddenColumn4MapKey;
 import cn.bc.web.ui.html.grid.IdColumn4MapKey;
 import cn.bc.web.ui.html.grid.TextColumn4MapKey;
+import cn.bc.web.ui.html.page.HtmlPage;
+import cn.bc.web.ui.html.page.ListPage;
 import cn.bc.web.ui.html.page.PageOption;
 import cn.bc.web.ui.html.toolbar.Toolbar;
 import cn.bc.web.ui.html.toolbar.ToolbarButton;
 import cn.bc.web.ui.json.Json;
+import cn.bc.workflow.service.WorkflowService;
 
 /**
  * 流程监控视图Action
@@ -44,8 +50,17 @@ import cn.bc.web.ui.json.Json;
 @Controller
 public class HistoricProcessInstancesAction extends
 		ViewAction<Map<String, Object>> {
+	private static final Log logger = LogFactory
+			.getLog(HistoricProcessInstancesAction.class);
 	private static final long serialVersionUID = 1L;
-	public String status = String.valueOf(BCConstants.STATUS_ENABLED); 
+	private WorkflowService workflowService;
+
+	@Autowired
+	public void setWorkflowService(WorkflowService workflowService) {
+		this.workflowService = workflowService;
+	}
+
+	public String status = String.valueOf(BCConstants.STATUS_ENABLED);
 
 	@Override
 	public boolean isReadonly() {
@@ -67,10 +82,11 @@ public class HistoricProcessInstancesAction extends
 		StringBuffer sql = new StringBuffer();
 
 		sql.append("select a.id_,b.name_ as category,a.start_time_,a.end_time_,a.duration_,a.proc_inst_id_");
-		sql.append(",b.version_ as version,b.key_ as key,c.first_");
+		sql.append(",b.version_ as version,b.key_ as key,c.name");
+		sql.append(",getProcessInstanceSubject(a.proc_inst_id_) as subject");
 		sql.append(" from act_hi_procinst a");
 		sql.append(" inner join act_re_procdef b on b.id_=a.proc_def_id_");
-		sql.append(" left join act_id_user c on c.id_=a.start_user_id_");
+		sql.append(" left join bc_identity_actor c on c.code=a.start_user_id_");
 		sqlObject.setSql(sql.toString());
 
 		// 注入参数
@@ -88,9 +104,9 @@ public class HistoricProcessInstancesAction extends
 				map.put("duration", rs[i++]);
 				if (map.get("end_time") != null) {
 					map.put("status", BCConstants.STATUS_DISABLED);
-				} else 
-					map.put("status",BCConstants.STATUS_ENABLED);
-				
+				} else
+					map.put("status", BCConstants.STATUS_ENABLED);
+
 				// 格式化耗时
 				if (map.get("duration") != null)
 					map.put("frmDuration",
@@ -100,7 +116,8 @@ public class HistoricProcessInstancesAction extends
 				map.put("procinstid", rs[i++]);
 				map.put("version", rs[i++]);
 				map.put("key", rs[i++]);
-				map.put("startName", rs[i++]);//发起人
+				map.put("startName", rs[i++]);// 发起人
+				map.put("subject", rs[i++]);
 				return map;
 			}
 		});
@@ -111,21 +128,26 @@ public class HistoricProcessInstancesAction extends
 	protected List<Column> getGridColumns() {
 		List<Column> columns = new ArrayList<Column>();
 		columns.add(new IdColumn4MapKey("a.id_", "id"));
+		// 状态
 		columns.add(new TextColumn4MapKey("", "status",
-				getText("flow.instance.status"), 60).setSortable(true)
+				getText("flow.instance.status"), 50).setSortable(true)
 				.setValueFormater(new EntityStatusFormater(getStatus())));
-		//发起人
-		columns.add(new TextColumn4MapKey("a.first_", "startName",
-				getText("flow.instance.startName"),80).setSortable(true)
+		// 主题
+		columns.add(new TextColumn4MapKey(
+				"getProcessInstanceSubject(a.proc_inst_id_)", "subject",
+				getText("flow.instance.subject"), 200).setSortable(true)
 				.setUseTitleFromLabel(true));
+		// 流程
 		columns.add(new TextColumn4MapKey("b.name_", "category",
-				getText("flow.instance.name")).setSortable(true)
+				getText("flow.instance.name"), 200).setSortable(true)
 				.setUseTitleFromLabel(true));
+		// 版本号
 		columns.add(new TextColumn4MapKey("b.version_", "version",
-				getText("flow.instance.version"),50).setSortable(true)
+				getText("flow.instance.version"), 50).setSortable(true)
 				.setUseTitleFromLabel(true));
-		columns.add(new TextColumn4MapKey("b.key_", "key",
-				getText("flow.instance.key"),180).setSortable(true)
+		// 发起人
+		columns.add(new TextColumn4MapKey("a.first_", "startName",
+				getText("flow.instance.startName"), 80).setSortable(true)
 				.setUseTitleFromLabel(true));
 		columns.add(new TextColumn4MapKey("a.start_time_", "start_time",
 				getText("flow.instance.startTime"), 150).setSortable(true)
@@ -137,10 +159,13 @@ public class HistoricProcessInstancesAction extends
 				.setValueFormater(new CalendarFormater("yyyy-MM-dd HH:mm:ss")));
 		columns.add(new TextColumn4MapKey("a.duration_", "frmDuration",
 				getText("flow.instance.duration"), 80).setSortable(true));
+		columns.add(new TextColumn4MapKey("b.key_", "key",
+				getText("flow.instance.key"), 180).setSortable(true)
+				.setUseTitleFromLabel(true));
 		columns.add(new HiddenColumn4MapKey("procinstid", "procinstid"));
 		return columns;
 	}
-	
+
 	/**
 	 * 状态值转换:流转中|已完成|全部
 	 * 
@@ -162,7 +187,8 @@ public class HistoricProcessInstancesAction extends
 
 	@Override
 	protected String[] getGridSearchFields() {
-		return new String[] { "b.name_","b.key_","c.first_" };
+		return new String[] { "b.name_", "b.key_", "c.name",
+				"getProcessInstanceSubject(a.proc_inst_id_)" };
 	}
 
 	@Override
@@ -177,18 +203,33 @@ public class HistoricProcessInstancesAction extends
 	}
 
 	@Override
+	protected HtmlPage buildHtmlPage() {
+		ListPage listPage = (ListPage) super.buildHtmlPage();
+		listPage.setDeleteUrl(getHtmlPageNamespace()
+				+ "/historicProcessInstances/delete");
+		return listPage;
+	}
+
+	@Override
 	protected Toolbar getHtmlPageToolbar() {
 		Toolbar tb = new Toolbar();
 		// 发起流程
 		tb.addButton(new ToolbarButton().setIcon("ui-icon-play")
-				.setText(getText("flow.start")).setClick("bc.historicProcessInstanceSelectView.startflow"));
+				.setText(getText("flow.start"))
+				.setClick("bc.historicProcessInstanceSelectView.startflow"));
 		// 查看
 		tb.addButton(new ToolbarButton().setIcon("ui-icon-check")
 				.setText(getText("label.read"))
 				.setClick("bc.historicProcessInstanceSelectView.open"));
-		
-		tb.addButton(Toolbar.getDefaultToolbarRadioGroup(
-				this.getStatus(), "status", BCConstants.STATUS_ENABLED,
+
+		// 流程实例级联删除
+		if (((SystemContext) this.getContext())
+				.hasAnyRole("BC_WORKFLOW_INSTANCE_DELETE")) {
+			tb.addButton(this.getDefaultDeleteToolbarButton());
+		}
+
+		tb.addButton(Toolbar.getDefaultToolbarRadioGroup(this.getStatus(),
+				"status", BCConstants.STATUS_ENABLED,
 				getText("title.click2changeSearchStatus")));
 
 		// 搜索按钮
@@ -201,14 +242,15 @@ public class HistoricProcessInstancesAction extends
 	protected Condition getGridSpecalCondition() {
 		// 状态条件
 		AndCondition ac = new AndCondition();
-		if(status != null && status.length() > 0) {
+		if (status != null && status.length() > 0) {
 			String[] ss = status.split(",");
 			if (ss.length == 1) {
-				if(ss[0].equals(String.valueOf(BCConstants.STATUS_ENABLED))){
+				if (ss[0].equals(String.valueOf(BCConstants.STATUS_ENABLED))) {
 					ac.add(new IsNullCondition("a.end_time_"));
-				}else if(ss[0].equals(String.valueOf(BCConstants.STATUS_DISABLED)))
+				} else if (ss[0].equals(String
+						.valueOf(BCConstants.STATUS_DISABLED)))
 					ac.add(new IsNotNullCondition("a.end_time_"));
-			} 
+			}
 		}
 		return ac.isEmpty() ? null : ac;
 	}
@@ -217,7 +259,7 @@ public class HistoricProcessInstancesAction extends
 	protected Json getGridExtrasData() {
 		Json json = new Json();
 		// 状态条件
-		if (status != null && status.length() > 0) 
+		if (status != null && status.length() > 0)
 			json.put("status", status);
 		return json;
 	}
@@ -232,9 +274,9 @@ public class HistoricProcessInstancesAction extends
 		return this.getHtmlPageNamespace()
 				+ "/historicprocessinstance/select.js";
 	}
-	
+
 	@Override
-	protected String getHtmlPageNamespace(){
+	protected String getHtmlPageNamespace() {
 		return this.getContextPath() + "/bc-workflow";
 	}
 
@@ -248,6 +290,30 @@ public class HistoricProcessInstancesAction extends
 	protected void initConditionsFrom() throws Exception {
 
 	}
+
 	// ==高级搜索代码结束==
 
+	public String id;
+
+	/**
+	 * 删除流程实例
+	 * 
+	 * @return
+	 * @throws Exception
+	 */
+	public String delete() throws Exception {
+		Json json = new Json();
+		try {
+			this.workflowService.deleteInstance(id);
+			json.put("success", true);
+			json.put("msg", getText("form.delete.success"));
+		} catch (Exception e) {
+			logger.warn(e.getMessage(), e);
+			json.put("success", false);
+			json.put("msg", e.getMessage());
+			json.put("e", e.getClass().getSimpleName());
+		}
+		this.json = json.toString();
+		return "json";
+	}
 }

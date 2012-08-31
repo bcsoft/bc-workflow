@@ -334,7 +334,7 @@ public class FlowAttachFileAction extends ActionSupport {
 			mapFormatSql.put("pid", flowAttach.getPid());
 			params = templateService.getMapParams(flowAttach.getTemplateId(), mapFormatSql);
 		} else{
-			mapFormatSql.put("tid", flowAttach.getPid());
+			mapFormatSql.put("tid", flowAttach.getTid());
 			params = templateService.getMapParams(flowAttach.getTemplateId(), mapFormatSql);
 		}
 			

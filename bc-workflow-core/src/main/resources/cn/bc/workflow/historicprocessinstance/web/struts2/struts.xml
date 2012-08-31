@@ -8,5 +8,6 @@
 		<action name="list" class="historicProcessInstancesAction" method="list"/>
 		<action name="data" class="historicProcessInstancesAction" method="data"/>
 		<action name="paging" class="historicProcessInstancesAction" method="paging"/>
+		<action name="delete" class="historicProcessInstancesAction" method="delete"/>
 	</package>
 </struts>

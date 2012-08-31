@@ -138,19 +138,24 @@ public class FlowAttachAction extends FileEntityAction<Long, FlowAttach> {
 		FlowAttach e=this.getE();
 		json.put("id", e.getId());
 		json.put("success", true);
-		json.put("msg", getText("form.save.success"));
+		json.put("msg", getText("flowAttach.success"));
 		ActorHistory ah=actorHistroyService.load(e.getAuthor().getId());
 		json.put("author",ah.getName());
 		json.put("fileDate",DateUtils.formatCalendar2Second(e.getFileDate()));
-		if(!isNew){
-			ActorHistory mah=actorHistroyService.load(e.getModifier().getId());
-			json.put("modifier", mah.getName());
-			json.put("modifiedDate",DateUtils.formatCalendar2Second(e.getModifiedDate()));
-		}
+		
+		//返回给对附件的信心
 		if(e.getType()==FlowAttach.TYPE_ATTACHMENT){
 			json.put("size", e.getSize());
 			json.put("ext", e.getExt());
 			json.put("formatted", e.getFormatted());
+			json.put("path", e.getPath());
+		}
+		
+		//非新建保存修改时间
+		if(!isNew){
+			ActorHistory mah=actorHistroyService.load(e.getModifier().getId());
+			json.put("modifier", mah.getName());
+			json.put("modifiedDate",DateUtils.formatCalendar2Second(e.getModifiedDate()));
 		}
 		this.json = json.toString();
 		return "json";

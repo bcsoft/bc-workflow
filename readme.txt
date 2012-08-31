@@ -37,6 +37,7 @@ ACT_GE_*: 通用数据及设置 general data, which is used in various use cases
 1）任务监听器：监听任务的创建(create)、分配(assignment)、完成(complete)
 org.activiti.engine.delegate.TaskListener
 只能配置在usertask上，不能配置在流程上
+如果监听器的类型在流程图中配置为"java class"类型，这时可以使用injected功能，但如果使用spring表达式则不支持。
 
 2）执行监听器：流程的启动(start)、结束(end)，活动的实例化，分支的转换(talk)
 org.activiti.engine.delegate.ExecutionListener
@@ -79,6 +80,8 @@ org.activiti.engine.delegate.JavaDelegate
 除了表单属性有记录外，也会把同名的流程变量当做被更新，历史信息中会同时与流程变量、表单属性的更新记录。
     不过本地流程变量和全局流程变量是可以同名的，系统内部会独立分开处理互不影响。
     在act_ru_valiable中是无法区分是流程变量还是表单属性的，同名的时候只会存在一条记录。
+    只有通过formService.submitTaskForm(...)提交的表单数据才会记录到历史中。
+    
 
 ）表单formkey的保存
     流转历史中并没有记录相应任务的formkey，导致查看历史时不知如何加载表单，一个简单的方法就是每次创建任务时在监听器中检测formkey的配置，

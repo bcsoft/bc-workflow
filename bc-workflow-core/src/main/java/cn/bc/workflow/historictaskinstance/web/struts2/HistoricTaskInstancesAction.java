@@ -6,6 +6,11 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.activiti.engine.RepositoryService;
+import org.activiti.engine.repository.ProcessDefinition;
+import org.activiti.engine.repository.ProcessDefinitionQuery;
+import org.json.JSONArray;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Controller;
@@ -22,6 +27,7 @@ import cn.bc.core.util.DateUtils;
 import cn.bc.db.jdbc.RowMapper;
 import cn.bc.db.jdbc.SqlObject;
 import cn.bc.identity.web.SystemContext;
+import cn.bc.option.domain.OptionItem;
 import cn.bc.web.formater.CalendarFormater;
 import cn.bc.web.formater.EntityStatusFormater;
 import cn.bc.web.struts2.ViewAction;
@@ -46,7 +52,7 @@ import cn.bc.web.ui.json.Json;
 public class HistoricTaskInstancesAction extends
 		ViewAction<Map<String, Object>> {
 	private static final long serialVersionUID = 1L;
-	public String status = String.valueOf(BCConstants.STATUS_ENABLED); 
+	public String status = String.valueOf(BCConstants.STATUS_ENABLED);
 	public boolean my = false;// 是否从我的经办
 
 	@Override
@@ -67,12 +73,14 @@ public class HistoricTaskInstancesAction extends
 		SqlObject<Map<String, Object>> sqlObject = new SqlObject<Map<String, Object>>();
 		// 构建查询语句,where和order by不要包含在sql中(要统一放到condition中)
 		StringBuffer sql = new StringBuffer();
-		sql.append("select a.id_,c.name_ as category,a.name_ as subject,a.start_time_,a.end_time_,d.first_ as receiver,a.duration_,a.proc_inst_id_");
+		sql.append("select a.id_,c.name_ as category,a.name_ as name,a.start_time_,a.end_time_,d.name as receiver,a.duration_,a.proc_inst_id_");
 		sql.append(",a.task_def_key_");
+		sql.append(",getProcessInstanceSubject(a.proc_inst_id_) as subject,a.due_date_ due_date");
 		sql.append(" from act_hi_taskinst a");
 		sql.append(" inner join act_hi_procinst b on b.proc_inst_id_=a.proc_inst_id_");
 		sql.append(" inner join act_re_procdef c on c.id_=a.proc_def_id_");
-		sql.append(" left join act_id_user d on d.id_=a.assignee_");
+		sql.append(" left join bc_identity_actor d on d.code=a.assignee_");
+		sql.append(" left join act_re_procdef e on e.id_=a.proc_def_id_");
 		sqlObject.setSql(sql.toString());
 
 		// 注入参数
@@ -85,18 +93,18 @@ public class HistoricTaskInstancesAction extends
 				int i = 0;
 				map.put("id", rs[i++]);
 				map.put("category", rs[i++]);
-				map.put("subject", rs[i++]);
+				map.put("name", rs[i++]);
 				map.put("start_time", rs[i++]);
 				map.put("end_time", rs[i++]);
 				map.put("receiver", rs[i++]);
 				map.put("duration", rs[i++]);
-				//根据结束时间取得状态
+				// 根据结束时间取得状态
 				if (map.get("end_time") != null) {
-					//已完成
-					map.put("status",BCConstants.STATUS_DISABLED);
-				} else 
-					//未完成
-					map.put("status",BCConstants.STATUS_ENABLED);
+					// 已完成
+					map.put("status", BCConstants.STATUS_DISABLED);
+				} else
+					// 未完成
+					map.put("status", BCConstants.STATUS_ENABLED);
 				// 格式化耗时
 				if (map.get("duration") != null)
 					map.put("frmDuration",
@@ -104,6 +112,8 @@ public class HistoricTaskInstancesAction extends
 									"duration").toString())));
 				map.put("procinstid", rs[i++]);
 				map.put("taskdefkey", rs[i++]);
+				map.put("subject", rs[i++]);
+				map.put("due_date", rs[i++]);
 				return map;
 			}
 		});
@@ -114,22 +124,31 @@ public class HistoricTaskInstancesAction extends
 	protected List<Column> getGridColumns() {
 		List<Column> columns = new ArrayList<Column>();
 		columns.add(new IdColumn4MapKey("a.id_", "id"));
-		if(!my)
+
+		// 状态
+		if (!my)
 			columns.add(new TextColumn4MapKey("", "status",
-					getText("flow.task.status"), 60).setSortable(true)
+					getText("flow.task.status"), 50).setSortable(true)
 					.setValueFormater(new EntityStatusFormater(getStatus())));
-		columns.add(new TextColumn4MapKey("c.name_", "category",
-				getText("flow.task.category"), 160).setSortable(true)
+		// 主题
+		columns.add(new TextColumn4MapKey(
+				"getProcessInstanceSubject(a.proc_inst_id_)", "subject",
+				getText("flow.task.subject"), 200).setSortable(true)
 				.setUseTitleFromLabel(true));
-		columns.add(new TextColumn4MapKey("a.name_", "subject",
-				getText("flow.task.name")).setUseTitleFromLabel(true));
-		if(!my){
+		// 名称
+		columns.add(new TextColumn4MapKey("a.name_", "name",
+				getText("flow.task.name"), 200).setUseTitleFromLabel(true));
+
+		if (!my) {
 			columns.add(new TextColumn4MapKey("d.first_", "receiver",
 					getText("flow.task.actor"), 80));
-			columns.add(new TextColumn4MapKey("a.task_def_key_", "taskdefkey",
-					"任务key值", 80));
 		}
-		if(my){
+		//办理期限
+		columns.add(new TextColumn4MapKey("a.due_date_", "due_date",
+				getText("done.dueDate"), 130).setSortable(true)
+				.setUseTitleFromLabel(true)
+				.setValueFormater(new CalendarFormater("yyyy-MM-dd HH:mm")));
+		if (my) {
 			columns.add(new TextColumn4MapKey("a.start_time_", "start_time",
 					getText("flow.task.startTime"), 130).setSortable(true)
 					.setUseTitleFromLabel(true)
@@ -138,30 +157,44 @@ public class HistoricTaskInstancesAction extends
 					getText("flow.task.endTime"), 130).setSortable(true)
 					.setUseTitleFromLabel(true)
 					.setValueFormater(new CalendarFormater("yyyy-MM-dd HH:mm")));
-		}else{
+		} else {
 			columns.add(new TextColumn4MapKey("a.start_time_", "start_time",
-					getText("flow.task.startTime"), 150).setSortable(true)
+					getText("flow.task.startTime"), 150)
+					.setSortable(true)
 					.setUseTitleFromLabel(true)
-					.setValueFormater(new CalendarFormater("yyyy-MM-dd HH:mm:ss")));
+					.setValueFormater(
+							new CalendarFormater("yyyy-MM-dd HH:mm:ss")));
 			columns.add(new TextColumn4MapKey("a.end_time_", "end_time",
-					getText("flow.task.endTime"), 150).setSortable(true)
+					getText("flow.task.endTime"), 150)
+					.setSortable(true)
 					.setUseTitleFromLabel(true)
-					.setValueFormater(new CalendarFormater("yyyy-MM-dd HH:mm:ss")));
+					.setValueFormater(
+							new CalendarFormater("yyyy-MM-dd HH:mm:ss")));
 		}
 		columns.add(new TextColumn4MapKey("a.duration_", "frmDuration",
 				getText("flow.task.duration"), 80).setSortable(true));
+		// 流程
+		columns.add(new TextColumn4MapKey("c.name_", "category",
+				getText("flow.task.category")).setSortable(true)
+				.setUseTitleFromLabel(true));
+		if (!my) {
+			columns.add(new TextColumn4MapKey("a.task_def_key_", "taskdefkey",
+					"任务key值", 80));
+		}
+
 		columns.add(new HiddenColumn4MapKey("procinstid", "procinstid"));
 		return columns;
 	}
 
 	@Override
 	protected String getGridRowLabelExpression() {
-		return my ? "'我的经办：'+['subject']" : "['subject']";
+		return my ? "'我的经办：'+['name']" : "['name']";
 	}
 
 	@Override
 	protected String[] getGridSearchFields() {
-		return new String[] { "d.first_", "a.name_", "c.name_" };
+		return new String[] { "d.name", "a.name_", "c.name_",
+				"getProcessInstanceSubject(a.proc_inst_id_)" };
 	}
 
 	@Override
@@ -182,10 +215,10 @@ public class HistoricTaskInstancesAction extends
 		tb.addButton(new ToolbarButton().setIcon("ui-icon-check")
 				.setText(getText("label.read"))
 				.setClick("bc.historicTaskInstanceSelectView.open"));
-		
-		if(!my)
-			tb.addButton(Toolbar.getDefaultToolbarRadioGroup(
-					this.getStatus(), "status", BCConstants.STATUS_ENABLED,
+
+		if (!my)
+			tb.addButton(Toolbar.getDefaultToolbarRadioGroup(this.getStatus(),
+					"status", BCConstants.STATUS_ENABLED,
 					getText("title.click2changeSearchStatus")));
 
 		// 搜索按钮
@@ -193,7 +226,7 @@ public class HistoricTaskInstancesAction extends
 
 		return tb;
 	}
-	
+
 	/**
 	 * 状态值转换:已完成|未完成|全部
 	 * 
@@ -218,14 +251,15 @@ public class HistoricTaskInstancesAction extends
 					.getCode()));
 			// 结束时间不能为空
 			ac.add(new IsNotNullCondition("a.end_time_"));
-		}else if(status != null && status.length() > 0) {
+		} else if (status != null && status.length() > 0) {
 			String[] ss = status.split(",");
 			if (ss.length == 1) {
-				if(ss[0].equals(String.valueOf(BCConstants.STATUS_ENABLED))){
+				if (ss[0].equals(String.valueOf(BCConstants.STATUS_ENABLED))) {
 					ac.add(new IsNullCondition("a.end_time_"));
-				}else if(ss[0].equals(String.valueOf(BCConstants.STATUS_DISABLED)))
+				} else if (ss[0].equals(String
+						.valueOf(BCConstants.STATUS_DISABLED)))
 					ac.add(new IsNotNullCondition("a.end_time_"));
-			} 
+			}
 		}
 		return ac.isEmpty() ? null : ac;
 	}
@@ -234,7 +268,7 @@ public class HistoricTaskInstancesAction extends
 	protected Json getGridExtrasData() {
 		Json json = new Json();
 		// 状态条件
-		if (status != null && status.length() > 0) 
+		if (status != null && status.length() > 0)
 			json.put("status", status);
 		if (my)
 			json.put("my", my);
@@ -248,24 +282,37 @@ public class HistoricTaskInstancesAction extends
 
 	@Override
 	protected String getHtmlPageJs() {
-		return this.getHtmlPageNamespace()
-				+ "/historictaskinstance/select.js";
+		return this.getHtmlPageNamespace() + "/historictaskinstance/select.js";
 	}
-	
+
 	@Override
-	protected String getHtmlPageNamespace(){
+	protected String getHtmlPageNamespace() {
 		return this.getContextPath() + "/bc-workflow";
 	}
 
 	// ==高级搜索代码开始==
 	@Override
 	protected boolean useAdvanceSearch() {
-		return false;
+		return true;
 	}
+	@Autowired
+	private RepositoryService repositoryService;
+	
+	public JSONArray processList;
 
 	@Override
 	protected void initConditionsFrom() throws Exception {
-
+		List<ProcessDefinition> list = this.repositoryService
+				.createProcessDefinitionQuery().list();
+		List<Map<String,String>> list2 = new ArrayList<Map<String,String>>();
+		
+		for(ProcessDefinition pd : list){
+			Map<String,String> map = new HashMap<String, String>();
+			map.put("key", pd.getId());
+			map.put("value", pd.getName());
+			list2.add(map);
+		}
+		this.processList = OptionItem.toLabelValues(list2);
 	}
 	// ==高级搜索代码结束==
 

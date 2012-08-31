@@ -30,7 +30,8 @@ public class FlowLogListener extends ExcutionLogListener {
 			ExecutionEntity e = (ExecutionEntity) execution;
 			TransitionImpl t = e.getTransition();
 			if (t != null) {
-				log.setCode(t.getId());// 流向的编码
+				log.setExcutionCode(t.getId());// 流向的编码
+				log.setExcutionName((String) t.getProperty("name"));// 流向的名称
 				Object conditionText = t.getProperty("conditionText");
 				log.setDescription(conditionText != null ? conditionText
 						.toString() : null);// 流向的条件表达式

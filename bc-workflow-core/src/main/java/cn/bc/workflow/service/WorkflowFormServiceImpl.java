@@ -12,6 +12,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.activiti.engine.HistoryService;
+import org.activiti.engine.RepositoryService;
 import org.activiti.engine.history.HistoricTaskInstance;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -38,6 +39,7 @@ public class WorkflowFormServiceImpl implements WorkflowFormService {
 	private ExcutionLogService excutionLogService;
 	private TemplateService templateService;
 	private HistoryService historyService;
+	private RepositoryService repositoryService;
 
 	@Autowired
 	public void setTemplateService(TemplateService templateService) {
@@ -52,6 +54,11 @@ public class WorkflowFormServiceImpl implements WorkflowFormService {
 	@Autowired
 	public void setHistoryService(HistoryService historyService) {
 		this.historyService = historyService;
+	}
+
+	@Autowired
+	public void setRepositoryService(RepositoryService repositoryService) {
+		this.repositoryService = repositoryService;
 	}
 
 	public String getRenderedTaskForm(String taskId, boolean readonly) {
@@ -110,8 +117,12 @@ public class WorkflowFormServiceImpl implements WorkflowFormService {
 		params.put("now2d", DateUtils.formatCalendar2Day(now));
 		params.put("now2m", DateUtils.formatCalendar2Minute(now));
 		params.put("year", now.get(Calendar.YEAR) + "");
-		params.put("month", (now.get(Calendar.MONTH) + 1) + "");
+		params.put("month", now.get(Calendar.MONTH) + 1);
 		params.put("day", now.get(Calendar.DAY_OF_MONTH));
+		// 加一个月
+		now.add(Calendar.MONTH, 1);
+		params.put("nextMonth", now.get(Calendar.MONTH) + 1);
+		params.put("nextMonthOfYear", now.get(Calendar.YEAR) + "");
 
 		// 获取任务的流程变量
 		Map<String, Object> vs = this.excutionLogService

@@ -22,11 +22,13 @@ import org.activiti.engine.task.Task;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.util.Assert;
 
 import cn.bc.core.exception.CoreException;
 import cn.bc.core.util.DateUtils;
 import cn.bc.core.util.StringUtils;
+import cn.bc.identity.service.ActorService;
 import cn.bc.identity.web.SystemContext;
 import cn.bc.identity.web.SystemContextHolder;
 import cn.bc.workflow.flowattach.domain.FlowAttach;
@@ -47,6 +49,13 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 	private FlowAttachService flowAttachService;
 	private ExcutionLogService excutionLogService;
 	private WorkflowFormService workflowFormService;
+	private ActorService actorService;
+
+	@Autowired
+	public void setActorService(
+			@Qualifier(value = "actorService") ActorService actorService) {
+		this.actorService = actorService;
+	}
 
 	@Autowired
 	public void setWorkflowFormService(WorkflowFormService workflowFormService) {
@@ -105,7 +114,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 		ws.put("id", instance.getId());
 		ws.put("businessKey", instance.getBusinessKey());
 		ws.put("deleteReason", instance.getDeleteReason());
-		ws.put("startUser", instance.getStartUserId());
+		ws.put("startUser", getActorNameByCode(instance.getStartUserId()));
 		ws.put("startTime", instance.getStartTime());
 		ws.put("endTime", instance.getEndTime());
 		ws.put("duration", instance.getDurationInMillis());
@@ -158,7 +167,8 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 	private Map<String, Object> buildWSCommonInfo(boolean flowing,
 			HistoricProcessInstance instance) {
 		Map<String, Object> info = new LinkedHashMap<String, Object>();
-		info.put("buttons", this.buildHeaderDefaultButtons(flowing, "common"));// 操作按钮列表
+		info.put("buttons",
+				this.buildHeaderDefaultButtons(flowing, "common", false));// 操作按钮列表
 		info.put("hasButtons", info.get("buttons") != null);// 有否操作按钮
 		List<Map<String, Object>> items = new ArrayList<Map<String, Object>>();// 一级条目列表
 		info.put("items", items);
@@ -197,11 +207,12 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 		item.put("type", type);// 信息类型
 		item.put("iconClass", "ui-icon-flag");// 左侧显示的小图标
 		item.put("subject", "统计信息");// 标题
-		item.put("link", false);// 非链接标题
+		item.put("link", true);// 非链接标题
 		item.put("hasButtons", false);// 无操作按钮
 		detail = new ArrayList<String>();
 		item.put("detail", detail);// 详细信息
-		detail.add("发起时间：" + instance.getStartUserId() + " "
+		detail.add("发起时间：" + getActorNameByCode(instance.getStartUserId())
+				+ " "
 				+ DateUtils.formatDateTime2Minute(instance.getStartTime()));
 		detail.add("结束时间："
 				+ (flowing ? "仍在流转中..." : DateUtils
@@ -210,10 +221,22 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 				+ (flowing ? DateUtils.getWasteTimeCN(instance.getStartTime())
 						: DateUtils.getWasteTimeCN(instance.getStartTime(),
 								instance.getEndTime())));
+		detail.add("流程版本：" + instance.getProcessDefinitionId());
 		// detail.add("参与人数：" + "");// TODO
 
 		// 返回
 		return info;
+	}
+
+	/**
+	 * 根据用户帐号获取用户的姓名
+	 * 
+	 * @param userCode
+	 *            用户帐号
+	 * @return
+	 */
+	private String getActorNameByCode(String userCode) {
+		return actorService.loadActorNameByCode(userCode);
 	}
 
 	private void buildFormInfo(boolean flowing,
@@ -360,6 +383,11 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 	private final static String ITEM_BUTTON_EDIT = "<span class='itemOperate edit'><span class='ui-icon ui-icon-pencil'></span><span class='text link'>编辑</span></span>";
 	private final static String ITEM_BUTTON_DELETE = "<span class='itemOperate delete'><span class='ui-icon ui-icon-closethick'></span><span class='text link'>删除</span></span>";
 	private final static String ITEM_BUTTON_DOWNLOAD = "<span class='itemOperate download'><span class='ui-icon ui-icon-arrowthickstop-1-s'></span><span class='text link'>下载</span></span>";
+	private final static String ITEM_BUTTON_ADDCOMMENT = "<span class='mainOperate addComment'><span class='ui-icon ui-icon-document'></span><span class='text link'>添加意见</span></span>";
+	private final static String ITEM_BUTTON_ADDATTACH = "<span class='mainOperate addAttach'><span class='ui-icon ui-icon-arrowthick-1-n'></span><span class='text link'>添加附件</span></span>";
+
+	private final static String ITEM_BUTTON_SHOWDIAGRAM = "<span class='mainOperate flowImage'><span class='ui-icon ui-icon-image'></span><span class='text link'>查看流程图</span></span>";
+	private final static String ITEM_BUTTON_SHOWLOG = "<span class='mainOperate excutionLog'><span class='ui-icon ui-icon-tag' title='查看流转日志'></span></span>";
 
 	/**
 	 * 创建默认的公共信息(common)、个人待办信息(todo_user)、岗位待办信息(todo_group)区标题右侧的操作按钮
@@ -368,28 +396,39 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 	 *            是否流转中
 	 * @param type
 	 *            类型
+	 * @param isMyTask
+	 *            是否是我的个人或岗位待办
 	 * @return
 	 */
-	private String buildHeaderDefaultButtons(boolean flowing, String type) {
+	private String buildHeaderDefaultButtons(boolean flowing, String type,
+			boolean isMyTask) {
 		StringBuffer buttons = new StringBuffer();
 		if ("common".equals(type)) {
-			buttons.append("<span class='mainOperate flowImage'><span class='ui-icon ui-icon-image'></span><span class='text link'>查看流程图</span></span>");
-			if (flowing) {
-				buttons.append("<span class='mainOperate addComment'><span class='ui-icon ui-icon-document'></span><span class='text link'>添加意见</span></span>");
-				buttons.append("<span class='mainOperate addAttach'><span class='ui-icon ui-icon-arrowthick-1-n'></span><span class='text link'>添加附件</span></span>");
+			buttons.append(ITEM_BUTTON_SHOWDIAGRAM);// 查看流程图
+			if (flowing
+					&& SystemContextHolder.get().hasAnyRole(
+							"BC_WORKFLOW_ADDGLOBALATTACH")) {// 有权限才能添加全局意见附件
+				buttons.append(ITEM_BUTTON_ADDCOMMENT);// 添加意见
+				buttons.append(ITEM_BUTTON_ADDATTACH);// 添加附件
 			}
-			buttons.append("<span class='mainOperate excutionLog'><span class='ui-icon ui-icon-tag' title='查看流转日志'></span></span>");
+			buttons.append(ITEM_BUTTON_SHOWLOG);// 查看流转日志
 		} else if ("todo_user".equals(type)) {
-			if (flowing) {
-				buttons.append("<span class='mainOperate addComment'><span class='ui-icon ui-icon-document'></span><span class='text link'>添加意见</span></span>");
-				buttons.append("<span class='mainOperate addAttach'><span class='ui-icon ui-icon-arrowthick-1-n'></span><span class='text link'>添加附件</span></span>");
-				buttons.append("<span class='mainOperate delegate'><span class='ui-icon ui-icon-person'></span><span class='text link'>委派任务</span></span>");
+			if (flowing && isMyTask) {
+				if (SystemContextHolder.get()
+						.hasAnyRole("BC_WORKFLOW_DELEGATE"))// 有权限才能委派任务
+					buttons.append("<span class='mainOperate delegate'><span class='ui-icon ui-icon-person'></span><span class='text link'>委派任务</span></span>");
+
+				buttons.append(ITEM_BUTTON_ADDCOMMENT);// 添加意见
+				buttons.append(ITEM_BUTTON_ADDATTACH);// 添加附件
 				buttons.append("<span class='mainOperate finish'><span class='ui-icon ui-icon-check'></span><span class='text link'>完成办理</span></span>");
 			}
 		} else if ("todo_group".equals(type)) {
 			if (flowing) {
-				buttons.append("<span class='mainOperate assign'><span class='ui-icon ui-icon-person'></span><span class='text link'>分派任务</span></span>");
-				buttons.append("<span class='mainOperate claim'><span class='ui-icon ui-icon-check'></span><span class='text link'>签领任务</span></span>");
+				if (SystemContextHolder.get().hasAnyRole("BC_WORKFLOW_ASSIGN"))// 有权限才能分派任务
+					buttons.append("<span class='mainOperate assign'><span class='ui-icon ui-icon-person'></span><span class='text link'>分派任务</span></span>");
+
+				if (isMyTask)
+					buttons.append("<span class='mainOperate claim'><span class='ui-icon ui-icon-check'></span><span class='text link'>签领任务</span></span>");
 			}
 		} else {
 			return null;
@@ -435,6 +474,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 
 		// 生成展现用的数据
 		Date now = new Date();
+		Object subject;
 		for (Task task : tasks) {
 			List<IdentityLink> identityLinks;
 			// 判断任务类型
@@ -449,21 +489,37 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 				// 获取任务的组关联信息
 				identityLinks = this.taskService.getIdentityLinksForTask(task
 						.getId());
+				if (identityLinks == null || identityLinks.isEmpty()) {
+					throw new CoreException(
+							"can't find membership from table act_ru_identitylink: taskId="
+									+ task.getId());
+				}
 				isMyTask = judgeIsMyTask(identityLinks);
 			}
 
 			// 任务的基本信息
 			taskItem = new HashMap<String, Object>();
-			taskItems.add(taskItem);
+			if (isMyTask) {
+				taskItems.add(0, taskItem);
+			} else {
+				taskItems.add(taskItem);
+			}
 			taskItem.put("id", task.getId());// 任务id
 			taskItem.put("isUserTask", isUserTask);// 是否是个人待办:true-个人待办、false-组待办
 			taskItem.put("isMyTask", isMyTask);// 是否是我的个人或组待办
-			taskItem.put("subject", task.getName());// 标题
+			subject = taskService.getVariableLocal(task.getId(), "subject");
+			if (subject != null) {
+				taskItem.put("subject", subject);// 标题
+			} else {
+				taskItem.put("subject", task.getName());// 标题
+			}
 			taskItem.put("buttons", this.buildHeaderDefaultButtons(flowing,
-					isUserTask ? "todo_user" : "todo_group"));// 操作按钮列表
+					isUserTask ? "todo_user" : "todo_group", isMyTask));// 操作按钮列表
 			taskItem.put("hasButtons", taskItem.get("buttons") != null);// 有否操作按钮
 			taskItem.put("formKey",
 					taskService.getVariableLocal(task.getId(), "formKey"));// 记录formKey
+			taskItem.put("desc", task.getDescription());// 任务描述说明
+			taskItem.put("priority", task.getPriority());// 任务优先级
 
 			// 任务的详细信息
 			items = new ArrayList<Map<String, Object>>();// 二级条目列表
@@ -471,7 +527,8 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 
 			// -- 表单信息
 			buildFormInfo(flowing, items, task.getProcessInstanceId(),
-					task.getId(), formKeys.get(task.getId()), !isMyTask);
+					task.getId(), formKeys.get(task.getId()),
+					!(isUserTask && isMyTask));
 
 			// -- 意见、附件信息
 			buildFlowAttachsInfo(flowing, items,
@@ -479,10 +536,11 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 
 			// 任务的汇总信息
 			if (isUserTask) {
-				taskItem.put("actor", "待办人：" + task.getAssignee());
+				taskItem.put("actor",
+						"待办人：" + getActorNameByCode(task.getAssignee()));
 			} else {
 				taskItem.put("actor", "待办岗："
-						+ identityLinks.get(0).getGroupId());// TODO
+						+ getActorNameByCode(identityLinks.get(0).getGroupId()));
 			}
 			taskItem.put(
 					"createTime",
@@ -535,9 +593,9 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 	 * @return
 	 */
 	private boolean judgeIsMyTask(List<IdentityLink> identityLinks) {
-		// TODO
 		if (identityLinks == null || identityLinks.isEmpty()) {
-			throw new CoreException("丢失岗位用户之间的关联信息了！");
+			throw new CoreException(
+					"argument identityLinks can't be null or empty");
 		}
 
 		List<String> groups = SystemContextHolder.get().getAttr(
@@ -587,18 +645,30 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 				.findTaskFormKeys(instance.getId());
 
 		// 生成展现用的数据
+		Object subject;
 		for (HistoricTaskInstance task : tasks) {
 			// 任务的基本信息
 			taskItem = new HashMap<String, Object>();
 			taskItems.add(taskItem);
+			taskItem.put("key", task.getTaskDefinitionKey());// 任务的Key
+			taskItem.put("orderNo", task.getTaskDefinitionKey());// 使用任务的Key作为业务排序号
 			taskItem.put("id", task.getId());// 任务id
-			taskItem.put("assignee", task.getAssignee());// 办理人
-			taskItem.put("owner", task.getOwner());// 委托人
+			taskItem.put("assignee", getActorNameByCode(task.getAssignee()));// 办理人
+			taskItem.put("owner", getActorNameByCode(task.getOwner()));// 委托人
 			taskItem.put("link", false);// 链接标题
-			taskItem.put("subject", task.getName());// 标题
+			taskItem.put("name", task.getName());// 名称
+			subject = excutionLogService.getTaskVariableLocal(task.getId(),
+					"subject");
+			if (subject != null) {
+				taskItem.put("subject", subject);// 标题
+			} else {
+				taskItem.put("subject", task.getName());// 标题
+			}
 			taskItem.put("hasButtons", false);// 有否操作按钮
 			taskItem.put("formKey",
 					excutionLogService.findTaskFormKey(task.getId()));// 记录formKey
+			taskItem.put("desc", task.getDescription());// 任务描述说明
+			taskItem.put("priority", task.getPriority());// 任务优先级
 
 			// 任务的详细信息
 			items = new ArrayList<Map<String, Object>>();// 二级条目列表
@@ -613,6 +683,13 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 					this.findTaskFlowAttachs(task.getId(), allFlowAttachs));
 
 			// 任务的汇总信息
+			taskItem.put("startTime",
+					DateUtils.formatDateTime(task.getStartTime()));// 任务创建时间
+			taskItem.put("endTime", DateUtils.formatDateTime(task.getEndTime()));// 任务完成时间
+			taskItem.put("startTime2m",
+					DateUtils.formatDateTime2Minute(task.getStartTime()));// 任务创建时间
+			taskItem.put("endTime2m",
+					DateUtils.formatDateTime2Minute(task.getEndTime()));// 任务完成时间
 			taskItem.put(
 					"wasteTime",
 					"办理耗时："
@@ -623,9 +700,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 									.getStartTime())
 							+ "到"
 							+ DateUtils.formatDateTime2Minute(task.getEndTime())
-							+ ")");
-			taskItem.put("startTime",
-					DateUtils.formatDateTime2Minute(task.getStartTime()));
+							+ ") - " + task.getTaskDefinitionKey());
 			if (task.getDueDate() != null) {
 				taskItem.put(
 						"dueDate",

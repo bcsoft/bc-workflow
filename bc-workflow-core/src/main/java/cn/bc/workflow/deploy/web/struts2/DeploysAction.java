@@ -14,6 +14,7 @@ import org.springframework.stereotype.Controller;
 
 import cn.bc.core.query.condition.Condition;
 import cn.bc.core.query.condition.ConditionUtils;
+import cn.bc.core.query.condition.Direction;
 import cn.bc.core.query.condition.impl.EqualsCondition;
 import cn.bc.core.query.condition.impl.OrderCondition;
 import cn.bc.db.jdbc.RowMapper;
@@ -21,7 +22,6 @@ import cn.bc.db.jdbc.SqlObject;
 import cn.bc.identity.web.SystemContext;
 import cn.bc.option.domain.OptionItem;
 import cn.bc.web.formater.CalendarFormater;
-import cn.bc.web.formater.FileSizeFormater;
 import cn.bc.web.formater.KeyValueFormater;
 import cn.bc.web.struts2.ViewAction;
 import cn.bc.web.ui.html.grid.Column;
@@ -46,17 +46,17 @@ import cn.bc.workflow.deploy.service.DeployService;
 @Controller
 public class DeploysAction extends ViewAction<Map<String, Object>> {
 	private static final long serialVersionUID = 1L;
-	public String status = String.valueOf(Deploy.STATUS_RELEASED);
+	public String status = "";// String.valueOf(Deploy.STATUS_RELEASED);
+	public boolean my = false;
 
 	@Override
 	public boolean isReadonly() {
-		// 模板管理员或系统管理员
+		// 权限控制：流程部署管理、流程管理或系统管理员
 		SystemContext context = (SystemContext) this.getContext();
-		// 配置权限：模板管理员
 		return !context.hasAnyRole(getText("key.role.bc.workflow.deploy"),
-				getText("key.role.bc.admin"));
+				getText("key.role.bc.workflow"), getText("key.role.bc.admin"));
 	}
-	
+
 	public boolean isCascade() {
 		// 流程部署级联删除管理
 		SystemContext context = (SystemContext) this.getContext();
@@ -64,10 +64,10 @@ public class DeploysAction extends ViewAction<Map<String, Object>> {
 				.hasAnyRole(getText("key.role.bc.workflow.deploy.cascade"));
 	}
 
-
 	@Override
 	protected OrderCondition getGridOrderCondition() {
-		return new OrderCondition("d.order_");
+		return new OrderCondition("d.status_", Direction.Asc).add("d.order_",
+				Direction.Asc);
 	}
 
 	@Override
@@ -80,6 +80,7 @@ public class DeploysAction extends ViewAction<Map<String, Object>> {
 		sql.append(",au.actor_name as uname,d.file_date,am.actor_name as mname");
 		sql.append(",d.modified_date,d.status_ as status,d.version_ as version");
 		sql.append(",d.category,d.size_ as size,ap.actor_name as pname,d.deploy_date");
+		sql.append(",getdeployuser(d.id)");
 		sql.append(" from bc_wf_deploy d");
 		sql.append(" inner join bc_identity_actor_history au on au.id=d.author_id ");
 		sql.append(" left join bc_identity_actor_history am on am.id=d.modifier_id");
@@ -113,6 +114,7 @@ public class DeploysAction extends ViewAction<Map<String, Object>> {
 				map.put("size", rs[i++]);
 				map.put("pname", rs[i++]);
 				map.put("deploy_date", rs[i++]);
+				map.put("users", rs[i++]);
 				return map;
 			}
 		});
@@ -130,25 +132,29 @@ public class DeploysAction extends ViewAction<Map<String, Object>> {
 				getText("deploy.order"), 50).setSortable(true));
 		columns.add(new TextColumn4MapKey("d.category", "category",
 				getText("deploy.category"), 150).setUseTitleFromLabel(true));
-		columns.add(new TextColumn4MapKey("d.type_", "type",
-				getText("deploy.type"), 250).setUseTitleFromLabel(true)
-				.setValueFormater(new KeyValueFormater(this.getTypes())));
 		columns.add(new TextColumn4MapKey("d.subject", "subject",
-				getText("deploy.tfsubject"), 250).setUseTitleFromLabel(true));
-		columns.add(new TextColumn4MapKey("d.source", "source",
-				getText("deploy.source"), 150).setUseTitleFromLabel(true));
-		columns.add(new TextColumn4MapKey("d.code", "code",
-				getText("deploy.code"), 100).setSortable(true)
-				.setUseTitleFromLabel(true));
+				getText("deploy.tfsubject"), 200).setUseTitleFromLabel(true));
 		columns.add(new TextColumn4MapKey("d.version_", "version",
 				getText("deploy.version"), 50).setUseTitleFromLabel(true));
-		columns.add(new TextColumn4MapKey("d.path", "path",
-				getText("deploy.tfpath"), 250).setUseTitleFromLabel(true));
-		columns.add(new TextColumn4MapKey("d.size_", "size",
-				getText("deploy.file.size"),65).setUseTitleFromLabel(true)
-				.setValueFormater(new FileSizeFormater()));
-		columns.add(new TextColumn4MapKey("d.desc_", "desc_",
-				getText("deploy.desc"), 100).setUseTitleFromLabel(true));
+		// columns.add(new TextColumn4MapKey("d.source", "source",
+		// getText("deploy.source"), 150).setUseTitleFromLabel(true));
+		if (!my) {
+			columns.add(new TextColumn4MapKey("", "users",
+					getText("deploy.user"), 120).setUseTitleFromLabel(true));
+		}
+		columns.add(new TextColumn4MapKey("d.type_", "type",
+				getText("deploy.type"), 85).setUseTitleFromLabel(true)
+				.setValueFormater(new KeyValueFormater(this.getTypes())));
+		columns.add(new TextColumn4MapKey("d.code", "code",
+				getText("deploy.code"), 150).setSortable(true)
+				.setUseTitleFromLabel(true));
+		// columns.add(new TextColumn4MapKey("d.path", "path",
+		// getText("deploy.tfpath"), 250).setUseTitleFromLabel(true));
+		// columns.add(new TextColumn4MapKey("d.size_", "size",
+		// getText("deploy.file.size"),65).setUseTitleFromLabel(true)
+		// .setValueFormater(new FileSizeFormater()));
+		// columns.add(new TextColumn4MapKey("d.desc_", "desc_",
+		// getText("deploy.desc"), 100).setUseTitleFromLabel(true));
 		columns.add(new TextColumn4MapKey("ap.actor_name", "pname",
 				getText("deploy.deployer"), 130));
 		columns.add(new TextColumn4MapKey("d.deploy_date", "deploy_date",
@@ -157,18 +163,17 @@ public class DeploysAction extends ViewAction<Map<String, Object>> {
 		columns.add(new TextColumn4MapKey("au.actor_name", "uname",
 				getText("deploy.author"), 80));
 		columns.add(new TextColumn4MapKey("d.file_date", "file_date",
-				getText("deploy.fileDate"), 130)
+				getText("deploy.fileDate")).setUseTitleFromLabel(true)
 				.setValueFormater(new CalendarFormater("yyyy-MM-dd HH:mm")));
-		columns.add(new TextColumn4MapKey("am.actor_name", "mname",
-				getText("deploy.modifier"), 80));
-		columns.add(new TextColumn4MapKey("d.modified_date", "modified_date",
-				getText("deploy.modifiedDate"), 130)
-				.setValueFormater(new CalendarFormater("yyyy-MM-dd HH:mm")));
+		// columns.add(new TextColumn4MapKey("am.actor_name", "mname",
+		// getText("deploy.modifier"), 80));
+		// columns.add(new TextColumn4MapKey("d.modified_date", "modified_date",
+		// getText("deploy.modifiedDate"), 130)
+		// .setValueFormater(new CalendarFormater("yyyy-MM-dd HH:mm")));
 		columns.add(new HiddenColumn4MapKey("uid", "uid"));
 		columns.add(new HiddenColumn4MapKey("status", "status"));
 		return columns;
 	}
-
 
 	// 状态键值转换
 	private Map<String, String> getStatuses() {
@@ -180,17 +185,17 @@ public class DeploysAction extends ViewAction<Map<String, Object>> {
 		statuses.put("", getText("deploy.status.all"));
 		return statuses;
 	}
-	
+
 	// 类型键值转换
 	private Map<String, String> getTypes() {
 		Map<String, String> statuses = new LinkedHashMap<String, String>();
 		statuses.put(String.valueOf(Deploy.TYPE_XML),
-				getText("deploy.type.xml"));
+				getText("deploy.type.xml.short"));
 		statuses.put(String.valueOf(Deploy.TYPE_BAR),
-				getText("deploy.type.bar"));
+				getText("deploy.type.bar.short"));
 		return statuses;
 	}
-	
+
 	@Override
 	protected String getGridRowLabelExpression() {
 		return "['subject']";
@@ -199,23 +204,22 @@ public class DeploysAction extends ViewAction<Map<String, Object>> {
 	@Override
 	protected String[] getGridSearchFields() {
 		return new String[] { "d.code", "am.actor_name", "d.path", "d.subject",
-				"d.version_", "d.category", "d.source"};
+				"d.version_", "d.category", "d.source" };
 	}
 
 	@Override
 	protected String getFormActionName() {
 		return "deploy";
 	}
-	
+
 	@Override
-	protected String getHtmlPageNamespace(){
+	protected String getHtmlPageNamespace() {
 		return this.getContextPath() + "/bc-workflow";
 	}
 
-
 	@Override
 	protected PageOption getHtmlPageOption() {
-		return super.getHtmlPageOption().setWidth(850).setMinWidth(400)
+		return super.getHtmlPageOption().setWidth(890).setMinWidth(400)
 				.setHeight(400).setMinHeight(300);
 	}
 
@@ -229,27 +233,29 @@ public class DeploysAction extends ViewAction<Map<String, Object>> {
 
 			// 编辑按钮
 			tb.addButton(this.getDefaultEditToolbarButton());
-			
-			//发布
+
+			// 发布
 			tb.addButton(new ToolbarButton().setIcon("ui-icon-person")
 					.setText(getText("label.deploy.release"))
 					.setClick("bc.deploy.release"));
-			//取消发布
+			// 取消发布
 			tb.addButton(new ToolbarButton().setIcon("ui-icon-trash")
 					.setText(getText("label.deploy.releaseCancel"))
 					.setClick("bc.deploy.releaseCancel"));
-			
-			if(this.isCascade()){
-				//级联取消发布
+
+			if (this.isCascade()) {
+				// 级联取消发布
 				tb.addButton(new ToolbarButton().setIcon("ui-icon-trash")
 						.setText(getText("label.deploy.cascadeCancel"))
 						.setClick("bc.deploy.cascadeCancel"));
+				// 强制删除
+				tb.addButton(getDefaultDeleteToolbarButton());
 			}
 		}
-		
+
 		// 状态按钮组
 		tb.addButton(Toolbar.getDefaultToolbarRadioGroup(this.getStatuses(),
-				"status", 0, getText("deploy.status.tips")));
+				"status", 2, getText("deploy.status.tips")));
 
 		// 搜索按钮
 		tb.addButton(this.getDefaultSearchToolbarButton());
@@ -261,31 +267,33 @@ public class DeploysAction extends ViewAction<Map<String, Object>> {
 	protected Condition getGridSpecalCondition() {
 		// 状态条件
 		Condition statusCondition = null;
-		if(status != null && status.length() > 0){
-			statusCondition = new EqualsCondition("d.status_",Integer.parseInt(status));
+		if (status != null && status.length() > 0) {
+			statusCondition = new EqualsCondition("d.status_",
+					Integer.parseInt(status));
 		}
 		return ConditionUtils.mix2AndCondition(statusCondition);
 	}
-	
+
 	@Override
 	protected Json getGridExtrasData() {
 		Json json = new Json();
-		if(status != null && status.length() > 0){
+		if (status != null && status.length() > 0) {
 			json.put("status", this.status);
 		}
-		if(json.isEmpty()) return null;
+		if (json.isEmpty())
+			return null;
 		return json;
 	}
-	
+
 	@Override
 	protected String getHtmlPageJs() {
 		return this.getHtmlPageNamespace() + "/deploy/view.js";
 	}
-	
+
 	public String json;
 	private Long excludeId;
-	private Boolean isCascade;//是否级联删除
-	
+	private Boolean isCascade;// 是否级联删除
+
 	public Long getExcludeId() {
 		return excludeId;
 	}
@@ -293,7 +301,7 @@ public class DeploysAction extends ViewAction<Map<String, Object>> {
 	public void setExcludeId(Long excludeId) {
 		this.excludeId = excludeId;
 	}
-	
+
 	public Boolean getIsCascade() {
 		return isCascade;
 	}
@@ -306,19 +314,19 @@ public class DeploysAction extends ViewAction<Map<String, Object>> {
 	public String isReleased() {
 		Json json = new Json();
 		Long excludeId = this.deployService.isReleased(this.excludeId);
-		if(excludeId != null){//已发布
+		if (excludeId != null) {// 已发布
 			json.put("id", excludeId);
 			json.put("released", "true");
 			json.put("msg", getText("deploy.msg.released"));
-		}else{//未发布
+		} else {// 未发布
 			json.put("released", "false");
 		}
 		this.json = json.toString();
 		return "json";
 	}
-	
+
 	/** 发布流程 **/
-	public String dodeployRelease(){
+	public String dodeployRelease() {
 		Json json = new Json();
 		this.deployService.dodeployRelease(this.excludeId);
 		json.put("msg", getText("deploy.msg.release.success"));
@@ -326,33 +334,33 @@ public class DeploysAction extends ViewAction<Map<String, Object>> {
 		this.json = json.toString();
 		return "json";
 	}
-	
+
 	/** 检查用户选择的流程是否已经发布 **/
 	public String isStarted() {
 		Json json = new Json();
 		Deploy deploy = this.deployService.load(this.excludeId);
 		Long excludeId = this.deployService.isStarted(deploy.getDeploymentId());
-		if(excludeId != null){//已发起的流程id
+		if (excludeId != null) {// 已发起的流程id
 			json.put("id", excludeId);
 			json.put("started", "true");
 			json.put("msg", getText("deploy.msg.started"));
-		}else{//未发布
+		} else {// 未发布
 			json.put("started", "false");
 		}
 		this.json = json.toString();
 		return "json";
 	}
-	
+
 	/** 取消发布 **/
-	public String dodeployCancel(){
+	public String dodeployCancel() {
 		Json json = new Json();
-		this.deployService.dodeployCancel(this.excludeId,isCascade);
+		this.deployService.dodeployCancel(this.excludeId, isCascade);
 		json.put("msg", getText("deploy.msg.cancel.success"));
 		json.put("id", this.excludeId);
 		this.json = json.toString();
 		return "json";
 	}
-	
+
 	// ==高级搜索代码开始==
 	@Override
 	protected boolean useAdvanceSearch() {
@@ -370,9 +378,9 @@ public class DeploysAction extends ViewAction<Map<String, Object>> {
 
 	@Override
 	protected void initConditionsFrom() throws Exception {
-		this.categorys= OptionItem.toLabelValues(this.deployService.findCategoryOption());
+		this.categorys = OptionItem.toLabelValues(this.deployService
+				.findCategoryOption());
 	}
 	// ==高级搜索代码结束==
 
-	
 }

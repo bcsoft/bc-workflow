@@ -1,6 +1,7 @@
 package cn.bc.workflow.activiti.test;
 
 import org.activiti.engine.FormService;
+import org.activiti.engine.HistoryService;
 import org.activiti.engine.IdentityService;
 import org.activiti.engine.RuntimeService;
 import org.activiti.engine.TaskService;
@@ -34,6 +35,9 @@ public class AbstractActivitiTest {
 
 	@Autowired
 	protected FormService formService;
+
+	@Autowired
+	protected HistoryService historyService;
 
 	@Autowired
 	@Rule

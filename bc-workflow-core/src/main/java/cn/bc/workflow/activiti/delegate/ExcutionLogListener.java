@@ -9,8 +9,8 @@ import org.activiti.engine.delegate.DelegateExecution;
 import org.activiti.engine.delegate.ExecutionListener;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 
+import cn.bc.core.util.SpringUtils;
 import cn.bc.identity.domain.ActorHistory;
 import cn.bc.identity.web.SystemContextHolder;
 import cn.bc.workflow.domain.ExcutionLog;
@@ -27,9 +27,8 @@ public class ExcutionLogListener implements ExecutionListener {
 			.getLog(ExcutionLogListener.class);
 	protected ExcutionLogService excutionLogService;
 
-	@Autowired
-	public void setExcutionLogService(ExcutionLogService excutionLogService) {
-		this.excutionLogService = excutionLogService;
+	public ExcutionLogListener() {
+		excutionLogService = SpringUtils.getBean(ExcutionLogService.class);
 	}
 
 	public void notify(DelegateExecution execution) throws Exception {

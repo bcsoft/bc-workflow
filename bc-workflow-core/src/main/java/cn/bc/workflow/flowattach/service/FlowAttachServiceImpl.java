@@ -45,12 +45,30 @@ public class FlowAttachServiceImpl extends DefaultCrudService<FlowAttach>
 
 	public List<FlowAttach> findByProcess(String processInstanceId,
 			boolean includeTask) {
+		return findByProcess(processInstanceId, null, includeTask);
+	}
+
+	public List<FlowAttach> findCommentsByProcess(String processInstanceId,
+			boolean includeTask) {
+		return findByProcess(processInstanceId,
+				new Integer[] { FlowAttach.TYPE_COMMENT }, includeTask);
+	}
+
+	public List<FlowAttach> findByProcess(String processInstanceId,
+			Integer[] types, boolean includeTask) {
 		Assert.notNull(processInstanceId);
 		AndCondition and = new AndCondition();
 		and.add(new EqualsCondition("pid", processInstanceId));
 		if (!includeTask) {
-			and.add(new OrCondition().add(new IsNullCondition("tid")).add(
-					new EqualsCondition("tid", "")));
+			and.add(new OrCondition().add(new IsNullCondition("tid"))
+					.add(new EqualsCondition("tid", "")).setAddBracket(true));
+		}
+		if (types != null && types.length > 0) {
+			if (types.length == 1) {
+				and.add(new EqualsCondition("type", types[0]));
+			} else {
+				and.add(new InCondition("type", types));
+			}
 		}
 		and.add(new OrderCondition("type", Direction.Asc).add("fileDate",
 				Direction.Asc));
@@ -58,6 +76,14 @@ public class FlowAttachServiceImpl extends DefaultCrudService<FlowAttach>
 	}
 
 	public List<FlowAttach> findByTask(String[] taskIds) {
+		return findByTask(taskIds, null);
+	}
+
+	public List<FlowAttach> findCommentsByTask(String[] taskIds) {
+		return findByTask(taskIds, new Integer[] { FlowAttach.TYPE_COMMENT });
+	}
+
+	public List<FlowAttach> findByTask(String[] taskIds, Integer[] types) {
 		if (taskIds == null || taskIds.length == 0)
 			return new ArrayList<FlowAttach>();
 
@@ -67,7 +93,14 @@ public class FlowAttachServiceImpl extends DefaultCrudService<FlowAttach>
 		} else {
 			and.add(new InCondition("tid", taskIds));
 		}
-		and.add(new OrderCondition("type", Direction.Asc).add("fileDate",
+		if (types != null && types.length > 0) {
+			if (types.length == 1) {
+				and.add(new EqualsCondition("type", types[0]));
+			} else {
+				and.add(new InCondition("type", types));
+			}
+		}
+		and.add(new OrderCondition("tid", Direction.Asc).add("fileDate",
 				Direction.Asc));
 		return this.createQuery().condition(and).list();
 	}

@@ -152,7 +152,8 @@ public class FormServiceImpl extends org.activiti.engine.impl.FormServiceImpl {
 			sourceFormString = loadFormTemplateByUrl(key);
 		} else if ("file".equalsIgnoreCase(from)) {// 使用服务器文件方式
 			sourceFormString = loadFormTemplateByFile(key);
-		} else if ("res".equalsIgnoreCase(from)) {// 从类资源中获取
+		} else if ("res".equalsIgnoreCase(from)
+				|| "resource".equalsIgnoreCase(from)) {// 从类资源中获取
 			sourceFormString = loadFormTemplateByClassResource(key);
 		} else {
 			sourceFormString = null;
