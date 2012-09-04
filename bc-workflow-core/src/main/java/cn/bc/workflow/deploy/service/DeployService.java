@@ -1,10 +1,12 @@
 package cn.bc.workflow.deploy.service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import cn.bc.core.service.CrudService;
 import cn.bc.workflow.deploy.domain.Deploy;
+import cn.bc.workflow.deploy.domain.DeployResource;
 
 /**
  * Service接口
@@ -67,4 +69,25 @@ public interface DeployService extends CrudService<Deploy> {
 	 * @return
 	 */
 	public Long isStarted(String deploymentId);
+
+	/**
+	 * 判断指定的编码与版本号是否唯一
+	 * 
+	 * @param currentId
+	 *            当前模板的id
+	 * @param codes
+	 *            当前模板要使用的编码列表
+	 * @return
+	 */
+	public ArrayList<Object> isUniqueResourceCodeAndExtCheck(
+			Long id, String codes);
+
+	/**
+	 * 通过流程部署记录id和流程编码和部署资源编码查找对应部署资源
+	 * @param dmId
+	 * @param wfCode
+	 * @param resCode
+	 * @return
+	 */
+	public DeployResource findDeployResourceByDmIdAndwfCodeAndresCode(String dmId,String wfCode,String resCode);
 }
