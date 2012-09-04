@@ -135,6 +135,7 @@ public class WorkflowFormServiceImpl implements WorkflowFormService {
 		}
 
 		// 添加一些任务的定义参数
+		params.put("taskId", task.getId());
 		params.put("taskKey", task.getTaskDefinitionKey());
 		params.put("processKey", task.getProcessDefinitionId());
 
