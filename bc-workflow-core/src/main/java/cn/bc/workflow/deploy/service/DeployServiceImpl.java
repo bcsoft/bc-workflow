@@ -3,6 +3,7 @@ package cn.bc.workflow.deploy.service;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
@@ -23,6 +24,7 @@ import cn.bc.log.domain.OperateLog;
 import cn.bc.log.service.OperateLogService;
 import cn.bc.workflow.deploy.dao.DeployDao;
 import cn.bc.workflow.deploy.domain.Deploy;
+import cn.bc.workflow.deploy.domain.DeployResource;
 
 /**
  * Service接口的实现
@@ -208,6 +210,30 @@ public class DeployServiceImpl extends DefaultCrudService<Deploy> implements
 							+ "的流程信息", null, OperateLog.OPERATE_UPDATE);
 		}
 		return entity;
+	}
+
+	/**
+	 * 判断指定的编码与版本号是否唯一
+	 * 
+	 * @param currentId
+	 *            当前模板的id
+	 * @param codes
+	 *            当前模板要使用的编码列表
+	 * @return
+	 */
+	public ArrayList<Object> isUniqueResourceCodeAndExtCheck(Long id, String codes) {
+		return this.deployDao.isUniqueResourceCodeAndExtCheck(id,codes);
+	}
+
+	/**
+	 * 通过流程部署记录id和流程编码和部署资源编码查找对应部署资源
+	 * @param dmId
+	 * @param wfCode
+	 * @param resCode
+	 * @return
+	 */
+	public DeployResource findDeployResourceByDmIdAndwfCodeAndresCode(String dmId,String wfCode, String resCode) {
+		return this.deployDao.findDeployResourceByDmIdAndwfCodeAndresCode(dmId,wfCode,resCode);
 	}
 
 }

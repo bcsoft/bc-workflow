@@ -9,11 +9,13 @@ import java.io.InputStream;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.activiti.engine.HistoryService;
 import org.activiti.engine.RepositoryService;
 import org.activiti.engine.history.HistoricTaskInstance;
+import org.activiti.engine.repository.ProcessDefinition;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +30,8 @@ import cn.bc.template.domain.Template;
 import cn.bc.template.service.TemplateService;
 import cn.bc.template.util.FreeMarkerUtils;
 import cn.bc.web.util.WebUtils;
+import cn.bc.workflow.deploy.domain.DeployResource;
+import cn.bc.workflow.deploy.service.DeployService;
 
 /**
  * @author dragon
@@ -40,7 +44,8 @@ public class WorkflowFormServiceImpl implements WorkflowFormService {
 	private TemplateService templateService;
 	private HistoryService historyService;
 	private RepositoryService repositoryService;
-
+	private DeployService deployService;
+	
 	@Autowired
 	public void setTemplateService(TemplateService templateService) {
 		this.templateService = templateService;
@@ -55,10 +60,15 @@ public class WorkflowFormServiceImpl implements WorkflowFormService {
 	public void setHistoryService(HistoryService historyService) {
 		this.historyService = historyService;
 	}
-
+	
 	@Autowired
 	public void setRepositoryService(RepositoryService repositoryService) {
 		this.repositoryService = repositoryService;
+	}
+
+	@Autowired
+	public void setDeployService(DeployService deployService) {
+		this.deployService = deployService;
 	}
 
 	public String getRenderedTaskForm(String taskId, boolean readonly) {
@@ -260,7 +270,7 @@ public class WorkflowFormServiceImpl implements WorkflowFormService {
 			String key) {
 		String wfCode;// 流程编码
 		String resCode;// 资源编码
-		if (key.indexOf("/") != -1) {
+		if (key.indexOf("/") == -1) {
 			wfCode = task.getProcessDefinitionId().substring(0,
 					task.getProcessDefinitionId().indexOf(":"));
 			resCode = key;
@@ -273,8 +283,31 @@ public class WorkflowFormServiceImpl implements WorkflowFormService {
 			logger.debug("wfCode=" + wfCode);
 			logger.debug("resCode=" + resCode);
 		}
+		//获取部署记录id
+		List<ProcessDefinition> list = repositoryService.createProcessDefinitionQuery()
+				.processDefinitionId(task.getProcessDefinitionId()).list();
+		DeployResource dr;
+		if(list.size() == 1){
+			dr = deployService.findDeployResourceByDmIdAndwfCodeAndresCode(
+					list.get(0).getDeploymentId(),wfCode, resCode);
+		}else{
+			throw new CoreException("通过流程定义id查找出多个流程定义对象!");
+		}
+		
+		if(dr == null)
+			throw new CoreException("unsupport method:loadFormTemplateByWFResource");
 
-		// TODO
-		throw new CoreException("unsupport method:loadFormTemplateByWFResource");
+		// 上传部署资源的存储的绝对路径
+		String drRealPath = Attach.DATA_REAL_PATH + "/"
+				+ DeployResource.DATA_SUB_PATH + "/" + dr.getPath();
+		// 获取文件流
+		try {
+			InputStream file = new FileInputStream(drRealPath);
+			return new String(FileCopyUtils.copyToByteArray(file));
+		} catch (IOException e) {
+			logger.warn(e.getMessage(), e);
+			throw new CoreException(e.getMessage(), e);
+		}
+		
 	}
 }
