@@ -27,7 +27,12 @@
 		<action name="deploys/dodeployRelease" class="deploysAction" method="dodeployRelease"/>
 		<action name="deploys/dodeployCancel" class="deploysAction" method="dodeployCancel"/>
 		
+		<!-- 流程部署的编码加版本号是否唯一检查  -->
 		<action name="deploy/isUniqueCodeAndVersion" class="deployAction" method="isUniqueCodeAndVersion"/>
+		<!-- 流程部署的编码是否唯一和扩展名是否有效检查  -->
+		<action name="deploy/isUniqueResourceCodeAndExtCheck" class="deployAction" method="isUniqueResourceCodeAndExtCheck"/>
+		<!-- 页面添加一项资源设置UID和文件大小  -->
+		<action name="deploy/setInputUid" class="deployAction" method="setInputUid"/>
 		<action name="deploy/diagram" class="deployAction" method="diagram">
 			<result name="success" type="stream">
 				<!-- 下载文件类型定义 -->

@@ -1,11 +1,14 @@
 package cn.bc.workflow.deploy.dao.hibernate.jpa;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import javax.sql.DataSource;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -20,6 +23,7 @@ import cn.bc.orm.hibernate.jpa.HibernateCrudJpaDao;
 import cn.bc.orm.hibernate.jpa.HibernateJpaNativeQuery;
 import cn.bc.workflow.deploy.dao.DeployDao;
 import cn.bc.workflow.deploy.domain.Deploy;
+import cn.bc.workflow.deploy.domain.DeployResource;
 
 /**
  * DAO接口的实现
@@ -29,7 +33,8 @@ import cn.bc.workflow.deploy.domain.Deploy;
  */
 public class DeployDaoImpl extends HibernateCrudJpaDao<Deploy> implements
 		DeployDao {
-
+	protected final Log logger = LogFactory.getLog(getClass());
+	
 	private JdbcTemplate jdbcTemplate;
 
 	@Autowired
@@ -137,5 +142,80 @@ public class DeployDaoImpl extends HibernateCrudJpaDao<Deploy> implements
 			e.getStackTrace();
 		}
 		return id;
+	}
+
+	/**
+	 * 判断指定的编码与版本号是否唯一
+	 * 
+	 * @param currentId
+	 *            当前模板的id
+	 * @param codes
+	 *            当前模板要使用的编码列表
+	 * @return
+	 */
+	@SuppressWarnings("unchecked")
+	public ArrayList<Object> isUniqueResourceCodeAndExtCheck(Long id, String codes) {
+		List<?> result;
+		String [] codeAry = codes.split(",");
+		if(codeAry.length == 0){
+			return null;
+		}else{
+			List<Object> args = new ArrayList<Object>();
+			StringBuffer hql = new StringBuffer();
+			if (id == null) {
+				hql.append("select dr.code from DeployResource dr where dr.code in (?");
+				args.add(codeAry[0]);
+				for (int i = 1; i < codeAry.length; i++) {
+					hql.append(",?");
+					args.add(codeAry[i]);
+				}
+				hql.append(")");
+				result = this.getJpaTemplate().find(hql.toString(),
+						args.toArray());
+			}else{
+				hql.append("select dr.code from DeployResource dr where dr.deploy.id !=? and dr.code in (?");
+				args.add(id);
+				args.add(codeAry[0]);
+				for (int i = 1; i < codeAry.length; i++) {
+					hql.append(",?");
+					args.add(codeAry[i]);
+				}
+				hql.append(")");
+				result = this.getJpaTemplate().find(hql.toString(),
+						args.toArray());
+			}
+			if (result.size() == 0) {
+				return null;
+			} else {
+				return ((ArrayList<Object>) result);
+			}
+		}
+	}
+
+	/**
+	 * 通过流程部署记录id和流程编码和部署资源编码查找对应部署资源
+	 * @param dmId
+	 * @param wfCode
+	 * @param resCode
+	 * @return
+	 */
+	public DeployResource findDeployResourceByDmIdAndwfCodeAndresCode(String dmId,String wfCode, String resCode) {
+		DeployResource dr = null;
+		List<?> list = this.getJpaTemplate().find(
+				"from DeployResource dr where dr.deploy.deploymentId=? and dr.deploy.code=? and dr.code=?",
+				new Object[] { dmId,wfCode,resCode });
+		if(list.size() == 0){
+			return null;
+		} else if(list.size() == 1){
+			dr = (DeployResource) list.get(0);
+			return dr;
+		}else{
+			dr = (DeployResource) list.get(0);
+			if (logger.isDebugEnabled()) {
+				logger.debug("存在两个或两个以上同一编码的资源，已选择第一个资源显示！");
+
+			}
+		}
+		return null;
 	}
 }

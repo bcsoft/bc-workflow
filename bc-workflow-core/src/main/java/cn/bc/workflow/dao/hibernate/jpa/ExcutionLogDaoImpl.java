@@ -53,7 +53,7 @@ public class ExcutionLogDaoImpl extends HibernateCrudJpaDao<ExcutionLog>
 		this.applicationContext = applicationContext;
 	}
 
-	public RepositoryService getRepositoryService() {
+	private RepositoryService getRepositoryService() {
 		return applicationContext.getBean(RepositoryService.class);
 	}
 
@@ -91,7 +91,8 @@ public class ExcutionLogDaoImpl extends HibernateCrudJpaDao<ExcutionLog>
 			logger.debug("taskId=" + taskId);
 		}
 		List<Object[]> all = HibernateJpaNativeQuery.executeNativeSql(
-				getJpaTemplate(), hql, new Object[] { taskId,"task_create" }, null);
+				getJpaTemplate(), hql, new Object[] { taskId, "task_create" },
+				null);
 		if (all == null || all.isEmpty()) {
 			return null;
 		} else {
