@@ -145,15 +145,6 @@ public class WorkflowFormServiceImpl implements WorkflowFormService {
 		}
 
 		// 添加一些任务的定义参数
-<<<<<<< HEAD
-		HistoricTaskInstance task = historyService
-				.createHistoricTaskInstanceQuery().taskId(taskId)
-				.singleResult();
-		if (task == null) {
-			throw new CoreException("can't find taskHistory: id=" + taskId);
-		}
-=======
->>>>>>> flow
 		params.put("taskId", task.getId());
 		params.put("taskKey", task.getTaskDefinitionKey());
 		params.put("processKey", task.getProcessDefinitionId());
