@@ -142,7 +142,7 @@ public class DeployServiceImpl extends DefaultCrudService<Deploy> implements
 	public void dodeployCancel(Long deploymentId, Boolean isCascade) {
 		// 判断发布类型
 		Deploy deploy = this.deployDao.load(deploymentId);
-		if (null != deploy) {
+		if (null != deploy && null != deploy.getDeploymentId()) {
 			if (isCascade) {
 				repositoryService.deleteDeployment(deploy.getDeploymentId(),
 						true);// 级联删除流程
