@@ -10,6 +10,7 @@ import javax.persistence.PersistenceException;
 
 import org.activiti.engine.FormService;
 import org.activiti.engine.HistoryService;
+import org.activiti.engine.RepositoryService;
 import org.activiti.engine.TaskService;
 import org.activiti.engine.form.FormProperty;
 import org.activiti.engine.form.TaskFormData;
@@ -18,6 +19,7 @@ import org.activiti.engine.history.HistoricFormProperty;
 import org.activiti.engine.history.HistoricProcessInstance;
 import org.activiti.engine.history.HistoricTaskInstance;
 import org.activiti.engine.history.HistoricVariableUpdate;
+import org.activiti.engine.repository.ProcessDefinition;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.BeansException;
@@ -49,6 +51,10 @@ public class ExcutionLogDaoImpl extends HibernateCrudJpaDao<ExcutionLog>
 	public void setApplicationContext(ApplicationContext applicationContext)
 			throws BeansException {
 		this.applicationContext = applicationContext;
+	}
+
+	private RepositoryService getRepositoryService() {
+		return applicationContext.getBean(RepositoryService.class);
 	}
 
 	public HistoryService getHistoryService() {
@@ -85,7 +91,8 @@ public class ExcutionLogDaoImpl extends HibernateCrudJpaDao<ExcutionLog>
 			logger.debug("taskId=" + taskId);
 		}
 		List<Object[]> all = HibernateJpaNativeQuery.executeNativeSql(
-				getJpaTemplate(), hql, new Object[] { taskId,"task_create" }, null);
+				getJpaTemplate(), hql, new Object[] { taskId, "task_create" },
+				null);
 		if (all == null || all.isEmpty()) {
 			return null;
 		} else {
@@ -132,7 +139,26 @@ public class ExcutionLogDaoImpl extends HibernateCrudJpaDao<ExcutionLog>
 					+ task.getProcessInstanceId());
 		}
 
+		// 参数容器初始化
 		Map<String, Object> params = new LinkedHashMap<String, Object>();
+
+		// 流程实例的一些参数
+		params.put("pi_id", pi.getId());
+		params.put("pi_businessKey", pi.getBusinessKey());
+		params.put("pi_definitionId", pi.getProcessDefinitionId());
+		params.put("pi_startUserId", pi.getStartUserId());
+		params.put("pi_deleteReason", pi.getDeleteReason());
+
+		// 流程定义的参数
+		ProcessDefinition pd = getRepositoryService()
+				.createProcessDefinitionQuery()
+				.processDefinitionId(pi.getProcessDefinitionId())
+				.singleResult();
+		params.put("pd_id", pd.getId());
+		params.put("pd_category", pd.getCategory());
+		params.put("pd_deploymentId", pd.getDeploymentId());
+		params.put("pd_key", pd.getKey());
+		params.put("pd_name", pd.getName());
 
 		// 全局流程变量
 		List<HistoricDetail> detail = getHistoryService()

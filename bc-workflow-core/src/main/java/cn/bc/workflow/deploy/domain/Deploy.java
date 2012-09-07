@@ -7,13 +7,17 @@ import java.io.File;
 import java.util.Calendar;
 import java.util.Set;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
+import javax.persistence.Inheritance;
+import javax.persistence.InheritanceType;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.OrderBy;
 import javax.persistence.Table;
 import javax.persistence.Transient;
@@ -33,6 +37,7 @@ import cn.bc.identity.domain.RichFileEntityImpl;
  */
 @Entity
 @Table(name = "BC_WF_DEPLOY")
+@Inheritance(strategy = InheritanceType.JOINED)
 public class Deploy extends RichFileEntityImpl {
 	private static final long serialVersionUID = 1L;
 	@SuppressWarnings("unused")
@@ -66,6 +71,7 @@ public class Deploy extends RichFileEntityImpl {
 	private ActorHistory deployer;// 最后部署人
 	
 	private Set<Actor> users;// 使用人，为空代表所有人均可使用
+	private Set<DeployResource> resources;// 使用人，为空代表所有人均可使用
 
 	@ManyToMany(fetch = FetchType.EAGER)
 	@JoinTable(name = "BC_WF_DEPLOY_ACTOR", joinColumns = @JoinColumn(name = "DID", referencedColumnName = "ID"), inverseJoinColumns = @JoinColumn(name = "AID", referencedColumnName = "ID"))
@@ -76,6 +82,16 @@ public class Deploy extends RichFileEntityImpl {
 	
 	public void setUsers(Set<Actor> users) {
 		this.users = users;
+	}
+	
+	@OneToMany(mappedBy = "deploy", fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
+	@OrderBy(value = "id asc")
+	public Set<DeployResource> getResources() {
+		return resources;
+	}
+
+	public void setResources(Set<DeployResource> resources) {
+		this.resources = resources;
 	}
 
 	@Column(name = "DEPLOYMENT_ID")
@@ -193,7 +209,7 @@ public class Deploy extends RichFileEntityImpl {
 
 	
 	/**
-	 * 获取模板的附件长度
+	 * 获取流程部署文件的附件长度
 	 * <p>
 	 * 如果是自定义文本内容返回此内容字节的长度,如果是附件类型返回附件长度
 	 * </p>
