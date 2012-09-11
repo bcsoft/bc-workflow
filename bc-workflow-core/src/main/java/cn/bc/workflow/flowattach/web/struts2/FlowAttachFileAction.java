@@ -11,7 +11,6 @@ import java.io.InputStream;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.logging.Log;
@@ -319,13 +318,10 @@ public class FlowAttachFileAction extends ActionSupport {
 	private Map<String,Object> getParams(FlowAttach flowAttach) throws Exception{
 		if(!flowAttach.getFormatted())
 			return null;
-		String path = Attach.DATA_REAL_PATH + File.separator
-				+ FlowAttach.DATA_SUB_PATH + File.separator
-				+ flowAttach.getPath();
+
 		// 声明格式化参数
 		Map<String, Object> params=null;
-		// 获取文件中的${XXXX}占位标记的键名列表
-		List<String> markers=null;
+
 		
 		//
 		Map<String, Object> mapFormatSql=new HashMap<String, Object>();
@@ -337,32 +333,7 @@ public class FlowAttachFileAction extends ActionSupport {
 			mapFormatSql.put("tid", flowAttach.getTid());
 			params = templateService.getMapParams(flowAttach.getTemplateId(), mapFormatSql);
 		}
-			
-		if (params == null || params.size() == 0)
-			params = new HashMap<String, Object>();
-		
-		//docx
-		if (flowAttach.getExt().equals(
-				templateTypeService.loadByCode("word-docx").getExtension())) {
-			markers = DocxUtils.findMarkers(new FileInputStream(path));
-		//xls
-		} else if (flowAttach.getExt().equals(
-				templateTypeService.loadByCode("xls").getExtension())) {
-			markers = XlsUtils.findMarkers(new FileInputStream(path));
-		
-		//xlsx
-		} else if (flowAttach.getExt().equals(
-				templateTypeService.loadByCode("xlsx").getExtension())) {
-			markers = XlsUtils.findMarkers(new FileInputStream(path));
-		}else
-			return null;
-		
-		// 占位符列表与参数列表匹配,当占位符列表值没出现在参数列表key值时，增加此key值
-		for (String key : markers) {
-			if (!params.containsKey(key))
-				params.put(key, "　");
-		}
-		
-		return params;
+	
+		return params == null?new HashMap<String, Object>():params;
 	}
 }
