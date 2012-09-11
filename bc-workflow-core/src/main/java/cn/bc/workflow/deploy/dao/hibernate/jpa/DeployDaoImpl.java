@@ -205,17 +205,38 @@ public class DeployDaoImpl extends HibernateCrudJpaDao<Deploy> implements
 				"from DeployResource dr where dr.deploy.deploymentId=? and dr.deploy.code=? and dr.code=?",
 				new Object[] { dmId,wfCode,resCode });
 		if(list.size() == 0){
-			return null;
+			logger.debug("异常！根据流程部署记录id,流程编码,流程资源编码查找不了流程资源！");
 		} else if(list.size() == 1){
 			dr = (DeployResource) list.get(0);
-			return dr;
 		}else{
 			dr = (DeployResource) list.get(0);
 			if (logger.isDebugEnabled()) {
-				logger.debug("存在两个或两个以上同一编码的资源，已选择第一个资源显示！");
-
+				logger.debug("异常！存在两个或两个以上同一编码的资源，已选择第一个资源显示！");
 			}
 		}
-		return null;
+		return dr;
+	}
+
+	/**
+	 * 通过流程编码获取流程资源
+	 * @param deployCode
+	 * @return
+	 */
+	public DeployResource findDeployResourceCode(String deployCode) {
+		DeployResource dr = null;
+		List<?> list = this.getJpaTemplate().find(
+				"from DeployResource dr where dr.code=?",
+				new Object[] { deployCode });
+		if(list.size() == 0){
+			logger.debug("异常！流程编码查找不了流程资源！");
+		} else if(list.size() == 1){
+			dr = (DeployResource) list.get(0);
+		}else{
+			dr = (DeployResource) list.get(0);
+			if (logger.isDebugEnabled()) {
+				logger.debug("异常！存在两个或两个以上同一编码的资源，已选择第一个资源显示！");
+			}
+		}
+		return dr;
 	}
 }

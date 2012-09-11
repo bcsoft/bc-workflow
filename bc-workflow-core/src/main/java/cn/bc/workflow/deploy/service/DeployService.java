@@ -90,4 +90,11 @@ public interface DeployService extends CrudService<Deploy> {
 	 * @return
 	 */
 	public DeployResource findDeployResourceByDmIdAndwfCodeAndresCode(String dmId,String wfCode,String resCode);
+	
+	/**
+	 * 通过流程编码获取流程资源
+	 * @param deployCode
+	 * @return
+	 */
+	public DeployResource findDeployResourceCode(String deployCode);
 }
