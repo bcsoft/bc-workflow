@@ -11,6 +11,7 @@ import org.activiti.engine.repository.ProcessDefinition;
 import org.activiti.engine.runtime.ProcessInstance;
 
 import cn.bc.identity.domain.ActorHistory;
+import cn.bc.workflow.deploy.domain.DeployResource;
 
 /**
  * 工作流常用方法封装的Service
@@ -145,10 +146,28 @@ public interface WorkflowService {
 	InputStream getInstanceDiagram(String processInstanceId);
 
 	/**
+	 * 获取流程图资源文件流
+	 * 
+	 * @param deployId
+	 *            平台流程部署ID
+	 * @return
+	 */
+	InputStream getDiagram(Long deployId);
+
+	/**
+	 * 获取指定流程资源的流程图资源文件流
+	 * 
+	 * @param deployId
+	 *            平台流程部署ID
+	 * @return
+	 */
+	InputStream getDeployDiagram(DeployResource dr);
+	
+	/**
 	 * 获取指定流程部署的流程图资源文件流
 	 * 
 	 * @param deploymentId
-	 *            流程部署ID
+	 *            Activiti流程部署ID
 	 * @return
 	 */
 	InputStream getDeploymentDiagram(String deploymentId);

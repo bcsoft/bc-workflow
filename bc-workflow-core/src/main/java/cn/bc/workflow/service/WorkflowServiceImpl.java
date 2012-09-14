@@ -3,6 +3,9 @@
  */
 package cn.bc.workflow.service;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -34,6 +37,7 @@ import org.springframework.util.Assert;
 import cn.bc.core.exception.CoreException;
 import cn.bc.core.util.DateUtils;
 import cn.bc.core.util.JsonUtils;
+import cn.bc.docs.domain.Attach;
 import cn.bc.identity.domain.ActorHistory;
 import cn.bc.identity.service.ActorHistoryService;
 import cn.bc.identity.service.ActorService;
@@ -41,6 +45,9 @@ import cn.bc.identity.web.SystemContextHolder;
 import cn.bc.template.domain.Template;
 import cn.bc.template.service.TemplateService;
 import cn.bc.workflow.activiti.ActivitiUtils;
+import cn.bc.workflow.deploy.domain.Deploy;
+import cn.bc.workflow.deploy.domain.DeployResource;
+import cn.bc.workflow.deploy.service.DeployService;
 import cn.bc.workflow.domain.ExcutionLog;
 import cn.bc.workflow.flowattach.domain.FlowAttach;
 import cn.bc.workflow.flowattach.service.FlowAttachService;
@@ -64,6 +71,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 	// private FormService formService;
 	private HistoryService historyService;
 	private ActorService actorService;
+	private DeployService deployService;
 
 	@Autowired
 	public void setActorService(
@@ -115,11 +123,18 @@ public class WorkflowServiceImpl implements WorkflowService {
 	public void setHistoryService(HistoryService historyService) {
 		this.historyService = historyService;
 	}
-
+	
+	@Autowired
+	public void setDeployService(DeployService deployService) {
+		this.deployService = deployService;
+	}
+	
 	// @Autowired
 	// public void setFormService(FormService formService) {
 	// this.formService = formService;
 	// }
+
+
 
 	/**
 	 * 获取当前用户的帐号信息
@@ -384,6 +399,34 @@ public class WorkflowServiceImpl implements WorkflowService {
 		return repositoryService.getResourceAsStream(
 				definition.getDeploymentId(),
 				definition.getDiagramResourceName());
+	}
+
+	public InputStream getDiagram(Long deployId) {
+		InputStream inputStream = null;
+		Deploy deploy = deployService.load(deployId);
+		DeployResource dr = this.deployService.findDeployResourceCode(deploy.getCode());
+		// 根据流程编码不能获取流程部署资源,则获取指定Activiti流程部署的相关资源文件流
+		if(dr != null){
+			inputStream = this.getDeployDiagram(dr);
+		}else{
+			inputStream = this.getDeploymentDiagram(deploy.getDeploymentId());
+		}
+		return inputStream;
+	}
+	
+	public InputStream getDeployDiagram(DeployResource dr) {
+		InputStream inputStream = null;
+		// 上传部署资源的存储的绝对路径
+		String drRealPath = Attach.DATA_REAL_PATH + "/"
+				+ DeployResource.DATA_SUB_PATH + "/" + dr.getPath();
+		File file = new File(drRealPath);
+		try {
+			inputStream = new FileInputStream(file);
+		} catch (FileNotFoundException e) {
+			logger.warn(e.getMessage(), e);
+			throw new CoreException(e.getMessage(), e);
+		}
+		return inputStream;
 	}
 
 	public InputStream getDeploymentDiagram(String deploymentId) {
@@ -707,4 +750,5 @@ public class WorkflowServiceImpl implements WorkflowService {
 
 		// 删除流转日志、意见、附件 TODO
 	}
+
 }

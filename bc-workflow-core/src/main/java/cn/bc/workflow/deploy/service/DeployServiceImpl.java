@@ -236,4 +236,8 @@ public class DeployServiceImpl extends DefaultCrudService<Deploy> implements
 		return this.deployDao.findDeployResourceByDmIdAndwfCodeAndresCode(dmId,wfCode,resCode);
 	}
 
+	public DeployResource findDeployResourceCode(String deployCode) {
+		return this.deployDao.findDeployResourceCode(deployCode);
+	}
+
 }

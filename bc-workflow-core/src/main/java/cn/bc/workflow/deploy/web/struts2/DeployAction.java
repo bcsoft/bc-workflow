@@ -181,7 +181,8 @@ public class DeployAction extends FileEntityAction<Long, Deploy> {
 					String path = json.getString("path");
 					resource.setDeploy(entity);
 					resource.setUid(json.getString("uid"));
-					resource.setType(json.getInt("type"));
+					resource.setType(json.getString("type"));
+					//resource.setType(json.getInt("type"));
 					resource.setCode(json.getString("code"));
 					resource.setSubject(json.getString("subject"));
 					resource.setPath(path);
@@ -227,7 +228,7 @@ public class DeployAction extends FileEntityAction<Long, Deploy> {
 		super.initForm(editable);
 		// 状态列表
 		statusesValue = this.getStatuses();
-		resourceTypeValues = this.getResourceType();
+		//resourceTypeValues = this.getResourceType();
 	}
 
 	// 状态键值转换
@@ -241,21 +242,21 @@ public class DeployAction extends FileEntityAction<Long, Deploy> {
 		return statuses;
 	}
 	
-	/**
-	 * 资源类型列表：JS|FORM|PNG
-	 * 
-	 * @return
-	 */
-	protected Map<String, String> getResourceType() {
-		Map<String, String> statuses = new LinkedHashMap<String, String>();
-		statuses.put(String.valueOf(DeployResource.TYPE_JS),
-				"js");
-		statuses.put(String.valueOf(DeployResource.TYPE_FORM),
-				"form");
-		statuses.put(String.valueOf(DeployResource.TYPE_PNG),
-				"png");
-		return statuses;
-	}
+//	/**
+//	 * 资源类型列表：JS|FORM|PNG
+//	 * 
+//	 * @return
+//	 */
+//	protected Map<String, String> getResourceType() {
+//		Map<String, String> statuses = new LinkedHashMap<String, String>();
+//		statuses.put(String.valueOf(DeployResource.TYPE_JS),
+//				"js");
+//		statuses.put(String.valueOf(DeployResource.TYPE_FORM),
+//				"form");
+//		statuses.put(String.valueOf(DeployResource.TYPE_PNG),
+//				"png");
+//		return statuses;
+//	}
 
 
 	public Long id;// 部署id
@@ -332,7 +333,7 @@ public class DeployAction extends FileEntityAction<Long, Deploy> {
 	 * @throws Exception
 	 */
 	public String diagram() throws Exception {
-		Assert.hasText(did, "need did argument");
+		Assert.hasText(id+"", "need id argument");
 		Date startTime = new Date();
 
 		// 下载文件的扩展名
@@ -349,7 +350,7 @@ public class DeployAction extends FileEntityAction<Long, Deploy> {
 		}
 
 		// 获取资源流
-		this.inputStream = workflowService.getDeploymentDiagram(this.did);
+		this.inputStream = workflowService.getDiagram(this.id);
 		if (logger.isDebugEnabled())
 			logger.debug("inputStream=" + this.inputStream.getClass());
 		this.contentLength = this.inputStream.available();// 资源大小
