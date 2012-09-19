@@ -6,6 +6,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -25,9 +26,14 @@ import cn.bc.identity.domain.Actor;
 import cn.bc.identity.service.ActorService;
 import cn.bc.identity.web.SystemContext;
 import cn.bc.identity.web.struts2.FileEntityAction;
+import cn.bc.template.domain.TemplateParam;
+import cn.bc.template.domain.TemplateType;
+import cn.bc.template.service.TemplateParamService;
+import cn.bc.template.service.TemplateTypeService;
 import cn.bc.web.ui.html.page.ButtonOption;
 import cn.bc.web.ui.html.page.PageOption;
 import cn.bc.web.ui.json.Json;
+import cn.bc.web.ui.json.JsonArray;
 import cn.bc.web.util.WebUtils;
 import cn.bc.workflow.deploy.domain.Deploy;
 import cn.bc.workflow.deploy.domain.DeployResource;
@@ -47,10 +53,16 @@ public class DeployAction extends FileEntityAction<Long, Deploy> {
 	private static final long serialVersionUID = 1L;
 	private DeployService deployService;
 	private ActorService actorService;
+	private TemplateTypeService templateTypeService;
+	private TemplateParamService templateParamService;
 	protected WorkflowService workflowService;
 
 	public Map<String, String> statusesValue;
 	public Map<String, String> resourceTypeValues;
+	// 模板类型集合
+	public List<Map<String, String>> typeList;
+	// 模板参数
+	public String templateParamIds;
 
 	public String assignUserIds;// 分配的用户id，多个id用逗号连接
 	public Set<Actor> ownedUsers;// 已分配的用户
@@ -66,11 +78,22 @@ public class DeployAction extends FileEntityAction<Long, Deploy> {
 	public void setActorService(ActorService actorService) {
 		this.actorService = actorService;
 	}
+	
+	@Autowired
+	public void setTemplateTypeService(TemplateTypeService templateTypeService) {
+		this.templateTypeService = templateTypeService;
+	}
+	
+	@Autowired
+	public void setTemplateParamService(TemplateParamService templateParamService) {
+		this.templateParamService = templateParamService;
+	}
 
 	@Autowired
 	public void setWorkflowService(WorkflowService workflowService) {
 		this.workflowService = workflowService;
 	}
+
 
 	@Override
 	public boolean isReadonly() {
@@ -105,9 +128,9 @@ public class DeployAction extends FileEntityAction<Long, Deploy> {
 		entity.setStatus(Deploy.STATUS_NOT_RELEASE);
 		// 默认模板类型为自定义文本
 		entity.setType(Deploy.TYPE_XML);
-
 		// uid
 		entity.setUid(this.getIdGeneratorService().next(Deploy.ATTACH_TYPE));
+		
 	}
 
 	@Override
@@ -116,6 +139,9 @@ public class DeployAction extends FileEntityAction<Long, Deploy> {
 
 		// 加载已分配的用户
 		this.ownedUsers = entity.getUsers();
+		
+		this.typeList = this.templateTypeService.findTemplateTypeOption(true);
+		
 	}
 
 	@Override
@@ -124,6 +150,9 @@ public class DeployAction extends FileEntityAction<Long, Deploy> {
 
 		// 加载已分配的用户
 		this.ownedUsers = entity.getUsers();
+		
+		this.typeList = this.templateTypeService.findTemplateTypeOption(true);
+		
 	}
 
 	@Override
@@ -170,26 +199,61 @@ public class DeployAction extends FileEntityAction<Long, Deploy> {
 			if(this.resources != null && this.resources.length() > 0){
 				resources = new LinkedHashSet<DeployResource>();
 				DeployResource resource;
+				TemplateType templateType;
 				JSONArray jsons = new JSONArray(this.resources);
 				JSONObject json;
 				for(int i=0;i<jsons.length();i++){
 					json = jsons.getJSONObject(i);
+					//加载流程资源
 					resource = new DeployResource();
+					//加载模板类型
+					templateType = this.templateTypeService.load(json
+							.getLong("type"));
+					
 					if(json.has("id"))
 						resource.setId(json.getLong("id"));
 					
-					String path = json.getString("path");
-					resource.setDeploy(entity);
 					resource.setUid(json.getString("uid"));
-					resource.setType(json.getString("type"));
 					//resource.setType(json.getInt("type"));
 					resource.setCode(json.getString("code"));
 					resource.setSubject(json.getString("subject"));
-					resource.setPath(path);
+					resource.setPath(json.getString("path"));
 					resource.setSize(json.getLong("size"));
 					resource.setSource(json.getString("source"));
-					resource.setDesc(json.getString("desc"));
+					resource.setFormatted(json.getBoolean("formatted"));
 					
+					resource.setDeploy(entity); //设置部署对象
+					resource.setTemplateType(templateType); //设置模板类型对象
+					String idstr = json.getString("paramIds");
+					
+					
+					//设置流程资源里的参数
+					Long[] templateParamIds = null;
+					if (idstr != null && idstr.length() > 0) {
+						String[] tpIds = idstr.split(",");
+						templateParamIds = new Long[tpIds.length];
+						for (int j = 0; j < tpIds.length; j++){ 
+							templateParamIds[j] = new Long(tpIds[j]);
+						}
+					}
+					
+					if(templateParamIds!=null&&templateParamIds.length>0){
+						Set<TemplateParam> params=null;
+						TemplateParam templateParam=null;
+						for(int j=0;j<templateParamIds.length;j++){
+							if(j==0)
+								params=new HashSet<TemplateParam>();
+							templateParam=this.templateParamService.load(templateParamIds[j]);
+							params.add(templateParam);
+						}
+						if(resource.getParams()!=null){
+							resource.getParams().clear();
+							resource.getParams().addAll(params);
+						}else{
+							resource.setParams(params);
+						}
+					}
+
 					resources.add(resource);
 				}
 			}
@@ -277,6 +341,24 @@ public class DeployAction extends FileEntityAction<Long, Deploy> {
 		json.put("uid", this.getIdGeneratorService().next(
 				DeployResource.ATTACH_TYPE));
 		this.json = json.toString();
+		return "json";
+	}
+	
+	// 加载模板类型列表
+	public String loadTemplateTypeList(){
+		JsonArray jsonArray = new JsonArray();
+		Json json = null;
+		List<Map<String, String>> listMap = null;
+		listMap = this.templateTypeService.findTemplateTypeOption(true);
+		for (Map<String, String> map : listMap) {
+			if (map != null) {
+				json = new Json();
+				json.put("key", map.get("key").trim());
+				json.put("value", map.get("value").trim());
+				jsonArray.add(json);
+			}
+		}
+		this.json =jsonArray.toString();
 		return "json";
 	}
 

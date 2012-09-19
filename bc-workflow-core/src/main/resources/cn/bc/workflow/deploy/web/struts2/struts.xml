@@ -33,6 +33,8 @@
 		<action name="deploy/isUniqueResourceCodeAndExtCheck" class="deployAction" method="isUniqueResourceCodeAndExtCheck"/>
 		<!-- 页面添加一项资源设置UID和文件大小  -->
 		<action name="deploy/setInputUid" class="deployAction" method="setInputUid"/>
+		<!-- 加载模板类型列表  -->
+		<action name="deploy/loadTemplateTypeList" class="deployAction" method="loadTemplateTypeList"/>
 		<action name="deploy/diagram" class="deployAction" method="diagram">
 			<result name="success" type="stream">
 				<!-- 下载文件类型定义 -->

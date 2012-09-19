@@ -7,12 +7,16 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.util.Set;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
+import javax.persistence.OrderBy;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
@@ -21,6 +25,8 @@ import org.apache.commons.logging.LogFactory;
 
 import cn.bc.core.EntityImpl;
 import cn.bc.docs.domain.Attach;
+import cn.bc.template.domain.TemplateParam;
+import cn.bc.template.domain.TemplateType;
 
 /**
  * 流程部署资源
@@ -48,15 +54,18 @@ public class DeployResource extends EntityImpl {
 	
 	private String uid;
 	//private int type; // 1:JS,2:FORM,3:PNG,4:CSS
-	private String type; //类型
+	//private String type; //类型
 	private String code;// 编码
 	private String subject;// 标题
 	private String path;// 物理文件保存的相对路径（相对于全局配置的app.data.realPath或app.data.subPath目录下的子路径，如"resource/20120820/xxxx.doc"）
 	private Long size;// 文件的大小(单位为字节) 默认0
 	private String source;//原始文件名
-	private String desc;// 备注
+	private boolean formatted;// 格式化：模板是否允许格式化 默认否
 	
 	private Deploy deploy; //部署ID
+	private TemplateType templateType;
+	private Set<TemplateParam> params;//模板所使用的参数
+
 
 	@ManyToOne(fetch = FetchType.EAGER, optional = false)
 	@JoinColumn(name = "PID", referencedColumnName = "ID")
@@ -67,6 +76,28 @@ public class DeployResource extends EntityImpl {
 	public void setDeploy(Deploy deploy) {
 		this.deploy = deploy;
 	}
+	
+	@ManyToOne(fetch = FetchType.EAGER, optional = false)
+	@JoinColumn(name = "TYPE_ID", referencedColumnName = "ID")
+	public TemplateType getTemplateType() {
+		return templateType;
+	}
+
+	public void setTemplateType(TemplateType templateType) {
+		this.templateType = templateType;
+	}
+	
+	@ManyToMany(fetch = FetchType.EAGER)
+	@JoinTable(name = "BC_WF_DEPLOY_RESOURCE_PARAM", joinColumns = @JoinColumn(name = "RID", referencedColumnName = "ID"), inverseJoinColumns = @JoinColumn(name = "PID", referencedColumnName = "ID"))
+	@OrderBy("orderNo asc")
+	public Set<TemplateParam> getParams() {
+		return params;
+	}
+
+	public void setParams(Set<TemplateParam> params) {
+		this.params = params;
+	}
+
 
 	@Column(name = "UID_")
 	public String getUid() {
@@ -86,14 +117,14 @@ public class DeployResource extends EntityImpl {
 //		this.type = type;
 //	}
 
-	@Column(name = "TYPE_")
-	public String getType() {
-		return type;
-	}
-
-	public void setType(String type) {
-		this.type = type;
-	}
+//	@Column(name = "TYPE_")
+//	public String getType() {
+//		return type;
+//	}
+//
+//	public void setType(String type) {
+//		this.type = type;
+//	}
 
 	@Column(name = "SIZE_")
 	public Long getSize() {
@@ -136,15 +167,15 @@ public class DeployResource extends EntityImpl {
 		this.source = source;
 	}
 	
-	@Column(name = "DESC_")
-	public String getDesc() {
-		return desc;
+	@Column(name = "FORMATTED")
+	public boolean isFormatted() {
+		return formatted;
 	}
 
-	public void setDesc(String desc) {
-		this.desc = desc;
+	public void setFormatted(boolean formatted) {
+		this.formatted = formatted;
 	}
-	
+
 	/**
 	 * 获取流程资源文件的附件长度
 	 * <p>
