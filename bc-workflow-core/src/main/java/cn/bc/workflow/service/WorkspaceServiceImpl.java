@@ -416,7 +416,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 			if (flowing && isMyTask) {
 				if (SystemContextHolder.get()
 						.hasAnyRole("BC_WORKFLOW_DELEGATE"))// 有权限才能委派任务
-					buttons.append("<span class='mainOperate delegate'><span class='ui-icon ui-icon-person'></span><span class='text link'>委派任务</span></span>");
+					buttons.append("<span class='mainOperate delegate'><span class='ui-icon ui-icon-person'></span><span class='text link'>委托任务</span></span>");
 
 				buttons.append(ITEM_BUTTON_ADDCOMMENT);// 添加意见
 				buttons.append(ITEM_BUTTON_ADDATTACH);// 添加附件
