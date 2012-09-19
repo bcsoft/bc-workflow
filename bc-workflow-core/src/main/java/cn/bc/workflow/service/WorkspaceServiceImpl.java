@@ -238,6 +238,17 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 	private String getActorNameByCode(String userCode) {
 		return actorService.loadActorNameByCode(userCode);
 	}
+	
+	/**
+	 * 根据用户帐号获取用户的全名称
+	 * 
+	 * @param userCode
+	 *            用户帐号
+	 * @return
+	 */
+	private String getActorFullNameByCode(String userCode) {
+		return actorService.loadActorFullNameByCode(userCode);
+	}
 
 	private void buildFormInfo(boolean flowing,
 			List<Map<String, Object>> items, String processInstanceId,
@@ -540,7 +551,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 						"待办人：" + getActorNameByCode(task.getAssignee()));
 			} else {
 				taskItem.put("actor", "待办岗："
-						+ getActorNameByCode(identityLinks.get(0).getGroupId()));
+						+ getActorFullNameByCode(identityLinks.get(0).getGroupId()));
 			}
 			taskItem.put(
 					"createTime",
