@@ -8,7 +8,6 @@ import java.util.Map;
 
 import org.activiti.engine.RepositoryService;
 import org.activiti.engine.repository.ProcessDefinition;
-import org.activiti.engine.repository.ProcessDefinitionQuery;
 import org.json.JSONArray;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
@@ -75,12 +74,14 @@ public class HistoricTaskInstancesAction extends
 		StringBuffer sql = new StringBuffer();
 		sql.append("select a.id_,c.name_ as category,a.name_ as name,a.start_time_,a.end_time_,d.name as receiver,a.duration_,a.proc_inst_id_");
 		sql.append(",a.task_def_key_");
-		sql.append(",getProcessInstanceSubject(a.proc_inst_id_) as subject,a.due_date_ due_date");
+		sql.append(",getProcessInstanceSubject(a.proc_inst_id_) as subject,a.due_date_ as due_date,g.name as gwei");
 		sql.append(" from act_hi_taskinst a");
 		sql.append(" inner join act_hi_procinst b on b.proc_inst_id_=a.proc_inst_id_");
 		sql.append(" inner join act_re_procdef c on c.id_=a.proc_def_id_");
 		sql.append(" left join bc_identity_actor d on d.code=a.assignee_");
 		sql.append(" left join act_re_procdef e on e.id_=a.proc_def_id_");
+		sql.append(" left join act_ru_identitylink f on f.task_id_=a.id_");
+		sql.append(" left join bc_identity_actor g on g.code=f.group_id_");
 		sqlObject.setSql(sql.toString());
 
 		// 注入参数
@@ -114,6 +115,10 @@ public class HistoricTaskInstancesAction extends
 				map.put("taskdefkey", rs[i++]);
 				map.put("subject", rs[i++]);
 				map.put("due_date", rs[i++]);
+				
+				if(map.get("receiver") ==null ||map.get("receiver").toString().length()==0)
+				map.put("receiver", rs[i++]);
+				
 				return map;
 			}
 		});
@@ -140,8 +145,8 @@ public class HistoricTaskInstancesAction extends
 				getText("flow.task.name"), 200).setUseTitleFromLabel(true));
 
 		if (!my) {
-			columns.add(new TextColumn4MapKey("d.first_", "receiver",
-					getText("flow.task.actor"), 80));
+			columns.add(new TextColumn4MapKey("d.name", "receiver",
+					getText("flow.task.actor"), 120).setUseTitleFromLabel(true));
 		}
 		//办理期限
 		columns.add(new TextColumn4MapKey("a.due_date_", "due_date",
@@ -194,7 +199,7 @@ public class HistoricTaskInstancesAction extends
 	@Override
 	protected String[] getGridSearchFields() {
 		return new String[] { "d.name", "a.name_", "c.name_",
-				"getProcessInstanceSubject(a.proc_inst_id_)" };
+				"getProcessInstanceSubject(a.proc_inst_id_)","g.name" };
 	}
 
 	@Override
