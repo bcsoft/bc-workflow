@@ -107,6 +107,17 @@ public class FlowAttachAction extends FileEntityAction<Long, FlowAttach> {
 		return po;
 	}
 	
+	public String isCascade; //确定是否与参数表存在关系
+	private Long templateId; //模板id
+	
+	public Long getTemplateId() {
+		return templateId;
+	}
+
+	public void setTemplateId(Long templateId) {
+		this.templateId = templateId;
+	}
+
 	@Override
 	protected void beforeSave(FlowAttach entity) {
 		super.beforeSave(entity);
@@ -114,6 +125,14 @@ public class FlowAttachAction extends FileEntityAction<Long, FlowAttach> {
 		if(entity.getType()==FlowAttach.TYPE_ATTACHMENT){
 			entity.setSize(entity.getSizeEx());
 			entity.setExt(StringUtils.getFilenameExtension(entity.getPath()));
+		}
+		
+		if(this.templateId != null){//templateId为空 或者有关联
+			Template template = templateService.load(templateId);
+			entity.getParams().clear();
+			entity.getParams().addAll(template.getParams());
+		}else if(this.templateId == null && this.isCascade.length() == 0){
+			entity.setParams(null);
 		}
 	}
 	
@@ -128,6 +147,14 @@ public class FlowAttachAction extends FileEntityAction<Long, FlowAttach> {
 		this.formPageOption=po;
 	}
 
+	@Override
+	protected void afterEdit(FlowAttach entity) {
+		super.afterEdit(entity);
+		if(entity.getParams() != null && entity.getParams().size() > 0){
+			this.isCascade = "true";
+		}
+	}
+	
 	@Override
 	public String save() throws Exception {
 		Json json=new Json();

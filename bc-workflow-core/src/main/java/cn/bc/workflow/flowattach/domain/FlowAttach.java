@@ -4,14 +4,21 @@
 package cn.bc.workflow.flowattach.domain;
 
 import java.io.File;
+import java.util.Set;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.ManyToMany;
+import javax.persistence.OrderBy;
 import javax.persistence.Table;
 import javax.persistence.Transient;
 
 import cn.bc.docs.domain.Attach;
 import cn.bc.identity.domain.FileEntityImpl;
+import cn.bc.template.domain.TemplateParam;
 
 /**
  * 流程附加信息
@@ -43,16 +50,17 @@ public class FlowAttach extends FileEntityImpl {
 	private String ext;// 扩展名
 	private Boolean formatted;//附件是否需要格式化,类型为意见时字段为空
 	
-	private Long templateId;//模板id
+	private Set<TemplateParam> params;//模板所使用的参数
 	
-	
-	@Column(name = "TEMPLATE_ID")
-	public Long getTemplateId() {
-		return templateId;
+	@ManyToMany(fetch = FetchType.EAGER)
+	@JoinTable(name = "BC_WF_ATTACH_PARAM", joinColumns = @JoinColumn(name = "AID", referencedColumnName = "ID"), inverseJoinColumns = @JoinColumn(name = "PID", referencedColumnName = "ID"))
+	@OrderBy("orderNo asc")
+	public Set<TemplateParam> getParams() {
+		return params;
 	}
 
-	public void setTemplateId(Long templateId) {
-		this.templateId = templateId;
+	public void setParams(Set<TemplateParam> params) {
+		this.params = params;
 	}
 
 	@Column(name = "FORMATTED")

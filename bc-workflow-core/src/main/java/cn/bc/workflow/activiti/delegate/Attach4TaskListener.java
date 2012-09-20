@@ -121,7 +121,7 @@ public class Attach4TaskListener implements TaskListener {
 				flowAttach.setSize(template.getSize());
 				
 				flowAttach.setFormatted(true);//附件是否需要格式化,类型为意见时字段为空
-				flowAttach.setTemplateId(template.getId());//模板id
+				//flowAttach.setTemplateId(template.getId());//模板id
 				
 				//创建人,最后修改人信息
 				SystemContext context = SystemContextHolder.get();
@@ -208,7 +208,6 @@ public class Attach4TaskListener implements TaskListener {
 			}
 			flowAttach.setSubject(dr.getSubject()); //标题
 			flowAttach.setCommon(false); //公共信息
-			flowAttach.setDesc(dr.getDesc());
 			flowAttach.setSize(dr.getSize());
 			
 			flowAttach.setFormatted(true);//附件是否需要格式化,类型为意见时字段为空

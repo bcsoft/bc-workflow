@@ -119,7 +119,7 @@ public class Attach4ProcessListener implements ExecutionListener {
 				flowAttach.setSize(template.getSize());
 				
 				flowAttach.setFormatted(true);//附件是否需要格式化,类型为意见时字段为空
-				flowAttach.setTemplateId(template.getId());//模板id
+				//flowAttach.setTemplateId(template.getId());//模板id
 				
 				//创建人,最后修改人信息
 				SystemContext context = SystemContextHolder.get();
@@ -207,10 +207,9 @@ public class Attach4ProcessListener implements ExecutionListener {
 			}
 			flowAttach.setSubject(dr.getSubject()); //标题
 			flowAttach.setCommon(true); //公共信息
-			flowAttach.setDesc(dr.getDesc());
 			flowAttach.setSize(dr.getSize());
 			
-			flowAttach.setFormatted(true);//附件是否需要格式化,类型为意见时字段为空
+			flowAttach.setFormatted(dr.isFormatted());//附件是否需要格式化,类型为意见时字段为空
 			
 			//创建人,最后修改人信息
 			SystemContext context = SystemContextHolder.get();
