@@ -31,7 +31,8 @@ import cn.bc.docs.service.AttachService;
 import cn.bc.docs.util.OfficeUtils;
 import cn.bc.docs.web.AttachUtils;
 import cn.bc.identity.web.SystemContextHolder;
-import cn.bc.template.service.TemplateService;
+import cn.bc.template.domain.TemplateParam;
+import cn.bc.template.service.TemplateParamService;
 import cn.bc.template.service.TemplateTypeService;
 import cn.bc.template.util.DocxUtils;
 import cn.bc.template.util.XlsUtils;
@@ -57,7 +58,7 @@ public class FlowAttachFileAction extends ActionSupport {
 	private AttachService attachService;
 	private FlowAttachService flowAttachService;
 	private TemplateTypeService templateTypeService;
-	private TemplateService templateService;
+	private TemplateParamService templateParamService;
 
 	@Autowired
 	public void setAttachService(AttachService attachService) {
@@ -75,11 +76,12 @@ public class FlowAttachFileAction extends ActionSupport {
 	}
 	
 	@Autowired
-	public void setTemplateService(TemplateService templateService) {
-		this.templateService = templateService;
-	}
-
+	public void setTemplateParamService(TemplateParamService templateParamService) {
+		this.templateParamService = templateParamService;
+	}	
+	
 	public Long id;// 流程附件id
+
 
 	public String filename;
 	public String contentType;
@@ -90,16 +92,6 @@ public class FlowAttachFileAction extends ActionSupport {
 	private static final int BUFFER = 4096;
 	public String from;// 指定原始文件的类型，默认为文件扩展名
 	public String to;// 预览时转换到的文件类型，默认为pdf
-
-	private Long templateId; //模板id
-	
-	public Long getTemplateId() {
-		return templateId;
-	}
-
-	public void setTemplateId(Long templateId) {
-		this.templateId = templateId;
-	}
 
 
 	// 下载附件
@@ -135,7 +127,7 @@ public class FlowAttachFileAction extends ActionSupport {
 			//docx
 			if (flowAttach.getExt().equals(
 					templateTypeService.loadByCode("word-docx").getExtension())) {
-				params=getParams(flowAttach,templateId);
+				params=getParams(flowAttach);
 				XWPFDocument docx = DocxUtils.format(inputStream, params);
 				docx.write(out);
 				this.inputStream = new ByteArrayInputStream(out.toByteArray());
@@ -144,7 +136,7 @@ public class FlowAttachFileAction extends ActionSupport {
 			//xls
 			} else if (flowAttach.getExt().equals(
 					templateTypeService.loadByCode("xls").getExtension())) {
-				params=getParams(flowAttach,templateId);
+				params=getParams(flowAttach);
 				HSSFWorkbook xls = XlsUtils.format(inputStream, params);
 				xls.write(out);
 				this.inputStream=new ByteArrayInputStream(out.toByteArray());
@@ -153,7 +145,7 @@ public class FlowAttachFileAction extends ActionSupport {
 			//xlsx
 			} else if (flowAttach.getExt().equals(
 					templateTypeService.loadByCode("xlsx").getExtension())) {
-				params=getParams(flowAttach,templateId);
+				params=getParams(flowAttach);
 				XSSFWorkbook xlsx = XlsxUtils.format(inputStream, params);
 				xlsx.write(out);
 				this.inputStream=new ByteArrayInputStream(out.toByteArray());
@@ -241,7 +233,7 @@ public class FlowAttachFileAction extends ActionSupport {
 				//docx
 				if (flowAttach.getExt().equals(
 						templateTypeService.loadByCode("word-docx").getExtension())) {
-					params=getParams(flowAttach,templateId);
+					params=getParams(flowAttach);
 					XWPFDocument docx = DocxUtils.format(inputStream, params);
 					ByteArrayOutputStream out = new ByteArrayOutputStream();
 					docx.write(out);
@@ -250,7 +242,7 @@ public class FlowAttachFileAction extends ActionSupport {
 				//xls
 				} else if (flowAttach.getExt().equals(
 						templateTypeService.loadByCode("xls").getExtension())) {
-					params=getParams(flowAttach,templateId);
+					params=getParams(flowAttach);
 					HSSFWorkbook xls = XlsUtils.format(inputStream, params);
 					ByteArrayOutputStream out = new ByteArrayOutputStream();
 					xls.write(out);
@@ -259,7 +251,7 @@ public class FlowAttachFileAction extends ActionSupport {
 				//xlsx
 				} else if (flowAttach.getExt().equals(
 						templateTypeService.loadByCode("xlsx").getExtension())) {
-					params=getParams(flowAttach,templateId);
+					params=getParams(flowAttach);
 					XSSFWorkbook xlsx = XlsxUtils.format(inputStream, params);
 					ByteArrayOutputStream out = new ByteArrayOutputStream();
 					xlsx.write(out);
@@ -324,12 +316,12 @@ public class FlowAttachFileAction extends ActionSupport {
 	}
 	
 	// 获取替换参数
-	private Map<String,Object> getParams(FlowAttach flowAttach,Long templateId) throws Exception{
+	private Map<String,Object> getParams(FlowAttach flowAttach) throws Exception{
 		if(!flowAttach.getFormatted())
 			return null;
 
 		// 声明格式化参数
-		Map<String, Object> params=null;
+		Map<String, Object> params= new HashMap<String,Object>();
 
 		
 		//
@@ -340,7 +332,9 @@ public class FlowAttachFileAction extends ActionSupport {
 		} else{
 			mapFormatSql.put("tid", flowAttach.getTid());
 		}
-		params = templateService.getMapParams(templateId, mapFormatSql);
+		for(TemplateParam tp : flowAttach.getParams()){
+			params.putAll(templateParamService.getMapParams(tp, mapFormatSql));
+		}
 	
 		return params == null?new HashMap<String, Object>():params;
 	}

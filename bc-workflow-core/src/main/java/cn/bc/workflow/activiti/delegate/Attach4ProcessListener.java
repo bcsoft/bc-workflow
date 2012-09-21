@@ -7,6 +7,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.activiti.engine.RepositoryService;
 import org.activiti.engine.delegate.DelegateExecution;
@@ -26,6 +28,7 @@ import cn.bc.identity.service.IdGeneratorService;
 import cn.bc.identity.web.SystemContext;
 import cn.bc.identity.web.SystemContextHolder;
 import cn.bc.template.domain.Template;
+import cn.bc.template.domain.TemplateParam;
 import cn.bc.template.service.TemplateService;
 import cn.bc.workflow.deploy.domain.DeployResource;
 import cn.bc.workflow.deploy.service.DeployService;
@@ -119,6 +122,12 @@ public class Attach4ProcessListener implements ExecutionListener {
 				flowAttach.setSize(template.getSize());
 				
 				flowAttach.setFormatted(true);//附件是否需要格式化,类型为意见时字段为空
+				
+				Set<TemplateParam> params = new HashSet<TemplateParam>();//模板参数
+				for(TemplateParam t : template.getParams()){
+					params.add(t);
+				}
+				flowAttach.setParams(params);
 				//flowAttach.setTemplateId(template.getId());//模板id
 				
 				//创建人,最后修改人信息
@@ -210,6 +219,12 @@ public class Attach4ProcessListener implements ExecutionListener {
 			flowAttach.setSize(dr.getSize());
 			
 			flowAttach.setFormatted(dr.isFormatted());//附件是否需要格式化,类型为意见时字段为空
+			
+			Set<TemplateParam> params = new HashSet<TemplateParam>();//设置模板参数
+			for(TemplateParam t : dr.getParams()){
+				params.add(t);
+			}
+			dr.setParams(params);
 			
 			//创建人,最后修改人信息
 			SystemContext context = SystemContextHolder.get();

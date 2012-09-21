@@ -4,6 +4,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.apache.struts2.ServletActionContext;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +24,7 @@ import cn.bc.identity.service.ActorHistoryService;
 import cn.bc.identity.web.SystemContext;
 import cn.bc.identity.web.struts2.FileEntityAction;
 import cn.bc.template.domain.Template;
+import cn.bc.template.domain.TemplateParam;
 import cn.bc.template.service.TemplateService;
 import cn.bc.web.ui.html.page.ButtonOption;
 import cn.bc.web.ui.html.page.PageOption;
@@ -129,8 +132,11 @@ public class FlowAttachAction extends FileEntityAction<Long, FlowAttach> {
 		
 		if(this.templateId != null){//templateId为空 或者有关联
 			Template template = templateService.load(templateId);
-			entity.getParams().clear();
-			entity.getParams().addAll(template.getParams());
+			Set<TemplateParam> params = new HashSet<TemplateParam>();
+			for(TemplateParam t : template.getParams()){
+				params.add(t);
+			}
+			entity.setParams(params);
 		}else if(this.templateId == null && this.isCascade.length() == 0){
 			entity.setParams(null);
 		}
