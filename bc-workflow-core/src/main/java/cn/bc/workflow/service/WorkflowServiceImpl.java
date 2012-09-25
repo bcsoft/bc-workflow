@@ -394,11 +394,24 @@ public class WorkflowServiceImpl implements WorkflowService {
 				.createProcessDefinitionQuery()
 				.processDefinitionId(instance.getProcessDefinitionId())
 				.singleResult();
-
-		// 获取发布的资源文件
-		return repositoryService.getResourceAsStream(
-				definition.getDeploymentId(),
-				definition.getDiagramResourceName());
+		
+		// 获取流程资源
+		DeployResource dr = deployService.findDeployResourceByDmIdAndwfCodeAndresCode(
+				definition.getDeploymentId(),definition.getKey(), definition.getKey());
+		
+		InputStream inputStream = null;
+		
+		if(dr != null){
+			// 获取流程资源的文件
+			inputStream = this.getDeployDiagram(dr);
+		}else{
+			// 获取发布的资源文件
+			inputStream = repositoryService.getResourceAsStream(
+					definition.getDeploymentId(),
+					definition.getDiagramResourceName());
+		}
+		
+		return inputStream;
 	}
 
 	public InputStream getDiagram(Long deployId) {

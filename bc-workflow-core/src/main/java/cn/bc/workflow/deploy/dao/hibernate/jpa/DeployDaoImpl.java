@@ -132,7 +132,7 @@ public class DeployDaoImpl extends HibernateCrudJpaDao<Deploy> implements
 	 */
 	public Long isStarted(String deploymentId) {
 		Long id = null;
-		String sql = "select ard.id_ from act_re_deployment ard" +
+		String sql = "select DISTINCT ard.id_ from act_re_deployment ard" +
 				" inner join act_re_procdef arp on ard.id_ = arp.deployment_id_"+
 				" inner join act_ru_execution ae on arp.id_ = ae.proc_def_id_ "+
 				" where ard.id_='"+deploymentId+"'";

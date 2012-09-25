@@ -116,7 +116,7 @@ public class DeployAction extends FileEntityAction<Long, Deploy> {
 
 	@Override
 	protected PageOption buildFormPageOption(boolean editable) {
-		return super.buildFormPageOption(editable).setWidth(770)
+		return super.buildFormPageOption(editable).setWidth(810)
 				.setMinHeight(200).setMinWidth(300).setMaxHeight(800)
 				.setHelp("mubanguanli");
 	}
