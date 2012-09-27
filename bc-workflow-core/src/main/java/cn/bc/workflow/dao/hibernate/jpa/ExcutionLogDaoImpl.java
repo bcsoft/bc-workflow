@@ -142,6 +142,19 @@ public class ExcutionLogDaoImpl extends HibernateCrudJpaDao<ExcutionLog>
 		// 参数容器初始化
 		Map<String, Object> params = new LinkedHashMap<String, Object>();
 
+		// 任务的参数
+		params.put("ti_id", task.getId());
+		params.put("ti_key", task.getTaskDefinitionKey());
+		params.put("ti_deleteReason", task.getDeleteReason());
+		params.put("ti_startTime", task.getStartTime());
+		params.put("ti_endTime", task.getEndTime());
+		params.put("ti_description", task.getDescription());
+		params.put("ti_assignee", task.getAssignee());
+		params.put("ti_owner", task.getOwner());
+		params.put("ti_name", task.getName());
+		params.put("ti_priority", task.getPriority());
+		params.put("ti_dueDate", task.getDueDate());
+
 		// 流程实例的一些参数
 		params.put("pi_id", pi.getId());
 		params.put("pi_businessKey", pi.getBusinessKey());
