@@ -20,6 +20,7 @@ import cn.bc.core.query.condition.impl.AndCondition;
 import cn.bc.core.query.condition.impl.IsNotNullCondition;
 import cn.bc.core.query.condition.impl.IsNullCondition;
 import cn.bc.core.query.condition.impl.OrderCondition;
+import cn.bc.core.query.condition.impl.QlCondition;
 import cn.bc.core.util.DateUtils;
 import cn.bc.db.jdbc.RowMapper;
 import cn.bc.db.jdbc.SqlObject;
@@ -54,6 +55,7 @@ public class HistoricProcessInstancesAction extends
 			.getLog(HistoricProcessInstancesAction.class);
 	private static final long serialVersionUID = 1L;
 	private WorkflowService workflowService;
+	public boolean my = false;// 是否我的流程
 
 	@Autowired
 	public void setWorkflowService(WorkflowService workflowService) {
@@ -84,6 +86,7 @@ public class HistoricProcessInstancesAction extends
 		sql.append("select a.id_,b.name_ as category,a.start_time_,a.end_time_,a.duration_,a.proc_inst_id_");
 		sql.append(",b.version_ as version,b.key_ as key,c.name");
 		sql.append(",getProcessInstanceSubject(a.proc_inst_id_) as subject");
+		sql.append(",(select string_agg(e.name_,',') from act_ru_task e where a.id_=e.proc_inst_id_ ) as  todo_names");
 		sql.append(" from act_hi_procinst a");
 		sql.append(" inner join act_re_procdef b on b.id_=a.proc_def_id_");
 		sql.append(" left join bc_identity_actor c on c.code=a.start_user_id_");
@@ -118,6 +121,7 @@ public class HistoricProcessInstancesAction extends
 				map.put("key", rs[i++]);
 				map.put("startName", rs[i++]);// 发起人
 				map.put("subject", rs[i++]);
+				map.put("todo_names", rs[i++]);
 				return map;
 			}
 		});
@@ -140,6 +144,9 @@ public class HistoricProcessInstancesAction extends
 		// 流程
 		columns.add(new TextColumn4MapKey("b.name_", "category",
 				getText("flow.instance.name"), 200).setSortable(true)
+				.setUseTitleFromLabel(true));
+		columns.add(new TextColumn4MapKey("", "todo_names",
+				getText("flow.instance.todoTask"), 200).setSortable(true)
 				.setUseTitleFromLabel(true));
 		// 版本号
 		columns.add(new TextColumn4MapKey("b.version_", "version",
@@ -213,24 +220,27 @@ public class HistoricProcessInstancesAction extends
 	@Override
 	protected Toolbar getHtmlPageToolbar() {
 		Toolbar tb = new Toolbar();
-		// 发起流程
-		tb.addButton(new ToolbarButton().setIcon("ui-icon-play")
-				.setText(getText("flow.start"))
-				.setClick("bc.historicProcessInstanceSelectView.startflow"));
 		// 查看
 		tb.addButton(new ToolbarButton().setIcon("ui-icon-check")
 				.setText(getText("label.read"))
 				.setClick("bc.historicProcessInstanceSelectView.open"));
+		
+		if(!my){
+			// 发起流程
+			tb.addButton(new ToolbarButton().setIcon("ui-icon-play")
+					.setText(getText("flow.start"))
+					.setClick("bc.historicProcessInstanceSelectView.startflow"));
 
-		// 流程实例级联删除
-		if (((SystemContext) this.getContext())
-				.hasAnyRole("BC_WORKFLOW_INSTANCE_DELETE")) {
-			tb.addButton(this.getDefaultDeleteToolbarButton());
-		}
+			// 流程实例级联删除
+			if (((SystemContext) this.getContext())
+					.hasAnyRole("BC_WORKFLOW_INSTANCE_DELETE")) {
+				tb.addButton(this.getDefaultDeleteToolbarButton());
+			}
 
-		tb.addButton(Toolbar.getDefaultToolbarRadioGroup(this.getStatus(),
-				"status", BCConstants.STATUS_ENABLED,
-				getText("title.click2changeSearchStatus")));
+			tb.addButton(Toolbar.getDefaultToolbarRadioGroup(this.getStatus(),
+					"status", BCConstants.STATUS_ENABLED,
+					getText("title.click2changeSearchStatus")));
+		}		
 
 		// 搜索按钮
 		tb.addButton(this.getDefaultSearchToolbarButton());
@@ -252,6 +262,24 @@ public class HistoricProcessInstancesAction extends
 					ac.add(new IsNotNullCondition("a.end_time_"));
 			}
 		}
+		
+		if(my){
+			SystemContext context = (SystemContext) this.getContext();
+			//保存的用户id键值集合
+			String code=context.getUser().getCode();
+			String sql="";
+			sql+="exists(";
+			sql+="select 1 ";
+			sql+=" from act_hi_taskinst d";								
+			sql+=" where a.id_=d.proc_inst_id_ and d.end_time_ is not null and d.assignee_ = '";			
+			sql+=code;
+			sql+="')";
+			
+			ac.add(
+					new QlCondition(sql,new Object[]{})
+			);		
+		}
+		
 		return ac.isEmpty() ? null : ac;
 	}
 
