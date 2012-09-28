@@ -20,6 +20,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Controller;
 import org.springframework.util.Assert;
 
+import cn.bc.BCConstants;
 import cn.bc.core.util.DateUtils;
 import cn.bc.docs.web.AttachUtils;
 import cn.bc.identity.domain.Actor;
@@ -67,6 +68,9 @@ public class DeployAction extends FileEntityAction<Long, Deploy> {
 	public String assignUserIds;// 分配的用户id，多个id用逗号连接
 	public Set<Actor> ownedUsers;// 已分配的用户
 	public String resources; // 资源列表的json字符串
+	
+	public boolean isDoMaintenance = false;// 是否进行维护操作
+	public boolean isDoLevelUp = false;// 是否进行升级操作
 
 	@Autowired
 	public void setDeployService(DeployService deployService) {
@@ -102,34 +106,90 @@ public class DeployAction extends FileEntityAction<Long, Deploy> {
 		return !context.hasAnyRole(getText("key.role.bc.workflow.deploy"),
 				getText("key.role.bc.workflow"), getText("key.role.bc.admin"));
 	}
-
+	
 	@Override
 	protected void buildFormPageButtons(PageOption pageOption, boolean editable) {
 		pageOption.addButton(new ButtonOption(getText("deploy.showDiagram"),
 				null, "bc.deployForm.showDiagram"));
-		if (!this.isReadonly()) {
-			if (editable)
+		if (!this.isReadonly()) {//有权限
+			if (this.getE().getStatus() != BCConstants.STATUS_DRAFT && !this.getE().isNew()){
+				// 非草稿状态下双击
+				if (!isDoMaintenance){
+					pageOption.addButton(new ButtonOption(
+							getText("deploy.op.maintenance"),
+							null, "bc.deployForm.doMaintenance"));
+					pageOption.addButton(new ButtonOption(
+							getText("deploy.op.levelUp"),
+							null, "bc.deployForm.doLevelUp"));
+				}
+			} else {
+				pageOption.addButton(new ButtonOption(getText("label.save4Draft"),
+						null, "bc.deployForm.save").setId("deploySave"));				
+			}
+			
+			// 维护操作
+			if (isDoMaintenance) {
 				pageOption.addButton(new ButtonOption(getText("label.save"),
-						null, "bc.deployForm.save").setId("deploySave"));
+						null, "bc.deployForm.save"));
+			}
+			
 		}
+		
+//		if (editable)
+//		pageOption.addButton(new ButtonOption(getText("label.save"),
+//				null, "bc.deployForm.save").setId("deploySave"));
+		
 	}
 
 	@Override
 	protected PageOption buildFormPageOption(boolean editable) {
-		return super.buildFormPageOption(editable).setWidth(810)
-				.setMinHeight(200).setMinWidth(300).setMaxHeight(800)
-				.setHelp("mubanguanli");
+		PageOption pageOption = new PageOption().setWidth(830)
+				.setMinHeight(200).setMinWidth(300).setMaxHeight(830);
+		
+		// 只有可编辑表单才按权限配置，其它情况一律配置为只读状态
+		boolean readonly = this.isReadonly();
+		
+		if (editable && !readonly) {
+			pageOption.put("readonly", readonly);
+		} else {
+			pageOption.put("readonly", true);
+		}
+		
+		// 添加按钮
+		buildFormPageButtons(pageOption, editable);
+		
+		return pageOption;
 	}
 
 	@Override
 	protected void afterCreate(Deploy entity) {
 		super.afterCreate(entity);
-		// 状态正常
-		entity.setStatus(Deploy.STATUS_NOT_RELEASE);
-		// 默认模板类型为自定义文本
-		entity.setType(Deploy.TYPE_XML);
-		// uid
-		entity.setUid(this.getIdGeneratorService().next(Deploy.ATTACH_TYPE));
+		
+		
+		
+		if(!isDoLevelUp){
+			// 默认模板类型为自定义文本
+			entity.setType(Deploy.TYPE_XML);
+			// 设置版本号
+			entity.setVersion("1.0");
+			// 状态草稿
+			entity.setStatus(BCConstants.STATUS_DRAFT);
+			// uid
+			entity.setUid(this.getIdGeneratorService().next(Deploy.ATTACH_TYPE));
+			
+		}else{//升级操作处理
+			//复制新的流程部署
+			Deploy newDeploy = this.deployService.doCopyDeploy(id);
+			this.setE(newDeploy);
+			
+			// 加载已分配的用户
+			this.ownedUsers = newDeploy.getUsers();
+			
+			this.typeList = this.templateTypeService.findTemplateTypeOption(true);
+			
+		}
+		
+
 		
 	}
 
@@ -142,6 +202,15 @@ public class DeployAction extends FileEntityAction<Long, Deploy> {
 		
 		this.typeList = this.templateTypeService.findTemplateTypeOption(true);
 		
+		// 如果非草稿状态下打开,版本号 +0.1
+		if (entity.getStatus() != BCConstants.STATUS_DRAFT
+				&& entity.getVersion() != null) {
+			String[] version = entity.getVersion().split("\\.");
+			String major = version[0];
+			int minor = Integer.parseInt(version[1]);
+			String result = major + "." + (minor+1);
+			entity.setVersion(result);
+		}
 	}
 
 	@Override
@@ -298,10 +367,12 @@ public class DeployAction extends FileEntityAction<Long, Deploy> {
 	// 状态键值转换
 	private Map<String, String> getStatuses() {
 		Map<String, String> statuses = new LinkedHashMap<String, String>();
-		statuses.put(String.valueOf(Deploy.STATUS_RELEASED),
-				getText("deploy.status.released"));
-		statuses.put(String.valueOf(Deploy.STATUS_NOT_RELEASE),
-				getText("deploy.status.not.release"));
+		statuses.put(String.valueOf(BCConstants.STATUS_DRAFT),
+				getText("deploy.status.draft"));
+		statuses.put(String.valueOf(Deploy.STATUS_USING),
+				getText("deploy.status.using"));
+		statuses.put(String.valueOf(Deploy.STATUS_STOPPED),
+				getText("deploy.status.stopped"));
 		statuses.put("", getText("deploy.status.all"));
 		return statuses;
 	}

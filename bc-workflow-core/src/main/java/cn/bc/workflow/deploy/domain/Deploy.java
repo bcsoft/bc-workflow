@@ -4,6 +4,9 @@
 package cn.bc.workflow.deploy.domain;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.util.Calendar;
 import java.util.Set;
 
@@ -40,16 +43,15 @@ import cn.bc.identity.domain.RichFileEntityImpl;
 @Inheritance(strategy = InheritanceType.JOINED)
 public class Deploy extends RichFileEntityImpl {
 	private static final long serialVersionUID = 1L;
-	@SuppressWarnings("unused")
 	private static Log logger = LogFactory.getLog(Deploy.class);
 	public static final String ATTACH_TYPE = Deploy.class.getSimpleName();
 	/** 模板存储的子路径，开头末尾不要带"/" */
 	public static String DATA_SUB_PATH = "workflow/deploy";
 
-	/** 状态：未发布 */
-	public static final int STATUS_NOT_RELEASE = -1;
-	/** 状态：已发布*/
-	public static final int STATUS_RELEASED = 0;
+	/** 状态：使用中 */
+	public static final int STATUS_USING = 0;
+	/** 状态：已停用*/
+	public static final int STATUS_STOPPED = 1;
 	
 	/** 类型：XML */
 	public static final int TYPE_XML = 0;
@@ -224,5 +226,23 @@ public class Deploy extends RichFileEntityImpl {
 		return file.length();
 	}
 
+	/**
+	 * 获取部署的文件流
+	 * 
+	 * @return
+	 */
+	@Transient
+	public InputStream getInputStream() {
+		// 读取文件流并返回
+		String p = Attach.DATA_REAL_PATH + "/"
+				+ Deploy.DATA_SUB_PATH + "/" + this.getPath();
+		File file = new File(p);
+		try {
+			return new FileInputStream(file);
+		} catch (FileNotFoundException e) {
+			logger.warn("getInputStream 附件文件不存在:file=" + p);
+			return null;
+		}
+	}
 
 }

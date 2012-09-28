@@ -97,4 +97,17 @@ public interface DeployService extends CrudService<Deploy> {
 	 * @return
 	 */
 	public DeployResource findDeployResourceCode(String deployCode);
+
+	/**
+	 * 升级流程部署操作
+	 * @param id
+	 * @return
+	 */
+	public Deploy doCopyDeploy(Long id);
+
+	/**
+	 * 禁用流程部署
+	 * @param excludeId
+	 */
+	public void dodeployStop(Long excludeId);
 }

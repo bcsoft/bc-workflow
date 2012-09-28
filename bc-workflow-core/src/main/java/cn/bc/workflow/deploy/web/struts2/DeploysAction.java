@@ -12,6 +12,7 @@ import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Controller;
 
+import cn.bc.BCConstants;
 import cn.bc.core.query.condition.Condition;
 import cn.bc.core.query.condition.ConditionUtils;
 import cn.bc.core.query.condition.Direction;
@@ -69,6 +70,13 @@ public class DeploysAction extends ViewAction<Map<String, Object>> {
 		return new OrderCondition("d.status_", Direction.Asc).add("d.order_",
 				Direction.Asc);
 	}
+	
+	@Override
+	protected String getGridDblRowMethod() {
+		// 强制为只读表单
+		return "bc.deploy.dblclick";
+	}
+
 
 	@Override
 	protected SqlObject<Map<String, Object>> getSqlObject() {
@@ -178,10 +186,12 @@ public class DeploysAction extends ViewAction<Map<String, Object>> {
 	// 状态键值转换
 	private Map<String, String> getStatuses() {
 		Map<String, String> statuses = new LinkedHashMap<String, String>();
-		statuses.put(String.valueOf(Deploy.STATUS_RELEASED),
-				getText("deploy.status.released"));
-		statuses.put(String.valueOf(Deploy.STATUS_NOT_RELEASE),
-				getText("deploy.status.not.release"));
+		statuses.put(String.valueOf(BCConstants.STATUS_DRAFT),
+				getText("deploy.status.draft"));
+		statuses.put(String.valueOf(Deploy.STATUS_USING),
+				getText("deploy.status.using"));
+		statuses.put(String.valueOf(Deploy.STATUS_STOPPED),
+				getText("deploy.status.stopped"));
 		statuses.put("", getText("deploy.status.all"));
 		return statuses;
 	}
@@ -198,7 +208,7 @@ public class DeploysAction extends ViewAction<Map<String, Object>> {
 
 	@Override
 	protected String getGridRowLabelExpression() {
-		return "['subject']";
+		return "['subject']+'的流程部署\t-\t v'+['version']";
 	}
 
 	@Override
@@ -232,30 +242,38 @@ public class DeploysAction extends ViewAction<Map<String, Object>> {
 			tb.addButton(this.getDefaultCreateToolbarButton());
 
 			// 编辑按钮
-			tb.addButton(this.getDefaultEditToolbarButton());
+			tb.addButton(this.getDefaultOpenToolbarButton());
 
 			// 发布
 			tb.addButton(new ToolbarButton().setIcon("ui-icon-person")
 					.setText(getText("label.deploy.release"))
 					.setClick("bc.deploy.release"));
-			// 取消发布
-			tb.addButton(new ToolbarButton().setIcon("ui-icon-trash")
-					.setText(getText("label.deploy.releaseCancel"))
-					.setClick("bc.deploy.releaseCancel"));
-
-			if (this.isCascade()) {
-				// 级联取消发布
-				tb.addButton(new ToolbarButton().setIcon("ui-icon-trash")
-						.setText(getText("label.deploy.cascadeCancel"))
-						.setClick("bc.deploy.cascadeCancel"));
-				// 强制删除
-				tb.addButton(getDefaultDeleteToolbarButton());
-			}
+			// 停用
+			tb.addButton(new ToolbarButton().setIcon("ui-icon-cancel")
+					.setText(getText("label.deploy.stop"))
+					.setClick("bc.deploy.stop"));
+			
+			// 强制删除
+			tb.addButton(getDefaultDeleteToolbarButton());
+			
+//			// 取消发布
+//			tb.addButton(new ToolbarButton().setIcon("ui-icon-trash")
+//					.setText(getText("label.deploy.releaseCancel"))
+//					.setClick("bc.deploy.releaseCancel"));
+//
+//			if (this.isCascade()) {
+//				// 级联取消发布
+//				tb.addButton(new ToolbarButton().setIcon("ui-icon-trash")
+//						.setText(getText("label.deploy.cascadeCancel"))
+//						.setClick("bc.deploy.cascadeCancel"));
+//				// 强制删除
+//				tb.addButton(getDefaultDeleteToolbarButton());
+//			}
 		}
 
 		// 状态按钮组
 		tb.addButton(Toolbar.getDefaultToolbarRadioGroup(this.getStatuses(),
-				"status", 2, getText("deploy.status.tips")));
+				"status", 3, getText("deploy.status.tips")));
 
 		// 搜索按钮
 		tb.addButton(this.getDefaultSearchToolbarButton());
@@ -360,6 +378,18 @@ public class DeploysAction extends ViewAction<Map<String, Object>> {
 		this.json = json.toString();
 		return "json";
 	}
+	
+	/** 禁用 **/
+	public String dodeployStop() {
+		Json json = new Json();
+		this.deployService.dodeployStop(this.excludeId);
+		json.put("msg", getText("deploy.msg.stop.success"));
+		json.put("id", this.excludeId);
+		this.json = json.toString();
+		return "json";
+	}
+	
+	
 
 	// ==高级搜索代码开始==
 	@Override
