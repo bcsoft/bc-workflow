@@ -180,6 +180,7 @@ public class ExcutionLogDaoImpl extends HibernateCrudJpaDao<ExcutionLog>
 		HistoricVariableUpdate v;
 		for (HistoricDetail d : detail) {
 			v = (HistoricVariableUpdate) d;
+			if(v.getTaskId()  == null)
 			params.put(v.getVariableName(), v.getValue());
 		}
 

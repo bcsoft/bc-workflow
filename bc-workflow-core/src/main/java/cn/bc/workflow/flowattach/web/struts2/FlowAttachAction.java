@@ -4,7 +4,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 import org.apache.struts2.ServletActionContext;
@@ -25,6 +25,7 @@ import cn.bc.identity.web.SystemContext;
 import cn.bc.identity.web.struts2.FileEntityAction;
 import cn.bc.template.domain.Template;
 import cn.bc.template.domain.TemplateParam;
+import cn.bc.template.service.TemplateParamService;
 import cn.bc.template.service.TemplateService;
 import cn.bc.web.ui.html.page.ButtonOption;
 import cn.bc.web.ui.html.page.PageOption;
@@ -49,10 +50,12 @@ public class FlowAttachAction extends FileEntityAction<Long, FlowAttach> {
 	public String tid;//任务id
 	public boolean common;//是否公共信息
 	public int type;//类型：1-附件，2-意见
+	public String params;
 	
 	private FlowAttachService flowAttachService;
 	private ActorHistoryService actorHistroyService;
 	private TemplateService templateService;
+	private TemplateParamService templateParamService;
 	private AttachService attachService;
 	
 	@Autowired
@@ -76,6 +79,11 @@ public class FlowAttachAction extends FileEntityAction<Long, FlowAttach> {
 		this.actorHistroyService = actorHistroyService;
 	}
 	
+	@Autowired
+	public void setTemplateParamService(TemplateParamService templateParamService) {
+		this.templateParamService = templateParamService;
+	}
+
 	@Override
 	public boolean isReadonly() {
 		// 普通人员
@@ -110,16 +118,6 @@ public class FlowAttachAction extends FileEntityAction<Long, FlowAttach> {
 		return po;
 	}
 	
-	public String isCascade; //确定是否与参数表存在关系
-	private Long templateId; //模板id
-	
-	public Long getTemplateId() {
-		return templateId;
-	}
-
-	public void setTemplateId(Long templateId) {
-		this.templateId = templateId;
-	}
 
 	@Override
 	protected void beforeSave(FlowAttach entity) {
@@ -129,17 +127,17 @@ public class FlowAttachAction extends FileEntityAction<Long, FlowAttach> {
 			entity.setSize(entity.getSizeEx());
 			entity.setExt(StringUtils.getFilenameExtension(entity.getPath()));
 		}
-		
-		if(this.templateId != null){//templateId为空 或者有关联
-			Template template = templateService.load(templateId);
-			Set<TemplateParam> params = new HashSet<TemplateParam>();
-			for(TemplateParam t : template.getParams()){
-				params.add(t);
+		if(params != null && params.length() > 0){
+			String [] paramsAry = params.split(",");
+			Set<TemplateParam> paramSet = new LinkedHashSet<TemplateParam>();
+			TemplateParam p;
+			for(int i=0;i<paramsAry.length;i++){
+				p = templateParamService.load(Long.valueOf(paramsAry[i]));
+				paramSet.add(p);
 			}
-			entity.setParams(params);
-		}else if(this.templateId == null && this.isCascade.length() == 0){
-			entity.setParams(null);
+			entity.setParams(paramSet);
 		}
+		
 	}
 	
 	@Override
@@ -156,9 +154,11 @@ public class FlowAttachAction extends FileEntityAction<Long, FlowAttach> {
 	@Override
 	protected void afterEdit(FlowAttach entity) {
 		super.afterEdit(entity);
-		if(entity.getParams() != null && entity.getParams().size() > 0){
-			this.isCascade = "true";
+		String str = "";
+		for(TemplateParam p : entity.getParams()){
+			str += p.getId() +",";
 		}
+		params = str;
 	}
 	
 	@Override

@@ -233,11 +233,21 @@ public class HistoricTaskInstancesAction extends
 		tb.addButton(new ToolbarButton().setIcon("ui-icon-check")
 				.setText(getText("label.read"))
 				.setClick("bc.historicTaskInstanceSelectView.open"));
+		
+		if(my){
+			tb.addButton(new ToolbarButton().setIcon("ui-icon-search")
+					.setText(getText("flow.task.flow"))
+					.setClick("bc.historicTaskInstanceSelectView.viewflow"));
+		}
 
-		if (!my)
+		if (!my){
 			tb.addButton(Toolbar.getDefaultToolbarRadioGroup(this.getStatus(),
 					"status", BCConstants.STATUS_ENABLED,
 					getText("title.click2changeSearchStatus")));
+		}
+		
+		
+			
 
 		// 搜索按钮
 		tb.addButton(this.getDefaultSearchToolbarButton());
