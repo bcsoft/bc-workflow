@@ -212,6 +212,12 @@ public class DeployServiceImpl extends DefaultCrudService<Deploy> implements
 				entity.getId().toString(), "停用" + entity.getSubject()
 				+ "的流程信息", null, "stopped");
 	}
+	
+	public void dodeployChangeStatus(Long excludeId) {
+		Deploy entity = this.deployDao.load(excludeId);
+		entity.setStatus(Deploy.STATUS_USING);
+		entity = this.deployDao.save(entity);
+	}
 
 
 	/**

@@ -76,7 +76,7 @@ public class SelectProcessAction extends AbstractSelectPageAction<Map<String, Ob
 		SqlObject<Map<String, Object>> sqlObject = new SqlObject<Map<String, Object>>();
 		// 构建查询语句,where和order by不要包含在sql中(要统一放到condition中)
 		StringBuffer sql = new StringBuffer();
-		sql.append("select distinct a.id_,a.name_,a.version_,c.deploy_time_,a.key_");
+		sql.append("select distinct a.id_,a.name_,e.version_,c.deploy_time_,a.key_");
 		sql.append(" from act_re_procdef a");
 		sql.append(" inner join act_re_deployment c on c.id_=a.deployment_id_");
 		sql.append(" INNER join bc_wf_deploy e on e.deployment_id=c.id_");
@@ -111,7 +111,7 @@ public class SelectProcessAction extends AbstractSelectPageAction<Map<String, Ob
 				getText("flow.name")).setSortable(true)
 				.setUseTitleFromLabel(true));
 		columns.add(new TextColumn4MapKey("a.version_", "version",
-				getText("flow.version"), 100).setUseTitleFromLabel(true));
+				getText("flow.version"), 50).setUseTitleFromLabel(true));
 		columns.add(new TextColumn4MapKey("c.deploy_time", "deploy_time",
 				getText("flow.deployTime"),150).setUseTitleFromLabel(true)
 				.setValueFormater(new CalendarFormater("yyyy-MM-dd HH:mm:ss")));

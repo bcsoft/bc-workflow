@@ -116,7 +116,7 @@ public class DeployDaoImpl extends HibernateCrudJpaDao<Deploy> implements
 	public Long isReleased(Long excludeId) {
 		Long id = null;
 		String sql = "select d.id from bc_wf_deploy d where d.id='"+excludeId+"'" +
-				"and d.status_="+Deploy.STATUS_USING;
+				"and d.deployment_id is null and d.status_!='"+BCConstants.STATUS_DRAFT+"'";
 		try {
 			id = this.jdbcTemplate.queryForLong(sql);
 		} catch (EmptyResultDataAccessException e) {

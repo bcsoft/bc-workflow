@@ -110,4 +110,11 @@ public interface DeployService extends CrudService<Deploy> {
 	 * @param excludeId
 	 */
 	public void dodeployStop(Long excludeId);
+
+	
+	/**
+	 * 将状态改为使用中
+	 * @param excludeId
+	 */
+	public void dodeployChangeStatus(Long excludeId);
 }

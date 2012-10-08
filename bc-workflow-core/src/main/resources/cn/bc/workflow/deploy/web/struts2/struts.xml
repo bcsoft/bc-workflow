@@ -27,6 +27,7 @@
 		<action name="deploys/dodeployRelease" class="deploysAction" method="dodeployRelease"/>
 		<action name="deploys/dodeployCancel" class="deploysAction" method="dodeployCancel"/>
 		<action name="deploys/dodeployStop" class="deploysAction" method="dodeployStop"/>
+		<action name="deploys/dodeployChangeStatus" class="deploysAction" method="dodeployChangeStatus"/>
 		
 		<!-- 流程部署的编码加版本号是否唯一检查  -->
 		<action name="deploy/isUniqueCodeAndVersion" class="deployAction" method="isUniqueCodeAndVersion"/>

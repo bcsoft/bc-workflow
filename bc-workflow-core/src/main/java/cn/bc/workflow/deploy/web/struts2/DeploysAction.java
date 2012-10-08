@@ -389,6 +389,16 @@ public class DeploysAction extends ViewAction<Map<String, Object>> {
 		return "json";
 	}
 	
+	/** 将状态改为使用中 **/
+	public String dodeployChangeStatus() {
+		Json json = new Json();
+		this.deployService.dodeployChangeStatus(this.excludeId);
+		json.put("msg", getText("deploy.msg.release.success"));
+		json.put("id", this.excludeId);
+		this.json = json.toString();
+		return "json";
+	}
+	
 	
 
 	// ==高级搜索代码开始==
