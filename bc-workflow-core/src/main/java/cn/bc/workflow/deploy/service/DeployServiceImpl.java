@@ -180,13 +180,20 @@ public class DeployServiceImpl extends DefaultCrudService<Deploy> implements
 
 	@Override
 	public void delete(Serializable id) {
-		// 先级联取消发布
-		this.dodeployCancel((Long) id, true);
-
+		Deploy entity = this.deployDao.load(id);
+		if(entity.getStatus() == Deploy.STATUS_USING){
+			// 先级联取消发布
+			this.dodeployCancel((Long) id, true);
+		}
 		// 删除流转日志、意见、附件 TODO
 
 		// 后彻底删除
 		super.delete(id);
+		
+		// 记录删除部署日志
+		this.operateLogService.saveWorkLog(Deploy.class.getSimpleName(),
+				entity.getId().toString(), "删除部署" + entity.getSubject()
+						+ "的流程信息", null, OperateLog.OPERATE_DELETE);
 	}
 
 	@Override

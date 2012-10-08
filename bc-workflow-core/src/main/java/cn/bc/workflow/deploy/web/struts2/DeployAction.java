@@ -143,8 +143,8 @@ public class DeployAction extends FileEntityAction<Long, Deploy> {
 
 	@Override
 	protected PageOption buildFormPageOption(boolean editable) {
-		PageOption pageOption = new PageOption().setWidth(830)
-				.setMinHeight(200).setMinWidth(300).setMaxHeight(830);
+		PageOption pageOption = new PageOption().setWidth(820)
+				.setMinHeight(200).setMinWidth(300).setHeight(400);
 		
 		// 只有可编辑表单才按权限配置，其它情况一律配置为只读状态
 		boolean readonly = this.isReadonly();
@@ -164,8 +164,6 @@ public class DeployAction extends FileEntityAction<Long, Deploy> {
 	@Override
 	protected void afterCreate(Deploy entity) {
 		super.afterCreate(entity);
-		
-		
 		
 		if(!isDoLevelUp){
 			// 默认模板类型为自定义文本
@@ -188,8 +186,6 @@ public class DeployAction extends FileEntityAction<Long, Deploy> {
 			this.typeList = this.templateTypeService.findTemplateTypeOption(true);
 			
 		}
-		
-
 		
 	}
 
