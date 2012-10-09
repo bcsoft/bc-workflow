@@ -154,27 +154,22 @@ public class SelectProcessAction extends AbstractSelectPageAction<Map<String, Ob
 		Condition isUsersCondition = null; //发布是否分配使用者
 		Condition userCondition = null; //当前登录用户id
 		Condition groupCondition = null; //当前用户岗位列表
-		Condition statusCondition = null; //状态
+		Condition statusCondition = new EqualsCondition("e.status_", Deploy.STATUS_USING); //状态为使用中
 		
-		statusCondition = new EqualsCondition("e.status_", Deploy.STATUS_USING);//使用中状态
-		
-		if(isManager() && constraint == true){
+		if(isManager() && constraint == true){//不是流程管理员并且有权限限制
 			isUsersCondition = new QlCondition("e.id not in(select wda.did from  bc_wf_deploy_actor wda)"
 					, (Object[]) null);
 			userCondition = new EqualsCondition("da.aid",context.getUser().getId());
 			groupCondition = new InCondition("da.aid",ids);
 			if(isNewVersion){
-				isNewVersionCondition = new QlCondition(//不是流程管理员并且有权限限制
+				isNewVersionCondition = new QlCondition(
 						"not exists(select 0 from act_re_procdef b where a.key_=b.key_ and a.version_<b.version_)",
 						(Object[]) null);
 			}
 			return ConditionUtils.mix2AndCondition(isNewVersionCondition,statusCondition,
 					ConditionUtils.mix2OrCondition(isUsersCondition,userCondition,groupCondition).setAddBracket(true));
-		}else if(!isManager() && constraint == false){//是流程管理员并且没有权限限制
-			return ConditionUtils.mix2AndCondition(isNewVersionCondition,statusCondition);
-		}else{
-			return null;
 		}
+		return ConditionUtils.mix2AndCondition(statusCondition);
 	}
 
 	@Override
@@ -182,6 +177,8 @@ public class SelectProcessAction extends AbstractSelectPageAction<Map<String, Ob
 		Json json = new Json();
 		if(isNewVersion)
 			json.put("isNewVersion", isNewVersion);
+		if(constraint)
+			json.put("constraint", constraint);
 		return json;
 	}
 	
