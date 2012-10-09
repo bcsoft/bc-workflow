@@ -182,6 +182,8 @@ public class SelectProcessAction extends AbstractSelectPageAction<Map<String, Ob
 		Json json = new Json();
 		if(isNewVersion)
 			json.put("isNewVersion", isNewVersion);
+		if(constraint)
+			json.put("constraint", constraint);
 		return json;
 	}
 	
