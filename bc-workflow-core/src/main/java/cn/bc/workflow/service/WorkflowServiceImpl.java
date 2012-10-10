@@ -123,18 +123,16 @@ public class WorkflowServiceImpl implements WorkflowService {
 	public void setHistoryService(HistoryService historyService) {
 		this.historyService = historyService;
 	}
-	
+
 	@Autowired
 	public void setDeployService(DeployService deployService) {
 		this.deployService = deployService;
 	}
-	
+
 	// @Autowired
 	// public void setFormService(FormService formService) {
 	// this.formService = formService;
 	// }
-
-
 
 	/**
 	 * 获取当前用户的帐号信息
@@ -394,39 +392,42 @@ public class WorkflowServiceImpl implements WorkflowService {
 				.createProcessDefinitionQuery()
 				.processDefinitionId(instance.getProcessDefinitionId())
 				.singleResult();
-		
+
 		// 获取流程资源
-		DeployResource dr = deployService.findDeployResourceByDmIdAndwfCodeAndresCode(
-				definition.getDeploymentId(),definition.getKey(), definition.getKey());
-		
+		DeployResource dr = deployService
+				.findDeployResourceByDmIdAndwfCodeAndresCode(
+						definition.getDeploymentId(), definition.getKey(),
+						definition.getKey());
+
 		InputStream inputStream = null;
-		
-		if(dr != null){
+
+		if (dr != null) {
 			// 获取流程资源的文件
 			inputStream = this.getDeployDiagram(dr);
-		}else{
+		} else {
 			// 获取发布的资源文件
 			inputStream = repositoryService.getResourceAsStream(
 					definition.getDeploymentId(),
 					definition.getDiagramResourceName());
 		}
-		
+
 		return inputStream;
 	}
 
 	public InputStream getDiagram(Long deployId) {
 		InputStream inputStream = null;
 		Deploy deploy = deployService.load(deployId);
-		DeployResource dr = this.deployService.findDeployResourceCode(deploy.getCode());
+		DeployResource dr = this.deployService.findDeployResourceCode(deploy
+				.getCode());
 		// 根据流程编码不能获取流程部署资源,则获取指定Activiti流程部署的相关资源文件流
-		if(dr != null){
+		if (dr != null) {
 			inputStream = this.getDeployDiagram(dr);
-		}else{
+		} else {
 			inputStream = this.getDeploymentDiagram(deploy.getDeploymentId());
 		}
 		return inputStream;
 	}
-	
+
 	public InputStream getDeployDiagram(DeployResource dr) {
 		InputStream inputStream = null;
 		// 上传部署资源的存储的绝对路径
@@ -564,7 +565,28 @@ public class WorkflowServiceImpl implements WorkflowService {
 			taskParams.put("comments_str", buildCommentsString(comments));
 
 			// add：如果一个节点产生多个实例，只会有最后执行任务的相关信息
-			params.put(taskCode, taskParams);
+			if (params.containsKey(taskCode)) {
+				Object p = params.get(taskCode);
+				if (p instanceof List) {
+					((List<Map<String, Object>>) p).add(taskParams);// 累加到列表中
+				} else if (p instanceof Map) {
+					List<Map<String, Object>> list = new ArrayList<Map<String, Object>>();
+					list.add((Map<String, Object>) p);// Map转换为List
+					params.put(taskCode, list);
+				} else {
+					throw new CoreException(
+							"taskCode existed and it's type is unsupport! taskCode="
+									+ taskCode);
+				}
+			} else {
+				if (taskCode.endsWith("_s")) {// 强制使用List记录
+					List<Map<String, Object>> list = new ArrayList<Map<String, Object>>();
+					list.add(taskParams);
+					params.put(taskCode, list);
+				} else {
+					params.put(taskCode, taskParams);
+				}
+			}
 		}
 
 		return params;
