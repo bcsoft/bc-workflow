@@ -200,9 +200,9 @@ public class DeploysAction extends ViewAction<Map<String, Object>> {
 	private Map<String, String> getTypes() {
 		Map<String, String> statuses = new LinkedHashMap<String, String>();
 		statuses.put(String.valueOf(Deploy.TYPE_XML),
-				getText("deploy.type.xml.short"));
+				getText("deploy.type.xml"));
 		statuses.put(String.valueOf(Deploy.TYPE_BAR),
-				getText("deploy.type.bar.short"));
+				getText("deploy.type.bar"));
 		return statuses;
 	}
 

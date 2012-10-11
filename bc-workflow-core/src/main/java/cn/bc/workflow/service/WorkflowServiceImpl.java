@@ -145,6 +145,13 @@ public class WorkflowServiceImpl implements WorkflowService {
 		return SystemContextHolder.get().getUser().getCode();
 	}
 
+	/**
+	 * 启动指定编码流程的最新版本
+	 * 
+	 * @param key
+	 *            流程编码
+	 * @return 流程实例的id
+	 */
 	public String startFlowByKey(String key) {
 		// 设置Activiti认证用户
 		String initiator = setAuthenticatedUser();
@@ -160,6 +167,27 @@ public class WorkflowServiceImpl implements WorkflowService {
 		// 返回流程实例的id
 		return pi.getProcessInstanceId();
 	}
+	
+	/**
+	 * 启动指定流程定义id的流程
+	 * @param id
+	 * @return
+	 */
+	public String startFlowByDefinitionId(String id) {
+		// 设置Activiti认证用户
+		String initiator = setAuthenticatedUser();
+		
+		ProcessInstance pi = runtimeService.startProcessInstanceById(id);
+		if (logger.isDebugEnabled()) {
+			logger.debug("id=" + id);
+			logger.debug("initiator=" + initiator);
+			logger.debug("pi=" + ActivitiUtils.toString(pi));
+		}
+		
+		// 返回流程实例的id
+		return pi.getProcessInstanceId();
+	}
+
 
 	/**
 	 * 初始化Activiti的当前认证用户信息
