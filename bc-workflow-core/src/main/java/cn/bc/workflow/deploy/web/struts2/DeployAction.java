@@ -71,6 +71,7 @@ public class DeployAction extends FileEntityAction<Long, Deploy> {
 	
 	public boolean isDoMaintenance = false;// 是否进行维护操作
 	public boolean isDoLevelUp = false;// 是否进行升级操作
+	public boolean isReadOnly;
 
 	@Autowired
 	public void setDeployService(DeployService deployService) {
@@ -218,6 +219,7 @@ public class DeployAction extends FileEntityAction<Long, Deploy> {
 		
 		this.typeList = this.templateTypeService.findTemplateTypeOption(true);
 		
+		this.isReadOnly = true;
 	}
 
 	@Override

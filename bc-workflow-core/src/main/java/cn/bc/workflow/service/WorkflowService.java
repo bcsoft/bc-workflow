@@ -69,6 +69,15 @@ public interface WorkflowService {
 	 * @return 流程实例的id
 	 */
 	String startFlowByKey(String key);
+	
+	/**
+	 * 启动指定流程定义id的流程
+	 * 
+	 * @param id
+	 * 
+	 * @return
+	 */
+	String startFlowByDefinitionId(String id);
 
 	/**
 	 * 领取任务
@@ -264,4 +273,5 @@ public interface WorkflowService {
 	 */
 	Map<String, Object> getTaskHistoryParams(String taskId, boolean withProcessInfo);
 	Map<String, Object> getTaskHistoryParams(String taskId);
+
 }
