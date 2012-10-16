@@ -3,6 +3,8 @@
  */
 package cn.bc.workflow.activiti.delegate;
 
+import java.util.Map;
+
 import org.activiti.engine.delegate.DelegateTask;
 import org.activiti.engine.delegate.TaskListener;
 import org.apache.commons.logging.Log;
@@ -32,20 +34,17 @@ public class MultiInstanceAssigneeListener implements TaskListener{
 			logger.debug("eventName=" + delegateTask.getEventName());
 		}
 		
-		//取得集合中的变量，格式为mcode/assigneeCode(/subject)
-		String variable=(String) delegateTask.getVariable("multiInstanceCollentionKey");
+		@SuppressWarnings("rawtypes")
+		Map mvariable=(Map) delegateTask.getVariable("multiInstanceCollentionKey");
 		
-		String[] variableArr=variable.split("/");
-		
-		//设置mcode
-		delegateTask.setVariableLocal("mcode", variableArr[0]);
-		//设置办理人
-		delegateTask.setAssignee(variableArr[1]);
-		
-		if(variableArr.length>2){
-			//设置主题
-			delegateTask.setVariableLocal("subject", variableArr[2]);
+		//设置任务办理人
+		delegateTask.setAssignee(mvariable.get("assignee").toString());
+			
+		//设置其它变量
+		for(Object o:mvariable.keySet()){
+			if(!o.toString().equals("assignee")){
+				delegateTask.setVariableLocal(o.toString(), mvariable.get(o.toString()).toString());
+			}
 		}
-		
 	}
 }

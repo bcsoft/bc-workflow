@@ -51,6 +51,12 @@ public class IsAssigneeHaveAnyGroupListener implements TaskListener {
 	 */
 	private Expression customHaveGroupKey;
 
+	/**
+	 * 全部变量中已存在此自定key的变量，此变量判断是否需要更新自定义的key值，默认不更新；
+	 * 
+	 */
+	private Expression exist;
+
 	public void notify(DelegateTask delegateTask) {
 		if (logger.isDebugEnabled()) {
 			logger.debug("anyGroupCodes="
@@ -65,12 +71,18 @@ public class IsAssigneeHaveAnyGroupListener implements TaskListener {
 			logger.debug("taskId=" + delegateTask.getId());
 			logger.debug("eventName=" + delegateTask.getEventName());
 		}
+
+		Object customKey = delegateTask.getVariable(this.customHaveGroupKey
+				.getExpressionText());
 		
-		
-		//任务还没有办理人 不进行判断
-		if(delegateTask.getAssignee()==null){
-			delegateTask.setVariable(customHaveGroupKey.getExpressionText(),
-					false);
+		//默认配置或判断的customHaveGroupKey已为ture时不再进行判断
+		if (customKey != null
+				&& (exist == null || exist.getExpressionText().equals("false") || (Boolean)customKey)) {
+			return;
+		}
+
+		// 任务还没有办理人 不进操作
+		if (delegateTask.getAssignee() == null) {
 			return;
 		}
 
