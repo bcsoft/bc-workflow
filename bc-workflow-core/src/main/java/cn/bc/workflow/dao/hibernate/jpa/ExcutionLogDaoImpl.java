@@ -176,7 +176,7 @@ public class ExcutionLogDaoImpl extends HibernateCrudJpaDao<ExcutionLog>
 		// 全局流程变量
 		List<HistoricDetail> detail = getHistoryService()
 				.createHistoricDetailQuery().processInstanceId(pi.getId())
-				.variableUpdates().list();
+				.variableUpdates().orderByTime().asc().list();
 		HistoricVariableUpdate v;
 		for (HistoricDetail d : detail) {
 			v = (HistoricVariableUpdate) d;
@@ -186,7 +186,7 @@ public class ExcutionLogDaoImpl extends HibernateCrudJpaDao<ExcutionLog>
 
 		// 本地流程变量
 		detail = getHistoryService().createHistoricDetailQuery().taskId(taskId)
-				.variableUpdates().list();
+				.variableUpdates().orderByTime().asc().list();
 		for (HistoricDetail d : detail) {
 			v = (HistoricVariableUpdate) d;
 			params.put(v.getVariableName(), v.getValue());
