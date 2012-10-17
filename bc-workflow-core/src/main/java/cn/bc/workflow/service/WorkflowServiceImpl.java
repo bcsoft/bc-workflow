@@ -532,6 +532,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 		variableParams = new HashMap<String, Object>();
 		for (HistoricDetail hd : variables) {
 			v = (HistoricVariableUpdate) hd;
+			if(v.getTaskId()  == null)
 			variableParams.put(v.getVariableName(),
 					convertSpecialValiableValue(v));
 		}
@@ -706,6 +707,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 			variableParams = new HashMap<String, Object>();
 			for (HistoricDetail hd : variables) {
 				v = (HistoricVariableUpdate) hd;
+				if(v.getTaskId()  == null)
 				variableParams.put(v.getVariableName(),
 						convertSpecialValiableValue(v));
 			}
