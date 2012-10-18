@@ -224,7 +224,7 @@ public class Attach4ProcessListener implements ExecutionListener {
 			for(TemplateParam t : dr.getParams()){
 				params.add(t);
 			}
-			dr.setParams(params);
+			flowAttach.setParams(params);
 			
 			//创建人,最后修改人信息
 			SystemContext context = SystemContextHolder.get();
