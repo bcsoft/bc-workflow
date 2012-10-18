@@ -174,7 +174,7 @@ public class Attach4ProcessListener implements ExecutionListener {
 			// 声明当前日期时间
 			Calendar now = Calendar.getInstance();
 			// 文件存储的相对路径（年月），避免超出目录内文件数的限制
-			String subFolder = new SimpleDateFormat("yy yyMM").format(now.getTime());
+			String subFolder = new SimpleDateFormat("yyyyMM").format(now.getTime());
 			// 上传文件存储的绝对路径
 			String appRealDir=Attach.DATA_REAL_PATH+"/"+FlowAttach.DATA_SUB_PATH;
 			// 所保存文件所在的目录的绝对路径名
@@ -224,7 +224,7 @@ public class Attach4ProcessListener implements ExecutionListener {
 			for(TemplateParam t : dr.getParams()){
 				params.add(t);
 			}
-			dr.setParams(params);
+			flowAttach.setParams(params);
 			
 			//创建人,最后修改人信息
 			SystemContext context = SystemContextHolder.get();

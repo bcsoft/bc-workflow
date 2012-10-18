@@ -196,6 +196,13 @@ public class SelectProcessAction extends AbstractSelectPageAction<Map<String, Ob
 	protected String getHtmlPageNamespace() {
 		return this.getContextPath() + "/bc-workflow";
 	}
+	
+	
+
+	@Override
+	protected String getGridDblRowMethod() {
+		return "";
+	}
 
 	@Override
 	protected String getGridRowLabelExpression() {
