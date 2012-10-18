@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.activiti.engine.RepositoryService;
+import org.activiti.engine.impl.persistence.entity.SuspensionState;
 import org.activiti.engine.repository.ProcessDefinition;
 import org.json.JSONArray;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -73,7 +74,7 @@ public class HistoricTaskInstancesAction extends
 		// 构建查询语句,where和order by不要包含在sql中(要统一放到condition中)
 		StringBuffer sql = new StringBuffer();
 		sql.append("select a.id_,c.name_ as category,a.name_ as name,a.start_time_,a.end_time_,d.name as receiver,a.duration_,a.proc_inst_id_");
-		sql.append(",a.task_def_key_,b.end_time_ as p_end_time");
+		sql.append(",a.task_def_key_,b.end_time_ as p_end_time,h.suspension_state_ pstatus");
 		sql.append(",getProcessInstanceSubject(a.proc_inst_id_) as subject,a.due_date_ as due_date,g.name as gwei");
 		sql.append(" from act_hi_taskinst a");
 		sql.append(" inner join act_hi_procinst b on b.proc_inst_id_=a.proc_inst_id_");
@@ -82,6 +83,7 @@ public class HistoricTaskInstancesAction extends
 		sql.append(" left join act_re_procdef e on e.id_=a.proc_def_id_");
 		sql.append(" left join act_ru_identitylink f on f.task_id_=a.id_");
 		sql.append(" left join bc_identity_actor g on g.code=f.group_id_");
+		sql.append(" left join act_ru_execution h on a.execution_id_ = h.id_");
 		sqlObject.setSql(sql.toString());
 
 		// 注入参数
@@ -106,6 +108,7 @@ public class HistoricTaskInstancesAction extends
 				} else
 					// 未完成
 					map.put("status", BCConstants.STATUS_ENABLED);
+
 				// 格式化耗时
 				if (map.get("duration") != null)
 					map.put("frmDuration",
@@ -115,12 +118,16 @@ public class HistoricTaskInstancesAction extends
 				map.put("taskdefkey", rs[i++]);
 				map.put("p_end_time", rs[i++]);
 				//根据流程的结束时间获取整个流程的状态
-				if (map.get("p_end_time") != null) {
-					// 已完成
-					map.put("pstatus", BCConstants.STATUS_DISABLED);
-				} else
-					// 未完成
-					map.put("pstatus", BCConstants.STATUS_ENABLED);
+				if (map.get("p_end_time") != null) {//已结束
+					map.put("pstatus", 3);
+				} else {
+					map.put("pstatus", rs[i++]);
+					if(map.get("pstatus").equals(String.valueOf(SuspensionState.ACTIVE.getStateCode()))){//处理中
+						map.put("pstatus", String.valueOf(SuspensionState.ACTIVE.getStateCode()));
+					}else if(map.get("pstatus").equals(String.valueOf(SuspensionState.SUSPENDED.getStateCode()))){//已暂停
+						map.put("pstatus", String.valueOf(SuspensionState.SUSPENDED.getStateCode()));
+					}
+				}
 				
 				map.put("subject", rs[i++]);
 				map.put("due_date", rs[i++]);
@@ -246,9 +253,6 @@ public class HistoricTaskInstancesAction extends
 					getText("title.click2changeSearchStatus")));
 		}
 		
-		
-			
-
 		// 搜索按钮
 		tb.addButton(this.getDefaultSearchToolbarButton());
 
@@ -270,15 +274,17 @@ public class HistoricTaskInstancesAction extends
 	}
 	
 	/**
-	 * 流程状态值转换:流转中|已完成|全部
+	 * 流程状态值转换:流转中|已暂停|已结束|全部
 	 * 
 	 */
 	private Map<String, String> getPStatus() {
 		Map<String, String> map = new LinkedHashMap<String, String>();
-		map.put(String.valueOf(BCConstants.STATUS_ENABLED),
-				getText("flow.instance.status.processing"));
-		map.put(String.valueOf(BCConstants.STATUS_DISABLED),
-				getText("flow.instance.status.finished"));
+		map.put(String.valueOf(SuspensionState.ACTIVE.getStateCode()),
+				getText("done.status.processing"));
+		map.put(String.valueOf(SuspensionState.SUSPENDED.getStateCode()),
+				getText("done.status.suspended"));
+		map.put("3",
+				getText("done.status.finished"));
 		map.put("", getText("bc.status.all"));
 		return map;
 	}
