@@ -49,15 +49,16 @@ public class AutoLoadAssignUpperListener implements TaskListener {
 		Actor upper=actorService.loadBelong(actor.getId(), 
 				new Integer[] {Actor.TYPE_UNIT,Actor.TYPE_DEPARTMENT});
 		
+		if(upper!=null&&add_global!=null&&add_global.getExpressionText().equals("true")){
+			delegateTask.setVariable("upperName", upper.getName());
+			delegateTask.setVariable("upperCode", upper.getCode());
+			delegateTask.setVariable("upperId", upper.getId());
+		}
+		
 		if(upper!=null){
 			delegateTask.setVariableLocal("upperName", upper.getName());
 			delegateTask.setVariableLocal("upperCode", upper.getCode());
 			delegateTask.setVariableLocal("upperId", upper.getId());
-			if(add_global!=null&&add_global.getExpressionText().equals("true")){
-				delegateTask.setVariable("upperName", upper.getName());
-				delegateTask.setVariable("upperCode", upper.getCode());
-				delegateTask.setVariable("upperId", upper.getId());
-			}
 		}
 	}
 }
