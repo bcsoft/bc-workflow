@@ -5,6 +5,7 @@ package cn.bc.workflow.activiti.delegate;
 
 import org.activiti.engine.delegate.DelegateTask;
 import org.activiti.engine.delegate.TaskListener;
+import org.activiti.engine.impl.el.Expression;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -27,6 +28,11 @@ import cn.bc.identity.service.ActorService;
 public class AutoLoadAssignUpperListener implements TaskListener {
 	private static final Log logger = LogFactory
 			.getLog(AutoLoadAssignUpperListener.class);
+	
+	/**
+	 * 是否在global中添加此值，默认false
+	 */
+	private Expression add_global;
 
 	public void notify(DelegateTask delegateTask) {
 		if (logger.isDebugEnabled()) {
@@ -43,11 +49,16 @@ public class AutoLoadAssignUpperListener implements TaskListener {
 		Actor upper=actorService.loadBelong(actor.getId(), 
 				new Integer[] {Actor.TYPE_UNIT,Actor.TYPE_DEPARTMENT});
 		
-		if(upper!=null){
+		if(upper!=null&&add_global!=null&&add_global.getExpressionText().equals("true")){
 			delegateTask.setVariable("upperName", upper.getName());
 			delegateTask.setVariable("upperCode", upper.getCode());
 			delegateTask.setVariable("upperId", upper.getId());
 		}
 		
+		if(upper!=null){
+			delegateTask.setVariableLocal("upperName", upper.getName());
+			delegateTask.setVariableLocal("upperCode", upper.getCode());
+			delegateTask.setVariableLocal("upperId", upper.getId());
+		}
 	}
 }
