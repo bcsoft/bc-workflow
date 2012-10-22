@@ -271,7 +271,7 @@ public class HistoricProcessInstancesAction extends
 			sql+="exists(";
 			sql+="select 1 ";
 			sql+=" from act_hi_taskinst d";								
-			sql+=" where a.id_=d.proc_inst_id_ and d.end_time_ is not null and d.assignee_ = '";			
+			sql+=" where a.id_=d.proc_inst_id_  and d.assignee_ = '";			
 			sql+=code;
 			sql+="')";
 			
@@ -289,6 +289,10 @@ public class HistoricProcessInstancesAction extends
 		// 状态条件
 		if (status != null && status.length() > 0)
 			json.put("status", status);
+		
+		if(my){
+			json.put("my", my);
+		}
 		return json;
 	}
 
