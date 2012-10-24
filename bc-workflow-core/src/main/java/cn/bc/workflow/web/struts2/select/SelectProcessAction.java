@@ -137,11 +137,20 @@ public class SelectProcessAction extends AbstractSelectPageAction<Map<String, Ob
 
 	@Override
 	protected Condition getGridSpecalCondition() {
-
+//		// 状态条件
+//		AndCondition ac = new AndCondition();
+//		
+//		if(isNewVersion)
+//			ac.add(
+//					new QlCondition("not exists(select 0 from act_re_procdef b where a.key_=b.key_ and a.version_<b.version_)"
+//							,(Object[])null));
+//
+//		return ac.isEmpty()?null:ac;
+		
 		// 查找当前登录用户条件
 		SystemContext context = (SystemContext) this.getContext();
 		Long [] ids = context.getAttr(SystemContext.KEY_ANCESTORS);
-		//Condition isNewVersionCondition = null; //显示最新版本
+		Condition isNewVersionCondition = null; //显示最新版本
 		Condition isUsersCondition = null; //发布是否分配使用者
 		Condition userCondition = null; //当前登录用户id
 		Condition groupCondition = null; //当前用户岗位列表
@@ -152,21 +161,12 @@ public class SelectProcessAction extends AbstractSelectPageAction<Map<String, Ob
 					, (Object[]) null);
 			userCondition = new EqualsCondition("da.aid",context.getUser().getId());
 			groupCondition = new InCondition("da.aid",ids);
-<<<<<<< HEAD
-			/*if(isNewVersion){
-				isNewVersionCondition = new QlCondition(
-						"not exists(select 0 from act_re_procdef b where a.key_=b.key_ and a.version_<b.version_)",
-						(Object[]) null);
-			}*/
-			return ConditionUtils.mix2AndCondition(statusCondition,
-=======
 //			if(isNewVersion){
 //				isNewVersionCondition = new QlCondition(
 //						"not exists(select 0 from act_re_procdef b where a.key_=b.key_ and a.version_<b.version_)",
 //						(Object[]) null);
 //			}
 			return ConditionUtils.mix2AndCondition(isNewVersionCondition,statusCondition,
->>>>>>> flow
 					ConditionUtils.mix2OrCondition(isUsersCondition,userCondition,groupCondition).setAddBracket(true));
 		}
 		return ConditionUtils.mix2AndCondition(statusCondition);
