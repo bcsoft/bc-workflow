@@ -165,27 +165,27 @@ public class WorkflowServiceImpl implements WorkflowService {
 		// 返回流程实例的id
 		return pi.getProcessInstanceId();
 	}
-	
+
 	/**
 	 * 启动指定流程定义id的流程
+	 * 
 	 * @param id
 	 * @return
 	 */
 	public String startFlowByDefinitionId(String id) {
 		// 设置Activiti认证用户
 		String initiator = setAuthenticatedUser();
-		
+
 		ProcessInstance pi = runtimeService.startProcessInstanceById(id);
 		if (logger.isDebugEnabled()) {
 			logger.debug("id=" + id);
 			logger.debug("initiator=" + initiator);
 			logger.debug("pi=" + ActivitiUtils.toString(pi));
 		}
-		
+
 		// 返回流程实例的id
 		return pi.getProcessInstanceId();
 	}
-
 
 	/**
 	 * 初始化Activiti的当前认证用户信息
@@ -532,9 +532,9 @@ public class WorkflowServiceImpl implements WorkflowService {
 		variableParams = new HashMap<String, Object>();
 		for (HistoricDetail hd : variables) {
 			v = (HistoricVariableUpdate) hd;
-			if(v.getTaskId()  == null)
-			variableParams.put(v.getVariableName(),
-					convertSpecialValiableValue(v));
+			if (v.getTaskId() == null)
+				variableParams.put(v.getVariableName(),
+						convertSpecialValiableValue(v));
 		}
 		params.put("vs", variableParams);
 
@@ -708,9 +708,9 @@ public class WorkflowServiceImpl implements WorkflowService {
 			variableParams = new HashMap<String, Object>();
 			for (HistoricDetail hd : variables) {
 				v = (HistoricVariableUpdate) hd;
-				if(v.getTaskId()  == null)
-				variableParams.put(v.getVariableName(),
-						convertSpecialValiableValue(v));
+				if (v.getTaskId() == null)
+					variableParams.put(v.getVariableName(),
+							convertSpecialValiableValue(v));
 			}
 			processParams.put("vs", variableParams);
 
@@ -767,22 +767,29 @@ public class WorkflowServiceImpl implements WorkflowService {
 	private StringBuffer buildCommentsString(List<FlowAttach> comments) {
 		StringBuffer comments_str;
 		comments_str = new StringBuffer();
-		/*for (FlowAttach comment : comments) {
-			// 意见的字符串表示：“[姓名1] [时间1] [标题1]\r\n[姓名2] [时间2] [标题2]...”
-			comments_str.append(comment.getAuthor().getName() + " "
-					+ DateUtils.formatCalendar2Minute(comment.getFileDate())
-					+ " " + comment.getSubject() + "\r\n");
-		}*/
+		/*
+		 * for (FlowAttach comment : comments) { // 意见的字符串表示：“[姓名1] [时间1]
+		 * [标题1]\r\n[姓名2] [时间2] [标题2]...”
+		 * comments_str.append(comment.getAuthor().getName() + " " +
+		 * DateUtils.formatCalendar2Minute(comment.getFileDate()) + " " +
+		 * comment.getSubject() + "\r\n"); }
+		 */
 
-		if(comments.isEmpty())
+		if (comments.isEmpty())
 			return comments_str;
-		
-		//构建意见字符串
-		for (int i=0;i<comments.size();i++) {
-			if(i+1==comments.size()){
-				comments_str.append(comments.get(i).getDesc());
-			}else{
-				comments_str.append(comments.get(i).getDesc()+",");
+
+		String desc = "";
+
+		// 构建意见字符串
+		for (int i = 0; i < comments.size(); i++) {
+			desc = comments.get(i).getDesc();
+			if (desc == null || desc.equals("")) {
+				desc = comments.get(i).getSubject();
+			}
+			if (i + 1 == comments.size()) {
+				comments_str.append(desc);
+			} else {
+				comments_str.append(desc + ",");
 			}
 		}
 		return comments_str;
