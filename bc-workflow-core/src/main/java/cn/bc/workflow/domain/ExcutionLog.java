@@ -31,6 +31,10 @@ public class ExcutionLog extends EntityImpl {
 	/** 类型:流程的结束 */
 	public static final String TYPE_PROCESS_END = "process_"
 			+ ExecutionListener.EVENTNAME_END;
+	/** 类型:流程激活 */
+	public static final String TYPE_PROCESS_ACTIVE = "process_active";
+	/** 类型:流程暂停 */
+	public static final String TYPE_PROCESS_SUSPENDED = "process_suspended";
 
 	/** 类型:分支的执行 */
 	public static final String TYPE_FLOW_TAKE = "flow_"

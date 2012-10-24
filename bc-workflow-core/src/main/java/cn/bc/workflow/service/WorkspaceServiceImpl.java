@@ -13,10 +13,13 @@ import java.util.Map;
 import org.activiti.engine.FormService;
 import org.activiti.engine.HistoryService;
 import org.activiti.engine.RepositoryService;
+import org.activiti.engine.RuntimeService;
 import org.activiti.engine.TaskService;
 import org.activiti.engine.history.HistoricProcessInstance;
 import org.activiti.engine.history.HistoricTaskInstance;
+import org.activiti.engine.impl.persistence.entity.SuspensionState;
 import org.activiti.engine.repository.ProcessDefinition;
+import org.activiti.engine.runtime.ProcessInstance;
 import org.activiti.engine.task.IdentityLink;
 import org.activiti.engine.task.Task;
 import org.apache.commons.logging.Log;
@@ -43,6 +46,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 	private static final Log logger = LogFactory
 			.getLog(WorkspaceServiceImpl.class);
 	private RepositoryService repositoryService;
+	private RuntimeService runtimeService;
 	private TaskService taskService;
 	private FormService formService;
 	private HistoryService historyService;
@@ -50,6 +54,8 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 	private ExcutionLogService excutionLogService;
 	private WorkflowFormService workflowFormService;
 	private ActorService actorService;
+
+	public static final int COMPLETE = 3; //已结束
 
 	@Autowired
 	public void setActorService(
@@ -70,6 +76,11 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 	@Autowired
 	public void setRepositoryService(RepositoryService repositoryService) {
 		this.repositoryService = repositoryService;
+	}
+
+	@Autowired
+	public void setRuntimeService(RuntimeService runtimeService) {
+		this.runtimeService = runtimeService;
 	}
 
 	@Autowired
@@ -119,15 +130,28 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 		ws.put("endTime", instance.getEndTime());
 		ws.put("duration", instance.getDurationInMillis());
 
+		int flowStatus;
 		// 流转状态
-		boolean flowing = instance.getEndTime() == null;
-		ws.put("flowing", flowing);
+		if (instance.getEndTime() == null) {
+			// 流程实例
+			ProcessInstance pi = runtimeService.createProcessInstanceQuery()
+					.processInstanceId(processInstanceId).singleResult();
+			if (pi.isSuspended()) {// 已暂停
+				flowStatus = SuspensionState.SUSPENDED.getStateCode();
+			} else {// 流转中
+				flowStatus = SuspensionState.ACTIVE.getStateCode();
+			}
+		} else {
+			flowStatus = WorkspaceServiceImpl.COMPLETE;// 已结束
+		}
+		ws.put("flowStatus", flowStatus);
 
 		// 流程定义
 		ProcessDefinition definition = repositoryService
 				.createProcessDefinitionQuery()
 				.processDefinitionId(instance.getProcessDefinitionId())
 				.singleResult();
+
 		ws.put("definitionId", definition.getId());
 		ws.put("definitionName", definition.getName());
 		ws.put("definitionCategory", definition.getCategory());
@@ -144,13 +168,13 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 		ws.put("subject", definition.getName());
 
 		// 公共信息处理
-		ws.put("commonInfo", buildWSCommonInfo(flowing, instance));
+		ws.put("commonInfo", buildWSCommonInfo(flowStatus, instance));
 
 		// 待办信息处理
-		ws.put("todoInfo", buildWSTodoInfo(flowing, instance));
+		ws.put("todoInfo", buildWSTodoInfo(flowStatus, instance));
 
 		// 待办信息处理
-		ws.put("doneInfo", buildWSDoneInfo(flowing, instance));
+		ws.put("doneInfo", buildWSDoneInfo(flowStatus, instance));
 
 		// 返回综合后的信息
 		return ws;
@@ -159,16 +183,44 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 	/**
 	 * 构建工作空间公共信息
 	 * 
-	 * @param flowing
+	 * @param flowStatus
 	 *            流程是否仍在流转中
 	 * @param instance
 	 *            流程实例的历史记录
 	 */
-	private Map<String, Object> buildWSCommonInfo(boolean flowing,
+	private Map<String, Object> buildWSCommonInfo(int flowStatus,
 			HistoricProcessInstance instance) {
 		Map<String, Object> info = new LinkedHashMap<String, Object>();
-		info.put("buttons",
-				this.buildHeaderDefaultButtons(flowing, "common", false));// 操作按钮列表
+
+		// 实例流转中,当前处理人是否拥有暂停权限或流程管理员才显示
+		boolean isShowSuspendedButton = false;
+		// 实例已暂停,当前处理人是否拥有激活权限或流程管理员才显示
+		boolean isShowActiveButton = false;
+		
+		if(SystemContextHolder.get().hasAnyRole(//流程管理员拥有激活,暂停
+				"BC_WORKFLOW")){
+			isShowSuspendedButton = true;
+			isShowActiveButton = true;
+		}else{
+			String userCode = this.getCurrentUserAccount(); //当前登录用户的编码
+			
+			//当前任务
+			Task task = taskService.createTaskQuery()
+					.processInstanceId(instance.getId()).singleResult();
+			
+			if(task != null && userCode.equalsIgnoreCase(task.getAssignee())){//当前登录用户是处理人
+				Map<String,Object> roleMap = taskService.getVariablesLocal(task.getId());
+				if(roleMap.get("suspended") != null){//流程变量暂停不为空
+					isShowSuspendedButton = (Boolean) roleMap.get("suspended");
+				}
+				if(roleMap.get("active") != null){//流程变量激活不为空
+					isShowActiveButton = (Boolean) roleMap.get("active");
+				}
+			}
+		}
+		
+		info.put("buttons", this.buildHeaderDefaultButtons(flowStatus,
+				"common", false, isShowSuspendedButton, isShowActiveButton));// 操作按钮列表
 		info.put("hasButtons", info.get("buttons") != null);// 有否操作按钮
 		List<Map<String, Object>> items = new ArrayList<Map<String, Object>>();// 一级条目列表
 		info.put("items", items);
@@ -185,7 +237,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 		// item.put("iconClass", "ui-icon-document");// 左侧显示的小图标
 		// item.put("link", true);// 链接标题
 		// item.put("subject", "表单：测试表单");// 标题 TODO
-		// item.put("buttons", this.buildItemDefaultButtons(flowing, type));//
+		// item.put("buttons", this.buildItemDefaultButtons(flowStatus, type));//
 		// 操作按钮列表
 		// item.put("hasButtons", item.get("buttons") != null);// 有否操作按钮
 		// detail = new ArrayList<String>();
@@ -197,7 +249,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 				instance.getId(), false);
 		if (logger.isDebugEnabled())
 			logger.debug("flowAttachs=" + flowAttachs);
-		buildFlowAttachsInfo(flowing, items, flowAttachs);
+		buildFlowAttachsInfo(flowStatus, items, flowAttachs);
 
 		// 构建统计信息条目
 		item = new HashMap<String, Object>();
@@ -214,13 +266,20 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 		detail.add("发起时间：" + getActorNameByCode(instance.getStartUserId())
 				+ " "
 				+ DateUtils.formatDateTime2Minute(instance.getStartTime()));
-		detail.add("结束时间："
-				+ (flowing ? "仍在流转中..." : DateUtils
-						.formatDateTime2Minute(instance.getEndTime())));
-		detail.add("办理耗时："
-				+ (flowing ? DateUtils.getWasteTimeCN(instance.getStartTime())
-						: DateUtils.getWasteTimeCN(instance.getStartTime(),
-								instance.getEndTime())));
+		if(flowStatus == SuspensionState.ACTIVE.getStateCode()){
+			detail.add("结束时间："+"仍在流转中...");
+			detail.add("办理耗时："+DateUtils
+						.getWasteTimeCN(instance.getStartTime()));
+		}else if(flowStatus == SuspensionState.SUSPENDED.getStateCode()){
+			detail.add("结束时间："+"流程已暂停...");
+			detail.add("办理耗时："+DateUtils
+					.getWasteTimeCN(instance.getStartTime()));
+		}else if(flowStatus == WorkspaceServiceImpl.COMPLETE){
+			detail.add("结束时间："+DateUtils.formatDateTime2Minute(instance.getEndTime()));
+			detail.add("办理耗时："
+					+ DateUtils.getWasteTimeCN(instance.getStartTime(),
+							instance.getEndTime()));
+		}
 		detail.add("流程版本：" + instance.getProcessDefinitionId());
 		// detail.add("参与人数：" + "");// TODO
 
@@ -238,7 +297,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 	private String getActorNameByCode(String userCode) {
 		return actorService.loadActorNameByCode(userCode);
 	}
-	
+
 	/**
 	 * 根据用户帐号获取用户的全名称
 	 * 
@@ -250,9 +309,9 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 		return actorService.loadActorFullNameByCode(userCode);
 	}
 
-	private void buildFormInfo(boolean flowing,
-			List<Map<String, Object>> items, String processInstanceId,
-			String taskId, String formKey, boolean readonly) {
+	private void buildFormInfo(int flowStatus, List<Map<String, Object>> items,
+			String processInstanceId, String taskId, String formKey,
+			boolean readonly) {
 		if (formKey == null || formKey.length() == 0)
 			return;
 		if (logger.isDebugEnabled()) {
@@ -270,7 +329,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 		item.put("tid", taskId);// 任务id
 		item.put("type", type);// 信息类型
 		item.put("link", false);// 链接标题
-		item.put("buttons", this.buildItemDefaultButtons(flowing, type));// 操作按钮列表
+		item.put("buttons", this.buildItemDefaultButtons(flowStatus, type));// 操作按钮列表
 		item.put("hasButtons", item.get("buttons") != null);// 有否操作按钮
 		item.put("iconClass", "ui-icon-document");// 左侧显示的小图标
 		item.put("subject", "完成任务前需要你处理如下信息：");// 标题信息
@@ -319,11 +378,11 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 	}
 
 	/**
-	 * @param flowing
+	 * @param flowStatus
 	 * @param items
 	 * @param flowAttachs
 	 */
-	private void buildFlowAttachsInfo(boolean flowing,
+	private void buildFlowAttachsInfo(int flowStatus,
 			List<Map<String, Object>> items, List<FlowAttach> flowAttachs) {
 		Map<String, Object> item;
 		List<String> detail;
@@ -355,7 +414,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 			}
 			item.put("type", type);// 信息类型
 			item.put("link", true);// 链接标题
-			item.put("buttons", this.buildItemDefaultButtons(flowing, type));// 操作按钮列表
+			item.put("buttons", this.buildItemDefaultButtons(flowStatus, type));// 操作按钮列表
 			item.put("hasButtons", item.get("buttons") != null);// 有否操作按钮
 
 			// 详细信息
@@ -375,16 +434,17 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 	 *            类型
 	 * @return
 	 */
-	private String buildItemDefaultButtons(boolean editable, String type) {
+	private String buildItemDefaultButtons(int editable, String type) {
 		StringBuffer buttons = new StringBuffer();
-		if (editable) {
+		if (editable == SuspensionState.ACTIVE.getStateCode()) {
 			buttons.append(ITEM_BUTTON_EDIT);
 		}
 		buttons.append(ITEM_BUTTON_OPEN);
 		if ("attach".equals(type)) {
 			buttons.append(ITEM_BUTTON_DOWNLOAD);
 		}
-		if (editable && !"form".equals(type)) {
+		if (editable == SuspensionState.ACTIVE.getStateCode()
+				&& !"form".equals(type)) {
 			buttons.append(ITEM_BUTTON_DELETE);
 		}
 		return buttons.length() > 0 ? buttons.toString() : null;
@@ -400,23 +460,43 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 	private final static String ITEM_BUTTON_SHOWDIAGRAM = "<span class='mainOperate flowImage'><span class='ui-icon ui-icon-image'></span><span class='text link'>查看流程图</span></span>";
 	private final static String ITEM_BUTTON_SHOWLOG = "<span class='mainOperate excutionLog'><span class='ui-icon ui-icon-tag' title='查看流转日志'></span></span>";
 
+	private final static String ITEM_BUTTON_ACTIVE = "<span class='mainOperate active'><span class='ui-icon ui-icon-play'></span><span class='text link'>激活流程</span></span>";
+	private final static String ITEM_BUTTON_SUSPENDED = "<span class='mainOperate suspended'><span class='ui-icon ui-icon-pause'></span><span class='text link'>暂停流程</span></span>";
+
 	/**
 	 * 创建默认的公共信息(common)、个人待办信息(todo_user)、岗位待办信息(todo_group)区标题右侧的操作按钮
 	 * 
-	 * @param flowing
+	 * @param flowStatus
 	 *            是否流转中
 	 * @param type
 	 *            类型
 	 * @param isMyTask
 	 *            是否是我的个人或岗位待办
+	 * @param isShowSuspendedButton
+	 *            是否显示暂停按钮
+	 * @param isShowActiveButton
+	 *            是否显示激活按钮
 	 * @return
 	 */
-	private String buildHeaderDefaultButtons(boolean flowing, String type,
-			boolean isMyTask) {
+	private String buildHeaderDefaultButtons(int flowStatus, String type,
+			boolean isMyTask, boolean isShowSuspendedButton,
+			boolean isShowActiveButton) {
 		StringBuffer buttons = new StringBuffer();
 		if ("common".equals(type)) {
+			
+			if (flowStatus == SuspensionState.ACTIVE.getStateCode()){
+				if(isShowSuspendedButton){// 实例流转中,当前处理人是否拥有暂停权限或流程管理员才显示
+					buttons.append(ITEM_BUTTON_SUSPENDED);// 暂停按钮
+				}
+			}
+			if (flowStatus == SuspensionState.SUSPENDED.getStateCode()){
+				if(isShowActiveButton){// 实例已暂停,当前处理人是否拥有激活权限或流程管理员才显示
+					buttons.append(ITEM_BUTTON_ACTIVE);// 激活按钮
+				}
+			}
+			
 			buttons.append(ITEM_BUTTON_SHOWDIAGRAM);// 查看流程图
-			if (flowing
+			if (flowStatus == SuspensionState.ACTIVE.getStateCode()
 					&& SystemContextHolder.get().hasAnyRole(
 							"BC_WORKFLOW_ADDGLOBALATTACH")) {// 有权限才能添加全局意见附件
 				buttons.append(ITEM_BUTTON_ADDCOMMENT);// 添加意见
@@ -424,7 +504,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 			}
 			buttons.append(ITEM_BUTTON_SHOWLOG);// 查看流转日志
 		} else if ("todo_user".equals(type)) {
-			if (flowing && isMyTask) {
+			if (flowStatus == SuspensionState.ACTIVE.getStateCode() && isMyTask) {
 				if (SystemContextHolder.get()
 						.hasAnyRole("BC_WORKFLOW_DELEGATE"))// 有权限才能委派任务
 					buttons.append("<span class='mainOperate delegate'><span class='ui-icon ui-icon-person'></span><span class='text link'>委托任务</span></span>");
@@ -434,7 +514,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 				buttons.append("<span class='mainOperate finish'><span class='ui-icon ui-icon-check'></span><span class='text link'>完成办理</span></span>");
 			}
 		} else if ("todo_group".equals(type)) {
-			if (flowing) {
+			if (flowStatus == SuspensionState.ACTIVE.getStateCode()) {
 				if (SystemContextHolder.get().hasAnyRole("BC_WORKFLOW_ASSIGN"))// 有权限才能分派任务
 					buttons.append("<span class='mainOperate assign'><span class='ui-icon ui-icon-person'></span><span class='text link'>分派任务</span></span>");
 
@@ -450,12 +530,12 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 	/**
 	 * 构建工作空间待办信息
 	 * 
-	 * @param flowing
+	 * @param flowStatus
 	 *            流程是否仍在流转中
 	 * @param instance
 	 *            流程实例的历史记录
 	 */
-	private Map<String, Object> buildWSTodoInfo(boolean flowing,
+	private Map<String, Object> buildWSTodoInfo(int flowStatus,
 			HistoricProcessInstance instance) {
 		Map<String, Object> info = new LinkedHashMap<String, Object>();
 		List<Map<String, Object>> taskItems = new ArrayList<Map<String, Object>>();// 一级条目列表
@@ -524,8 +604,9 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 			} else {
 				taskItem.put("subject", task.getName());// 标题
 			}
-			taskItem.put("buttons", this.buildHeaderDefaultButtons(flowing,
-					isUserTask ? "todo_user" : "todo_group", isMyTask));// 操作按钮列表
+			taskItem.put("buttons", this.buildHeaderDefaultButtons(flowStatus,
+					isUserTask ? "todo_user" : "todo_group", isMyTask, false,
+					false));// 操作按钮列表
 			taskItem.put("hasButtons", taskItem.get("buttons") != null);// 有否操作按钮
 			taskItem.put("formKey",
 					taskService.getVariableLocal(task.getId(), "formKey"));// 记录formKey
@@ -537,12 +618,12 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 			taskItem.put("items", items);
 
 			// -- 表单信息
-			buildFormInfo(flowing, items, task.getProcessInstanceId(),
+			buildFormInfo(flowStatus, items, task.getProcessInstanceId(),
 					task.getId(), formKeys.get(task.getId()),
 					!(isUserTask && isMyTask));
 
 			// -- 意见、附件信息
-			buildFlowAttachsInfo(flowing, items,
+			buildFlowAttachsInfo(flowStatus, items,
 					this.findTaskFlowAttachs(task.getId(), allFlowAttachs));
 
 			// 任务的汇总信息
@@ -551,7 +632,8 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 						"待办人：" + getActorNameByCode(task.getAssignee()));
 			} else {
 				taskItem.put("actor", "待办岗："
-						+ getActorFullNameByCode(identityLinks.get(0).getGroupId()));
+						+ getActorFullNameByCode(identityLinks.get(0)
+								.getGroupId()));
 			}
 			taskItem.put(
 					"createTime",
@@ -622,12 +704,12 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 	/**
 	 * 构建工作空间已办信息
 	 * 
-	 * @param flowing
+	 * @param flowStatus
 	 *            流程是否仍在流转中
 	 * @param instance
 	 *            流程实例的历史记录
 	 */
-	private Map<String, Object> buildWSDoneInfo(boolean flowing,
+	private Map<String, Object> buildWSDoneInfo(int flowStatus,
 			HistoricProcessInstance instance) {
 		Map<String, Object> info = new LinkedHashMap<String, Object>();
 		List<Map<String, Object>> taskItems = new ArrayList<Map<String, Object>>();// 一级条目列表
@@ -686,11 +768,11 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 			taskItem.put("items", items);
 
 			// -- 表单信息
-			buildFormInfo(flowing, items, task.getProcessInstanceId(),
+			buildFormInfo(flowStatus, items, task.getProcessInstanceId(),
 					task.getId(), formKeys.get(task.getId()), true);
 
 			// -- 意见、附件信息
-			buildFlowAttachsInfo(false, items,
+			buildFlowAttachsInfo(WorkspaceServiceImpl.COMPLETE, items,
 					this.findTaskFlowAttachs(task.getId(), allFlowAttachs));
 
 			// 任务的汇总信息

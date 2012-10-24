@@ -270,12 +270,21 @@ public class WorkflowServiceImpl implements WorkflowService {
 		// 设置Activiti认证用户
 		setAuthenticatedUser();
 
+		Task task = this.taskService.createTaskQuery().taskId(taskId).singleResult();
+		String originAssignee = task.getAssignee();
 		// 委托任务
 		this.taskService.delegateTask(taskId, toUser);
-
-		// 保存excutionlog信息
-		saveExcutionLogInfo4DelegateAndAssign(taskId, toUser,
-				ExcutionLog.TYPE_TASK_INSTANCE_DELEGATE, "委托给");
+		if(originAssignee.equalsIgnoreCase(toUser)){//委托人是原办理人
+			// 保存excutionlog信息
+			saveExcutionLogInfo4DelegateAndAssign(taskId, toUser,
+					ExcutionLog.TYPE_TASK_INSTANCE_DELEGATE, "任务委托给");
+		}else{//第三方委托
+			// 保存excutionlog信息
+			ActorHistory ah = this.actorHistoryService.loadByCode(task.getAssignee());
+			String msg = ah.getName()+"的任务委托给";
+			saveExcutionLogInfo4DelegateAndAssign(taskId, toUser,
+					ExcutionLog.TYPE_TASK_INSTANCE_DELEGATE, msg);
+		}
 
 		return this.actorHistoryService.loadByCode(toUser);
 	}
@@ -289,7 +298,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 
 		// 保存excutionlog信息
 		saveExcutionLogInfo4DelegateAndAssign(taskId, toUser,
-				ExcutionLog.TYPE_TASK_INSTANCE_ASSIGN, "分派给");
+				ExcutionLog.TYPE_TASK_INSTANCE_ASSIGN, "任务分派给");
 
 		return this.actorHistoryService.loadByCode(toUser);
 	}
@@ -319,11 +328,11 @@ public class WorkflowServiceImpl implements WorkflowService {
 		log.setType(type);
 		log.setProcessInstanceId(task.getProcessInstanceId());
 		log.setTaskInstanceId(task.getId());
-		log.setExcutionCode(task.getTaskDefinitionKey());
+		log.setExcutionCode(task.getProcessDefinitionId());
 		log.setExcutionName(task.getName());
 
 		String date = DateUtils.formatCalendar2Minute(log.getFileDate());
-		log.setDescription(h.getName() + "在" + date + "成功将任务" + msg
+		log.setDescription(h.getName() + "在" + date + "成功将" + msg
 				+ h2.getName());
 		// 保存
 		this.excutionLogService.save(log);
@@ -889,5 +898,106 @@ public class WorkflowServiceImpl implements WorkflowService {
 
 		// 删除流转日志、意见、附件 TODO
 	}
+
+	/**
+	 * 激活流程
+	 */
+	public void doActive(String id) {
+		// 设置Activiti认证用户
+		String initiator = setAuthenticatedUser();
+				
+		//激活流程
+		runtimeService.activateProcessInstanceById(id);
+		
+		if (logger.isDebugEnabled()) {
+			logger.debug("id=" + id);
+			logger.debug("initiator=" + initiator);
+		}
+		
+		HistoricProcessInstance pi = historyService
+				.createHistoricProcessInstanceQuery()
+				.processInstanceId(id).singleResult();
+		
+		ProcessDefinition pd = repositoryService.createProcessDefinitionQuery()
+				.processDefinitionId(pi.getProcessDefinitionId()).singleResult();
+
+		
+		// 创建执行日志
+		ExcutionLog log = new ExcutionLog();
+		log.setFileDate(Calendar.getInstance());
+		ActorHistory h = SystemContextHolder.get().getUserHistory();
+		log.setAuthorId(h.getId());
+		log.setAuthorCode(h.getCode());
+		log.setAuthorName(h.getName());
+
+		// 处理人信息
+		log.setAssigneeId(h.getId());
+		log.setAssigneeCode(h.getCode());
+		log.setAssigneeName(h.getName());
+		
+		log.setListener("custom");// 自定义
+		log.setExcutionId("0");
+		log.setType(ExcutionLog.TYPE_PROCESS_ACTIVE);
+		log.setProcessInstanceId(id);
+		log.setExcutionCode(pi.getProcessDefinitionId());
+		log.setExcutionName(pd.getName());
+		
+		String date = DateUtils.formatCalendar2Minute(log.getFileDate());
+		log.setDescription(h.getName() + "在" + date + "成功将" +pd.getName()+ "激活");
+		// 保存
+		this.excutionLogService.save(log);
+		
+	}
+
+	/**
+	 * 暂停流程
+	 */
+	public void doSuspended(String id) {
+		// 设置Activiti认证用户
+		String initiator = setAuthenticatedUser();
+		
+		//暂停流程
+		runtimeService.suspendProcessInstanceById(id);
+		
+		if (logger.isDebugEnabled()) {
+			logger.debug("id=" + id);
+			logger.debug("initiator=" + initiator);
+		}
+		
+		HistoricProcessInstance pi = historyService
+				.createHistoricProcessInstanceQuery()
+				.processInstanceId(id).singleResult();
+		
+		ProcessDefinition pd = repositoryService.createProcessDefinitionQuery()
+				.processDefinitionId(pi.getProcessDefinitionId()).singleResult();
+		
+		// 创建执行日志
+		ExcutionLog log = new ExcutionLog();
+		log.setFileDate(Calendar.getInstance());
+		ActorHistory h = SystemContextHolder.get().getUserHistory();
+		log.setAuthorId(h.getId());
+		log.setAuthorCode(h.getCode());
+		log.setAuthorName(h.getName());
+
+		// 处理人信息
+		log.setAssigneeId(h.getId());
+		log.setAssigneeCode(h.getCode());
+		log.setAssigneeName(h.getName());
+		
+		log.setListener("custom");// 自定义
+		log.setExcutionId("0");
+		log.setType(ExcutionLog.TYPE_PROCESS_SUSPENDED);
+		log.setProcessInstanceId(id);
+		log.setExcutionCode(pi.getProcessDefinitionId());
+		log.setExcutionName(pd.getName());
+		
+		String date = DateUtils.formatCalendar2Minute(log.getFileDate());
+		log.setDescription(h.getName() + "在" + date + "成功将" +pd.getName()+ "暂停");
+		// 保存
+		this.excutionLogService.save(log);
+
+		
+	}
+
 
 }

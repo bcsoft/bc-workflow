@@ -63,7 +63,7 @@ public class ExcutionLogsAction extends ViewAction<Map<String, Object>> {
 		StringBuffer sql = new StringBuffer();
 		sql.append("select l.id id, l.type_, l.listenter,l.eid,l.pid");
 		sql.append(",tid tid,l.ecode tkey,l.ename tname, l.formkey form");
-		sql.append(",l.assignee_name assignee_name,l.author_id author_id, l.author_code author_code, l.author_name author_name, l.file_date file_date");
+		sql.append(",l.assignee_name assignee_name,l.author_id author_id, l.author_code author_code, l.author_name author_name, l.file_date file_date,l.desc_");
 		sql.append(" from bc_wf_excution_log l");
 		sqlObject.setSql(sql.toString());
 
@@ -91,6 +91,7 @@ public class ExcutionLogsAction extends ViewAction<Map<String, Object>> {
 				map.put("author_code", rs[i++]);
 				map.put("author_name", rs[i++]);
 				map.put("file_date", rs[i++]);
+				map.put("desc", rs[i++]);
 				return map;
 			}
 		});
@@ -139,6 +140,8 @@ public class ExcutionLogsAction extends ViewAction<Map<String, Object>> {
 				.setUseTitleFromLabel(true));
 		columns.add(new TextColumn4MapKey("l.author_code", "author_code",
 				getText("flow.log.author_code"), 80).setSortable(true));
+		columns.add(new TextColumn4MapKey("l.desc_", "desc",
+				getText("flow.log.desc"), 80).setUseTitleFromLabel(true));
 		return columns;
 	}
 

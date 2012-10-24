@@ -6,6 +6,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.activiti.engine.impl.persistence.entity.SuspensionState;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,18 +14,16 @@ import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Controller;
 
-import cn.bc.BCConstants;
 import cn.bc.core.query.condition.Condition;
 import cn.bc.core.query.condition.Direction;
 import cn.bc.core.query.condition.impl.AndCondition;
-import cn.bc.core.query.condition.impl.IsNotNullCondition;
-import cn.bc.core.query.condition.impl.IsNullCondition;
 import cn.bc.core.query.condition.impl.OrderCondition;
 import cn.bc.core.query.condition.impl.QlCondition;
 import cn.bc.core.util.DateUtils;
 import cn.bc.db.jdbc.RowMapper;
 import cn.bc.db.jdbc.SqlObject;
 import cn.bc.identity.web.SystemContext;
+import cn.bc.web.formater.AbstractFormater;
 import cn.bc.web.formater.CalendarFormater;
 import cn.bc.web.formater.EntityStatusFormater;
 import cn.bc.web.struts2.ViewAction;
@@ -39,6 +38,7 @@ import cn.bc.web.ui.html.toolbar.Toolbar;
 import cn.bc.web.ui.html.toolbar.ToolbarButton;
 import cn.bc.web.ui.json.Json;
 import cn.bc.workflow.service.WorkflowService;
+import cn.bc.workflow.service.WorkspaceServiceImpl;
 
 /**
  * 流程监控视图Action
@@ -62,7 +62,7 @@ public class HistoricProcessInstancesAction extends
 		this.workflowService = workflowService;
 	}
 
-	public String status = String.valueOf(BCConstants.STATUS_ENABLED);
+	public String status = String.valueOf(SuspensionState.ACTIVE.getStateCode());
 
 	@Override
 	public boolean isReadonly() {
@@ -82,13 +82,15 @@ public class HistoricProcessInstancesAction extends
 		SqlObject<Map<String, Object>> sqlObject = new SqlObject<Map<String, Object>>();
 		// 构建查询语句,where和order by不要包含在sql中(要统一放到condition中)
 		StringBuffer sql = new StringBuffer();
-
-		sql.append("select a.id_,b.name_ as category,a.start_time_,a.end_time_,a.duration_,a.proc_inst_id_");
-		sql.append(",b.version_ as version,b.key_ as key,c.name");
+		sql.append("select a.id_,b.name_ as category,a.start_time_,a.end_time_,a.duration_,f.suspension_state_ status,a.proc_inst_id_");
+		sql.append(",e.version_ as version,b.version_ as aVersion,b.key_ as key,c.name");
 		sql.append(",getProcessInstanceSubject(a.proc_inst_id_) as subject");
 		sql.append(",(select string_agg(e.name_,',') from act_ru_task e where a.id_=e.proc_inst_id_ ) as  todo_names");
 		sql.append(" from act_hi_procinst a");
+		sql.append(" left join act_ru_execution f on a.id_ = f.proc_inst_id_");
 		sql.append(" inner join act_re_procdef b on b.id_=a.proc_def_id_");
+		sql.append(" inner join act_re_deployment d on d.id_=b.deployment_id_");
+		sql.append(" inner join bc_wf_deploy e on e.deployment_id=d.id_");
 		sql.append(" left join bc_identity_actor c on c.code=a.start_user_id_");
 		sqlObject.setSql(sql.toString());
 
@@ -105,10 +107,16 @@ public class HistoricProcessInstancesAction extends
 				map.put("start_time", rs[i++]);
 				map.put("end_time", rs[i++]);
 				map.put("duration", rs[i++]);
-				if (map.get("end_time") != null) {
-					map.put("status", BCConstants.STATUS_DISABLED);
-				} else
-					map.put("status", BCConstants.STATUS_ENABLED);
+				map.put("status", rs[i++]);
+				if (map.get("end_time") != null) {//已结束
+					map.put("status", WorkspaceServiceImpl.COMPLETE);
+				} else {
+					if(map.get("status").equals(String.valueOf(SuspensionState.ACTIVE.getStateCode()))){//流转中
+						map.put("status", String.valueOf(SuspensionState.ACTIVE.getStateCode()));
+					}else if(map.get("status").equals(String.valueOf(SuspensionState.SUSPENDED.getStateCode()))){//已暂停
+						map.put("status", String.valueOf(SuspensionState.SUSPENDED.getStateCode()));
+					}
+				}
 
 				// 格式化耗时
 				if (map.get("duration") != null)
@@ -118,6 +126,7 @@ public class HistoricProcessInstancesAction extends
 
 				map.put("procinstid", rs[i++]);
 				map.put("version", rs[i++]);
+				map.put("aVersion", rs[i++]);
 				map.put("key", rs[i++]);
 				map.put("startName", rs[i++]);// 发起人
 				map.put("subject", rs[i++]);
@@ -149,9 +158,17 @@ public class HistoricProcessInstancesAction extends
 				getText("flow.instance.todoTask"), 200).setSortable(true)
 				.setUseTitleFromLabel(true));
 		// 版本号
-		columns.add(new TextColumn4MapKey("b.version_", "version",
+		columns.add(new TextColumn4MapKey("e.version_", "version",
 				getText("flow.instance.version"), 50).setSortable(true)
-				.setUseTitleFromLabel(true));
+				.setUseTitleFromLabel(true).setValueFormater(new AbstractFormater<String>() {
+					@SuppressWarnings("unchecked")
+					@Override
+					public String format(Object context, Object value) {
+						Map<String, Object> version = (Map<String, Object>) context;
+						return version.get("version")+"  ("+version.get("aVersion")+")";
+					}
+					
+				}));
 		// 发起人
 		columns.add(new TextColumn4MapKey("a.first_", "startName",
 				getText("flow.instance.startName"), 80).setSortable(true)
@@ -170,18 +187,21 @@ public class HistoricProcessInstancesAction extends
 				getText("flow.instance.key"), 180).setSortable(true)
 				.setUseTitleFromLabel(true));
 		columns.add(new HiddenColumn4MapKey("procinstid", "procinstid"));
+		columns.add(new HiddenColumn4MapKey("status", "status"));
 		return columns;
 	}
 
 	/**
-	 * 状态值转换:流转中|已完成|全部
+	 * 状态值转换:流转中|已暂停|已结束|全部
 	 * 
 	 */
 	private Map<String, String> getStatus() {
 		Map<String, String> map = new LinkedHashMap<String, String>();
-		map.put(String.valueOf(BCConstants.STATUS_ENABLED),
+		map.put(String.valueOf(SuspensionState.ACTIVE.getStateCode()),
 				getText("flow.instance.status.processing"));
-		map.put(String.valueOf(BCConstants.STATUS_DISABLED),
+		map.put(String.valueOf(SuspensionState.SUSPENDED.getStateCode()),
+				getText("flow.instance.status.suspended"));
+		map.put(String.valueOf(WorkspaceServiceImpl.COMPLETE),
 				getText("flow.instance.status.finished"));
 		map.put("", getText("bc.status.all"));
 		return map;
@@ -227,10 +247,21 @@ public class HistoricProcessInstancesAction extends
 		
 		if(!my){
 			// 发起流程
-			tb.addButton(new ToolbarButton().setIcon("ui-icon-play")
+			tb.addButton(new ToolbarButton().setIcon("ui-icon-bullet")
 					.setText(getText("flow.start"))
 					.setClick("bc.historicProcessInstanceSelectView.startflow"));
 
+			if (!this.isReadonly()) {
+				// 激活
+				tb.addButton(new ToolbarButton().setIcon("ui-icon-play")
+						.setText(getText("lable.flow.active"))
+						.setClick("bc.historicprocessinstance.active"));
+				// 暂停
+				tb.addButton(new ToolbarButton().setIcon("ui-icon-pause")
+						.setText(getText("lable.flow.suspended"))
+						.setClick("bc.historicprocessinstance.suspended"));
+			}
+			
 			// 流程实例级联删除
 			if (((SystemContext) this.getContext())
 					.hasAnyRole("BC_WORKFLOW_INSTANCE_DELETE")) {
@@ -238,8 +269,7 @@ public class HistoricProcessInstancesAction extends
 			}
 
 			tb.addButton(Toolbar.getDefaultToolbarRadioGroup(this.getStatus(),
-					"status", BCConstants.STATUS_ENABLED,
-					getText("title.click2changeSearchStatus")));
+					"status", 0, getText("title.click2changeSearchStatus")));
 		}		
 
 		// 搜索按钮
@@ -255,30 +285,43 @@ public class HistoricProcessInstancesAction extends
 		if (status != null && status.length() > 0) {
 			String[] ss = status.split(",");
 			if (ss.length == 1) {
-				if (ss[0].equals(String.valueOf(BCConstants.STATUS_ENABLED))) {
-					ac.add(new IsNullCondition("a.end_time_"));
+				String sqlstr="";
+				if (ss[0].equals(String.valueOf(SuspensionState.ACTIVE.getStateCode()))) {
+					//ac.add(new EqualsCondition("f.suspension_state_",SuspensionState.ACTIVE.getStateCode()));
+					sqlstr += " a.end_time_ is null";
+					sqlstr += " and ((b.suspension_state_ = "+SuspensionState.ACTIVE.getStateCode()+")";
+					sqlstr += " and (f.suspension_state_ ="+SuspensionState.ACTIVE.getStateCode()+"))";
 				} else if (ss[0].equals(String
-						.valueOf(BCConstants.STATUS_DISABLED)))
-					ac.add(new IsNotNullCondition("a.end_time_"));
+						.valueOf(SuspensionState.SUSPENDED.getStateCode()))){
+					//ac.add(new EqualsCondition("f.suspension_state_",SuspensionState.SUSPENDED.getStateCode())).add(
+					//		new AndCondition(new IsNullCondition("a.end_time_")));
+					sqlstr += " a.end_time_ is null";
+					sqlstr += " and ((b.suspension_state_ = "+SuspensionState.SUSPENDED.getStateCode()+")";
+					sqlstr += " or (f.suspension_state_ ="+SuspensionState.SUSPENDED.getStateCode()+"))";
+				} else if (ss[0].equals(String.valueOf(WorkspaceServiceImpl.COMPLETE))){
+					//ac.add(new IsNotNullCondition("a.end_time_"));
+					sqlstr += " a.end_time_ is not null";
+				} 
+				ac.add(new QlCondition(sqlstr,new Object[]{}));
 			}
 		}
 		
-		if(my){
-			SystemContext context = (SystemContext) this.getContext();
-			//保存的用户id键值集合
-			String code=context.getUser().getCode();
-			String sql="";
-			sql+="exists(";
-			sql+="select 1 ";
-			sql+=" from act_hi_taskinst d";								
-			sql+=" where a.id_=d.proc_inst_id_  and d.assignee_ = '";			
-			sql+=code;
-			sql+="')";
-			
-			ac.add(
-					new QlCondition(sql,new Object[]{})
-			);		
-		}
+//		if(my){
+//			SystemContext context = (SystemContext) this.getContext();
+//			//保存的用户id键值集合
+//			String code=context.getUser().getCode();
+//			String sql="";
+//			sql+="exists(";
+//			sql+="select 1 ";
+//			sql+=" from act_hi_taskinst d";								
+//			sql+=" where a.id_=d.proc_inst_id_ and d.end_time_ is not null and d.assignee_ = '";			
+//			sql+=code;
+//			sql+="')";
+//			
+//			ac.add(
+//					new QlCondition(sql,new Object[]{})
+//			);		
+//		}
 		
 		return ac.isEmpty() ? null : ac;
 	}
@@ -289,10 +332,8 @@ public class HistoricProcessInstancesAction extends
 		// 状态条件
 		if (status != null && status.length() > 0)
 			json.put("status", status);
-		
-		if(my){
-			json.put("my", my);
-		}
+		if (my)
+			json.put("my", true);
 		return json;
 	}
 
@@ -304,7 +345,8 @@ public class HistoricProcessInstancesAction extends
 	@Override
 	protected String getHtmlPageJs() {
 		return this.getHtmlPageNamespace()
-				+ "/historicprocessinstance/select.js";
+				+ "/historicprocessinstance/select.js"+","+
+				this.getHtmlPageNamespace() + "/historicprocessinstance/view.js";
 	}
 
 	@Override
@@ -325,7 +367,7 @@ public class HistoricProcessInstancesAction extends
 
 	// ==高级搜索代码结束==
 
-	public String id;
+	public String id;	//流程实例id
 
 	/**
 	 * 删除流程实例
@@ -348,4 +390,26 @@ public class HistoricProcessInstancesAction extends
 		this.json = json.toString();
 		return "json";
 	}
+	
+
+	/** 激活流程 **/
+	public String doActive() {
+		Json json = new Json();
+		this.workflowService.doActive(this.id);
+		json.put("msg", getText("flow.msg.active.success"));
+		json.put("id", this.id);
+		this.json = json.toString();
+		return "json";
+	}
+	
+	/** 暂停流程 **/
+	public String doSuspended() {
+		Json json = new Json();
+		this.workflowService.doSuspended(this.id);
+		json.put("msg", getText("flow.msg.suspended.success"));
+		json.put("id", this.id);
+		this.json = json.toString();
+		return "json";
+	}
+
 }
