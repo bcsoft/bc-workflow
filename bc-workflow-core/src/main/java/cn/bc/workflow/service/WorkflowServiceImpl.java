@@ -546,7 +546,16 @@ public class WorkflowServiceImpl implements WorkflowService {
 			logger.debug("comments.size=" + comments.size());
 		}
 		params.put("comments_str", buildCommentsString(comments));
-
+		
+		// 全局附件
+		List<FlowAttach> attachs = flowAttachService.findAttachsByProcess(
+				processInstanceId, false);
+		params.put("attachs", attachs);
+		if (logger.isDebugEnabled()) {
+			logger.debug("attachs.size=" + attachs.size());
+		}
+		params.put("attachs_str", buildAttachsString(attachs));
+		
 		// 经办任务
 		String taskCode;
 		List<HistoricTaskInstance> tasks = this.historyService
@@ -561,6 +570,8 @@ public class WorkflowServiceImpl implements WorkflowService {
 		}
 		List<FlowAttach> allComments = flowAttachService
 				.findCommentsByTask(tids);
+		List<FlowAttach> allAttachs = flowAttachService
+				.findAttachsByTask(tids);
 		for (HistoricTaskInstance task : tasks) {
 			taskCode = task.getTaskDefinitionKey();
 			taskParams = new HashMap<String, Object>();
@@ -593,6 +604,11 @@ public class WorkflowServiceImpl implements WorkflowService {
 			comments = findTaskFlowAttachs(task.getId(), allComments);
 			taskParams.put("comments", comments);
 			taskParams.put("comments_str", buildCommentsString(comments));
+			
+			// 任务的附件
+			attachs = findTaskFlowAttachs(task.getId(), allAttachs);
+			taskParams.put("attachs", attachs);
+			taskParams.put("attachs_str", buildAttachsString(attachs));
 
 			// add：如果一个节点产生多个实例，只会有最后执行任务的相关信息
 			if (params.containsKey(taskCode)) {
@@ -642,6 +658,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 		params.put("code", task.getTaskDefinitionKey());
 		params.put("owner", task.getOwner());
 		params.put("assignee", getActorNameByCode(task.getAssignee()));
+		params.put("assigneeCode", task.getAssignee());
 		params.put("desc", task.getDescription());
 		params.put("dueDate", task.getDueDate());
 		params.put("priority", task.getPriority());
@@ -668,6 +685,12 @@ public class WorkflowServiceImpl implements WorkflowService {
 				.findCommentsByTask(new String[] { taskId });
 		params.put("comments", comments);
 		params.put("comments_str", buildCommentsString(comments));
+		
+		// 任务的附件
+		List<FlowAttach> attachs = flowAttachService
+				.findAttachsByTask(new String[] { taskId });
+		params.put("attachs", attachs);
+		params.put("attachs_str", buildAttachsString(attachs));
 
 		if (withProcessInfo) {
 			Map<String, Object> processParams = new HashMap<String, Object>();
@@ -722,6 +745,15 @@ public class WorkflowServiceImpl implements WorkflowService {
 				logger.debug("pi.comments.size=" + comments.size());
 			}
 			processParams.put("pi.comments_str", buildCommentsString(comments));
+			
+			// 全局附件
+			attachs = flowAttachService.findAttachsByProcess(
+					task.getProcessInstanceId(), false);
+			processParams.put("attachs", attachs);
+			if (logger.isDebugEnabled()) {
+				logger.debug("pi.attachs.size=" + attachs.size());
+			}
+			processParams.put("pi.attachs_str", buildAttachsString(attachs));
 
 			params.put("pi", processParams);
 		}
@@ -789,10 +821,32 @@ public class WorkflowServiceImpl implements WorkflowService {
 			if (i + 1 == comments.size()) {
 				comments_str.append(desc);
 			} else {
-				comments_str.append(desc + "　　");
+				comments_str.append(desc + "　");
 			}
 		}
 		return comments_str;
+	}
+	
+	/**
+	 * @param attachs
+	 * @return
+	 */
+	private StringBuffer buildAttachsString(List<FlowAttach> attachs) {
+		StringBuffer attachs_str;
+		attachs_str = new StringBuffer();
+
+		if (attachs.isEmpty())
+			return attachs_str;
+
+		// 附件字符串
+		for (int i = 0; i < attachs.size(); i++) {
+			if (i + 1 == attachs.size()) {
+				attachs_str.append(attachs.get(i).getSubject());
+			} else {
+				attachs_str.append(attachs.get(i).getSubject() + ",");
+			}
+		}
+		return attachs_str;
 	}
 
 	/**

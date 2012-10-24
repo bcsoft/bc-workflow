@@ -53,6 +53,12 @@ public class FlowAttachServiceImpl extends DefaultCrudService<FlowAttach>
 		return findByProcess(processInstanceId,
 				new Integer[] { FlowAttach.TYPE_COMMENT }, includeTask);
 	}
+	
+	public List<FlowAttach> findAttachsByProcess(String processInstanceId,
+			boolean includeTask) {
+		return findByProcess(processInstanceId,
+				new Integer[] { FlowAttach.TYPE_ATTACHMENT }, includeTask);
+	}
 
 	public List<FlowAttach> findByProcess(String processInstanceId,
 			Integer[] types, boolean includeTask) {
@@ -114,5 +120,9 @@ public class FlowAttachServiceImpl extends DefaultCrudService<FlowAttach>
 
 	public String getProcInstName(String pid) {
 		return flowAttachDao.getProcInstName(pid);
+	}
+
+	public List<FlowAttach> findAttachsByTask(String[] taskIds) {
+		return findByTask(taskIds, new Integer[] { FlowAttach.TYPE_ATTACHMENT });
 	}
 }
