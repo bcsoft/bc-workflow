@@ -23,6 +23,7 @@ import cn.bc.core.util.DateUtils;
 import cn.bc.db.jdbc.RowMapper;
 import cn.bc.db.jdbc.SqlObject;
 import cn.bc.identity.web.SystemContext;
+import cn.bc.web.formater.AbstractFormater;
 import cn.bc.web.formater.CalendarFormater;
 import cn.bc.web.formater.EntityStatusFormater;
 import cn.bc.web.struts2.ViewAction;
@@ -37,6 +38,7 @@ import cn.bc.web.ui.html.toolbar.Toolbar;
 import cn.bc.web.ui.html.toolbar.ToolbarButton;
 import cn.bc.web.ui.json.Json;
 import cn.bc.workflow.service.WorkflowService;
+import cn.bc.workflow.service.WorkspaceServiceImpl;
 
 /**
  * 流程监控视图Action
@@ -81,7 +83,7 @@ public class HistoricProcessInstancesAction extends
 		// 构建查询语句,where和order by不要包含在sql中(要统一放到condition中)
 		StringBuffer sql = new StringBuffer();
 		sql.append("select a.id_,b.name_ as category,a.start_time_,a.end_time_,a.duration_,f.suspension_state_ status,a.proc_inst_id_");
-		sql.append(",e.version_ as version,b.key_ as key,c.name");
+		sql.append(",e.version_ as version,b.version_ as aVersion,b.key_ as key,c.name");
 		sql.append(",getProcessInstanceSubject(a.proc_inst_id_) as subject");
 		sql.append(",(select string_agg(e.name_,',') from act_ru_task e where a.id_=e.proc_inst_id_ ) as  todo_names");
 		sql.append(" from act_hi_procinst a");
@@ -107,7 +109,7 @@ public class HistoricProcessInstancesAction extends
 				map.put("duration", rs[i++]);
 				map.put("status", rs[i++]);
 				if (map.get("end_time") != null) {//已结束
-					map.put("status", 3);
+					map.put("status", WorkspaceServiceImpl.COMPLETE);
 				} else {
 					if(map.get("status").equals(String.valueOf(SuspensionState.ACTIVE.getStateCode()))){//流转中
 						map.put("status", String.valueOf(SuspensionState.ACTIVE.getStateCode()));
@@ -124,6 +126,7 @@ public class HistoricProcessInstancesAction extends
 
 				map.put("procinstid", rs[i++]);
 				map.put("version", rs[i++]);
+				map.put("aVersion", rs[i++]);
 				map.put("key", rs[i++]);
 				map.put("startName", rs[i++]);// 发起人
 				map.put("subject", rs[i++]);
@@ -157,7 +160,15 @@ public class HistoricProcessInstancesAction extends
 		// 版本号
 		columns.add(new TextColumn4MapKey("e.version_", "version",
 				getText("flow.instance.version"), 50).setSortable(true)
-				.setUseTitleFromLabel(true));
+				.setUseTitleFromLabel(true).setValueFormater(new AbstractFormater<String>() {
+					@SuppressWarnings("unchecked")
+					@Override
+					public String format(Object context, Object value) {
+						Map<String, Object> version = (Map<String, Object>) context;
+						return version.get("version")+"  ("+version.get("aVersion")+")";
+					}
+					
+				}));
 		// 发起人
 		columns.add(new TextColumn4MapKey("a.first_", "startName",
 				getText("flow.instance.startName"), 80).setSortable(true)
@@ -190,7 +201,7 @@ public class HistoricProcessInstancesAction extends
 				getText("flow.instance.status.processing"));
 		map.put(String.valueOf(SuspensionState.SUSPENDED.getStateCode()),
 				getText("flow.instance.status.suspended"));
-		map.put("3",
+		map.put(String.valueOf(WorkspaceServiceImpl.COMPLETE),
 				getText("flow.instance.status.finished"));
 		map.put("", getText("bc.status.all"));
 		return map;
@@ -287,7 +298,7 @@ public class HistoricProcessInstancesAction extends
 					sqlstr += " a.end_time_ is null";
 					sqlstr += " and ((b.suspension_state_ = "+SuspensionState.SUSPENDED.getStateCode()+")";
 					sqlstr += " or (f.suspension_state_ ="+SuspensionState.SUSPENDED.getStateCode()+"))";
-				} else if (ss[0].equals("3")){
+				} else if (ss[0].equals(String.valueOf(WorkspaceServiceImpl.COMPLETE))){
 					//ac.add(new IsNotNullCondition("a.end_time_"));
 					sqlstr += " a.end_time_ is not null";
 				} 
@@ -295,22 +306,22 @@ public class HistoricProcessInstancesAction extends
 			}
 		}
 		
-		if(my){
-			SystemContext context = (SystemContext) this.getContext();
-			//保存的用户id键值集合
-			String code=context.getUser().getCode();
-			String sql="";
-			sql+="exists(";
-			sql+="select 1 ";
-			sql+=" from act_hi_taskinst d";								
-			sql+=" where a.id_=d.proc_inst_id_ and d.end_time_ is not null and d.assignee_ = '";			
-			sql+=code;
-			sql+="')";
-			
-			ac.add(
-					new QlCondition(sql,new Object[]{})
-			);		
-		}
+//		if(my){
+//			SystemContext context = (SystemContext) this.getContext();
+//			//保存的用户id键值集合
+//			String code=context.getUser().getCode();
+//			String sql="";
+//			sql+="exists(";
+//			sql+="select 1 ";
+//			sql+=" from act_hi_taskinst d";								
+//			sql+=" where a.id_=d.proc_inst_id_ and d.end_time_ is not null and d.assignee_ = '";			
+//			sql+=code;
+//			sql+="')";
+//			
+//			ac.add(
+//					new QlCondition(sql,new Object[]{})
+//			);		
+//		}
 		
 		return ac.isEmpty() ? null : ac;
 	}

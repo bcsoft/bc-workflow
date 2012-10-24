@@ -270,12 +270,21 @@ public class WorkflowServiceImpl implements WorkflowService {
 		// 设置Activiti认证用户
 		setAuthenticatedUser();
 
+		Task task = this.taskService.createTaskQuery().taskId(taskId).singleResult();
+		String originAssignee = task.getAssignee();
 		// 委托任务
 		this.taskService.delegateTask(taskId, toUser);
-
-		// 保存excutionlog信息
-		saveExcutionLogInfo4DelegateAndAssign(taskId, toUser,
-				ExcutionLog.TYPE_TASK_INSTANCE_DELEGATE, "委托给");
+		if(originAssignee.equalsIgnoreCase(toUser)){//委托人是原办理人
+			// 保存excutionlog信息
+			saveExcutionLogInfo4DelegateAndAssign(taskId, toUser,
+					ExcutionLog.TYPE_TASK_INSTANCE_DELEGATE, "任务委托给");
+		}else{//第三方委托
+			// 保存excutionlog信息
+			ActorHistory ah = this.actorHistoryService.loadByCode(task.getAssignee());
+			String msg = ah.getName()+"的任务委托给";
+			saveExcutionLogInfo4DelegateAndAssign(taskId, toUser,
+					ExcutionLog.TYPE_TASK_INSTANCE_DELEGATE, msg);
+		}
 
 		return this.actorHistoryService.loadByCode(toUser);
 	}
@@ -289,7 +298,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 
 		// 保存excutionlog信息
 		saveExcutionLogInfo4DelegateAndAssign(taskId, toUser,
-				ExcutionLog.TYPE_TASK_INSTANCE_ASSIGN, "分派给");
+				ExcutionLog.TYPE_TASK_INSTANCE_ASSIGN, "任务分派给");
 
 		return this.actorHistoryService.loadByCode(toUser);
 	}
@@ -319,11 +328,11 @@ public class WorkflowServiceImpl implements WorkflowService {
 		log.setType(type);
 		log.setProcessInstanceId(task.getProcessInstanceId());
 		log.setTaskInstanceId(task.getId());
-		log.setExcutionCode(task.getTaskDefinitionKey());
+		log.setExcutionCode(task.getProcessDefinitionId());
 		log.setExcutionName(task.getName());
 
 		String date = DateUtils.formatCalendar2Minute(log.getFileDate());
-		log.setDescription(h.getName() + "在" + date + "成功将任务" + msg
+		log.setDescription(h.getName() + "在" + date + "成功将" + msg
 				+ h2.getName());
 		// 保存
 		this.excutionLogService.save(log);

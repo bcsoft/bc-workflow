@@ -39,6 +39,7 @@ import cn.bc.web.ui.html.page.PageOption;
 import cn.bc.web.ui.html.toolbar.Toolbar;
 import cn.bc.web.ui.html.toolbar.ToolbarButton;
 import cn.bc.web.ui.json.Json;
+import cn.bc.workflow.service.WorkspaceServiceImpl;
 
 /**
  * 经办、任务监控视图Action
@@ -62,6 +63,12 @@ public class HistoricTaskInstancesAction extends
 		return !context.hasAnyRole(getText("key.role.bc.admin"),
 				getText("key.role.bc.workflow"));
 	}
+	
+	public boolean isDelegate() {
+		// 任务委托角色
+		SystemContext context = (SystemContext) this.getContext();
+		return context.hasAnyRole(getText("key.role.bc.workflow"),getText("key.role.bc.workflow.delegate"));
+	}
 
 	@Override
 	protected OrderCondition getGridOrderCondition() {
@@ -73,7 +80,7 @@ public class HistoricTaskInstancesAction extends
 		SqlObject<Map<String, Object>> sqlObject = new SqlObject<Map<String, Object>>();
 		// 构建查询语句,where和order by不要包含在sql中(要统一放到condition中)
 		StringBuffer sql = new StringBuffer();
-		sql.append("select a.id_,c.name_ as category,a.name_ as name,a.start_time_,a.end_time_,d.name as receiver,a.duration_,a.proc_inst_id_");
+		sql.append("select a.id_,c.name_ as category,a.name_ as name,a.start_time_,a.end_time_,a.assignee_,d.name as receiver,a.duration_,a.proc_inst_id_");
 		sql.append(",a.task_def_key_,b.end_time_ as p_end_time,h.suspension_state_ pstatus");
 		sql.append(",getProcessInstanceSubject(a.proc_inst_id_) as subject,a.due_date_ as due_date,g.name as gwei");
 		sql.append(" from act_hi_taskinst a");
@@ -99,6 +106,7 @@ public class HistoricTaskInstancesAction extends
 				map.put("name", rs[i++]);
 				map.put("start_time", rs[i++]);
 				map.put("end_time", rs[i++]);
+				map.put("assignee_", rs[i++]);
 				map.put("receiver", rs[i++]);
 				map.put("duration", rs[i++]);
 				// 根据结束时间取得状态
@@ -119,7 +127,7 @@ public class HistoricTaskInstancesAction extends
 				map.put("p_end_time", rs[i++]);
 				//根据流程的结束时间获取整个流程的状态
 				if (map.get("p_end_time") != null) {//已结束
-					map.put("pstatus", 3);
+					map.put("pstatus", WorkspaceServiceImpl.COMPLETE);
 				} else {
 					map.put("pstatus", rs[i++]);
 					if(map.get("pstatus").equals(String.valueOf(SuspensionState.ACTIVE.getStateCode()))){//处理中
@@ -208,6 +216,7 @@ public class HistoricTaskInstancesAction extends
 		}
 
 		columns.add(new HiddenColumn4MapKey("procinstid", "procinstid"));
+		columns.add(new HiddenColumn4MapKey("assignee", "assignee_"));
 		return columns;
 	}
 
@@ -248,9 +257,16 @@ public class HistoricTaskInstancesAction extends
 		}
 
 		if (!my){
+			if (this.isDelegate()) {
+				tb.addButton(new ToolbarButton().setIcon("ui-icon-person")
+						.setText(getText("label.delegate.task"))
+						.setClick("bc.todoView.delegateTask"));
+			}
+			
 			tb.addButton(Toolbar.getDefaultToolbarRadioGroup(this.getStatus(),
 					"status", BCConstants.STATUS_ENABLED,
 					getText("title.click2changeSearchStatus")));
+			
 		}
 		
 		// 搜索按钮
@@ -283,7 +299,7 @@ public class HistoricTaskInstancesAction extends
 				getText("done.status.processing"));
 		map.put(String.valueOf(SuspensionState.SUSPENDED.getStateCode()),
 				getText("done.status.suspended"));
-		map.put("3",
+		map.put(String.valueOf(WorkspaceServiceImpl.COMPLETE),
 				getText("done.status.finished"));
 		map.put("", getText("bc.status.all"));
 		return map;
@@ -330,7 +346,9 @@ public class HistoricTaskInstancesAction extends
 
 	@Override
 	protected String getHtmlPageJs() {
-		return this.getHtmlPageNamespace() + "/historictaskinstance/select.js";
+		return this.getHtmlPageNamespace() + "/historictaskinstance/select.js"+","
+				+ this.getContextPath() + "/bc-workflow/todo/view.js"+","
+				+ this.getContextPath() + "/bc/identity/identity.js";
 	}
 
 	@Override
