@@ -789,7 +789,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 			if (i + 1 == comments.size()) {
 				comments_str.append(desc);
 			} else {
-				comments_str.append(desc + ",");
+				comments_str.append(desc + "　　");
 			}
 		}
 		return comments_str;
