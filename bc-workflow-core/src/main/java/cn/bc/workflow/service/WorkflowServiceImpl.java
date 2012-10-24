@@ -568,6 +568,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 			taskParams.put("code", taskCode);
 			taskParams.put("owner", task.getOwner());
 			taskParams.put("assignee", getActorNameByCode(task.getAssignee()));
+			taskParams.put("assigneeCode", task.getAssignee());
 			taskParams.put("desc", task.getDescription());
 			taskParams.put("dueDate", task.getDueDate());
 			taskParams.put("priority", task.getPriority());
@@ -766,11 +767,23 @@ public class WorkflowServiceImpl implements WorkflowService {
 	private StringBuffer buildCommentsString(List<FlowAttach> comments) {
 		StringBuffer comments_str;
 		comments_str = new StringBuffer();
-		for (FlowAttach comment : comments) {
+		/*for (FlowAttach comment : comments) {
 			// 意见的字符串表示：“[姓名1] [时间1] [标题1]\r\n[姓名2] [时间2] [标题2]...”
 			comments_str.append(comment.getAuthor().getName() + " "
 					+ DateUtils.formatCalendar2Minute(comment.getFileDate())
 					+ " " + comment.getSubject() + "\r\n");
+		}*/
+
+		if(comments.isEmpty())
+			return comments_str;
+		
+		//构建意见字符串
+		for (int i=0;i<comments.size();i++) {
+			if(i+1==comments.size()){
+				comments_str.append(comments.get(i).getDesc());
+			}else{
+				comments_str.append(comments.get(i).getDesc()+",");
+			}
 		}
 		return comments_str;
 	}
