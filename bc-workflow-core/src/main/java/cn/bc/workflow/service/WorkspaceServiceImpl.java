@@ -207,16 +207,19 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 			String userCode = this.getCurrentUserAccount(); //当前登录用户的编码
 			
 			//当前任务
-			Task task = taskService.createTaskQuery()
-					.processInstanceId(instance.getId()).singleResult();
+			List<Task> task_list = taskService.createTaskQuery()
+					.processInstanceId(instance.getId()).list();
 			
-			if(task != null && userCode.equalsIgnoreCase(task.getAssignee())){//当前登录用户是处理人
-				Map<String,Object> roleMap = taskService.getVariablesLocal(task.getId());
-				if(roleMap.get("suspended") != null){//流程变量暂停不为空
-					isShowSuspendedButton = (Boolean) roleMap.get("suspended");
-				}
-				if(roleMap.get("active") != null){//流程变量激活不为空
-					isShowActiveButton = (Boolean) roleMap.get("active");
+			if(task_list != null){
+				for(Task task:task_list){
+					if(userCode.equalsIgnoreCase(task.getAssignee())){//当前登录用户是处理人
+						Map<String,Object> roleMap = taskService.getVariablesLocal(task.getId());
+						if(roleMap.get("suspended") != null)//流程变量暂停不为空
+							isShowSuspendedButton = (Boolean) roleMap.get("suspended");
+						
+						if(roleMap.get("active") != null)//流程变量激活不为空
+							isShowActiveButton = (Boolean) roleMap.get("active");
+					}
 				}
 			}
 		}
