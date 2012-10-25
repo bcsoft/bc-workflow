@@ -15,8 +15,10 @@ import org.activiti.engine.HistoryService;
 import org.activiti.engine.RepositoryService;
 import org.activiti.engine.RuntimeService;
 import org.activiti.engine.TaskService;
+import org.activiti.engine.history.HistoricDetail;
 import org.activiti.engine.history.HistoricProcessInstance;
 import org.activiti.engine.history.HistoricTaskInstance;
+import org.activiti.engine.history.HistoricVariableUpdate;
 import org.activiti.engine.impl.persistence.entity.SuspensionState;
 import org.activiti.engine.repository.ProcessDefinition;
 import org.activiti.engine.runtime.ProcessInstance;
@@ -219,8 +221,25 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 			}
 		}
 		
+		// 流程变量
+		HistoricVariableUpdate v;
+		List<HistoricDetail> variables = historyService
+				.createHistoricDetailQuery()
+				.processInstanceId(instance.getId()).variableUpdates()
+				.orderByTime().asc().list();
+		Map<String, Object> variableParams = new HashMap<String, Object>();
+		for (HistoricDetail hd : variables) {
+			v = (HistoricVariableUpdate) hd;
+			if (v.getTaskId() == null)
+				variableParams.put(v.getVariableName(),v);
+		}
+		
+		//读取隐藏按钮控制参数
+		String _hiddenButtonCodes=variableParams.containsKey("hiddenButtonCodes") ?
+				((HistoricVariableUpdate)variableParams.get("hiddenButtonCodes")).getValue().toString() : "";
+		
 		info.put("buttons", this.buildHeaderDefaultButtons(flowStatus,
-				"common", false, isShowSuspendedButton, isShowActiveButton));// 操作按钮列表
+				"common", false, isShowSuspendedButton, isShowActiveButton,_hiddenButtonCodes));// 操作按钮列表
 		info.put("hasButtons", info.get("buttons") != null);// 有否操作按钮
 		List<Map<String, Object>> items = new ArrayList<Map<String, Object>>();// 一级条目列表
 		info.put("items", items);
@@ -480,7 +499,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 	 */
 	private String buildHeaderDefaultButtons(int flowStatus, String type,
 			boolean isMyTask, boolean isShowSuspendedButton,
-			boolean isShowActiveButton) {
+			boolean isShowActiveButton,String hiddenButtonCodes) {
 		StringBuffer buttons = new StringBuffer();
 		if ("common".equals(type)) {
 			
@@ -499,8 +518,11 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 			if (flowStatus == SuspensionState.ACTIVE.getStateCode()
 					&& SystemContextHolder.get().hasAnyRole(
 							"BC_WORKFLOW_ADDGLOBALATTACH")) {// 有权限才能添加全局意见附件
-				buttons.append(ITEM_BUTTON_ADDCOMMENT);// 添加意见
-				buttons.append(ITEM_BUTTON_ADDATTACH);// 添加附件
+				if(hiddenButtonCodes.indexOf("BUTTON_ADDCOMMENT") == -1)
+					buttons.append(ITEM_BUTTON_ADDCOMMENT);// 添加意见
+				
+				if(hiddenButtonCodes.indexOf("BUTTON_ADDATTACH") == -1)
+					buttons.append(ITEM_BUTTON_ADDATTACH);// 添加附件
 			}
 			buttons.append(ITEM_BUTTON_SHOWLOG);// 查看流转日志
 		} else if ("todo_user".equals(type)) {
@@ -509,8 +531,11 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 						.hasAnyRole("BC_WORKFLOW_DELEGATE"))// 有权限才能委派任务
 					buttons.append("<span class='mainOperate delegate'><span class='ui-icon ui-icon-person'></span><span class='text link'>委托任务</span></span>");
 
-				buttons.append(ITEM_BUTTON_ADDCOMMENT);// 添加意见
-				buttons.append(ITEM_BUTTON_ADDATTACH);// 添加附件
+				if(hiddenButtonCodes.indexOf("BUTTON_ADDCOMMENT") == -1)
+					buttons.append(ITEM_BUTTON_ADDCOMMENT);// 添加意见
+				
+				if(hiddenButtonCodes.indexOf("BUTTON_ADDATTACH") == -1)
+					buttons.append(ITEM_BUTTON_ADDATTACH);// 添加附件
 				buttons.append("<span class='mainOperate finish'><span class='ui-icon ui-icon-check'></span><span class='text link'>完成办理</span></span>");
 			}
 		} else if ("todo_group".equals(type)) {
@@ -604,9 +629,11 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 			} else {
 				taskItem.put("subject", task.getName());// 标题
 			}
+			//读取隐藏按钮控制参数
+			Object obj_hiddenButtonCodes=taskService.getVariableLocal(task.getId(), "hiddenButtonCodes");
 			taskItem.put("buttons", this.buildHeaderDefaultButtons(flowStatus,
 					isUserTask ? "todo_user" : "todo_group", isMyTask, false,
-					false));// 操作按钮列表
+					false,obj_hiddenButtonCodes != null ? obj_hiddenButtonCodes.toString() : ""));// 操作按钮列表
 			taskItem.put("hasButtons", taskItem.get("buttons") != null);// 有否操作按钮
 			taskItem.put("formKey",
 					taskService.getVariableLocal(task.getId(), "formKey"));// 记录formKey
