@@ -126,7 +126,7 @@ public class HistoricTaskInstancesAction extends
 				map.put("taskdefkey", rs[i++]);
 				map.put("p_end_time", rs[i++]);
 				//根据流程的结束时间获取整个流程的状态
-				if (map.get("p_end_time") != null) {//已结束
+				if (map.get("end_time") != null) {//已结束
 					map.put("pstatus", WorkspaceServiceImpl.COMPLETE);
 				} else {
 					map.put("pstatus", rs[i++]);
