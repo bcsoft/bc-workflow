@@ -306,22 +306,22 @@ public class HistoricProcessInstancesAction extends
 			}
 		}
 		
-//		if(my){
-//			SystemContext context = (SystemContext) this.getContext();
-//			//保存的用户id键值集合
-//			String code=context.getUser().getCode();
-//			String sql="";
-//			sql+="exists(";
-//			sql+="select 1 ";
-//			sql+=" from act_hi_taskinst d";								
-//			sql+=" where a.id_=d.proc_inst_id_ and d.end_time_ is not null and d.assignee_ = '";			
-//			sql+=code;
-//			sql+="')";
-//			
-//			ac.add(
-//					new QlCondition(sql,new Object[]{})
-//			);		
-//		}
+		if(my){
+			SystemContext context = (SystemContext) this.getContext();
+			//保存的用户id键值集合
+			String code=context.getUser().getCode();
+			String sql="";
+			sql+="exists(";
+			sql+="select 1 ";
+			sql+=" from act_hi_taskinst d";								
+			sql+=" where a.id_=d.proc_inst_id_ and d.end_time_ is not null and d.assignee_ = '";			
+			sql+=code;
+			sql+="')";
+			
+			ac.add(
+					new QlCondition(sql,new Object[]{})
+			);		
+		}
 		
 		return ac.isEmpty() ? null : ac;
 	}
