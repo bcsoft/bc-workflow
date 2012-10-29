@@ -160,20 +160,29 @@ public class WorkflowAction extends AbstractBaseAction {
 	 */
 	public String startFlow() throws Exception {
 		try {
-			// id为流程实例id
-			Assert.assertNotEmpty(id);
+			String processInstanceId = "";
 			
-			// 完成任务
-			String processInstanceId = this.workflowService.startFlowByDefinitionId(id);
-
+			if(null != key && key.length() > 0){
+				//启动流程
+				processInstanceId = this.workflowService.startFlowByKey(key);
+				
+			}else{
+				// id为流程实例id
+				Assert.assertNotEmpty(id);
+				//启动流程
+				processInstanceId = this.workflowService.startFlowByDefinitionId(id);
+				
+			}
+			
 			// 返回信息
 			Json json = createSuccessMsg("启动成功！");
 			json.put("processInstance", processInstanceId);// 流程实例id
 			this.json = json.toString();
+
 		} catch (Exception e) {
 			json = createFailureMsg(e).toString();
 		}
-
+		
 		return JSON;
 	}
 

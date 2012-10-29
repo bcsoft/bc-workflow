@@ -26,6 +26,7 @@ import cn.bc.core.exception.CoreException;
 import cn.bc.core.util.DateUtils;
 import cn.bc.core.util.TemplateUtils;
 import cn.bc.docs.domain.Attach;
+import cn.bc.identity.web.SystemContextHolder;
 import cn.bc.template.domain.Template;
 import cn.bc.template.service.TemplateService;
 import cn.bc.template.util.FreeMarkerUtils;
@@ -133,6 +134,8 @@ public class WorkflowFormServiceImpl implements WorkflowFormService {
 		now.add(Calendar.MONTH, 1);
 		params.put("nextMonth", now.get(Calendar.MONTH) + 1);
 		params.put("nextMonthOfYear", now.get(Calendar.YEAR) + "");
+		//加载上下文信息
+		params.put("SystemContext",SystemContextHolder.get());
 
 		// 获取任务的流程变量
 		Map<String, Object> vs = this.excutionLogService
@@ -311,4 +314,5 @@ public class WorkflowFormServiceImpl implements WorkflowFormService {
 		}
 		
 	}
+	
 }

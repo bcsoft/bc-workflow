@@ -161,11 +161,11 @@ public class SelectProcessAction extends AbstractSelectPageAction<Map<String, Ob
 					, (Object[]) null);
 			userCondition = new EqualsCondition("da.aid",context.getUser().getId());
 			groupCondition = new InCondition("da.aid",ids);
-			if(isNewVersion){
-				isNewVersionCondition = new QlCondition(
-						"not exists(select 0 from act_re_procdef b where a.key_=b.key_ and a.version_<b.version_)",
-						(Object[]) null);
-			}
+//			if(isNewVersion){
+//				isNewVersionCondition = new QlCondition(
+//						"not exists(select 0 from act_re_procdef b where a.key_=b.key_ and a.version_<b.version_)",
+//						(Object[]) null);
+//			}
 			return ConditionUtils.mix2AndCondition(isNewVersionCondition,statusCondition,
 					ConditionUtils.mix2OrCondition(isUsersCondition,userCondition,groupCondition).setAddBracket(true));
 		}

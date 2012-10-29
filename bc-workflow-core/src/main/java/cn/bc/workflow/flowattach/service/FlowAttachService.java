@@ -44,6 +44,17 @@ public interface FlowAttachService extends CrudService<FlowAttach> {
 	 * @return
 	 */
 	List<FlowAttach> findCommentsByProcess(String processInstanceId, boolean includeTask);
+	
+	/**
+	 * 获取流程附件信息列表
+	 * 
+	 * @param processInstanceId
+	 *            所属流程实例ID
+	 * @param includeTask
+	 *            是否包含流程任务的附加信息
+	 * @return
+	 */
+	List<FlowAttach> findAttachsByProcess(String processInstanceId, boolean includeTask);
 
 	/**
 	 * 获取任务附加信息列表
@@ -62,6 +73,15 @@ public interface FlowAttachService extends CrudService<FlowAttach> {
 	 * @return
 	 */
 	List<FlowAttach> findCommentsByTask(String[] taskIds);
+	
+	/**
+	 * 获取任务附件列表
+	 * 
+	 * @param taskIds
+	 *            任务ID列表
+	 * @return
+	 */
+	List<FlowAttach> findAttachsByTask(String[] taskIds);
 
 	/**
 	 * 获取任务附加信息列表

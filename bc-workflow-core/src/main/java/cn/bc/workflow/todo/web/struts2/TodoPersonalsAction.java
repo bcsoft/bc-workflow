@@ -3,9 +3,11 @@ package cn.bc.workflow.todo.web.struts2;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.activiti.engine.impl.persistence.entity.SuspensionState;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
@@ -25,6 +27,7 @@ import cn.bc.db.jdbc.SqlObject;
 import cn.bc.identity.web.SystemContext;
 import cn.bc.web.formater.AbstractFormater;
 import cn.bc.web.formater.CalendarFormater;
+import cn.bc.web.formater.EntityStatusFormater;
 import cn.bc.web.struts2.ViewAction;
 import cn.bc.web.ui.html.grid.Column;
 import cn.bc.web.ui.html.grid.HiddenColumn4MapKey;
@@ -60,6 +63,9 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>> {
 	public void setWorkflowService(WorkflowService workflowService) {
 		this.workflowService = workflowService;
 	}
+
+	public String status = String
+			.valueOf(SuspensionState.ACTIVE.getStateCode());
 
 	@Override
 	public boolean isReadonly() {
@@ -104,14 +110,28 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>> {
 	protected Condition getGridSpecalCondition() {
 		// 查找当前登录用户条件
 		SystemContext context = (SystemContext) this.getContext();
+		Condition statusCondition = null; // 状态
 		Condition assigneeCondition = new EqualsCondition("art.assignee_",
 				context.getUser().getCode()); // act_ru_task 任务表
 		Condition userCondition = new EqualsCondition("ari.user_id_", context
 				.getUser().getCode()); // act_ru_identitylink 参与成员表
 		Condition ariTypeCondition = new EqualsCondition("ari.type_",
 				"candidate"); // act_ru_identitylink 参与成员表了性
-
 		Condition groupCondition = null;
+
+		if (status != null && status.length() > 0) {
+			String[] ss = status.split(",");
+			if (ss[0].equals(String.valueOf(SuspensionState.ACTIVE
+					.getStateCode()))) {//处理中
+				statusCondition = new EqualsCondition("ae.suspension_state_",
+						SuspensionState.ACTIVE.getStateCode());
+			} else if (ss[0].equals(String.valueOf(SuspensionState.SUSPENDED
+					.getStateCode()))) {//已暂停
+				statusCondition = new EqualsCondition("ae.suspension_state_",
+						SuspensionState.SUSPENDED.getStateCode());
+			}
+		}
+		
 		// 获取当前登录用户所在岗位的code列表
 		List<String> list = context.getAttr(SystemContext.KEY_GROUPS);
 		if (null != list && list.size() > 0) {
@@ -121,7 +141,8 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>> {
 
 		// 当前用户是否等于任务待办人 或者 当前用户所在岗位是否等于任务的参与者 前提 该任务的待办人为空
 		return ConditionUtils.mix2OrCondition(
-				assigneeCondition,
+				ConditionUtils.mix2AndCondition(statusCondition,
+						assigneeCondition),
 				ConditionUtils.mix2AndCondition(
 						assigneeIsNullCondition,
 						ariTypeCondition,
@@ -155,8 +176,11 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>> {
 					.setClick("bc.todoView.assignTask"));
 		}
 
+		tb.addButton(Toolbar.getDefaultToolbarRadioGroup(this.getStatus(),
+				"status", 0, getText("title.click2changeSearchStatus")));
+
 		// 搜索按钮
-		tb.addButton(getDefaultSearchToolbarButton());
+		tb.addButton(this.getDefaultSearchToolbarButton());
 
 		return tb;
 	}
@@ -171,12 +195,19 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>> {
 	protected List<Column> getGridColumns() {
 		List<Column> columns = new ArrayList<Column>();
 		columns.add(new IdColumn4MapKey("art.id_", "id_"));
+
+		// 状态
+		columns.add(new TextColumn4MapKey("ae.suspension_state_", "status",
+				getText("todo.stauts"), 50).setSortable(true).setValueFormater(
+				new EntityStatusFormater(getStatus())));
+
 		// 发送时间
 		columns.add(new TextColumn4MapKey("art.create_time_", "create_time_",
 				getText("todo.personal.createTime"), 120).setSortable(true)
 				.setValueFormater(new CalendarFormater("yyyy-MM-dd HH:mm")));
 		// 主题
-		columns.add(new TextColumn4MapKey("getProcessInstanceSubject(art.proc_inst_id_)", "subject",
+		columns.add(new TextColumn4MapKey(
+				"getProcessInstanceSubject(art.proc_inst_id_)", "subject",
 				getText("flow.task.subject"), 200).setSortable(true)
 				.setUseTitleFromLabel(true));
 		// 名称
@@ -303,6 +334,29 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>> {
 				+ "/bc-workflow/historicprocessinstance/select.js";
 	}
 
+	@Override
+	protected Json getGridExtrasData() {
+		Json json = new Json();
+		// 状态条件
+		if (status != null && status.length() > 0)
+			json.put("status", status);
+		return json;
+	}
+
+	/**
+	 * 状态值转换:处理中|已暂停|全部
+	 * 
+	 */
+	private Map<String, String> getStatus() {
+		Map<String, String> map = new LinkedHashMap<String, String>();
+		map.put(String.valueOf(SuspensionState.ACTIVE.getStateCode()),
+				getText("todo.status.processing"));
+		map.put(String.valueOf(SuspensionState.SUSPENDED.getStateCode()),
+				getText("todo.status.suspended"));
+		map.put("", getText("bc.status.all"));
+		return map;
+	}
+
 	private static SqlObject<Map<String, Object>> getTodoPersonalData() {
 		SqlObject<Map<String, Object>> sqlObject = new SqlObject<Map<String, Object>>();
 
@@ -310,7 +364,7 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>> {
 		StringBuffer sql = new StringBuffer();
 		// 发送人问题未解决
 		// sql.append("select art.id_,art.name_ artName,art.due_date_,aiu.first_ aiuName,art.create_time_,arp.name_ arpName");
-		sql.append("select distinct art.id_,art.proc_inst_id_ procInstId,art.name_ artName,art.due_date_,art.create_time_,arp.name_ arpName,art.description_,art.assignee_");
+		sql.append("select distinct art.id_,ae.suspension_state_ status,art.proc_inst_id_ procInstId,art.name_ artName,art.due_date_,art.create_time_,arp.name_ arpName,art.description_,art.assignee_");
 		sql.append(",(case when (select count(*) from act_ru_task rt inner join act_ru_identitylink ri on rt.id_ = ri.task_id_ where rt.assignee_ is null) > 0 then TRUE else FALSE end) isCandidate");
 		sql.append(",(select string_agg(ri2.group_id_,',') from act_ru_task rt2 inner join act_ru_identitylink ri2 on rt2.id_ = ri2.task_id_ where rt2.id_ = art.id_) groupIds");
 		sql.append(",getProcessInstanceSubject(art.proc_inst_id_) as subject");
@@ -318,6 +372,7 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>> {
 		// sql.append(" left join act_id_user aiu on art.assignee_ = aiu.id_");
 		sql.append(" left join act_re_procdef arp on art.proc_def_id_ = arp.id_");
 		sql.append(" left join act_ru_identitylink ari on art.id_ = ari.task_id_");
+		sql.append(" inner join act_ru_execution ae on art.execution_id_ = ae.id_");
 
 		sqlObject.setSql(sql.toString());
 
@@ -330,6 +385,7 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>> {
 				Map<String, Object> map = new HashMap<String, Object>();
 				int i = 0;
 				map.put("id_", rs[i++]);
+				map.put("status", rs[i++]);
 				map.put("procInstId", rs[i++]); // 流程实例id
 				map.put("artName", rs[i++]); // 标题
 				map.put("due_date_", rs[i++]); // 办理期限

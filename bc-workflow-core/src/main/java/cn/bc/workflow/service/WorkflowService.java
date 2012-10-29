@@ -245,4 +245,16 @@ public interface WorkflowService {
 
 	Map<String, Object> getTaskHistoryParams(String taskId);
 
+	/**
+	 * 激活流程
+	 * @param id
+	 */
+	void doActive(String id);
+
+	/**
+	 * 暂停流程
+	 * @param id
+	 */
+	void doSuspended(String id);
+
 }
