@@ -165,27 +165,27 @@ public class WorkflowServiceImpl implements WorkflowService {
 		// 返回流程实例的id
 		return pi.getProcessInstanceId();
 	}
-	
+
 	/**
 	 * 启动指定流程定义id的流程
+	 * 
 	 * @param id
 	 * @return
 	 */
 	public String startFlowByDefinitionId(String id) {
 		// 设置Activiti认证用户
 		String initiator = setAuthenticatedUser();
-		
+
 		ProcessInstance pi = runtimeService.startProcessInstanceById(id);
 		if (logger.isDebugEnabled()) {
 			logger.debug("id=" + id);
 			logger.debug("initiator=" + initiator);
 			logger.debug("pi=" + ActivitiUtils.toString(pi));
 		}
-		
+
 		// 返回流程实例的id
 		return pi.getProcessInstanceId();
 	}
-
 
 	/**
 	 * 初始化Activiti的当前认证用户信息
@@ -532,9 +532,9 @@ public class WorkflowServiceImpl implements WorkflowService {
 		variableParams = new HashMap<String, Object>();
 		for (HistoricDetail hd : variables) {
 			v = (HistoricVariableUpdate) hd;
-			if(v.getTaskId()  == null)
-			variableParams.put(v.getVariableName(),
-					convertSpecialValiableValue(v));
+			if (v.getTaskId() == null)
+				variableParams.put(v.getVariableName(),
+						convertSpecialValiableValue(v));
 		}
 		params.put("vs", variableParams);
 
@@ -707,9 +707,9 @@ public class WorkflowServiceImpl implements WorkflowService {
 			variableParams = new HashMap<String, Object>();
 			for (HistoricDetail hd : variables) {
 				v = (HistoricVariableUpdate) hd;
-				if(v.getTaskId()  == null)
-				variableParams.put(v.getVariableName(),
-						convertSpecialValiableValue(v));
+				if (v.getTaskId() == null)
+					variableParams.put(v.getVariableName(),
+							convertSpecialValiableValue(v));
 			}
 			processParams.put("vs", variableParams);
 
@@ -792,28 +792,29 @@ public class WorkflowServiceImpl implements WorkflowService {
 		return taskFlowAttachs;
 	}
 
-	public void deleteInstance(String instanceId) {
-		if (instanceId == null || instanceId.length() == 0) {
+	public void deleteInstance(String[] instanceIds) {
+		if (instanceIds == null || instanceIds.length == 0) {
 			throw new CoreException("没有指定要删除的流程实例信息！");
 		}
-		HistoricProcessInstance pi = this.historyService
-				.createHistoricProcessInstanceQuery()
-				.processInstanceId(instanceId).singleResult();
-		if (pi == null) {
-			throw new CoreException("要删除的流程实例在系统总已经不存在：id=" + instanceId);
+
+		for (String id : instanceIds) {
+			HistoricProcessInstance pi = this.historyService
+					.createHistoricProcessInstanceQuery().processInstanceId(id)
+					.singleResult();
+			if (pi == null) {
+				throw new CoreException("要删除的流程实例在系统总已经不存在：id=" + id);
+			}
+			boolean flowing = pi.getEndTime() == null;
+
+			// 删除流转中数据
+			if (flowing) {
+				this.runtimeService.deleteProcessInstance(id, "force-delete");
+			}
+
+			// 删除历史数据
+			this.historyService.deleteHistoricProcessInstance(id);
+
+			// 删除流转日志、意见、附件 TODO
 		}
-		boolean flowing = pi.getEndTime() == null;
-
-		// 删除流转中数据
-		if (flowing) {
-			this.runtimeService.deleteProcessInstance(instanceId,
-					"force-delete");
-		}
-
-		// 删除历史数据
-		this.historyService.deleteHistoricProcessInstance(instanceId);
-
-		// 删除流转日志、意见、附件 TODO
 	}
-
 }

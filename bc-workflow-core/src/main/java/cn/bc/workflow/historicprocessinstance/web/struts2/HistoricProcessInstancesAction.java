@@ -14,6 +14,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Controller;
 
 import cn.bc.BCConstants;
+import cn.bc.core.exception.CoreException;
 import cn.bc.core.query.condition.Condition;
 import cn.bc.core.query.condition.Direction;
 import cn.bc.core.query.condition.impl.AndCondition;
@@ -224,8 +225,8 @@ public class HistoricProcessInstancesAction extends
 		tb.addButton(new ToolbarButton().setIcon("ui-icon-check")
 				.setText(getText("label.read"))
 				.setClick("bc.historicProcessInstanceSelectView.open"));
-		
-		if(!my){
+
+		if (!my) {
 			// 发起流程
 			tb.addButton(new ToolbarButton().setIcon("ui-icon-play")
 					.setText(getText("flow.start"))
@@ -240,7 +241,7 @@ public class HistoricProcessInstancesAction extends
 			tb.addButton(Toolbar.getDefaultToolbarRadioGroup(this.getStatus(),
 					"status", BCConstants.STATUS_ENABLED,
 					getText("title.click2changeSearchStatus")));
-		}		
+		}
 
 		// 搜索按钮
 		tb.addButton(this.getDefaultSearchToolbarButton());
@@ -262,24 +263,22 @@ public class HistoricProcessInstancesAction extends
 					ac.add(new IsNotNullCondition("a.end_time_"));
 			}
 		}
-		
-		if(my){
+
+		if (my) {
 			SystemContext context = (SystemContext) this.getContext();
-			//保存的用户id键值集合
-			String code=context.getUser().getCode();
-			String sql="";
-			sql+="exists(";
-			sql+="select 1 ";
-			sql+=" from act_hi_taskinst d";								
-			sql+=" where a.id_=d.proc_inst_id_ and d.end_time_ is not null and d.assignee_ = '";			
-			sql+=code;
-			sql+="')";
-			
-			ac.add(
-					new QlCondition(sql,new Object[]{})
-			);		
+			// 保存的用户id键值集合
+			String code = context.getUser().getCode();
+			String sql = "";
+			sql += "exists(";
+			sql += "select 1 ";
+			sql += " from act_hi_taskinst d";
+			sql += " where a.id_=d.proc_inst_id_ and d.end_time_ is not null and d.assignee_ = '";
+			sql += code;
+			sql += "')";
+
+			ac.add(new QlCondition(sql, new Object[] {}));
 		}
-		
+
 		return ac.isEmpty() ? null : ac;
 	}
 
@@ -322,6 +321,7 @@ public class HistoricProcessInstancesAction extends
 	// ==高级搜索代码结束==
 
 	public String id;
+	public String ids;
 
 	/**
 	 * 删除流程实例
@@ -332,7 +332,10 @@ public class HistoricProcessInstancesAction extends
 	public String delete() throws Exception {
 		Json json = new Json();
 		try {
-			this.workflowService.deleteInstance(id);
+			if (ids != null) {
+				throw new CoreException("为安全起见，系统限制为每次只可删除一个流程实例！");
+			}
+			this.workflowService.deleteInstance(new String[] { id });
 			json.put("success", true);
 			json.put("msg", getText("form.delete.success"));
 		} catch (Exception e) {
