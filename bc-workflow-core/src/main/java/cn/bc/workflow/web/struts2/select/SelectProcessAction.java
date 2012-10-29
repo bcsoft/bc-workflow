@@ -111,10 +111,10 @@ public class SelectProcessAction extends AbstractSelectPageAction<Map<String, Ob
 				getText("flow.name")).setSortable(true)
 				.setUseTitleFromLabel(true));
 		columns.add(new TextColumn4MapKey("a.version_", "version",
-				getText("flow.version"), 50).setUseTitleFromLabel(true));
+				getText("flow.version"), 26).setUseTitleFromLabel(true));
 		columns.add(new TextColumn4MapKey("c.deploy_time", "deploy_time",
-				getText("flow.deployTime"),150).setUseTitleFromLabel(true)
-				.setValueFormater(new CalendarFormater("yyyy-MM-dd HH:mm:ss")));
+				getText("flow.deployDate"),85).setUseTitleFromLabel(true)
+				.setValueFormater(new CalendarFormater("yyyy-MM-dd")));
 		columns.add(new HiddenColumn4MapKey("key", "key"));
 		return columns;
 	}
@@ -131,8 +131,8 @@ public class SelectProcessAction extends AbstractSelectPageAction<Map<String, Ob
 
 	@Override
 	protected PageOption getHtmlPageOption() {
-		return super.getHtmlPageOption().setWidth(600).setMinWidth(200)
-				.setHeight(400).setMinHeight(200).setModal(true);
+		return super.getHtmlPageOption().setWidth(350).setMinWidth(200)
+				.setHeight(360).setMinHeight(200).setModal(true);
 	}
 
 	@Override
