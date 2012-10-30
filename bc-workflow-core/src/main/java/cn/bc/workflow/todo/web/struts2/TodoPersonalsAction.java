@@ -144,6 +144,7 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>> {
 				ConditionUtils.mix2AndCondition(statusCondition,
 						assigneeCondition),
 				ConditionUtils.mix2AndCondition(
+						statusCondition,
 						assigneeIsNullCondition,
 						ariTypeCondition,
 						ConditionUtils.mix2AndCondition(ConditionUtils
