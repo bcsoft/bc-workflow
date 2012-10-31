@@ -253,22 +253,11 @@ public class DeploysAction extends ViewAction<Map<String, Object>> {
 					.setText(getText("label.deploy.stop"))
 					.setClick("bc.deploy.stop"));
 			
-			// 强制删除
-			tb.addButton(getDefaultDeleteToolbarButton());
-			
-//			// 取消发布
-//			tb.addButton(new ToolbarButton().setIcon("ui-icon-trash")
-//					.setText(getText("label.deploy.releaseCancel"))
-//					.setClick("bc.deploy.releaseCancel"));
-//
-//			if (this.isCascade()) {
-//				// 级联取消发布
-//				tb.addButton(new ToolbarButton().setIcon("ui-icon-trash")
-//						.setText(getText("label.deploy.cascadeCancel"))
-//						.setClick("bc.deploy.cascadeCancel"));
-//				// 强制删除
-//				tb.addButton(getDefaultDeleteToolbarButton());
-//			}
+
+			if (this.isCascade()) {
+					// 强制删除
+				tb.addButton(getDefaultDeleteToolbarButton());
+			}
 		}
 
 		// 状态按钮组
