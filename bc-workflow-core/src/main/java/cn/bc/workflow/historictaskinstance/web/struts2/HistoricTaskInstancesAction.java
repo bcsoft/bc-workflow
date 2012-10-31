@@ -109,40 +109,37 @@ public class HistoricTaskInstancesAction extends
 				map.put("assignee_", rs[i++]);
 				map.put("receiver", rs[i++]);
 				map.put("duration", rs[i++]);
+				map.put("procinstid", rs[i++]);
+				map.put("taskdefkey", rs[i++]);
+				map.put("p_end_time", rs[i++]);
+				map.put("pstatus", rs[i++]);
+				map.put("subject", rs[i++]);
+				map.put("due_date", rs[i++]);
+				
+				//任务 分配到岗位
+				if(map.get("receiver") ==null ||map.get("receiver").toString().length()==0)
+					map.put("receiver", rs[i++]);
+				
 				// 根据结束时间取得状态
 				if (map.get("end_time") != null) {
 					// 已完成
 					map.put("status", BCConstants.STATUS_DISABLED);
-				} else
+					map.put("pstatus", WorkspaceServiceImpl.COMPLETE);
+				} else{
 					// 未完成
 					map.put("status", BCConstants.STATUS_ENABLED);
-
-				// 格式化耗时
-				if (map.get("duration") != null)
-					map.put("frmDuration",
-							DateUtils.getWasteTime(Long.parseLong(map.get(
-									"duration").toString())));
-				map.put("procinstid", rs[i++]);
-				map.put("taskdefkey", rs[i++]);
-				map.put("p_end_time", rs[i++]);
-				//根据流程的结束时间获取整个流程的状态
-				if (map.get("end_time") != null) {//已结束
-					map.put("pstatus", WorkspaceServiceImpl.COMPLETE);
-				} else {
-					map.put("pstatus", rs[i++]);
 					if(map.get("pstatus").equals(String.valueOf(SuspensionState.ACTIVE.getStateCode()))){//处理中
 						map.put("pstatus", String.valueOf(SuspensionState.ACTIVE.getStateCode()));
 					}else if(map.get("pstatus").equals(String.valueOf(SuspensionState.SUSPENDED.getStateCode()))){//已暂停
 						map.put("pstatus", String.valueOf(SuspensionState.SUSPENDED.getStateCode()));
 					}
 				}
-				
-				map.put("subject", rs[i++]);
-				map.put("due_date", rs[i++]);
-				
-				if(map.get("receiver") ==null ||map.get("receiver").toString().length()==0)
-				map.put("receiver", rs[i++]);
-				
+
+				// 格式化耗时
+				if (map.get("duration") != null)
+					map.put("frmDuration",
+							DateUtils.getWasteTime(Long.parseLong(map.get(
+									"duration").toString())));
 				return map;
 			}
 		});
