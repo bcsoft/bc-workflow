@@ -25,6 +25,7 @@ import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Controller;
 
 import cn.bc.core.util.DateUtils;
+import cn.bc.core.util.TemplateUtils;
 import cn.bc.docs.domain.Attach;
 import cn.bc.docs.domain.AttachHistory;
 import cn.bc.docs.service.AttachService;
@@ -35,6 +36,7 @@ import cn.bc.template.domain.TemplateParam;
 import cn.bc.template.service.TemplateParamService;
 import cn.bc.template.service.TemplateTypeService;
 import cn.bc.template.util.DocxUtils;
+import cn.bc.template.util.FreeMarkerUtils;
 import cn.bc.template.util.XlsUtils;
 import cn.bc.template.util.XlsxUtils;
 import cn.bc.web.util.WebUtils;
@@ -217,12 +219,13 @@ public class FlowAttachFileAction extends ActionSupport {
 			InputStream inputStream = new FileInputStream(path);
 			ByteArrayOutputStream outputStream = new ByteArrayOutputStream(
 					BUFFER);
+			byte[] bs = null;
 
 			if (this.from == null || this.from.length() == 0)
 				this.from = flowAttach.getExt();
 			if (this.to == null || this.to.length() == 0)
 				this.to = getText("jodconverter.to.extension");// 没有指定就是用系统默认的配置转换为pdf
-
+			
 			// 声明需要转换的流
 			InputStream is = null;
 			// 声明格式化参数
@@ -239,6 +242,9 @@ public class FlowAttachFileAction extends ActionSupport {
 					docx.write(out);
 					is = new ByteArrayInputStream(out.toByteArray());
 					out.close();
+					// convert
+					OfficeUtils.convert(is, this.from, outputStream, this.to);
+					bs = outputStream.toByteArray();
 				//xls
 				} else if (flowAttach.getExt().equals(
 						templateTypeService.loadByCode("xls").getExtension())) {
@@ -248,6 +254,9 @@ public class FlowAttachFileAction extends ActionSupport {
 					xls.write(out);
 					is =new ByteArrayInputStream(out.toByteArray());
 					out.close();
+					// convert
+					OfficeUtils.convert(is, this.from, outputStream, this.to);
+					bs = outputStream.toByteArray();
 				//xlsx
 				} else if (flowAttach.getExt().equals(
 						templateTypeService.loadByCode("xlsx").getExtension())) {
@@ -257,46 +266,56 @@ public class FlowAttachFileAction extends ActionSupport {
 					xlsx.write(out);
 					is=new ByteArrayInputStream(out.toByteArray());
 					out.close();
-				}else
+					// convert
+					OfficeUtils.convert(is, this.from, outputStream, this.to);
+					bs = outputStream.toByteArray();
+				//html
+				} else if (flowAttach.getExt().equals(
+						templateTypeService.loadByCode("html").getExtension())) {
+					this.to=flowAttach.getExt();
+					params=getParams(flowAttach);
+					bs=FreeMarkerUtils.format(TemplateUtils.loadText(inputStream),params).getBytes();
+				} else {
 					is = inputStream;
-			}else
+					// convert
+					OfficeUtils.convert(is, this.from, outputStream, this.to);
+					bs = outputStream.toByteArray();
+				}
+			} else {
 				is = inputStream;
-			
-			// convert
-			OfficeUtils.convert(is, this.from, outputStream, this.to);
+				// convert
+				OfficeUtils.convert(is, this.from, outputStream, this.to);
+				bs = outputStream.toByteArray();
+			}
+
 
 			if (logger.isDebugEnabled())
 				logger.debug("convert:" + DateUtils.getWasteTime(startTime));
 
 			// 设置下载文件的参数（设置不对的话，浏览器是不会直接打开的）
-			byte[] bs = outputStream.toByteArray();
 			this.inputStream = new ByteArrayInputStream(bs);
 			this.inputStream.close();
 			this.contentType = AttachUtils.getContentType(this.to);
-			this.contentLength = bs.length;
-			this.filename = WebUtils.encodeFileName(
-					ServletActionContext.getRequest(),
-					flowAttach.getSubject().lastIndexOf(".") == -1 ? flowAttach
-							.getSubject() + "." + flowAttach.getExt()
-							: flowAttach.getSubject());
-		} else {
+			this.contentLength =bs.length;
+			
+		}else {
 			// 设置下载文件的参数
 			this.contentType = AttachUtils.getContentType(flowAttach.getExt());
-			this.filename = WebUtils.encodeFileName(
-					ServletActionContext.getRequest(),
-					flowAttach.getSubject().lastIndexOf(".") == -1 ? flowAttach
-							.getSubject() + "." + flowAttach.getExt()
-							: flowAttach.getSubject());
-
 			// 无需转换的文档直接下载处理
 			File file = new File(path);
 			this.contentLength = file.length();
 			this.inputStream = new FileInputStream(file);
 		}
+		
+		this.filename = WebUtils.encodeFileName(
+				ServletActionContext.getRequest(),
+				flowAttach.getSubject().lastIndexOf(".") == -1 ? flowAttach
+						.getSubject() + "." + flowAttach.getExt()
+						: flowAttach.getSubject());
 
 		//附件保存相对路径
-				String resolatePath=FlowAttach.DATA_SUB_PATH + File.separator
-						+ flowAttach.getPath();
+		String resolatePath=FlowAttach.DATA_SUB_PATH + File.separator
+				+ flowAttach.getPath();
 		// 创建文件上传日志
 		saveAttachHistory(flowAttach.getSubject(),AttachHistory.TYPE_INLINE, resolatePath,
 				flowAttach.getExt(),"FlowAttach",flowAttach.getUid());
@@ -317,14 +336,12 @@ public class FlowAttachFileAction extends ActionSupport {
 	
 	// 获取替换参数
 	private Map<String,Object> getParams(FlowAttach flowAttach) throws Exception{
-		if(!flowAttach.getFormatted())
-			return null;
-
 		// 声明格式化参数
 		Map<String, Object> params= new HashMap<String,Object>();
-
 		
-		//
+		if(!flowAttach.getFormatted())
+			return params;
+
 		Map<String, Object> mapFormatSql=new HashMap<String, Object>();
 		// 获取替换参数
 		if (flowAttach.isCommon()) {
@@ -335,7 +352,11 @@ public class FlowAttachFileAction extends ActionSupport {
 		for(TemplateParam tp : flowAttach.getParams()){
 			params.putAll(templateParamService.getMapParams(tp, mapFormatSql));
 		}
-	
-		return params == null?new HashMap<String, Object>():params;
+
+		//添加上下文路径
+		params.put("htmlPageNamespace",ServletActionContext.getRequest().getContextPath());
+		//添加时间戳
+		params.put("appTs",getText("app.ts"));
+		return params;
 	}
 }
