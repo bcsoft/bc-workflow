@@ -356,7 +356,13 @@ public class FlowAttachFileAction extends ActionSupport {
 		//添加上下文路径
 		params.put("htmlPageNamespace",ServletActionContext.getRequest().getContextPath());
 		//添加时间戳
-		params.put("appTs",getText("app.ts"));
+		if ("true".equalsIgnoreCase(getText("app.debug"))) {
+			// 调试状态每次登陆都自动生成
+			params.put("appTs",getText(String.valueOf(new Date().getTime())));
+		} else {
+			// 产品环境使用资源文件配置的值
+			params.put("appTs",getText("app.ts"));
+		}
 		return params;
 	}
 }
