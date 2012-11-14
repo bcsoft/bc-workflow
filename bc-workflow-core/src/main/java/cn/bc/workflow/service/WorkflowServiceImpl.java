@@ -581,6 +581,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 				.findCommentsByTask(tids);
 		List<FlowAttach> allAttachs = flowAttachService
 				.findAttachsByTask(tids);
+		List<Map<String,Object>> alltaskParams = new ArrayList<Map<String,Object>>();
 		for (HistoricTaskInstance task : tasks) {
 			taskCode = task.getTaskDefinitionKey();
 			taskParams = new HashMap<String, Object>();
@@ -642,8 +643,12 @@ public class WorkflowServiceImpl implements WorkflowService {
 					params.put(taskCode, taskParams);
 				}
 			}
+			
+			// 全部经办实例信息的独立记录
+			alltaskParams.add(taskParams);
 		}
-
+		params.put("tasks", alltaskParams);
+		
 		return params;
 	}
 
