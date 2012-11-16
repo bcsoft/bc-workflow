@@ -113,8 +113,11 @@ public class FlowAttachAction extends FileEntityAction<Long, FlowAttach> {
 			po.setHeight(270);
 		}else if(type==FlowAttach.TYPE_COMMENT||e.getType()==FlowAttach.TYPE_COMMENT){
 			po.setHeight(244);
-		}else
+		}else{
 			po.setHeight(300);
+		}
+		po.setMinimizable(false);
+		po.setMaximizable(false);
 		return po;
 	}
 	
