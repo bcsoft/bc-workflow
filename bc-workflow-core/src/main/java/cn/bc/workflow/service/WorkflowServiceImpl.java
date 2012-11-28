@@ -645,9 +645,9 @@ public class WorkflowServiceImpl implements WorkflowService {
 			}
 			
 			// 全部经办实例信息的独立记录
-			alltaskParams.add(taskParams);
+			//alltaskParams.add(taskParams);
 		}
-		params.put("tasks", alltaskParams);
+		//params.put("tasks", alltaskParams);
 		
 		return params;
 	}
@@ -1003,6 +1003,23 @@ public class WorkflowServiceImpl implements WorkflowService {
 		this.excutionLogService.save(log);
 
 		
+	}
+
+	public String startFlowByKey(String key, Map<String, Object> variables) {
+		// 设置Activiti认证用户
+		String initiator = setAuthenticatedUser();
+
+		// 启动流程：TODO 表单信息的处理
+		ProcessInstance pi = runtimeService.startProcessInstanceByKey(key,variables);
+		if (logger.isDebugEnabled()) {
+			logger.debug("key=" + key);
+			logger.debug("initiator=" + initiator);
+			logger.debug("pi=" + ActivitiUtils.toString(pi));
+			logger.debug("variables="+variables.toString());
+		}
+
+		// 返回流程实例的id
+		return pi.getProcessInstanceId();
 	}
 
 
