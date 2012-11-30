@@ -69,6 +69,17 @@ public interface WorkflowService {
 	 * @return 流程实例的id
 	 */
 	String startFlowByKey(String key);
+	
+	/**
+	 * 启动指定编码流程的最新版本
+	 * 
+	 * @param key
+	 *            流程编码
+	 *        variables
+	 *        	      自定义的流程全局变量
+	 * @return 流程实例的id
+	 */
+	String startFlowByKey(String key,Map<String, Object> variables);
 
 	/**
 	 * 启动指定流程定义id的流程
