@@ -353,6 +353,9 @@ public class FlowAttachFileAction extends ActionSupport {
 			params.putAll(templateParamService.getMapParams(tp, mapFormatSql));
 		}
 
+		//添加上下文内容
+		params.put("SystemContext", SystemContextHolder.get());
+		
 		//添加上下文路径
 		params.put("htmlPageNamespace",ServletActionContext.getRequest().getContextPath());
 		//添加时间戳
