@@ -18,6 +18,7 @@ import cn.bc.core.exception.CoreException;
 import cn.bc.core.query.condition.Condition;
 import cn.bc.core.query.condition.Direction;
 import cn.bc.core.query.condition.impl.AndCondition;
+import cn.bc.core.query.condition.impl.IsNullCondition;
 import cn.bc.core.query.condition.impl.OrderCondition;
 import cn.bc.core.query.condition.impl.QlCondition;
 import cn.bc.core.util.DateUtils;
@@ -83,7 +84,7 @@ public class HistoricProcessInstancesAction extends
 		SqlObject<Map<String, Object>> sqlObject = new SqlObject<Map<String, Object>>();
 		// 构建查询语句,where和order by不要包含在sql中(要统一放到condition中)
 		StringBuffer sql = new StringBuffer();
-		sql.append("select distinct a.id_,b.name_ as category,a.start_time_,a.end_time_,a.duration_,f.suspension_state_ status,a.proc_inst_id_");
+		sql.append("select a.id_,b.name_ as category,a.start_time_,a.end_time_,a.duration_,f.suspension_state_ status,a.proc_inst_id_");
 		sql.append(",e.version_ as version,b.version_ as aVersion,b.key_ as key,c.name");
 		sql.append(",getProcessInstanceSubject(a.proc_inst_id_) as subject");
 		sql.append(",(select string_agg(e.name_,',') from act_ru_task e where a.id_=e.proc_inst_id_ ) as  todo_names");
@@ -321,6 +322,8 @@ public class HistoricProcessInstancesAction extends
 
 			ac.add(new QlCondition(sql, new Object[] {}));
 		}
+		
+		ac.add(new IsNullCondition("f.parent_id_"));
 
 		return ac.isEmpty() ? null : ac;
 	}
