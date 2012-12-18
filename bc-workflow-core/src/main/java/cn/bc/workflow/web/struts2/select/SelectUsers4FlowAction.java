@@ -179,6 +179,7 @@ public class SelectUsers4FlowAction extends
 		Condition userCondition = null;
 		Condition aTypeCondition = null;
 		Condition gTypeCondition = null;
+		Condition aCurrentCondition = null;
 		
 		if (status != null && status.length() > 0) {
 			String[] ss = status.split(",");
@@ -213,7 +214,9 @@ public class SelectUsers4FlowAction extends
 
 		aTypeCondition =  new EqualsCondition("a.type_", 4);//岗位
 		gTypeCondition =  new EqualsCondition("g.type_", 3);//用户
-		return ConditionUtils.mix2AndCondition(statusCondition,aTypeCondition,gTypeCondition
+		
+		aCurrentCondition = new EqualsCondition("h.current", true);
+		return ConditionUtils.mix2AndCondition(statusCondition,aTypeCondition,gTypeCondition,aCurrentCondition
 				,ConditionUtils.mix2OrCondition(userCondition,groupCondition).setAddBracket(true));
 	}
 
