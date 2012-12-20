@@ -645,9 +645,9 @@ public class WorkflowServiceImpl implements WorkflowService {
 			}
 			
 			// 全部经办实例信息的独立记录
-			//alltaskParams.add(taskParams);
+			alltaskParams.add(taskParams);
 		}
-		//params.put("tasks", alltaskParams);
+		params.put("tasks", alltaskParams);
 		
 		return params;
 	}
