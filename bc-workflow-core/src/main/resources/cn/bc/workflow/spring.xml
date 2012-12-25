@@ -85,4 +85,10 @@
 	<!-- 通用JavaDelegate监听器：任务日志 -->
 	<bean id="javaDelegateLogListener"
 		class="cn.bc.workflow.activiti.delegate.JavaDelegateLogListener" />
+		
+	<!-- 流程关系 -->
+	<bean id="workflowModuleRelationDao" class="cn.bc.workflow.dao.hibernate.jpa.WorkflowModuleRelationDaoImpl"
+		p:entityManagerFactory-ref="entityManagerFactory" />
+	<bean id="workflowModuleRelationService" class="cn.bc.workflow.service.WorkflowModuleRelationServiceImpl" 
+		p:moduleRelationDao-ref="workflowModuleRelationDao"/>
 </beans>
