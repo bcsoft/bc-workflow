@@ -19,7 +19,8 @@ public interface WorkflowModuleRelationDao extends CrudDao<WorkflowModuleRelatio
 	 * 
 	 * @param mid
 	 * @param mtype
+	 * @param globalKeys
 	 * @return
 	 */
-	List<Map<String,Object>> findList(Long mid,String mtype);
+	List<Map<String,Object>> findList(Long mid,String mtype,String[] globalKeys);
 }
