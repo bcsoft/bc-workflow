@@ -31,6 +31,11 @@
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-orm</artifactId>
 		</dependency>
+		<dependency>
+			<groupId>cn.bc</groupId>
+			<artifactId>bc-message</artifactId>
+			<version>${framework.version}</version>
+		</dependency>
 
 		<!-- for test -->
 		<dependency>
