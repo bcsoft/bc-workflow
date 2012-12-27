@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.activiti.engine.impl.persistence.entity.SuspensionState;
+import org.json.JSONArray;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
@@ -16,15 +17,19 @@ import org.springframework.stereotype.Controller;
 import cn.bc.core.Page;
 import cn.bc.core.query.Query;
 import cn.bc.core.query.condition.Condition;
-import cn.bc.core.query.condition.ConditionUtils;
 import cn.bc.core.query.condition.Direction;
+import cn.bc.core.query.condition.impl.AndCondition;
 import cn.bc.core.query.condition.impl.EqualsCondition;
 import cn.bc.core.query.condition.impl.InCondition;
 import cn.bc.core.query.condition.impl.IsNullCondition;
+import cn.bc.core.query.condition.impl.OrCondition;
 import cn.bc.core.query.condition.impl.OrderCondition;
+import cn.bc.core.query.condition.impl.QlCondition;
+import cn.bc.core.util.StringUtils;
 import cn.bc.db.jdbc.RowMapper;
 import cn.bc.db.jdbc.SqlObject;
 import cn.bc.identity.web.SystemContext;
+import cn.bc.option.domain.OptionItem;
 import cn.bc.web.formater.AbstractFormater;
 import cn.bc.web.formater.CalendarFormater;
 import cn.bc.web.formater.EntityStatusFormater;
@@ -103,53 +108,62 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>> {
 
 	@Override
 	protected OrderCondition getGridOrderCondition() {
-		return new OrderCondition("art.create_time_", Direction.Desc);
+		return new OrderCondition("a.create_time_", Direction.Desc);
 	}
 
 	@Override
 	protected Condition getGridSpecalCondition() {
-		// 查找当前登录用户条件
-		SystemContext context = (SystemContext) this.getContext();
-		Condition statusCondition = null; // 状态
-		Condition assigneeCondition = new EqualsCondition("art.assignee_",
-				context.getUser().getCode()); // act_ru_task 任务表
-		Condition userCondition = new EqualsCondition("ari.user_id_", context
-				.getUser().getCode()); // act_ru_identitylink 参与成员表
-		Condition ariTypeCondition = new EqualsCondition("ari.type_",
-				"candidate"); // act_ru_identitylink 参与成员表了性
-		Condition groupCondition = null;
-
+		AndCondition ac=new AndCondition();
+		
+		//状态判断
 		if (status != null && status.length() > 0) {
 			String[] ss = status.split(",");
-			if (ss[0].equals(String.valueOf(SuspensionState.ACTIVE
-					.getStateCode()))) {//处理中
-				statusCondition = new EqualsCondition("ae.suspension_state_",
-						SuspensionState.ACTIVE.getStateCode());
-			} else if (ss[0].equals(String.valueOf(SuspensionState.SUSPENDED
-					.getStateCode()))) {//已暂停
-				statusCondition = new EqualsCondition("ae.suspension_state_",
-						SuspensionState.SUSPENDED.getStateCode());
+			if(ss.length==1){
+				ac.add(new EqualsCondition("b.suspension_state_",Integer.valueOf(ss[0])));
+			}else{
+				ac.add(new InCondition("b.suspension_state_", StringUtils.stringArray2IntegerArray(ss)));
 			}
 		}
 		
+		//关联excution的流程实例
+		ac.add(new IsNullCondition("b.parent_id_"));
+		
+		OrCondition or=new OrCondition();
+		
+		// 查找当前登录用户条件
+		SystemContext context = (SystemContext) this.getContext();
+		//用户为任务办理人
+		or.add(new EqualsCondition("a.assignee_",context.getUser().getCode()));
+		
 		// 获取当前登录用户所在岗位的code列表
 		List<String> list = context.getAttr(SystemContext.KEY_GROUPS);
-		if (null != list && list.size() > 0) {
-			groupCondition = new InCondition("ari.group_id_", list);
-		}
-		Condition assigneeIsNullCondition = new IsNullCondition("art.assignee_");
-
-		// 当前用户是否等于任务待办人 或者 当前用户所在岗位是否等于任务的参与者 前提 该任务的待办人为空
-		return ConditionUtils.mix2OrCondition(
-				ConditionUtils.mix2AndCondition(statusCondition,
-						assigneeCondition),
-				ConditionUtils.mix2AndCondition(
-						statusCondition,
-						assigneeIsNullCondition,
-						ariTypeCondition,
-						ConditionUtils.mix2AndCondition(ConditionUtils
-								.mix2OrCondition(userCondition, groupCondition)
-								.setAddBracket(true))).setAddBracket(true));
+		String qlcondition="exists(select 1 from act_ru_identitylink c where c.task_id_ = a.id_ and ";
+			qlcondition+="(c.user_id_ ='"+context.getUser().getCode()+"'";
+			if (null != list && list.size() > 0) {
+				qlcondition +=" or c.group_id_ in(";
+				for(String g:list){
+					qlcondition+="'"+g+"',";
+				}
+				qlcondition=qlcondition.substring(0, qlcondition.lastIndexOf(","));
+				qlcondition+=")";
+			}
+			qlcondition+=")";
+		qlcondition+=")";
+		//用户是否有资格签领此任务
+		or.add(new AndCondition(new IsNullCondition("a.assignee_"),new QlCondition(qlcondition)).setAddBracket(true));
+		
+		/*
+		 * where b.suspension_state_ = 1 and b.parent_id_ is null and
+			(a.assignee_ = 'xu' OR 
+				(a.assignee_ is null  and 
+					exists(select 1 from act_ru_identitylink c where c.task_id_ = a.id_ and (c.user_id_ = 'ru' or c.group_id_ in ('DriverRecruiter')))
+				)
+			)
+		 * 
+		 */
+		ac.add(or.setAddBracket(true));
+		
+		return ac.isEmpty()?null:ac;
 	}
 
 	@Override
@@ -195,24 +209,24 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>> {
 	@Override
 	protected List<Column> getGridColumns() {
 		List<Column> columns = new ArrayList<Column>();
-		columns.add(new IdColumn4MapKey("art.id_", "id_"));
+		columns.add(new IdColumn4MapKey("a.id_", "id_"));
 
 		// 状态
-		columns.add(new TextColumn4MapKey("ae.suspension_state_", "status",
+		columns.add(new TextColumn4MapKey("a.suspension_state_", "status",
 				getText("todo.stauts"), 50).setSortable(true).setValueFormater(
 				new EntityStatusFormater(getStatus())));
 
 		// 发送时间
-		columns.add(new TextColumn4MapKey("art.create_time_", "create_time_",
+		columns.add(new TextColumn4MapKey("a.create_time_", "createTime",
 				getText("todo.personal.createTime"), 120).setSortable(true)
 				.setValueFormater(new CalendarFormater("yyyy-MM-dd HH:mm")));
 		// 主题
 		columns.add(new TextColumn4MapKey(
-				"getProcessInstanceSubject(art.proc_inst_id_)", "subject",
+				"getProcessInstanceSubject(a.proc_inst_id_)", "subject",
 				getText("flow.task.subject"), 200).setSortable(true)
 				.setUseTitleFromLabel(true));
 		// 名称
-		columns.add(new TextColumn4MapKey("art.name_", "artName",
+		columns.add(new TextColumn4MapKey("a.name_", "taskName",
 				getText("todo.personal.artName"), 200).setSortable(true)
 				.setUseTitleFromLabel(true)
 				.setValueFormater(new AbstractFormater<String>() {
@@ -222,25 +236,25 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>> {
 						@SuppressWarnings("unchecked")
 						Map<String, Object> task = (Map<String, Object>) context;
 						boolean flag = false;
-						if (task.get("due_date_") != null) {// 办理时间是否过期
-							Date d1 = (Date) task.get("due_date_");
+						if (task.get("dueDute") != null) {// 办理时间是否过期
+							Date d1 = (Date) task.get("dueDute");
 							Date d2 = new Date();
 							flag = d1.before(d2);
 						}
-						if (task.get("assignee_") == null) {// 岗位任务
+						if ("2".equals(task.get("type").toString())) {// 岗位任务
 							if (flag) {
 								return "<div style=\"\"><span style=\"float: left;\" title=\"此任务已过期\" class=\"ui-icon ui-icon-clock\"></span>"
 										+ "<span style=\"float: left;\" title=\"岗位任务\" class=\"ui-icon ui-icon-person\"></span>"
 										+ "&nbsp;"
 										+ "<span>"
-										+ task.get("artName")
+										+ task.get("taskName")
 										+ "</span>"
 										+ "</div>";
 							} else {
 								return "<div style=\"\"><span style=\"float: left;\" title=\"岗位任务\" class=\"ui-icon ui-icon-person\"></span>"
 										+ "&nbsp;"
 										+ "<span>"
-										+ task.get("artName")
+										+ task.get("taskName")
 										+ "</span>"
 										+ "</div>";
 							}
@@ -249,36 +263,33 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>> {
 								return "<div style=\"\"><span style=\"float: left;\" title=\"此任务已过期\" class=\"ui-icon ui-icon-clock\"></span>"
 										+ "&nbsp;"
 										+ "<span>"
-										+ task.get("artName")
+										+ task.get("taskName")
 										+ "</span>"
 										+ "</div>";
 							} else {
-								return (String) task.get("artName");
+								return (String) task.get("taskName");
 							}
 						}
 					}
 
 				}));
 		// 办理期限
-		columns.add(new TextColumn4MapKey("art.due_date_", "due_date_",
+		columns.add(new TextColumn4MapKey("art.due_date_", "dueDate",
 				getText("todo.personal.dueDate"), 120).setSortable(true)
 				.setValueFormater(new CalendarFormater("yyyy-MM-dd HH:mm")));
 		// 附加说明
-		columns.add(new TextColumn4MapKey("art.description_", "description_",
+		columns.add(new TextColumn4MapKey("art.description_", "desc",
 				getText("todo.personal.description"))
 				.setUseTitleFromLabel(true));
 		// 流程
-		columns.add(new TextColumn4MapKey("arpName", "arpName",
+		columns.add(new TextColumn4MapKey("processName", "processName",
 				getText("flow.task.category"), 180).setSortable(true)
 				.setUseTitleFromLabel(true));
-		// // 发送人
-		// columns.add(new TextColumn4MapKey("aiuName", "aiuName",
-		// getText("todo.personal.aiuName"), 60).setSortable(true));
 
 		columns.add(new HiddenColumn4MapKey("procInstId", "procInstId"));
-		columns.add(new HiddenColumn4MapKey("assignee", "assignee_"));
-		columns.add(new HiddenColumn4MapKey("isCandidate", "isCandidate"));// 是否岗位任务
-		columns.add(new HiddenColumn4MapKey("groupIds", "groupIds"));// 候选岗位列表
+		columns.add(new HiddenColumn4MapKey("assignee", "assignee"));
+		columns.add(new HiddenColumn4MapKey("type", "type"));////任务的类型：1-个人任务，2-候选任务(包括岗位任务和候选人任务)
+		//columns.add(new HiddenColumn4MapKey("groupIds", "groupIds"));// 候选岗位列表
 
 		return columns;
 	}
@@ -311,7 +322,7 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>> {
 
 	@Override
 	protected String getGridRowLabelExpression() {
-		return "['artName']";
+		return "['taskName']";
 	}
 
 	@Override
@@ -322,8 +333,8 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>> {
 
 	@Override
 	protected String[] getGridSearchFields() {
-		return new String[] { "art.name_", "art.description_", "art.assignee_",
-				"arp.name_", "getProcessInstanceSubject(art.proc_inst_id_)" };
+		return new String[] { "a.name_", "a.description_", "a.assignee_",
+				"d.name_", "getProcessInstanceSubject(a.proc_inst_id_)" };
 	}
 
 	@Override
@@ -363,20 +374,17 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>> {
 
 		// 构建查询语句,where和order by不要包含在sql中(要统一放到condition中)
 		StringBuffer sql = new StringBuffer();
-		// 发送人问题未解决
-		// sql.append("select art.id_,art.name_ artName,art.due_date_,aiu.first_ aiuName,art.create_time_,arp.name_ arpName");
-		sql.append("select distinct art.id_,ae.suspension_state_ status,art.proc_inst_id_ procInstId,art.name_ artName,art.due_date_,art.create_time_,arp.name_ arpName,art.description_,art.assignee_");
-		sql.append(",(case when (select count(*) from act_ru_task rt inner join act_ru_identitylink ri on rt.id_ = ri.task_id_ where rt.assignee_ is null) > 0 then TRUE else FALSE end) isCandidate");
-		sql.append(",(select string_agg(ri2.group_id_,',') from act_ru_task rt2 inner join act_ru_identitylink ri2 on rt2.id_ = ri2.task_id_ where rt2.id_ = art.id_) groupIds");
-		sql.append(",getProcessInstanceSubject(art.proc_inst_id_) as subject");
-		sql.append(" from act_ru_task art");
-		// sql.append(" left join act_id_user aiu on art.assignee_ = aiu.id_");
-		sql.append(" left join act_re_procdef arp on art.proc_def_id_ = arp.id_");
-		sql.append(" left join act_ru_identitylink ari on art.id_ = ari.task_id_");
-		sql.append(" inner join act_ru_execution ae on art.execution_id_ = ae.id_");
-
+		
+		sql.append("select a.id_,b.suspension_state_ as status,a.proc_inst_id_ as procinstid,a.name_ as taskname,a.due_date_ as duedate,a.create_time_ as createtime");
+		sql.append(",d.name_ as processname,a.description_ as desc_,a.assignee_ as assignee");
+		//任务的类型：1-个人任务，2-候选任务
+		sql.append(",case when a.assignee_ is not null then 1 else 2 end as type_");
+		//流程主题
+		sql.append(",getprocessinstancesubject(a.proc_inst_id_) as subject");
+		sql.append(" from act_ru_task a");
+		sql.append(" inner join act_ru_execution b on b.proc_inst_id_ = a.proc_inst_id_");
+		sql.append(" inner join act_re_procdef d on d.id_ = a.proc_def_id_");
 		sqlObject.setSql(sql.toString());
-
 		// 注入参数
 		sqlObject.setArgs(null);
 
@@ -388,15 +396,13 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>> {
 				map.put("id_", rs[i++]);
 				map.put("status", rs[i++]);
 				map.put("procInstId", rs[i++]); // 流程实例id
-				map.put("artName", rs[i++]); // 标题
-				map.put("due_date_", rs[i++]); // 办理期限
-				// map.put("aiuName", rs[i++]); // 发送人
-				map.put("create_time_", rs[i++]); // 发送时间
-				map.put("arpName", rs[i++]); // 分类
-				map.put("description_", rs[i++]); // 附加说明
-				map.put("assignee_", rs[i++]); // 任务处理人code
-				map.put("isCandidate", rs[i++]); // 是否存在候选人或岗位
-				map.put("groupIds", rs[i++]); // 候选岗位列表
+				map.put("taskName", rs[i++]); // 任务名称
+				map.put("dueDate", rs[i++]); // 办理期限
+				map.put("createTime", rs[i++]); // 发送时间
+				map.put("processName", rs[i++]); // 分类 流程名称
+				map.put("desc", rs[i++]); // 任务附加说明
+				map.put("assignee", rs[i++]); // 任务处理人code
+				map.put("type", rs[i++]); // 任务的类型：1-个人任务，2-候选任务
 				map.put("subject", rs[i++]); // 实例标题
 				return map;
 			}
@@ -434,8 +440,6 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>> {
 	/** 实现签领 **/
 	public String claimTask() {
 		// 查找当前登录用户条件
-		// SystemContext context = (SystemContext) this.getContext();
-		// this.todoService.doSignTask(this.excludeId,context.getUser().getCode());
 		Json json = new Json();
 		this.workflowService.claimTask(this.excludeId.toString());
 		json.put("id", this.excludeId);
@@ -451,9 +455,38 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>> {
 	protected boolean useAdvanceSearch() {
 		return true;
 	}
+	
+	public JSONArray processNames;
+	
+	public JSONArray taskNames;
 
 	@Override
 	protected void initConditionsFrom() throws Exception {
-
+		// 查找当前登录用户条件
+		SystemContext context = (SystemContext) this.getContext();
+		String account=context.getUserHistory().getCode();
+		// 获取当前登录用户所在岗位的code列表
+		List<String> groupList = context.getAttr(SystemContext.KEY_GROUPS);
+		
+		List<String> values=this.todoService.findProcessNames(account, groupList);
+		List<Map<String,String>> list = new ArrayList<Map<String,String>>();
+		Map<String,String> map;
+		for(String value : values){
+			map = new HashMap<String, String>();
+			map.put("key", value);
+			map.put("value", value);
+			list.add(map);
+		}
+		this.processNames=OptionItem.toLabelValues(list);
+		
+		values=this.todoService.findTaskNames(account, groupList);
+		list = new ArrayList<Map<String,String>>();
+		for(String value : values){
+			map = new HashMap<String, String>();
+			map.put("key", value);
+			map.put("value", value);
+			list.add(map);
+		}
+		this.taskNames=OptionItem.toLabelValues(list);
 	}
 }

@@ -3,6 +3,7 @@
  */
 package cn.bc.workflow.todo.service;
 
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.logging.Log;
@@ -59,6 +60,14 @@ public class TodoServiceImpl implements TodoService {
 	@Deprecated
 	public void doSignTask(Long excludeId,String assignee) {
 		this.todoDao.doSignTask(excludeId,assignee);
+	}
+
+	public List<String> findTaskNames(String account, List<String> groupList) {
+		return this.todoDao.findTaskNames(account, groupList);
+	}
+
+	public List<String> findProcessNames(String account, List<String> groupList) {
+		return this.todoDao.findProcessNames(account, groupList);
 	}
 	
 }

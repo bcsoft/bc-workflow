@@ -3,6 +3,8 @@
  */
 package cn.bc.workflow.todo.dao;
 
+import java.util.List;
+
 
 /**
  * 待办Dao
@@ -25,5 +27,23 @@ public interface TodoDao {
 	 */
 	@Deprecated
 	void doSignTask(Long excludeId, String assignee);
+	
+	/**
+	 * 查找用户待办任务名称
+	 * 
+	 * @param account 用户账号
+	 * @param groupList 岗位key集合
+	 * @return
+	 */
+	List<String> findTaskNames(String account,List<String> groupList);
+	
+	/**
+	 * 查找用户待办任务中的流程名称
+	 * 
+	 * @param account 用户账号
+	 * @param groupList 岗位key集合
+	 * @return
+	 */
+	List<String> findProcessNames(String account,List<String> groupList);
 
 }

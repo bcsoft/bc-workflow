@@ -3,6 +3,8 @@
  */
 package cn.bc.workflow.todo.dao.hibernate.jpa;
 
+import java.util.List;
+
 import javax.sql.DataSource;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -63,6 +65,52 @@ public class TodoDaoImpl implements TodoDao {
 			this.jdbcTemplate.update(sql3,
 					new Object[] { assignee, taskId });
 		}
+	}
+
+	
+	public List<String> findTaskNames(String account, List<String> groupList) {
+		String sql ="select a.name_";
+		sql += " from act_ru_task a";
+		sql += " where a.assignee_ = ? OR  ";
+		sql += "(a.assignee_ is null  and ";
+			sql += "exists(select 1 from act_ru_identitylink c where c.task_id_ = a.id_ and ";
+				sql += "(c.user_id_ = ?";
+				if (null != groupList && groupList.size() > 0) {
+					sql +=" or c.group_id_ in(";
+					for(String g:groupList){
+						sql+="'"+g+"',";
+					}
+					sql=sql.substring(0, sql.lastIndexOf(","));
+					sql+=")";
+				}
+				sql+=")";
+			sql+=")";
+		sql += ") GROUP BY a.name_";
+		
+		return this.jdbcTemplate.queryForList(sql, new Object[]{account,account}, String.class);
+	}
+
+	public List<String> findProcessNames(String account, List<String> groupList) {
+		String sql ="select d.name_";
+		sql += " from act_ru_task a";
+		sql += " inner join act_re_procdef d on d.id_ = a.proc_def_id_";
+		sql += " where a.assignee_ = ? OR  ";
+		sql += "(a.assignee_ is null  and ";
+			sql += "exists(select 1 from act_ru_identitylink c where c.task_id_ = a.id_ and ";
+				sql += "(c.user_id_ = ?";
+				if (null != groupList && groupList.size() > 0) {
+					sql +=" or c.group_id_ in(";
+					for(String g:groupList){
+						sql+="'"+g+"',";
+					}
+					sql=sql.substring(0, sql.lastIndexOf(","));
+					sql+=")";
+				}
+				sql+=")";
+			sql+=")";
+		sql += ") GROUP BY d.name_";
+		
+		return this.jdbcTemplate.queryForList(sql, new Object[]{account,account}, String.class);
 	}
 
 }
