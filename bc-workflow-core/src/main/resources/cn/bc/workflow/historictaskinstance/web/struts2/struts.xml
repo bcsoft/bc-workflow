@@ -5,17 +5,14 @@
 <struts>
 	<!-- 我的经办 -->
 	<package name="myDones" extends="bc-default" namespace="/bc-workflow/myDones">
-		<action name="list" class="historicTaskInstancesAction" method="list">
-			<param name="my">true</param>
+		<action name="list" class="myHistoricTaskInstancesAction" method="list">
 		</action>
-		<action name="data" class="historicTaskInstancesAction" method="data">
-			<param name="my">true</param>
+		<action name="data" class="myHistoricTaskInstancesAction" method="data">
 		</action>
-		<action name="paging" class="historicTaskInstancesAction" method="paging">
-			<param name="my">true</param>
+		<action name="paging" class="myHistoricTaskInstancesAction" method="paging">
 		</action>
-		<action name="conditions" class="historicTaskInstancesAction" method="conditions">
-			<result name="success">/bc-workflow/historictaskinstance/conditions.jsp</result>
+		<action name="conditions" class="myHistoricTaskInstancesAction" method="conditions">
+			<result name="success">/bc-workflow/historictaskinstance/my/conditions.jsp</result>
 		</action>
 	</package>
 	<!-- 任务监控 -->
