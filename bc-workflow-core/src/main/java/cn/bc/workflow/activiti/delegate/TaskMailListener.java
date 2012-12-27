@@ -10,6 +10,7 @@ import org.activiti.engine.RepositoryService;
 import org.activiti.engine.TaskService;
 import org.activiti.engine.delegate.DelegateTask;
 import org.activiti.engine.delegate.TaskListener;
+import org.activiti.engine.impl.el.Expression;
 import org.activiti.engine.impl.persistence.entity.IdentityLinkEntity;
 import org.activiti.engine.impl.persistence.entity.TaskEntity;
 import org.activiti.engine.task.IdentityLink;
@@ -35,6 +36,8 @@ public class TaskMailListener implements TaskListener {
 	protected MailService mailService;
 	protected TaskService taskService;
 	protected RepositoryService repositoryService;
+
+	private Expression detail; // 详细说明
 
 	public TaskMailListener() {
 		actorService = SpringUtils.getBean("actorService", ActorService.class);
@@ -93,6 +96,13 @@ public class TaskMailListener implements TaskListener {
 					&& !task.getDescription().isEmpty()) {
 				content += "\r\n附加说明：" + task.getDescription();
 			}
+			if (detail != null && detail.getExpressionText().length() > 0
+					&& delegateTask.hasVariable(detail.getExpressionText())) {
+				content += "\r\n\r\n====详细内容====\r\n"
+						+ delegateTask.getVariable(detail.getExpressionText());
+			}
+			content += "\r\n\r\n<p>此邮件由BC系统自动生成，请勿回复此邮件。\r\n内部编号：PI"
+					+ task.getProcessInstanceId()+"<p>";
 			mail.setContent(content);
 
 			// 邮件接收人：岗位任务时发送到岗位中的所有人
