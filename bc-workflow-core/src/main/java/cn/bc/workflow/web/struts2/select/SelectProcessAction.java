@@ -116,7 +116,7 @@ public class SelectProcessAction extends AbstractSelectPageAction<Map<String, Ob
 				getText("flow.name")).setSortable(true)
 				.setUseTitleFromLabel(true));
 		columns.add(new TextColumn4MapKey("a.version_", "version",
-				getText("flow.version"), 26).setUseTitleFromLabel(true));
+				getText("flow.version"), 40).setUseTitleFromLabel(true));
 		columns.add(new TextColumn4MapKey("c.deploy_time", "deploy_time",
 				getText("flow.deployDate"),85).setUseTitleFromLabel(true)
 				.setValueFormater(new CalendarFormater("yyyy-MM-dd")));
