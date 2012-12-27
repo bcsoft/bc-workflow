@@ -67,6 +67,11 @@ public class SelectProcessAction extends AbstractSelectPageAction<Map<String, Ob
 	}
 
 	@Override
+	protected String getOkButtonLabel() {
+		return getText("flow.start");
+	}
+
+	@Override
 	protected OrderCondition getGridOrderCondition() {
 		return new OrderCondition("c.deploy_time_", Direction.Desc);
 	}
