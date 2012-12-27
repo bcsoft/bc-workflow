@@ -61,6 +61,7 @@ public class TaskMailListener implements TaskListener {
 
 		// 创建邮件
 		Mail mail = new Mail();
+		mail.setHtml(true);// html邮件
 
 		String eventType = delegateTask.getEventName();
 		if (eventType.equals("create")) {
@@ -77,32 +78,38 @@ public class TaskMailListener implements TaskListener {
 			}
 
 			// 邮件内容
-			String content = "任务名称：" + taskSubject;
-			String businessSubject = (String) task.getVariable("subject");
+			String content = addBr("任务名称：" + taskSubject);
+			String businessSubject = (String) task.getExecution().getVariable(
+					"subject");
 			if (businessSubject != null && !businessSubject.isEmpty()) {
-				content += "\r\n所属业务：" + businessSubject;
+				content += addBr("所属业务：" + businessSubject);
 			}
-			content += "\r\n所属流程："
+			content += addBr("所属流程："
 					+ repositoryService.createProcessDefinitionQuery()
 							.processDefinitionId(task.getProcessDefinitionId())
-							.singleResult().getName();
-			content += "\r\n创建时间："
-					+ DateUtils.formatDateTime2Minute(task.getCreateTime());
+							.singleResult().getName());
+			content += addBr("创建时间："
+					+ DateUtils.formatDateTime2Minute(task.getCreateTime()));
 			if (task.getDueDate() != null) {
-				content += "\r\n办理期限："
-						+ DateUtils.formatDateTime2Minute(task.getDueDate());
+				content += addBr("办理期限："
+						+ DateUtils.formatDateTime2Minute(task.getDueDate()));
 			}
 			if (task.getDescription() != null
 					&& !task.getDescription().isEmpty()) {
-				content += "\r\n附加说明：" + task.getDescription();
+				content += addBr("附加说明：" + task.getDescription());
 			}
 			if (detail != null && detail.getExpressionText().length() > 0
 					&& delegateTask.hasVariable(detail.getExpressionText())) {
-				content += "\r\n\r\n====详细内容====\r\n"
-						+ delegateTask.getVariable(detail.getExpressionText());
+				content += addBr("详细内容：<br>"
+						+ String.valueOf(
+								delegateTask.getVariable(detail
+										.getExpressionText())).replaceAll(
+								"\\r\\n|\\r|\\n", "<br>"));
 			}
-			content += "\r\n\r\n<p>此邮件由BC系统自动生成，请勿回复此邮件。\r\n内部编号：PI"
-					+ task.getProcessInstanceId()+"<p>";
+			content += addParagraph(
+					"此邮件由BC系统自动生成，请勿回复此邮件【邮件编号：PI"
+							+ task.getProcessInstanceId() + "TI" + task.getId()
+							+ "】", "color:gray;font-size:80%;");
 			mail.setContent(content);
 
 			// 邮件接收人：岗位任务时发送到岗位中的所有人
@@ -140,6 +147,18 @@ public class TaskMailListener implements TaskListener {
 		} else {
 			throw new CoreException("unsupport send mail for " + eventType
 					+ " task");
+		}
+	}
+
+	private String addBr(String text) {
+		return text + "<br>";
+	}
+
+	private String addParagraph(String text, String style) {
+		if (style != null) {
+			return "<p style=\"" + style + "\">" + text + "</p>";
+		} else {
+			return "<p>" + text + "</p>";
 		}
 	}
 }
