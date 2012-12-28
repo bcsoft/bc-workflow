@@ -69,8 +69,7 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>> {
 		this.workflowService = workflowService;
 	}
 
-	public String status = String
-			.valueOf(SuspensionState.ACTIVE.getStateCode());
+	public String status;
 
 	@Override
 	public boolean isReadonly() {
@@ -192,7 +191,7 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>> {
 		}
 
 		tb.addButton(Toolbar.getDefaultToolbarRadioGroup(this.getStatus(),
-				"status", 0, getText("title.click2changeSearchStatus")));
+				"status", 2, getText("title.click2changeSearchStatus")));
 
 		// 搜索按钮
 		tb.addButton(this.getDefaultSearchToolbarButton());
@@ -328,7 +327,7 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>> {
 	@Override
 	/** 获取表格双击行的js处理函数名 */
 	protected String getGridDblRowMethod() {
-		return "bc.todoView.open";
+		return "bc.myTodoView.open";
 	}
 
 	@Override
