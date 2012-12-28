@@ -266,6 +266,8 @@ public class MyHistoricTaskInstancesAction extends
 	}
 
 	public JSONArray processList;
+	
+	public JSONArray taskList;
 
 	@Override
 	protected void initConditionsFrom() throws Exception {
@@ -282,6 +284,16 @@ public class MyHistoricTaskInstancesAction extends
 			list.add(map);
 		}
 		this.processList = OptionItem.toLabelValues(list);
+		
+		values=this.historicTaskInstanceService.findTaskNames(account, true);
+		list = new ArrayList<Map<String,String>>();
+		for(String value : values){
+			map = new HashMap<String, String>();
+			map.put("key", value);
+			map.put("value", value);
+			list.add(map);
+		}
+		this.taskList = OptionItem.toLabelValues(list);
 	}
 	// ==高级搜索代码结束==
 

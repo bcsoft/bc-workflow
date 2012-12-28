@@ -9,6 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.activiti.engine.impl.persistence.entity.SuspensionState;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Controller;
@@ -59,12 +60,10 @@ public class TodoSideBarPersonalsAction extends TodoPersonalsAction {
 				todoMap.put("description", isNullObject(map.get("desc")));//附加说明
 				todoMap.put("category",isNullObject(map.get("processName")));//所属分类
 				todoMap.put("assignee", isNullObject(map.get("assignee"))); //任务处理人
-//				if(null != map.get("group_id_")){ //判断所属分类,如果是所属岗位的任务:0,个人任务:1
-//					todoMap.put("todoType", 0);
-//				}else{
-//					todoMap.put("todoType", 1);
-//				}
-				todoList.add(todoMap);
+				//只显示处理中的任务
+				if(String.valueOf(SuspensionState.ACTIVE.getStateCode()).equals(map.get("status").toString())){
+					todoList.add(todoMap);
+				}
 			}
 		}
 		

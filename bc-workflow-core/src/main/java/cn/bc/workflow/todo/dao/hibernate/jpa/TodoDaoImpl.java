@@ -113,4 +113,21 @@ public class TodoDaoImpl implements TodoDao {
 		return this.jdbcTemplate.queryForList(sql, new Object[]{account,account}, String.class);
 	}
 
+	public List<String> findTaskNames() {
+		String sql ="select a.name_";
+		sql += " from act_ru_task a";
+		sql += " GROUP BY a.name_";
+		
+		return this.jdbcTemplate.queryForList(sql, String.class);
+	}
+
+	public List<String> findProcessNames() {
+		String sql ="select d.name_";
+		sql += " from act_ru_task a";
+		sql += " inner join act_re_procdef d on d.id_ = a.proc_def_id_";
+		sql += " GROUP BY d.name_";
+		
+		return this.jdbcTemplate.queryForList(sql, String.class);
+	}
+
 }

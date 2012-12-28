@@ -19,9 +19,9 @@ import cn.bc.core.EntityImpl;
 public class WorkflowModuleRelation extends EntityImpl {
 	private static final long serialVersionUID = 1L;
 
-	private Long mid;
-	private String mtype;
-	private String pid;
+	private Long mid;//模块id
+	private String mtype;//模块类型
+	private String pid;//流程实例id
 	
 	public Long getMid() {
 		return mid;

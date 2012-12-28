@@ -34,6 +34,14 @@ public class HistoricTaskInstanceServiceImpl implements HistoricTaskInstanceServ
 	public List<String> findProcessNames() {
 		return this.historicTaskInstanceDao.findProcessNames();
 	}
+
+	public List<String> findTaskNames(String account, boolean isDone) {
+		return this.historicTaskInstanceDao.findTaskNames(account, isDone);
+	}
+
+	public List<String> findTaskNames() {
+		return this.historicTaskInstanceDao.findTaskNames();
+	}
 	
 	
 }

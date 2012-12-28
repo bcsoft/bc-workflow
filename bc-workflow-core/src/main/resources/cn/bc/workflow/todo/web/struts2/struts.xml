@@ -11,7 +11,7 @@
 		<action name="personals/isSigned" class="todoPersonalsAction" method="isSigned"/>
 		<action name="personals/claimTask" class="todoPersonalsAction" method="claimTask"/>
 		<action name="personals/conditions" class="todoPersonalsAction" method="conditions">
-			<result name="success">/bc-workflow/todo/conditions.jsp</result>
+			<result name="success">/bc-workflow/todo/my/conditions.jsp</result>
 		</action>
 		
 		<!-- 待办监控 -->

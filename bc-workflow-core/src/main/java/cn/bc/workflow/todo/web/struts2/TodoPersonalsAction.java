@@ -174,21 +174,21 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>> {
 			// 发起流程
 			tb.addButton(new ToolbarButton().setIcon("ui-icon-play")
 					.setText(getText("flow.start"))
-					.setClick("bc.todoView.startflow"));
+					.setClick("bc.myTodoView.startflow"));
 		}
 
 		tb.addButton(new ToolbarButton().setIcon("ui-icon-pencil")
 				.setText(getText("label.sign.task"))
-				.setClick("bc.todoView.signTask"));
+				.setClick("bc.myTodoView.signTask"));
 		if (this.isDelegate()) {
 			tb.addButton(new ToolbarButton().setIcon("ui-icon-person")
 					.setText(getText("label.delegate.task"))
-					.setClick("bc.todoView.delegateTask"));
+					.setClick("bc.myTodoView.delegateTask"));
 		}
 		if (this.isAssign()) {
 			tb.addButton(new ToolbarButton().setIcon("ui-icon-flag")
 					.setText(getText("label.assign.task"))
-					.setClick("bc.todoView.assignTask"));
+					.setClick("bc.myTodoView.assignTask"));
 		}
 
 		tb.addButton(Toolbar.getDefaultToolbarRadioGroup(this.getStatus(),
@@ -339,7 +339,7 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>> {
 
 	@Override
 	protected String getHtmlPageJs() {
-		return this.getContextPath() + "/bc-workflow/todo/view.js" + ","
+		return this.getContextPath() + "/bc-workflow/todo/my/view.js" + ","
 				+ this.getContextPath() + "/bc/identity/identity.js" + ","
 				+ this.getContextPath() + "/bc-workflow/select/selectUsers.js"
 				+ "," + this.getContextPath()

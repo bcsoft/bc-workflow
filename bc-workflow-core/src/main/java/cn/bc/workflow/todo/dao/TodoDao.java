@@ -45,5 +45,20 @@ public interface TodoDao {
 	 * @return
 	 */
 	List<String> findProcessNames(String account,List<String> groupList);
+	
+	/**
+	 * 查找待办任务名称
+	 * 
+	 * @return
+	 */
+	List<String> findTaskNames();
+	
+	/**
+	 * 查找待办任务中的流程名称
+	 * 
+	 * @return
+	 */
+	List<String> findProcessNames();
+
 
 }

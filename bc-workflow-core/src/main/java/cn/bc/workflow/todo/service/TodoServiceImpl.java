@@ -69,5 +69,13 @@ public class TodoServiceImpl implements TodoService {
 	public List<String> findProcessNames(String account, List<String> groupList) {
 		return this.todoDao.findProcessNames(account, groupList);
 	}
+
+	public List<String> findTaskNames() {
+		return this.todoDao.findTaskNames();
+	}
+
+	public List<String> findProcessNames() {
+		return this.todoDao.findProcessNames();
+	}
 	
 }
