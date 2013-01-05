@@ -25,7 +25,7 @@ import cn.bc.mail.Mail;
 import cn.bc.mail.MailService;
 
 /**
- * 发送任务邮件提醒的的监听器：create创建、assignment分配、complete完成
+ * 发送简易任务邮件提醒的的监听器：create创建、assignment分配、complete完成
  * 
  * @author dragon
  * 
@@ -150,11 +150,11 @@ public class TaskMailListener implements TaskListener {
 		}
 	}
 
-	private String addBr(String text) {
+	protected static String addBr(String text) {
 		return text + "<br>";
 	}
 
-	private String addParagraph(String text, String style) {
+	protected static String addParagraph(String text, String style) {
 		if (style != null) {
 			return "<p style=\"" + style + "\">" + text + "</p>";
 		} else {
