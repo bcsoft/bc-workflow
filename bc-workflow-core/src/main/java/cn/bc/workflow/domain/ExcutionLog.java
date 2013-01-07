@@ -35,6 +35,8 @@ public class ExcutionLog extends EntityImpl {
 	public static final String TYPE_PROCESS_ACTIVE = "process_active";
 	/** 类型:流程暂停 */
 	public static final String TYPE_PROCESS_SUSPENDED = "process_suspended";
+	/** 类型:同步信息 */
+	public static final String TYPE_PROCESS_SYNC_INFO = "process_sync_info";
 
 	/** 类型:分支的执行 */
 	public static final String TYPE_FLOW_TAKE = "flow_"
@@ -65,6 +67,11 @@ public class ExcutionLog extends EntityImpl {
 	/** 类型:活动的跳转 */
 	public static final String TYPE_EXCUTION_TAKE = "excution_"
 			+ ExecutionListener.EVENTNAME_TAKE;
+	
+	/** 同步信息 控制key */
+	public static final String SYNC_INFO_FLAG = "workflow_process_sync_flag";
+	/** 同步信息 保存值key */
+	public static final String SYNC_INFO_VALUE = "workflow_process_sync_value";
 
 	private Calendar fileDate;// 创建时间
 	private Long authorId;// 创建人ID(对应ActoryHistory表的ID)
