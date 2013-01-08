@@ -65,7 +65,7 @@ public class TaskMailListener implements TaskListener {
 				&& ignoreVarName.getExpressionText().length() > 0) {
 			if (delegateTask
 					.hasVariableLocal(ignoreVarName.getExpressionText())) {
-				if ((Boolean) delegateTask.getVariableLocal(ignoreVarName
+				if ((Boolean) delegateTask.getVariable(ignoreVarName
 						.getExpressionText())) {
 					return;
 				}
