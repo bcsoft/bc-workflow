@@ -34,16 +34,18 @@ import cn.bc.template.util.FreeMarkerUtils;
 public class TaskMailCustomListener extends TaskMailListener {
 	private static final Log logger = LogFactory
 			.getLog(TaskMailCustomListener.class);
-	private static String DEFAULT_CONTENT;
+	private static String DEFAULT_CONTENT;// 默认的邮件内容格式
 
 	static {
 		DEFAULT_CONTENT = addBr("任务名称：${ti_subject}");
+		DEFAULT_CONTENT += addBr("：${pi_subject}");
 		DEFAULT_CONTENT += addBr("所属业务：${pi_subject}");
 		DEFAULT_CONTENT += addBr("所属流程：${pd_name}");
 		DEFAULT_CONTENT += addBr("创建时间：${ti_startTime?string(\"yyyy-MM-dd HH:mm\"}");
 		DEFAULT_CONTENT += addBr("办理期限：${ti_dueDate?string(\"yyyy-MM-dd HH:mm\"}");
 		DEFAULT_CONTENT += addBr("附加说明：${ti_description}");
 	}
+	private Expression ignoreVarName; // 控制是否发邮件的流程变量名称
 	private Expression subject; // 定义邮件的标题格式
 	private Expression content; // 定义邮件的内容格式
 	private Expression override; // 用于决定是否使用to属性的收件人覆盖任务的办理人的邮箱还是增加to指定的邮箱，默认为附加(false)
@@ -66,6 +68,18 @@ public class TaskMailCustomListener extends TaskMailListener {
 			logger.debug("executionId=" + delegateTask.getExecutionId());
 			logger.debug("taskDefinitionKey="
 					+ delegateTask.getTaskDefinitionKey());
+		}
+
+		// 控制是否发送邮件
+		if (ignoreVarName != null
+				&& ignoreVarName.getExpressionText().length() > 0) {
+			if (delegateTask
+					.hasVariableLocal(ignoreVarName.getExpressionText())) {
+				if ((Boolean) delegateTask.getVariableLocal(ignoreVarName
+						.getExpressionText())) {
+					return;
+				}
+			}
 		}
 
 		// 创建邮件

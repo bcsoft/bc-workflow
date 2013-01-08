@@ -37,6 +37,7 @@ public class TaskMailListener implements TaskListener {
 	protected TaskService taskService;
 	protected RepositoryService repositoryService;
 
+	private Expression ignoreVarName; // 控制是否发邮件的流程变量名称
 	private Expression detail; // 详细说明
 
 	public TaskMailListener() {
@@ -57,6 +58,18 @@ public class TaskMailListener implements TaskListener {
 			logger.debug("executionId=" + delegateTask.getExecutionId());
 			logger.debug("taskDefinitionKey="
 					+ delegateTask.getTaskDefinitionKey());
+		}
+
+		// 控制是否发送邮件
+		if (ignoreVarName != null
+				&& ignoreVarName.getExpressionText().length() > 0) {
+			if (delegateTask
+					.hasVariableLocal(ignoreVarName.getExpressionText())) {
+				if ((Boolean) delegateTask.getVariableLocal(ignoreVarName
+						.getExpressionText())) {
+					return;
+				}
+			}
 		}
 
 		// 创建邮件
