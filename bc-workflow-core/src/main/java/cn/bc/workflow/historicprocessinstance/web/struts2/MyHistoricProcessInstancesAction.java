@@ -7,15 +7,12 @@ import java.util.List;
 import java.util.Map;
 
 import org.activiti.engine.impl.persistence.entity.SuspensionState;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.json.JSONArray;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Controller;
 
-import cn.bc.core.exception.CoreException;
 import cn.bc.core.query.condition.Condition;
 import cn.bc.core.query.condition.Direction;
 import cn.bc.core.query.condition.impl.AndCondition;
@@ -30,23 +27,19 @@ import cn.bc.option.domain.OptionItem;
 import cn.bc.web.formater.AbstractFormater;
 import cn.bc.web.formater.CalendarFormater;
 import cn.bc.web.formater.EntityStatusFormater;
-import cn.bc.web.struts2.ViewAction;
 import cn.bc.web.ui.html.grid.Column;
 import cn.bc.web.ui.html.grid.HiddenColumn4MapKey;
 import cn.bc.web.ui.html.grid.IdColumn4MapKey;
 import cn.bc.web.ui.html.grid.TextColumn4MapKey;
-import cn.bc.web.ui.html.page.HtmlPage;
-import cn.bc.web.ui.html.page.ListPage;
 import cn.bc.web.ui.html.page.PageOption;
 import cn.bc.web.ui.html.toolbar.Toolbar;
 import cn.bc.web.ui.html.toolbar.ToolbarButton;
 import cn.bc.web.ui.json.Json;
 import cn.bc.workflow.historictaskinstance.service.HistoricTaskInstanceService;
-import cn.bc.workflow.service.WorkflowService;
 import cn.bc.workflow.service.WorkspaceServiceImpl;
 
 /**
- * 流程监控视图Action
+ * 我的经办流程视图Action
  * 
  * @author lbj
  * 
@@ -54,27 +47,13 @@ import cn.bc.workflow.service.WorkspaceServiceImpl;
 
 @Scope(BeanDefinition.SCOPE_PROTOTYPE)
 @Controller
-public class HistoricProcessInstancesAction extends
-		ViewAction<Map<String, Object>> {
-	private static final Log logger = LogFactory
-			.getLog(HistoricProcessInstancesAction.class);
+public class MyHistoricProcessInstancesAction extends HistoricProcessInstancesAction {
+	/*private static final Log logger = LogFactory
+			.getLog(MyHistoricProcessInstancesAction.class);*/
 	private static final long serialVersionUID = 1L;
-	private WorkflowService workflowService;
 
-	@Autowired
-	public void setWorkflowService(WorkflowService workflowService) {
-		this.workflowService = workflowService;
-	}
+	public String status ;
 
-	public String status;
-
-	@Override
-	public boolean isReadonly() {
-		SystemContext context = (SystemContext) this.getContext();
-		// 配置权限：、超级管理员
-		return !context.hasAnyRole(getText("key.role.bc.admin"),
-				getText("key.role.bc.workflow"));
-	}
 
 	@Override
 	protected OrderCondition getGridOrderCondition() {
@@ -224,7 +203,7 @@ public class HistoricProcessInstancesAction extends
 
 	@Override
 	protected String getFormActionName() {
-		return "historicProcessInstance";
+		return "myHistoricProcessInstance";
 	}
 
 	@Override
@@ -234,46 +213,15 @@ public class HistoricProcessInstancesAction extends
 	}
 
 	@Override
-	protected HtmlPage buildHtmlPage() {
-		ListPage listPage = (ListPage) super.buildHtmlPage();
-		listPage.setDeleteUrl(getHtmlPageNamespace()
-				+ "/historicProcessInstances/delete");
-		return listPage;
-	}
-
-	@Override
 	protected Toolbar getHtmlPageToolbar() {
 		Toolbar tb = new Toolbar();
 		// 查看
 		tb.addButton(new ToolbarButton().setIcon("ui-icon-check")
 				.setText(getText("label.read"))
 				.setClick("bc.historicProcessInstanceSelectView.open"));
-	
-		// 发起流程
-		tb.addButton(new ToolbarButton().setIcon("ui-icon-bullet")
-				.setText(getText("flow.start"))
-				.setClick("bc.historicProcessInstanceSelectView.startflow"));
-
-		if (!this.isReadonly()) {
-			// 激活
-			tb.addButton(new ToolbarButton().setIcon("ui-icon-play")
-					.setText(getText("lable.flow.active"))
-					.setClick("bc.historicprocessinstance.active"));
-			// 暂停
-			tb.addButton(new ToolbarButton().setIcon("ui-icon-pause")
-					.setText(getText("lable.flow.suspended"))
-					.setClick("bc.historicprocessinstance.suspended"));
-		}
 		
-		// 流程实例级联删除
-		if (((SystemContext) this.getContext())
-				.hasAnyRole("BC_WORKFLOW_INSTANCE_DELETE")) {
-			tb.addButton(this.getDefaultDeleteToolbarButton());
-		}
-
 		tb.addButton(Toolbar.getDefaultToolbarRadioGroup(this.getStatus(),
 				"status", 3, getText("title.click2changeSearchStatus")));
-		
 
 		// 搜索按钮
 		tb.addButton(this.getDefaultSearchToolbarButton());
@@ -305,7 +253,19 @@ public class HistoricProcessInstancesAction extends
 			}
 		}
 
-		
+
+		SystemContext context = (SystemContext) this.getContext();
+		// 保存的用户id键值集合
+		String code = context.getUser().getCode();
+		String sql = "";
+		sql += "exists(";
+		sql += "select 1 ";
+		sql += " from act_hi_taskinst d";
+		sql += " where a.id_=d.proc_inst_id_ and d.end_time_ is not null and d.assignee_ = '";
+		sql += code;
+		sql += "')";
+
+		ac.add(new QlCondition(sql, new Object[] {}));
 		ac.add(new IsNullCondition("f.parent_id_"));
 
 		return ac.isEmpty() ? null : ac;
@@ -317,6 +277,7 @@ public class HistoricProcessInstancesAction extends
 		// 状态条件
 		if (status != null && status.length() > 0)
 			json.put("status", status);
+
 		return json;
 	}
 
@@ -355,7 +316,10 @@ public class HistoricProcessInstancesAction extends
 
 	@Override
 	protected void initConditionsFrom() throws Exception {
-		List<String> values=this.historicTaskInstanceService.findProcessNames();
+		// 查找当前登录用户条件
+		SystemContext context = (SystemContext) this.getContext();
+		String account=context.getUserHistory().getCode();
+		List<String> values=this.historicTaskInstanceService.findProcessNames(account, true);
 		List<Map<String,String>> list = new ArrayList<Map<String,String>>();
 		Map<String,String> map;
 		for(String value : values){
@@ -368,54 +332,4 @@ public class HistoricProcessInstancesAction extends
 	}
 
 	// ==高级搜索代码结束==
-
-	public String id;	//流程实例id
-	public String ids;
-
-	/**
-	 * 删除流程实例
-	 * 
-	 * @return
-	 * @throws Exception
-	 */
-	public String delete() throws Exception {
-		Json json = new Json();
-		try {
-			if (ids != null) {
-				throw new CoreException("为安全起见，系统限制为每次只可删除一个流程实例！");
-			}
-			this.workflowService.deleteInstance(new String[] { id });
-			json.put("success", true);
-			json.put("msg", getText("form.delete.success"));
-		} catch (Exception e) {
-			logger.warn(e.getMessage(), e);
-			json.put("success", false);
-			json.put("msg", e.getMessage());
-			json.put("e", e.getClass().getSimpleName());
-		}
-		this.json = json.toString();
-		return "json";
-	}
-	
-
-	/** 激活流程 **/
-	public String doActive() {
-		Json json = new Json();
-		this.workflowService.doActive(this.id);
-		json.put("msg", getText("flow.msg.active.success"));
-		json.put("id", this.id);
-		this.json = json.toString();
-		return "json";
-	}
-	
-	/** 暂停流程 **/
-	public String doSuspended() {
-		Json json = new Json();
-		this.workflowService.doSuspended(this.id);
-		json.put("msg", getText("flow.msg.suspended.success"));
-		json.put("id", this.id);
-		this.json = json.toString();
-		return "json";
-	}
-
 }
