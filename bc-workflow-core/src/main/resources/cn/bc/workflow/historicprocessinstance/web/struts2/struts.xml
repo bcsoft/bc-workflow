@@ -4,12 +4,24 @@
     "http://struts.apache.org/dtds/struts-2.0.dtd">
 <struts>
 	<!-- 流程监控 -->											 
-	<package name="flowMonitors" extends="bc-default" namespace="/bc-workflow/flowMonitors">
+	<package name="historicProcessInstances" extends="bc-default" namespace="/bc-workflow/historicProcessInstances">
 		<action name="list" class="historicProcessInstancesAction" method="list"/>
 		<action name="data" class="historicProcessInstancesAction" method="data"/>
 		<action name="paging" class="historicProcessInstancesAction" method="paging"/>
 		<action name="delete" class="historicProcessInstancesAction" method="delete"/>
 		<action name="doActive" class="historicProcessInstancesAction" method="doActive"/>
 		<action name="doSuspended" class="historicProcessInstancesAction" method="doSuspended"/>
+		<action name="conditions" class="historicProcessInstancesAction" method="conditions">
+			<result name="success">/bc-workflow/historicprocessinstance/conditions.jsp</result>
+		</action>
+	</package>
+	<!-- 我的经办流程 -->
+	<package name="myHistoricProcessInstances" extends="bc-default" namespace="/bc-workflow/myHistoricProcessInstances">
+		<action name="list" class="myHistoricProcessInstancesAction" method="list"/>
+		<action name="data" class="myHistoricProcessInstancesAction" method="data"/>
+		<action name="paging" class="myHistoricProcessInstancesAction" method="paging"/>
+		<action name="conditions" class="myHistoricProcessInstancesAction" method="conditions">
+			<result name="success">/bc-workflow/historicprocessinstance/my/conditions.jsp</result>
+		</action>
 	</package>
 </struts>
