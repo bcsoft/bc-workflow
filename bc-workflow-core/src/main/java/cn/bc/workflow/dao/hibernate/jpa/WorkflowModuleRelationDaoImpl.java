@@ -31,8 +31,8 @@ public class WorkflowModuleRelationDaoImpl extends
 			String[] globalKeys) {
 		// sql占位符替换参数
 		List<Object> args = new ArrayList<Object>();
-		String hql = "SELECT a.pid,to_char(b.start_time_,'YYYY-MM-DD HH24:mm') as statrTime";
-		hql+=",to_char(b.end_time_,'YYYY-MM-DD HH24:mm') as endTime";
+		String hql = "SELECT a.pid,to_char(b.start_time_,'YYYY-MM-DD HH24:MI') as statrTime";
+		hql+=",to_char(b.end_time_,'YYYY-MM-DD HH24:MI') as endTime";
 		hql+=",c.name_,c.key_,f.suspension_state_";
 		
 		if (globalKeys != null && globalKeys.length > 0) {
