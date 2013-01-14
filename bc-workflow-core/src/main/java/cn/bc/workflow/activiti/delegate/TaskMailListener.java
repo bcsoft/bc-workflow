@@ -37,7 +37,7 @@ public class TaskMailListener implements TaskListener {
 	protected TaskService taskService;
 	protected RepositoryService repositoryService;
 
-	private Expression ignoreVarName; // 控制是否发邮件的流程变量名称
+	protected Expression ignoreVarName; // 控制是否发邮件的流程变量名称
 	private Expression detail; // 详细说明
 
 	public TaskMailListener() {

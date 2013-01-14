@@ -17,8 +17,11 @@ import org.activiti.engine.runtime.ProcessInstance;
 import org.activiti.engine.task.IdentityLink;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.util.StringUtils;
 
 import cn.bc.core.exception.CoreException;
+import cn.bc.identity.web.SystemContext;
+import cn.bc.identity.web.SystemContextHolder;
 import cn.bc.mail.Mail;
 import cn.bc.template.util.FreeMarkerUtils;
 
@@ -37,15 +40,13 @@ public class TaskMailCustomListener extends TaskMailListener {
 	private static String DEFAULT_CONTENT;// 默认的邮件内容格式
 
 	static {
-		DEFAULT_CONTENT = addBr("任务名称：${ti_subject}");
-		DEFAULT_CONTENT += addBr("：${pi_subject}");
+		DEFAULT_CONTENT = addBr("${_ACTORS!}任务名称：${ti_subject}");
 		DEFAULT_CONTENT += addBr("所属业务：${pi_subject}");
 		DEFAULT_CONTENT += addBr("所属流程：${pd_name}");
-		DEFAULT_CONTENT += addBr("创建时间：${ti_startTime?string(\"yyyy-MM-dd HH:mm\"}");
-		DEFAULT_CONTENT += addBr("办理期限：${ti_dueDate?string(\"yyyy-MM-dd HH:mm\"}");
-		DEFAULT_CONTENT += addBr("附加说明：${ti_description}");
+		DEFAULT_CONTENT += addBr("创建时间：${ti_startTime?string('yyyy-MM-dd HH:mm')}");
+		DEFAULT_CONTENT += addBr("办理期限：${(ti_dueDate?string('yyyy-MM-dd HH:mm'))!}");
+		DEFAULT_CONTENT += addBr("附加说明：${ti_description!}");
 	}
-	private Expression ignoreVarName; // 控制是否发邮件的流程变量名称
 	private Expression subject; // 定义邮件的标题格式
 	private Expression content; // 定义邮件的内容格式
 	private Expression override; // 用于决定是否使用to属性的收件人覆盖任务的办理人的邮箱还是增加to指定的邮箱，默认为附加(false)
@@ -109,7 +110,7 @@ public class TaskMailCustomListener extends TaskMailListener {
 		params.put("ti_subject", taskSubject);
 
 		// 流程实例的一些参数
-		ProcessInstance pi = task.getProcessInstance();
+		ProcessInstance pi = task.getExecution();
 		params.put("pi_id", pi.getId());
 		params.put("pi_businessKey", pi.getBusinessKey());
 		params.put("pi_definitionId", pi.getProcessDefinitionId());
@@ -128,6 +129,9 @@ public class TaskMailCustomListener extends TaskMailListener {
 		String piSubject = (String) delegateTask.getVariable("subject");
 		if (piSubject == null) {
 			piSubject = pd.getName();// 流程的名称
+		}
+		if (delegateTask.hasVariable("wf_code")) {
+			piSubject += " [" + delegateTask.getVariable("wf_code") + "]";
 		}
 		params.put("pi_subject", piSubject);
 
@@ -164,9 +168,19 @@ public class TaskMailCustomListener extends TaskMailListener {
 				}
 				mailAddresses = actorService.findMailAddressByGroup(groups);
 
+				// 待办岗位
+				params.put(
+						"_ACTORS",
+						addBr("待办岗位："
+								+ StringUtils
+										.collectionToCommaDelimitedString(groups)));
+
 				// 邮件标题
 				mail.setSubject("BC岗位待办提醒：" + originSubject);
 			} else {
+				// 待办人
+				params.put("_ACTORS",
+						addBr("待办用户：" + delegateTask.getAssignee()));
 				// 邮件标题
 				mail.setSubject("BC个人待办提醒：" + originSubject);
 
@@ -187,9 +201,14 @@ public class TaskMailCustomListener extends TaskMailListener {
 			c = FreeMarkerUtils.format(DEFAULT_CONTENT, params);
 		}
 		c += addParagraph(
-				"此邮件由BC系统自动生成，请勿回复此邮件【邮件编号：PI" + task.getProcessInstanceId()
-						+ "TI" + task.getId() + "】",
-				"color:gray;font-size:80%;");
+				"此邮件由<a href='"
+						+ SystemContextHolder.get().getAttr(
+								SystemContext.KEY_SYSURL)
+						+ "?token=wf::"
+						+ task.getProcessInstanceId()
+						+ "' target='_blank'>宝诚综合信息管理系统</a>自动生成，请勿回复此邮件！<br>[PI"
+						+ task.getProcessInstanceId() + "TI" + task.getId()
+						+ "]", "color:gray;font-size:80%;");
 		mail.setContent(c);
 
 		// 附加额外的主送人
