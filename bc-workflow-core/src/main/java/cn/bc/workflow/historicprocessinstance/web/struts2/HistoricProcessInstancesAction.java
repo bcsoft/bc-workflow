@@ -23,6 +23,7 @@ import cn.bc.core.query.condition.impl.IsNullCondition;
 import cn.bc.core.query.condition.impl.OrderCondition;
 import cn.bc.core.query.condition.impl.QlCondition;
 import cn.bc.core.util.DateUtils;
+import cn.bc.core.util.StringUtils;
 import cn.bc.db.jdbc.RowMapper;
 import cn.bc.db.jdbc.SqlObject;
 import cn.bc.identity.web.SystemContext;
@@ -89,7 +90,7 @@ public class HistoricProcessInstancesAction extends
 		sql.append("select a.id_,b.name_ as category,a.start_time_,a.end_time_,a.duration_,f.suspension_state_ status,a.proc_inst_id_");
 		sql.append(",e.version_ as version,b.version_ as aVersion,b.key_ as key,c.name");
 		sql.append(",getProcessInstanceSubject(a.proc_inst_id_) as subject");
-		sql.append(",(select string_agg(e.name_,',') from act_ru_task e where a.id_=e.proc_inst_id_ ) as  todo_names");
+		sql.append(",getprocesstodotasknames(a.proc_inst_id_) as  todo_names");
 		sql.append(" from act_hi_procinst a");
 		sql.append(" left join act_ru_execution f on a.id_ = f.proc_inst_id_");
 		sql.append(" inner join act_re_procdef b on b.id_=a.proc_def_id_");
@@ -160,7 +161,16 @@ public class HistoricProcessInstancesAction extends
 				.setUseTitleFromLabel(true));
 		columns.add(new TextColumn4MapKey("", "todo_names",
 				getText("flow.instance.todoTask"), 200).setSortable(true)
-				.setUseTitleFromLabel(true));
+				.setUseTitleFromLabel(true).setValueFormater(new AbstractFormater<String>() {
+					@SuppressWarnings("unchecked")
+					@Override
+					public String format(Object context, Object value) {
+						String value_=StringUtils.toString(((Map<String, Object>) context).get("todo_names"));
+						if(value_!=null)
+							return value_.replaceAll(";", ",");
+						return value_;
+					}
+				}));
 		// 版本号
 		columns.add(new TextColumn4MapKey("e.version_", "version",
 				getText("flow.instance.version"), 50).setSortable(true)
@@ -219,7 +229,7 @@ public class HistoricProcessInstancesAction extends
 	@Override
 	protected String[] getGridSearchFields() {
 		return new String[] { "b.name_", "b.key_", "c.name",
-				"getProcessInstanceSubject(a.proc_inst_id_)" };
+				"getProcessInstanceSubject(a.proc_inst_id_)","getprocesstodotasknames(a.proc_inst_id_)" };
 	}
 
 	@Override
