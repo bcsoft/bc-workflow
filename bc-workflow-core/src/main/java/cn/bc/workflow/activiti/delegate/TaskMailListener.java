@@ -25,7 +25,7 @@ import cn.bc.mail.Mail;
 import cn.bc.mail.MailService;
 
 /**
- * 发送任务邮件提醒的的监听器：create创建、assignment分配、complete完成
+ * 发送简易任务邮件提醒的的监听器：create创建、assignment分配、complete完成
  * 
  * @author dragon
  * 
@@ -37,6 +37,7 @@ public class TaskMailListener implements TaskListener {
 	protected TaskService taskService;
 	protected RepositoryService repositoryService;
 
+	protected Expression ignoreVarName; // 控制是否发邮件的流程变量名称
 	private Expression detail; // 详细说明
 
 	public TaskMailListener() {
@@ -57,6 +58,18 @@ public class TaskMailListener implements TaskListener {
 			logger.debug("executionId=" + delegateTask.getExecutionId());
 			logger.debug("taskDefinitionKey="
 					+ delegateTask.getTaskDefinitionKey());
+		}
+
+		// 控制是否发送邮件
+		if (ignoreVarName != null
+				&& ignoreVarName.getExpressionText().length() > 0) {
+			if (delegateTask
+					.hasVariableLocal(ignoreVarName.getExpressionText())) {
+				if ((Boolean) delegateTask.getVariable(ignoreVarName
+						.getExpressionText())) {
+					return;
+				}
+			}
 		}
 
 		// 创建邮件
@@ -150,11 +163,11 @@ public class TaskMailListener implements TaskListener {
 		}
 	}
 
-	private String addBr(String text) {
+	protected static String addBr(String text) {
 		return text + "<br>";
 	}
 
-	private String addParagraph(String text, String style) {
+	protected static String addParagraph(String text, String style) {
 		if (style != null) {
 			return "<p style=\"" + style + "\">" + text + "</p>";
 		} else {

@@ -78,4 +78,11 @@
 		<action name="data" class="selectUsers4FlowAction" method="data"/>
 		<action name="paging" class="selectUsers4FlowAction" method="paging"/>
 	</package>
+	
+	<!-- 选择流程关系 -->
+	<package name="selectWorkflowModuleRelation" extends="bc-default" namespace="/bc-workflow/selectWorkflowModuleRelation">
+		<action name="list" class="selectWorkflowModuleRelationAction" method="list"/>
+		<action name="data" class="selectWorkflowModuleRelationAction" method="data"/>
+		<action name="paging" class="selectWorkflowModuleRelationAction" method="paging"/>
+	</package>
 </struts>
