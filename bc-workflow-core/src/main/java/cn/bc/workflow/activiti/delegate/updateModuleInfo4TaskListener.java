@@ -22,7 +22,7 @@ import cn.bc.core.util.SpringUtils;
  * @author zxr
  * 
  */
-public class updateModuleInfo4TaskListener implements TaskListener {
+public class UpdateModuleInfo4TaskListener implements TaskListener {
 	protected final Log logger = LogFactory.getLog(getClass());
 
 	/**
