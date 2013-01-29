@@ -24,4 +24,14 @@
 			<result name="success">/bc-workflow/historicprocessinstance/my/conditions.jsp</result>
 		</action>
 	</package>
+	
+	<!-- 部门的经办流程 -->
+	<package name="groupHistoricProcessInstances" extends="bc-default" namespace="/bc-workflow/groupHistoricProcessInstances">
+		<action name="list" class="groupHistoricProcessInstancesAction" method="list"/>
+		<action name="data" class="groupHistoricProcessInstancesAction" method="data"/>
+		<action name="paging" class="groupHistoricProcessInstancesAction" method="paging"/>
+		<action name="conditions" class="groupHistoricProcessInstancesAction" method="conditions">
+			<result name="success">/bc-workflow/historicprocessinstance/conditions.jsp</result>
+		</action>
+	</package>
 </struts>

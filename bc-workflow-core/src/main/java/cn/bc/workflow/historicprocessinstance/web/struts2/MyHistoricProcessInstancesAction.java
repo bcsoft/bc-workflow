@@ -2,26 +2,19 @@ package cn.bc.workflow.historicprocessinstance.web.struts2;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.activiti.engine.impl.persistence.entity.SuspensionState;
-import org.json.JSONArray;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Controller;
 
 import cn.bc.core.query.condition.Condition;
-import cn.bc.core.query.condition.Direction;
 import cn.bc.core.query.condition.impl.AndCondition;
 import cn.bc.core.query.condition.impl.IsNullCondition;
-import cn.bc.core.query.condition.impl.OrderCondition;
 import cn.bc.core.query.condition.impl.QlCondition;
-import cn.bc.core.util.DateUtils;
-import cn.bc.db.jdbc.RowMapper;
-import cn.bc.db.jdbc.SqlObject;
 import cn.bc.identity.web.SystemContext;
 import cn.bc.option.domain.OptionItem;
 import cn.bc.web.formater.AbstractFormater;
@@ -31,10 +24,8 @@ import cn.bc.web.ui.html.grid.Column;
 import cn.bc.web.ui.html.grid.HiddenColumn4MapKey;
 import cn.bc.web.ui.html.grid.IdColumn4MapKey;
 import cn.bc.web.ui.html.grid.TextColumn4MapKey;
-import cn.bc.web.ui.html.page.PageOption;
 import cn.bc.web.ui.html.toolbar.Toolbar;
 import cn.bc.web.ui.html.toolbar.ToolbarButton;
-import cn.bc.web.ui.json.Json;
 import cn.bc.workflow.historictaskinstance.service.HistoricTaskInstanceService;
 import cn.bc.workflow.service.WorkspaceServiceImpl;
 
@@ -48,77 +39,7 @@ import cn.bc.workflow.service.WorkspaceServiceImpl;
 @Scope(BeanDefinition.SCOPE_PROTOTYPE)
 @Controller
 public class MyHistoricProcessInstancesAction extends HistoricProcessInstancesAction {
-	/*private static final Log logger = LogFactory
-			.getLog(MyHistoricProcessInstancesAction.class);*/
 	private static final long serialVersionUID = 1L;
-
-	public String status ;
-
-
-	@Override
-	protected OrderCondition getGridOrderCondition() {
-		return new OrderCondition("a.start_time_", Direction.Desc);
-	}
-
-	@Override
-	protected SqlObject<Map<String, Object>> getSqlObject() {
-		SqlObject<Map<String, Object>> sqlObject = new SqlObject<Map<String, Object>>();
-		// 构建查询语句,where和order by不要包含在sql中(要统一放到condition中)
-		StringBuffer sql = new StringBuffer();
-		sql.append("select a.id_,b.name_ as category,a.start_time_,a.end_time_,a.duration_,f.suspension_state_ status,a.proc_inst_id_");
-		sql.append(",e.version_ as version,b.version_ as aVersion,b.key_ as key,c.name");
-		sql.append(",getProcessInstanceSubject(a.proc_inst_id_) as subject");
-		sql.append(",(select string_agg(e.name_,',') from act_ru_task e where a.id_=e.proc_inst_id_ ) as  todo_names");
-		sql.append(" from act_hi_procinst a");
-		sql.append(" left join act_ru_execution f on a.id_ = f.proc_inst_id_");
-		sql.append(" inner join act_re_procdef b on b.id_=a.proc_def_id_");
-		sql.append(" inner join act_re_deployment d on d.id_=b.deployment_id_");
-		sql.append(" inner join bc_wf_deploy e on e.deployment_id=d.id_");
-		sql.append(" left join bc_identity_actor c on c.code=a.start_user_id_");
-		sqlObject.setSql(sql.toString());
-
-		// 注入参数
-		sqlObject.setArgs(null);
-
-		// 数据映射器
-		sqlObject.setRowMapper(new RowMapper<Map<String, Object>>() {
-			public Map<String, Object> mapRow(Object[] rs, int rowNum) {
-				Map<String, Object> map = new HashMap<String, Object>();
-				int i = 0;
-				map.put("id", rs[i++]);
-				map.put("category", rs[i++]);
-				map.put("start_time", rs[i++]);
-				map.put("end_time", rs[i++]);
-				map.put("duration", rs[i++]);
-				map.put("status", rs[i++]);
-				if (map.get("end_time") != null) {//已结束
-					map.put("status", WorkspaceServiceImpl.COMPLETE);
-				} else {
-					if(map.get("status").equals(String.valueOf(SuspensionState.ACTIVE.getStateCode()))){//流转中
-						map.put("status", String.valueOf(SuspensionState.ACTIVE.getStateCode()));
-					}else if(map.get("status").equals(String.valueOf(SuspensionState.SUSPENDED.getStateCode()))){//已暂停
-						map.put("status", String.valueOf(SuspensionState.SUSPENDED.getStateCode()));
-					}
-				}
-
-				// 格式化耗时
-				if (map.get("duration") != null)
-					map.put("frmDuration",
-							DateUtils.getWasteTime(Long.parseLong(map.get(
-									"duration").toString())));
-
-				map.put("procinstid", rs[i++]);
-				map.put("version", rs[i++]);
-				map.put("aVersion", rs[i++]);
-				map.put("key", rs[i++]);
-				map.put("startName", rs[i++]);// 发起人
-				map.put("subject", rs[i++]);
-				map.put("todo_names", rs[i++]);
-				return map;
-			}
-		});
-		return sqlObject;
-	}
 
 	@Override
 	protected List<Column> getGridColumns() {
@@ -174,26 +95,7 @@ public class MyHistoricProcessInstancesAction extends HistoricProcessInstancesAc
 		return columns;
 	}
 
-	/**
-	 * 状态值转换:流转中|已暂停|已结束|全部
-	 * 
-	 */
-	private Map<String, String> getStatus() {
-		Map<String, String> map = new LinkedHashMap<String, String>();
-		map.put(String.valueOf(SuspensionState.ACTIVE.getStateCode()),
-				getText("flow.instance.status.processing"));
-		map.put(String.valueOf(SuspensionState.SUSPENDED.getStateCode()),
-				getText("flow.instance.status.suspended"));
-		map.put(String.valueOf(WorkspaceServiceImpl.COMPLETE),
-				getText("flow.instance.status.finished"));
-		map.put("", getText("bc.status.all"));
-		return map;
-	}
 
-	@Override
-	protected String getGridRowLabelExpression() {
-		return "['subject']";
-	}
 
 	@Override
 	protected String[] getGridSearchFields() {
@@ -204,12 +106,6 @@ public class MyHistoricProcessInstancesAction extends HistoricProcessInstancesAc
 	@Override
 	protected String getFormActionName() {
 		return "myHistoricProcessInstance";
-	}
-
-	@Override
-	protected PageOption getHtmlPageOption() {
-		return super.getHtmlPageOption().setWidth(800).setMinWidth(400)
-				.setHeight(400).setMinHeight(300);
 	}
 
 	@Override
@@ -271,39 +167,8 @@ public class MyHistoricProcessInstancesAction extends HistoricProcessInstancesAc
 		return ac.isEmpty() ? null : ac;
 	}
 
-	@Override
-	protected Json getGridExtrasData() {
-		Json json = new Json();
-		// 状态条件
-		if (status != null && status.length() > 0)
-			json.put("status", status);
-
-		return json;
-	}
-
-	@Override
-	protected String getGridDblRowMethod() {
-		return "bc.historicProcessInstanceSelectView.open";
-	}
-
-	@Override
-	protected String getHtmlPageJs() {
-		return this.getHtmlPageNamespace()
-				+ "/historicprocessinstance/select.js"+","+
-				this.getHtmlPageNamespace() + "/historicprocessinstance/view.js";
-	}
-
-	@Override
-	protected String getHtmlPageNamespace() {
-		return this.getContextPath() + "/bc-workflow";
-	}
 
 	// ==高级搜索代码开始==
-	@Override
-	protected boolean useAdvanceSearch() {
-		return true;
-	}
-	
 	private HistoricTaskInstanceService historicTaskInstanceService;
 	
 	@Autowired
@@ -311,8 +176,6 @@ public class MyHistoricProcessInstancesAction extends HistoricProcessInstancesAc
 			HistoricTaskInstanceService historicTaskInstanceService) {
 		this.historicTaskInstanceService = historicTaskInstanceService;
 	}
-
-	public JSONArray processList;
 
 	@Override
 	protected void initConditionsFrom() throws Exception {

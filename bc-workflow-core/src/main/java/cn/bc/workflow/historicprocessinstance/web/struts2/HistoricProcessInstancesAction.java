@@ -209,7 +209,7 @@ public class HistoricProcessInstancesAction extends
 	 * 状态值转换:流转中|已暂停|已结束|全部
 	 * 
 	 */
-	private Map<String, String> getStatus() {
+	protected Map<String, String> getStatus() {
 		Map<String, String> map = new LinkedHashMap<String, String>();
 		map.put(String.valueOf(SuspensionState.ACTIVE.getStateCode()),
 				getText("flow.instance.status.processing"));
