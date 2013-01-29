@@ -1,4 +1,4 @@
-package cn.bc.workflow.todo.web.struts2;
+package cn.bc.workflow.historictaskinstance.web.struts2;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,9 +11,8 @@ import org.springframework.stereotype.Controller;
 import cn.bc.core.query.condition.Condition;
 import cn.bc.core.query.condition.impl.AndCondition;
 import cn.bc.core.query.condition.impl.InCondition;
+import cn.bc.core.query.condition.impl.IsNotNullCondition;
 import cn.bc.core.query.condition.impl.IsNullCondition;
-import cn.bc.core.query.condition.impl.OrCondition;
-import cn.bc.core.query.condition.impl.QlCondition;
 import cn.bc.identity.domain.Actor;
 import cn.bc.identity.domain.ActorRelation;
 import cn.bc.identity.service.ActorService;
@@ -22,14 +21,16 @@ import cn.bc.web.ui.html.toolbar.Toolbar;
 import cn.bc.web.ui.html.toolbar.ToolbarButton;
 
 /**
- * 部门的待办监控视图Action
+ * 部门经办监控视图Action
  * 
  * @author lbj
  * 
  */
+
 @Scope(BeanDefinition.SCOPE_PROTOTYPE)
 @Controller
-public class TodoGroupsAction extends TodoManagesAction {
+public class GroupHistoricTaskInstancesAction extends
+	HistoricTaskInstancesAction {
 	private static final long serialVersionUID = 1L;
 	private ActorService actorService;
 	
@@ -39,10 +40,31 @@ public class TodoGroupsAction extends TodoManagesAction {
 	}
 
 	@Override
+	protected String getFormActionName() {
+		return "groupHistoricTaskInstance" ;
+	}
+
+
+	@Override
+	protected Toolbar getHtmlPageToolbar() {
+		Toolbar tb = new Toolbar();
+		// 查看
+		tb.addButton(new ToolbarButton().setIcon("ui-icon-check")
+				.setText(getText("label.read"))
+				.setClick("bc.historicTaskInstanceSelectView.open"));
+
+		// 搜索按钮
+		tb.addButton(this.getDefaultSearchToolbarButton());
+
+		return tb;
+	}
+	
+
+
+	@Override
 	protected Condition getGridSpecalCondition() {
-		AndCondition ac=(AndCondition) super.getGridSpecalCondition();
-		
-		OrCondition or=new OrCondition();
+		// 状态条件
+		AndCondition ac = new AndCondition();
 		
 		List<String> ownActorCodes=new ArrayList<String>();
 		List<Actor> ownActors=this.getOwnActorCodes();
@@ -53,74 +75,14 @@ public class TodoGroupsAction extends TodoManagesAction {
 				ownActorCodes.add(a.getCode());
 			}
 		}
+		ac.add(new InCondition("a.assignee_",ownActorCodes));
+		// 结束时间不能为空
+		ac.add(new IsNotNullCondition("a.end_time_"));
 		
-		or.add(new InCondition("a.assignee_",ownActorCodes));
 		
-		if(ownActors!=null&&ownActors.size()>0){
-
-			//获取部门所有用户 其所拥有的岗位
-			List<Actor> ownActorOwnGroups = this.getOwnActorOwnGroups(ownActors);
-			
-			String ql_c="exists(select 1 from act_ru_identitylink c where c.task_id_ = a.id_ and ";
-				//候选人
-				ql_c+="(c.user_id_ in (";
-				for(String code:ownActorCodes){
-					ql_c+="'"+code+"',";
-				}
-				ql_c=ql_c.substring(0, ql_c.lastIndexOf(","));
-				ql_c+=")";
-				
-				//候选岗位
-				if (ownActorOwnGroups.size() > 0) {
-					ql_c +=" or c.group_id_ in(";
-					for(Actor a:ownActorOwnGroups){
-						ql_c+="'"+a.getCode()+"',";
-					}
-					ql_c=ql_c.substring(0, ql_c.lastIndexOf(","));
-					ql_c+=")";
-				}
-				ql_c+=")";
-			ql_c+=")";
-			
-	
-			or.add(new AndCondition(new IsNullCondition("a.assignee_"),new QlCondition(ql_c)).setAddBracket(true));
-		}
+		ac.add(new IsNullCondition("h.parent_id_"));
 		
-		ac.add(or.setAddBracket(true));
-		
-		return ac.isEmpty()?null:ac;
-	}
-
-	@Override
-	protected Toolbar getHtmlPageToolbar() {
-		Toolbar tb = new Toolbar();
-
-		// 查看按钮
-		tb.addButton(new ToolbarButton().setIcon("ui-icon-check")
-				.setText(getText("label.read"))
-				.setClick("bc.todoView.open"));
-				
-		tb.addButton(new ToolbarButton().setIcon("ui-icon-person")
-				.setText(getText("label.delegate.task"))
-				.setClick("bc.todoView.delegateTask"));
-
-		tb.addButton(new ToolbarButton().setIcon("ui-icon-flag")
-				.setText(getText("label.assign.task"))
-				.setClick("bc.todoView.assignTask"));
-
-
-		tb.addButton(Toolbar.getDefaultToolbarRadioGroup(getStatus(),
-				"status", 2, getText("title.click2changeSearchStatus")));
-
-		// 搜索按钮
-		tb.addButton(this.getDefaultSearchToolbarButton());
-
-		return tb;
-	}
-
-	@Override
-	protected String getFormActionName() {
-		return "group";
+		return ac.isEmpty() ? null : ac;
 	}
 	
 	/*获取属于当前用户拥有的指定岗位对应的上组织下的对应用户*/
@@ -175,27 +137,5 @@ public class TodoGroupsAction extends TodoManagesAction {
 		return ownActors;
 	}
 
-	/*获取属于当前用户拥有的指定岗位对应的上组织下的对应用户所拥有的岗位集合*/
-	private List<Actor> getOwnActorOwnGroups(List<Actor> users){
-		//用户拥有的岗位
-		List<Actor> ownGroups=new ArrayList<Actor>();
-		List<Actor> _ownGroups;
-		
-		//获取每一个用户拥有的岗位加入到集合中
-		for(Actor a: users){
-			_ownGroups=this.actorService.findMaster(a.getId(),
-					new Integer[] { ActorRelation.TYPE_BELONG },
-					new Integer[] { Actor.TYPE_GROUP });
-			if(_ownGroups!=null&&_ownGroups.size()>0){
-				for(Actor _a: _ownGroups){
-					if(!ownGroups.contains(_a)){
-						ownGroups.add(_a);
-					}
-				}	
-			}
-		}
-		
-		return ownGroups;
-	}
 
 }

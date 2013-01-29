@@ -24,4 +24,13 @@
 			<result name="success">/bc-workflow/historictaskinstance/conditions.jsp</result>
 		</action>
 	</package>
+	<!-- 部门经办监控 -->
+	<package name="groupHistoricTaskInstancesAction" extends="bc-default" namespace="/bc-workflow/groupHistoricTaskInstances">
+		<action name="list" class="groupHistoricTaskInstancesAction" method="list"/>
+		<action name="data" class="groupHistoricTaskInstancesAction" method="data"/>
+		<action name="paging" class="groupHistoricTaskInstancesAction" method="paging"/>
+		<action name="conditions" class="groupHistoricTaskInstancesAction" method="conditions">
+			<result name="success">/bc-workflow/historictaskinstance/conditions.jsp</result>
+		</action>
+	</package>
 </struts>
