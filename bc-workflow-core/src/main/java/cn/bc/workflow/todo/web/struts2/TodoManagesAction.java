@@ -17,8 +17,11 @@ import org.springframework.stereotype.Controller;
 import cn.bc.core.query.condition.Condition;
 import cn.bc.core.query.condition.Direction;
 import cn.bc.core.query.condition.impl.AndCondition;
+import cn.bc.core.query.condition.impl.EqualsCondition;
+import cn.bc.core.query.condition.impl.InCondition;
 import cn.bc.core.query.condition.impl.IsNullCondition;
 import cn.bc.core.query.condition.impl.OrderCondition;
+import cn.bc.core.util.StringUtils;
 import cn.bc.db.jdbc.RowMapper;
 import cn.bc.db.jdbc.SqlObject;
 import cn.bc.identity.web.SystemContext;
@@ -34,7 +37,6 @@ import cn.bc.web.ui.html.grid.TextColumn4MapKey;
 import cn.bc.web.ui.html.page.PageOption;
 import cn.bc.web.ui.html.toolbar.Toolbar;
 import cn.bc.web.ui.html.toolbar.ToolbarButton;
-import cn.bc.workflow.service.WorkspaceServiceImpl;
 import cn.bc.workflow.todo.service.TodoService;
 
 /**
@@ -47,6 +49,8 @@ import cn.bc.workflow.todo.service.TodoService;
 @Controller
 public class TodoManagesAction extends ViewAction<Map<String, Object>>{
 	private static final long serialVersionUID = 1L;
+	
+	public String status;
 	
 	@Override
 	public boolean isReadonly() {
@@ -124,6 +128,15 @@ public class TodoManagesAction extends ViewAction<Map<String, Object>>{
 	protected Condition getGridSpecalCondition() {
 		// 状态条件
 		AndCondition ac = new AndCondition();
+		//状态判断
+		if (status != null && status.length() > 0) {
+			String[] ss = status.split(",");
+			if(ss.length==1){
+				ac.add(new EqualsCondition("b.suspension_state_",Integer.valueOf(ss[0])));
+			}else{
+				ac.add(new InCondition("b.suspension_state_", StringUtils.stringArray2IntegerArray(ss)));
+			}
+		}
 		
 		ac.add(new IsNullCondition("b.parent_id_"));
 
@@ -150,6 +163,9 @@ public class TodoManagesAction extends ViewAction<Map<String, Object>>{
 					.setText(getText("label.assign.task"))
 					.setClick("bc.todoView.assignTask"));
 		}
+		
+		tb.addButton(Toolbar.getDefaultToolbarRadioGroup(this.getStatus(),
+				"status", 2, getText("title.click2changeSearchStatus")));
 
 		// 搜索按钮
 		tb.addButton(getDefaultSearchToolbarButton());
@@ -164,17 +180,30 @@ public class TodoManagesAction extends ViewAction<Map<String, Object>>{
 	}
 	
 	/**
-	 * 流程状态值转换:流转中|已暂停|已结束|全部
+	 * 流程状态值转换:流转中|已暂停|全部
 	 * 
 	 */
-	private Map<String, String> getStatus() {
+	protected Map<String, String> getProcessStatus() {
 		Map<String, String> map = new LinkedHashMap<String, String>();
 		map.put(String.valueOf(SuspensionState.ACTIVE.getStateCode()),
 				getText("flow.instance.status.processing"));
 		map.put(String.valueOf(SuspensionState.SUSPENDED.getStateCode()),
 				getText("flow.instance.status.suspended"));
-		map.put(String.valueOf(WorkspaceServiceImpl.COMPLETE),
-				getText("flow.instance.status.finished"));
+		map.put("", getText("bc.status.all"));
+		return map;
+	}
+	
+	
+	/**
+	 * 任务状态值转换:处理中|已暂停|全部
+	 * 
+	 */
+	protected Map<String, String> getStatus() {
+		Map<String, String> map = new LinkedHashMap<String, String>();
+		map.put(String.valueOf(SuspensionState.ACTIVE.getStateCode()),
+				getText("flow.task.status.doing"));
+		map.put(String.valueOf(SuspensionState.SUSPENDED.getStateCode()),
+				getText("flow.instance.status.suspended"));
 		map.put("", getText("bc.status.all"));
 		return map;
 	}
@@ -187,8 +216,7 @@ public class TodoManagesAction extends ViewAction<Map<String, Object>>{
 		//流程状态
 		columns.add(new TextColumn4MapKey("b.suspension_state_", "status",
 				getText("flow.task.pstatus"), 80).setSortable(true)
-				.setValueFormater(new EntityStatusFormater(getStatus())));
-
+				.setValueFormater(new EntityStatusFormater(getProcessStatus())));
 		// 主题
 		columns.add(new TextColumn4MapKey(
 				"getProcessInstanceSubject(a.proc_inst_id_)", "subject",
@@ -197,7 +225,7 @@ public class TodoManagesAction extends ViewAction<Map<String, Object>>{
 
 		columns.add(new TextColumn4MapKey("a.name_", "taskName",
 				getText("todo.personal.artName"), 250).setSortable(true)
-				.setUseTitleFromLabel(true)
+				.setUseTitleFromLabel(false)
 				.setValueFormater(new AbstractFormater<String>() {
 
 					@Override
@@ -210,18 +238,19 @@ public class TodoManagesAction extends ViewAction<Map<String, Object>>{
 							Date d2 = new Date();
 							flag = d1.before(d2);
 						}
+						
 						if("2".equals(task.get("type").toString())){//岗位任务
 							if(flag){
-								return "<div style=\"\"><span style=\"float: left;\" title=\"此任务已过期\" class=\"ui-icon ui-icon-clock\"></span>" +
-										"<span style=\"float: left;\" title=\"岗位任务\" class=\"ui-icon ui-icon-person\"></span>"
+								return "<div title=\"此任务已过期,岗位任务\"><span style=\"float: left;\" class=\"ui-icon ui-icon-clock\"></span>" +
+										"<span style=\"float: left;\" class=\"ui-icon ui-icon-person\"></span>"
 										+"&nbsp;"+"<span>"+task.get("taskName")+"</span>"+"</div>";
 							}else{
-								return "<div style=\"\"><span style=\"float: left;\" title=\"岗位任务\" class=\"ui-icon ui-icon-person\"></span>"
+								return "<div title=\"岗位任务\"><span style=\"float: left;\" class=\"ui-icon ui-icon-person\"></span>"
 										+"&nbsp;"+"<span>"+task.get("taskName")+"</span>"+"</div>";
 							}
 						}else{//个人任务
 							if(flag){
-								return "<div style=\"\"><span style=\"float: left;\" title=\"此任务已过期\" class=\"ui-icon ui-icon-clock\"></span>"
+								return "<div title=\"此任务已过期\"><span style=\"float: left;\" class=\"ui-icon ui-icon-clock\"></span>"
 										+"&nbsp;"+"<span>"+task.get("taskName")+"</span>"+"</div>";
 							}else{
 								return (String) task.get("taskName");
@@ -237,6 +266,7 @@ public class TodoManagesAction extends ViewAction<Map<String, Object>>{
 		columns.add(new TextColumn4MapKey("art.due_date_", "dueDate",
 				getText("todo.personal.dueDate"), 140).setSortable(true)
 				.setValueFormater(new CalendarFormater("yyyy-MM-dd HH:mm:ss")));
+		
 		// 创建时间
 		columns.add(new TextColumn4MapKey("art.create_time_", "createTime",
 				getText("todo.personal.createTime"), 140).setSortable(true)
@@ -246,10 +276,12 @@ public class TodoManagesAction extends ViewAction<Map<String, Object>>{
 				getText("todo.personal.groupIds"), 150).setUseTitleFromLabel(true));
 		// 候选人
 		columns.add(new TextColumn4MapKey("users", "users",
-				getText("todo.personal.userIds"), 100).setUseTitleFromLabel(true));
+				getText("todo.personal.userIds")).setUseTitleFromLabel(true));
 		// 分类
 		columns.add(new TextColumn4MapKey("d.name_", "processName",
-				getText("todo.personal.arpName")).setSortable(true).setUseTitleFromLabel(true));
+				getText("todo.personal.arpName"),180)
+				.setSortable(true).setUseTitleFromLabel(true));
+		
 		columns.add(new HiddenColumn4MapKey("procInstId", "procInstId"));
 		columns.add(new HiddenColumn4MapKey("type", "type"));
 		return columns;
