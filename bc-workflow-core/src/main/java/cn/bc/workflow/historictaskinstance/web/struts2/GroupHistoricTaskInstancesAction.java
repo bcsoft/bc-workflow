@@ -52,13 +52,20 @@ public class GroupHistoricTaskInstancesAction extends
 		tb.addButton(new ToolbarButton().setIcon("ui-icon-check")
 				.setText(getText("label.read"))
 				.setClick("bc.historicTaskInstanceSelectView.open"));
-
+		tb.addButton(new ToolbarButton().setIcon("ui-icon-search")
+				.setText(getText("flow.task.flow"))
+				.setClick("bc.groupHistoricTaskInstanceSelectView.viewflow"));
 		// 搜索按钮
 		tb.addButton(this.getDefaultSearchToolbarButton());
 
 		return tb;
 	}
 	
+	@Override
+	protected String getHtmlPageJs() {
+		return this.getHtmlPageNamespace() + "/historictaskinstance/select.js,"
+				+this.getHtmlPageNamespace() + "/historictaskinstance/group/select.js";
+	}
 
 
 	@Override
