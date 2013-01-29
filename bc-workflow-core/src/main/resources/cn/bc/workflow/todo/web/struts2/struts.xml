@@ -27,6 +27,14 @@
 			<result name="success">/bc-workflow/todo/sidebar.jsp</result>
 		</action>
 		
+		<!-- 部门待办监控 -->
+		<action name="groups/list" class="todoGroupsAction" method="list"/>
+		<action name="groups/paging" class="todoGroupsAction" method="paging"/>
+		<action name="groups/data" class="todoGroupsAction" method="data"/>
+		<action name="groups/conditions" class="todoGroupsAction" method="conditions">
+			<result name="success">/bc-workflow/todo/conditions.jsp</result>
+		</action>
+		
 	</package>
 	
 </struts>
