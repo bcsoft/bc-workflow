@@ -46,205 +46,213 @@ public class Attach4ProcessListener implements ExecutionListener {
 	private static final Log logger = LogFactory
 			.getLog(Attach4ProcessListener.class);
 
-	private Expression attachCode; //附件编码 多个逗号链接
-	private Expression resourceCode; //流程资源编码 多个逗号链接
+	public Expression attachCode; // 附件编码 多个逗号链接
+	public Expression resourceCode; // 流程资源编码 多个逗号链接
 
 	public void notify(DelegateExecution execution) {
 		if (logger.isDebugEnabled()) {
 			logger.debug("attachCode="
-					+ (attachCode != null ? attachCode.getExpressionText() : null));
+					+ (attachCode != null ? attachCode.getExpressionText()
+							: null));
 			logger.debug("resourceCode="
-					+ (resourceCode != null ? resourceCode.getExpressionText() : null));
-			logger.debug("processInstanceId=" 
+					+ (resourceCode != null ? resourceCode.getExpressionText()
+							: null));
+			logger.debug("processInstanceId="
 					+ execution.getProcessInstanceId());
 			logger.debug("eventName=" + execution.getEventName());
 		}
-		
-		if(attachCode != null){//编码不为空,根据编码从模板模块查找附件
-			String[] attachCodes=attachCode.getExpressionText().split(",");
-			for(String code:attachCodes){
-				addAttach4Template(code,execution);
+
+		if (attachCode != null) {// 编码不为空,根据编码从模板模块查找附件
+			String[] attachCodes = attachCode.getExpressionText().split(",");
+			for (String code : attachCodes) {
+				addAttach4Template(code, execution);
 			}
 
 		}
-		
-		if(resourceCode != null){//流程资源编码不为空,根据流程资源编码从流程资源获取信息生成附件
-			String[] resourceCodes=resourceCode.getExpressionText().split(",");
-			for(String code:resourceCodes){
-				addAttach4Resource(code,execution);
+
+		if (resourceCode != null) {// 流程资源编码不为空,根据流程资源编码从流程资源获取信息生成附件
+			String[] resourceCodes = resourceCode.getExpressionText()
+					.split(",");
+			for (String code : resourceCodes) {
+				addAttach4Resource(code, execution);
 			}
 		}
 	}
 
-	private void addAttach4Resource(String resourceCode, DelegateExecution execution) {
-		RepositoryService repositoryService = SpringUtils.getBean(RepositoryService.class);
-		
+	protected void addAttach4Resource(String resourceCode,
+			DelegateExecution execution) {
+		RepositoryService repositoryService = SpringUtils
+				.getBean(RepositoryService.class);
+
 		ExecutionEntity e = (ExecutionEntity) execution;
-		
-		//获取部署实例对象
+
+		// 获取部署实例对象
 		ProcessDefinition pd = repositoryService.createProcessDefinitionQuery()
 				.processDefinitionId(e.getProcessDefinitionId()).singleResult();
-			
-		DeployResource dr; //流程资源
-		if(pd != null){
-			DeployService deployService = SpringUtils.getBean(
-					"deployService", DeployService.class);
-			
+
+		DeployResource dr; // 流程资源
+		if (pd != null) {
+			DeployService deployService = SpringUtils.getBean("deployService",
+					DeployService.class);
+
 			dr = deployService.findDeployResourceByDmIdAndwfCodeAndresCode(
-					pd.getDeploymentId(),
-					pd.getKey(),
-					resourceCode);
-		}else{
+					pd.getDeploymentId(), pd.getKey(), resourceCode);
+		} else {
 			throw new CoreException("通过流程定义id查找流程定义对象为空!");
 		}
-		
-		if(dr == null)
-			throw new CoreException("没有找到编码未“"+ resourceCode + "”的附件");
-			
+
+		if (dr == null)
+			throw new CoreException("没有找到编码未“" + resourceCode + "”的附件");
+
 		// 模板文件扩展名
-		String extension=StringUtils.getFilenameExtension(dr.getPath());
+		String extension = StringUtils.getFilenameExtension(dr.getPath());
 		// 声明当前日期时间
 		Calendar now = Calendar.getInstance();
 		// 文件存储的相对路径（年月），避免超出目录内文件数的限制
 		String subFolder = new SimpleDateFormat("yyyyMM").format(now.getTime());
 		// 上传文件存储的绝对路径
-		String appRealDir=Attach.DATA_REAL_PATH+"/"+FlowAttach.DATA_SUB_PATH;
+		String appRealDir = Attach.DATA_REAL_PATH + "/"
+				+ FlowAttach.DATA_SUB_PATH;
 		// 所保存文件所在的目录的绝对路径名
-		String realFileDir=appRealDir+"/"+subFolder;
+		String realFileDir = appRealDir + "/" + subFolder;
 		// 不含路径的文件名
-		String fileName = new SimpleDateFormat("yyyyMMddHHmmssSSSS").format(now.getTime()) + "." + extension;
+		String fileName = new SimpleDateFormat("yyyyMMddHHmmssSSSS").format(now
+				.getTime()) + "." + extension;
 		// 所保存文件的绝对路径名
-		String realFilePath=realFileDir+"/"+fileName;
+		String realFilePath = realFileDir + "/" + fileName;
 		// 构建文件要保存到的目录
 		File _fileDir = new File(realFileDir);
 		if (!_fileDir.exists()) {
-			if (logger.isFatalEnabled()) 
+			if (logger.isFatalEnabled())
 				logger.fatal("mkdir=" + realFileDir);
 			_fileDir.mkdirs();
 		}
 		// 直接复制附件
 		if (logger.isInfoEnabled())
 			logger.info("pure copy file");
-		//deploy/resource目录下的指定文件复制到attachment目录下
-		try{
+		// deploy/resource目录下的指定文件复制到attachment目录下
+		try {
 			FileCopyUtils.copy(dr.getInputStream(), new FileOutputStream(
 					realFilePath));
-		}catch (Exception ex) {
+		} catch (Exception ex) {
 			logger.error(ex.getMessage(), ex);
 		}
-		
-		// 插入流程附件记录信息	
+
+		// 插入流程附件记录信息
 		FlowAttach flowAttach = new FlowAttach();
 		IdGeneratorService idGeneratorService = SpringUtils.getBean(
 				"idGeneratorService", IdGeneratorService.class);
 		flowAttach.setUid(idGeneratorService.next(FlowAttach.ATTACH_TYPE));
-		flowAttach.setType(FlowAttach.TYPE_ATTACHMENT); //类型：1-附件，2-意见
-		flowAttach.setPid(execution.getProcessInstanceId()); //流程id
-		String path = subFolder+"/"+fileName; //文件夹加文件名路径
-		if(path.length() > 0){
-			flowAttach.setPath(path); //附件路径，物理文件保存的相对路径
-			flowAttach
-					.setExt(extension); // 扩展名
+		flowAttach.setType(FlowAttach.TYPE_ATTACHMENT); // 类型：1-附件，2-意见
+		flowAttach.setPid(execution.getProcessInstanceId()); // 流程id
+		String path = subFolder + "/" + fileName; // 文件夹加文件名路径
+		if (path.length() > 0) {
+			flowAttach.setPath(path); // 附件路径，物理文件保存的相对路径
+			flowAttach.setExt(extension); // 扩展名
 		}
-		flowAttach.setSubject(dr.getSubject()); //标题
-		flowAttach.setCommon(true); //公共信息
+		flowAttach.setSubject(dr.getSubject()); // 标题
+		flowAttach.setCommon(true); // 公共信息
 		flowAttach.setSize(dr.getSize());
-		
-		flowAttach.setFormatted(dr.isFormatted());//附件是否需要格式化,类型为意见时字段为空
-		
-		Set<TemplateParam> params = new HashSet<TemplateParam>();//设置模板参数
-		for(TemplateParam t : dr.getParams()){
+
+		flowAttach.setFormatted(dr.isFormatted());// 附件是否需要格式化,类型为意见时字段为空
+
+		Set<TemplateParam> params = new HashSet<TemplateParam>();// 设置模板参数
+		for (TemplateParam t : dr.getParams()) {
 			params.add(t);
 		}
 		flowAttach.setParams(params);
-		
-		//创建人,最后修改人信息
+
+		// 创建人,最后修改人信息
 		SystemContext context = SystemContextHolder.get();
 		flowAttach.setAuthor(context.getUserHistory());
 		flowAttach.setModifier(context.getUserHistory());
 		flowAttach.setFileDate(Calendar.getInstance());
 		flowAttach.setModifiedDate(Calendar.getInstance());
-		
+
 		FlowAttachService flowAttachService = SpringUtils.getBean(
 				"flowAttachService", FlowAttachService.class);
 		flowAttachService.save(flowAttach);
 	}
 
-	private void addAttach4Template(String attachCode,DelegateExecution execution) {
+	private void addAttach4Template(String attachCode,
+			DelegateExecution execution) {
 		Template template;
 		TemplateService templateService = SpringUtils.getBean(
 				"templateService", TemplateService.class);
-		
+
 		template = templateService.loadByCode(attachCode);
 		if (template == null) {
-			throw new CoreException("没有找到编码为“"+ attachCode+ "”的附件");
-		}else{
+			throw new CoreException("没有找到编码为“" + attachCode + "”的附件");
+		} else {
 			// 模板文件扩展名
-			String extension=StringUtils.getFilenameExtension(template.getPath());
+			String extension = StringUtils.getFilenameExtension(template
+					.getPath());
 			// 声明当前日期时间
 			Calendar now = Calendar.getInstance();
 			// 文件存储的相对路径（年月），避免超出目录内文件数的限制
-			String subFolder = new SimpleDateFormat("yyyyMM").format(now.getTime());
+			String subFolder = new SimpleDateFormat("yyyyMM").format(now
+					.getTime());
 			// 上传文件存储的绝对路径
-			String appRealDir=Attach.DATA_REAL_PATH+"/"+FlowAttach.DATA_SUB_PATH;
+			String appRealDir = Attach.DATA_REAL_PATH + "/"
+					+ FlowAttach.DATA_SUB_PATH;
 			// 所保存文件所在的目录的绝对路径名
-			String realFileDir=appRealDir+"/"+subFolder;
+			String realFileDir = appRealDir + "/" + subFolder;
 			// 不含路径的文件名
-			String fileName = new SimpleDateFormat("yyyyMMddHHmmssSSSS").format(now.getTime()) + "." + extension;
+			String fileName = new SimpleDateFormat("yyyyMMddHHmmssSSSS")
+					.format(now.getTime()) + "." + extension;
 			// 所保存文件的绝对路径名
-			String realFilePath=realFileDir+"/"+fileName;
+			String realFilePath = realFileDir + "/" + fileName;
 			// 构建文件要保存到的目录
 			File _fileDir = new File(realFileDir);
 			if (!_fileDir.exists()) {
-				if (logger.isFatalEnabled()) 
+				if (logger.isFatalEnabled())
 					logger.fatal("mkdir=" + realFileDir);
 				_fileDir.mkdirs();
 			}
 			// 直接复制附件
 			if (logger.isInfoEnabled())
 				logger.info("pure copy file");
-			//从template目录下的指定文件复制到attachment目录下
-			try{
-				FileCopyUtils.copy(template.getInputStream(), new FileOutputStream(
-						realFilePath));
-			}catch (Exception ex) {
+			// 从template目录下的指定文件复制到attachment目录下
+			try {
+				FileCopyUtils.copy(template.getInputStream(),
+						new FileOutputStream(realFilePath));
+			} catch (Exception ex) {
 				logger.error(ex.getMessage(), ex);
 			}
-			
-			// 插入流程附件记录信息	
+
+			// 插入流程附件记录信息
 			FlowAttach flowAttach = new FlowAttach();
 			IdGeneratorService idGeneratorService = SpringUtils.getBean(
 					"idGeneratorService", IdGeneratorService.class);
 			flowAttach.setUid(idGeneratorService.next(FlowAttach.ATTACH_TYPE));
-			flowAttach.setType(FlowAttach.TYPE_ATTACHMENT); //类型：1-附件，2-意见
-			flowAttach.setPid(execution.getProcessInstanceId()); //流程id
-			String path = subFolder+"/"+fileName; //文件夹加文件名路径
-			if(path.length() > 0){
-				flowAttach.setPath(path); //附件路径，物理文件保存的相对路径
-				flowAttach
-						.setExt(extension); // 扩展名
+			flowAttach.setType(FlowAttach.TYPE_ATTACHMENT); // 类型：1-附件，2-意见
+			flowAttach.setPid(execution.getProcessInstanceId()); // 流程id
+			String path = subFolder + "/" + fileName; // 文件夹加文件名路径
+			if (path.length() > 0) {
+				flowAttach.setPath(path); // 附件路径，物理文件保存的相对路径
+				flowAttach.setExt(extension); // 扩展名
 			}
-			flowAttach.setSubject(template.getSubject()); //标题
-			flowAttach.setCommon(true); //公共信息
+			flowAttach.setSubject(template.getSubject()); // 标题
+			flowAttach.setCommon(true); // 公共信息
 			flowAttach.setDesc(template.getDesc());
 			flowAttach.setSize(template.getSize());
-			
-			flowAttach.setFormatted(true);//附件是否需要格式化,类型为意见时字段为空
-			
-			Set<TemplateParam> params = new HashSet<TemplateParam>();//模板参数
-			for(TemplateParam t : template.getParams()){
+
+			flowAttach.setFormatted(true);// 附件是否需要格式化,类型为意见时字段为空
+
+			Set<TemplateParam> params = new HashSet<TemplateParam>();// 模板参数
+			for (TemplateParam t : template.getParams()) {
 				params.add(t);
 			}
 			flowAttach.setParams(params);
-			//flowAttach.setTemplateId(template.getId());//模板id
-			
-			//创建人,最后修改人信息
+			// flowAttach.setTemplateId(template.getId());//模板id
+
+			// 创建人,最后修改人信息
 			SystemContext context = SystemContextHolder.get();
 			flowAttach.setAuthor(context.getUserHistory());
 			flowAttach.setModifier(context.getUserHistory());
 			flowAttach.setFileDate(Calendar.getInstance());
 			flowAttach.setModifiedDate(Calendar.getInstance());
-			
+
 			FlowAttachService flowAttachService = SpringUtils.getBean(
 					"flowAttachService", FlowAttachService.class);
 			flowAttachService.save(flowAttach);
