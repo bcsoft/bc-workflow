@@ -21,7 +21,7 @@ import cn.bc.core.util.SpringUtils;
  * @author zxr
  * 
  */
-public class UpdateModuleInfo4FlowListener extends ExcutionLogListener {
+public class UpdateModuleInfoOfficial4FlowListener extends ExcutionLogListener {
 	protected final Log logger = LogFactory.getLog(getClass());
 
 	/**
