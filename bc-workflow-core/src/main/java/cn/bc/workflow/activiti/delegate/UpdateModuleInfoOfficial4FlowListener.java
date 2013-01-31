@@ -57,9 +57,10 @@ public class UpdateModuleInfoOfficial4FlowListener extends ExcutionLogListener {
 				Object isExecute = execution.getVariable(execute.substring(
 						execute.indexOf("{") + 1, execute.indexOf("}")));
 				// 如果为true就执行
-				if (isExecute.toString().equals("true")) {
-					executeUpdateMethod(execution);
-
+				if (isExecute != null) {
+					if (isExecute.toString().equals("true")) {
+						executeUpdateMethod(execution);
+					}
 				}
 			}
 		} else {
