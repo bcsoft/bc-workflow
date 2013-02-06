@@ -5,7 +5,6 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Set;
 
 import org.activiti.engine.repository.Deployment;
 import org.activiti.engine.task.Task;
@@ -252,17 +251,22 @@ public class WorkflowAction extends AbstractBaseAction {
 				throw new CoreException("globalKeys is null");
 			}
 			
-			Map<String,Object> globalValues=this.workflowService.findGlobalValue(id,globalKeys.split(","));
+			String[] _globalKeys=this.globalKeys.split(",");
+			
+			Map<String,Object> globalValues=this.workflowService.findGlobalValue(id,_globalKeys);
 
 			if(globalValues==null||globalValues.size()==0)
 				return JSON;
-			
-			Set<String> keys=globalValues.keySet();
-			
+
 			Json o=new Json();
-			for(String key:keys){
-				o.put(key, globalValues.get(key));
+			
+			for(String key:_globalKeys){
+				//sql返回的key值都为小写
+				if(globalValues.containsKey(key.toLowerCase())){
+					o.put(key, globalValues.get(key.toLowerCase()));
+				}
 			}
+
 			// 返回信息
 			json = o.toString();
 		} catch (Exception e) {
