@@ -27,6 +27,7 @@
 		<action name="completeTask" class="workflowAction" method="completeTask" />
 		<action name="delegateTask" class="workflowAction" method="delegateTask" />
 		<action name="assignTask" class="workflowAction" method="assignTask" />
+		<action name="findGlobalValues" class="workflowAction" method="findGlobalValues" />
 		<action name="diagram" class="workflowAction" method="diagram">
 			<result name="success" type="stream">
 				<!-- 下载文件类型定义 -->

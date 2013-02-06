@@ -239,6 +239,42 @@ public class WorkflowAction extends AbstractBaseAction {
 
 		return JSON;
 	}
+	
+	public String globalKeys;//多个逗号链接
+	
+	public String findGlobalValues() throws Exception {	
+		try {
+			// id为流程的id
+			Assert.assertNotEmpty(id);
+			
+			if(globalKeys==null||globalKeys.length()==0){
+				throw new CoreException("globalKeys is null");
+			}
+			
+			String[] _globalKeys=this.globalKeys.split(",");
+			
+			Map<String,Object> globalValues=this.workflowService.findGlobalValue(id,_globalKeys);
+
+			if(globalValues==null||globalValues.size()==0)
+				return JSON;
+
+			Json o=new Json();
+			
+			for(String key:_globalKeys){
+				//sql返回的key值都为小写
+				if(globalValues.containsKey(key.toLowerCase())){
+					o.put(key, globalValues.get(key.toLowerCase()));
+				}
+			}
+
+			// 返回信息
+			json = o.toString();
+		} catch (Exception e) {
+			json = createFailureMsg(e).toString();
+		}
+
+		return JSON;
+	}
 
 	/**
 	 * 根据表单数据构建相应的流程变量

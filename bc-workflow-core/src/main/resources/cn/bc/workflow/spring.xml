@@ -12,7 +12,8 @@
         http://www.springframework.org/schema/aop
         http://www.springframework.org/schema/aop/spring-aop-3.0.xsd">
 	<!-- WorkFlowService 配置 -->
-	<bean id="workflowService" class="cn.bc.workflow.service.WorkflowServiceImpl" />
+	<bean id="workflowDao" class="cn.bc.workflow.dao.hibernate.jpa.WorkflowDaoImpl"/>
+	<bean id="workflowService" class="cn.bc.workflow.service.WorkflowServiceImpl"/>
 	<tx:advice id="workflowServiceTxAdvice" transaction-manager="transactionManager">
 		<tx:attributes>
 			<tx:method name="deploy*" propagation="REQUIRED" read-only="false" />

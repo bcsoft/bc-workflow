@@ -45,6 +45,7 @@ import cn.bc.identity.web.SystemContextHolder;
 import cn.bc.template.domain.Template;
 import cn.bc.template.service.TemplateService;
 import cn.bc.workflow.activiti.ActivitiUtils;
+import cn.bc.workflow.dao.WorkflowDao;
 import cn.bc.workflow.deploy.domain.Deploy;
 import cn.bc.workflow.deploy.domain.DeployResource;
 import cn.bc.workflow.deploy.service.DeployService;
@@ -72,6 +73,13 @@ public class WorkflowServiceImpl implements WorkflowService {
 	private HistoryService historyService;
 	private ActorService actorService;
 	private DeployService deployService;
+	
+	private WorkflowDao workflowDao;
+
+	@Autowired
+	public void setWorkflowtDao(WorkflowDao workflowDao) {
+		this.workflowDao = workflowDao;
+	}
 
 	@Autowired
 	public void setActorService(
@@ -1020,6 +1028,10 @@ public class WorkflowServiceImpl implements WorkflowService {
 
 		// 返回流程实例的id
 		return pi.getProcessInstanceId();
+	}
+
+	public Map<String, Object> findGlobalValue(String pid, String[] valueKeys) {
+		return this.workflowDao.findGlobalValue(pid, valueKeys);
 	}
 
 
