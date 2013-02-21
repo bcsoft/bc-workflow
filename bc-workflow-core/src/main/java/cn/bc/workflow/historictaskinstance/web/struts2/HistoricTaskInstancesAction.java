@@ -52,6 +52,14 @@ public class HistoricTaskInstancesAction extends
 		ViewAction<Map<String, Object>> {
 	private static final long serialVersionUID = 1L;
 	public String status ;
+	
+	protected HistoricTaskInstanceService historicTaskInstanceService;
+
+	@Autowired
+	public void setHistoricTaskInstanceService(
+			HistoricTaskInstanceService historicTaskInstanceService) {
+		this.historicTaskInstanceService = historicTaskInstanceService;
+	}
 
 	@Override
 	public boolean isReadonly() {
@@ -66,31 +74,16 @@ public class HistoricTaskInstancesAction extends
 	protected OrderCondition getGridOrderCondition() {
 		return new OrderCondition("a.start_time_", Direction.Desc);
 	}
-	
-	/**
-	 * select a.id_,c.name_ as category,a.name_ as name,a.start_time_,a.end_time_,a.assignee_,a.duration_,a.proc_inst_id_
-		,a.task_def_key_,b.end_time_ as p_end_time,a.due_date_ as due_date,d.name as aname
-		,getProcessInstanceSubject(a.proc_inst_id_) as subject
-		,h.suspension_state_ pstatus
-		from act_hi_taskinst a
-		inner join act_hi_procinst b on b.proc_inst_id_=a.proc_inst_id_
-		inner join act_re_procdef c on c.id_=a.proc_def_id_
-		left join act_ru_execution h on h.proc_inst_id_ = a.proc_inst_id_
-		left join bc_identity_actor d on d.code=a.assignee_ 
-		where h.parent_id_ is null ORDER BY a.end_time_ desc;
-	 * 
-	 * 
-	 */
 
 	@Override
 	protected SqlObject<Map<String, Object>> getSqlObject() {
 		SqlObject<Map<String, Object>> sqlObject = new SqlObject<Map<String, Object>>();
 		// 构建查询语句,where和order by不要包含在sql中(要统一放到condition中)
 		StringBuffer sql = new StringBuffer();
-		sql.append("select a.id_,c.name_ as category,a.name_ as name,a.start_time_,a.end_time_,a.duration_,a.proc_inst_id_");
+		sql.append("select a.id_,c.name_ as procinstname,a.name_ as name,a.start_time_,a.end_time_,a.duration_,a.proc_inst_id_");
 		sql.append(",a.task_def_key_,b.end_time_ as p_end_time,a.due_date_ as due_date,d.name as receiver");
 		sql.append(",getProcessInstanceSubject(a.proc_inst_id_) as subject");
-		sql.append(",h.suspension_state_ pstatus");
+		sql.append(",h.suspension_state_ pstatus,c.key_ procinstkey");
 		sql.append(" from act_hi_taskinst a");
 		sql.append(" inner join act_hi_procinst b on b.proc_inst_id_=a.proc_inst_id_");
 		sql.append(" inner join act_re_procdef c on c.id_=a.proc_def_id_");
@@ -107,7 +100,7 @@ public class HistoricTaskInstancesAction extends
 				Map<String, Object> map = new HashMap<String, Object>();
 				int i = 0;
 				map.put("id", rs[i++]);
-				map.put("category", rs[i++]);
+				map.put("procinstname", rs[i++]);
 				map.put("name", rs[i++]);
 				map.put("start_time", rs[i++]);
 				map.put("end_time", rs[i++]);
@@ -119,6 +112,7 @@ public class HistoricTaskInstancesAction extends
 				map.put("receiver", rs[i++]);
 				map.put("subject", rs[i++]);
 				map.put("pstatus", rs[i++]);
+				map.put("procinstkey", rs[i++]);
 
 				// 根据结束时间取得状态
 				if (map.get("end_time") != null) {
@@ -195,7 +189,7 @@ public class HistoricTaskInstancesAction extends
 		columns.add(new TextColumn4MapKey("a.duration_", "frmDuration",
 				getText("flow.task.duration"), 80).setSortable(true));
 		// 流程
-		columns.add(new TextColumn4MapKey("c.name_", "category",
+		columns.add(new TextColumn4MapKey("c.name_", "procinstname",
 				getText("flow.task.category")).setSortable(true)
 				.setUseTitleFromLabel(true));
 		//流程状态
@@ -205,7 +199,11 @@ public class HistoricTaskInstancesAction extends
 
 		columns.add(new TextColumn4MapKey("a.task_def_key_", "taskdefkey",
 				"任务key值", 80));
-		columns.add(new HiddenColumn4MapKey("procinstid", "procinstid"));
+		columns.add(new HiddenColumn4MapKey("procinstId", "procinstid"));
+		columns.add(new HiddenColumn4MapKey("procinstName", "procinstname"));
+		columns.add(new HiddenColumn4MapKey("procinstKey", "procinstkey"));
+		columns.add(new HiddenColumn4MapKey("name", "name"));
+		columns.add(new HiddenColumn4MapKey("subject", "subject"));
 		return columns;
 	}
 
@@ -238,7 +236,6 @@ public class HistoricTaskInstancesAction extends
 		tb.addButton(new ToolbarButton().setIcon("ui-icon-check")
 				.setText(getText("label.read"))
 				.setClick("bc.historicTaskInstanceSelectView.open"));
-		
 		
 		tb.addButton(Toolbar.getDefaultToolbarRadioGroup(this.getStatus(),
 				"status",2,
@@ -318,7 +315,7 @@ public class HistoricTaskInstancesAction extends
 
 	@Override
 	protected String getHtmlPageJs() {
-		return this.getHtmlPageNamespace() + "/historictaskinstance/select.js";
+		return this.getHtmlPageNamespace() + "/historictaskinstance/view.js";
 	}
 
 	@Override
@@ -330,14 +327,6 @@ public class HistoricTaskInstancesAction extends
 	@Override
 	protected boolean useAdvanceSearch() {
 		return true;
-	}
-
-	private HistoricTaskInstanceService historicTaskInstanceService;
-	
-	@Autowired
-	public void setHistoricTaskInstanceService(
-			HistoricTaskInstanceService historicTaskInstanceService) {
-		this.historicTaskInstanceService = historicTaskInstanceService;
 	}
 
 	public JSONArray processList;
@@ -368,4 +357,21 @@ public class HistoricTaskInstancesAction extends
 	}
 	// ==高级搜索代码结束==
 
+	
+	public String startFlowKey;//流程的key
+	public String processData;/* json格式 { 
+									procinstId:流程实例id,
+									procinstName:流程实例名称,
+									procinstKey:流程Key,
+									procinstTaskName:任务名称,
+									procinstTaskId:任务id  }*/
+	
+	public String startFlow() throws Exception {
+		Json json=new Json();
+		this.historicTaskInstanceService.doStartFlow(this.startFlowKey, this.processData);
+		json.put("success", true);
+		this.json=json.toString();
+		return "json";
+	}
+	
 }

@@ -4,12 +4,15 @@
 package cn.bc.workflow.historictaskinstance.service;
 
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import cn.bc.core.util.JsonUtils;
 import cn.bc.workflow.historictaskinstance.dao.HistoricTaskInstanceDao;
+import cn.bc.workflow.service.WorkflowService;
 
 /**
  * 任务监控Service的实现
@@ -20,11 +23,17 @@ public class HistoricTaskInstanceServiceImpl implements HistoricTaskInstanceServ
 	protected final Log logger = LogFactory.getLog(getClass());
 
 	private HistoricTaskInstanceDao historicTaskInstanceDao;
+	private WorkflowService workflowService;
 	
 	@Autowired
 	public void setHistoricTaskInstanceDao(
 			HistoricTaskInstanceDao historicTaskInstanceDao) {
 		this.historicTaskInstanceDao = historicTaskInstanceDao;
+	}
+	
+	@Autowired
+	public void setWorkflowService(WorkflowService workflowService) {
+		this.workflowService = workflowService;
 	}
 
 	public List<String> findProcessNames(String account, boolean isDone) {
@@ -41,6 +50,16 @@ public class HistoricTaskInstanceServiceImpl implements HistoricTaskInstanceServ
 
 	public List<String> findTaskNames() {
 		return this.historicTaskInstanceDao.findTaskNames();
+	}
+
+	public void doStartFlow(String key, String data) throws Exception {
+		Map<String,Object> variables=JsonUtils.toMap(data);
+		
+		//标识由流程发起的流程
+		variables.put("isWorkflow", true);
+		
+		this.workflowService.startFlowByKey(key, variables);
+
 	}
 	
 	
