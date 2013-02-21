@@ -368,8 +368,9 @@ public class HistoricTaskInstancesAction extends
 	
 	public String startFlow() throws Exception {
 		Json json=new Json();
-		this.historicTaskInstanceService.doStartFlow(this.startFlowKey, this.processData);
+		String procinstId=this.historicTaskInstanceService.doStartFlow(this.startFlowKey, this.processData);
 		json.put("success", true);
+		json.put("procinstId", procinstId);
 		this.json=json.toString();
 		return "json";
 	}

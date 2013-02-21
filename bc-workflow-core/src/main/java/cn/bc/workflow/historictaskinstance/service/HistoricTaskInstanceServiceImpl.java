@@ -52,13 +52,13 @@ public class HistoricTaskInstanceServiceImpl implements HistoricTaskInstanceServ
 		return this.historicTaskInstanceDao.findTaskNames();
 	}
 
-	public void doStartFlow(String key, String data) throws Exception {
+	public String doStartFlow(String key, String data) throws Exception {
 		Map<String,Object> variables=JsonUtils.toMap(data);
 		
 		//标识由流程发起的流程
 		variables.put("isWorkflow", true);
 		
-		this.workflowService.startFlowByKey(key, variables);
+		return this.workflowService.startFlowByKey(key, variables);
 
 	}
 	

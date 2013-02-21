@@ -54,6 +54,7 @@ public interface HistoricTaskInstanceService {
 							procinstKey:流程KEY,
 							procinstTaskName:任务名称,
 							procinstTaskId:任务id  }
+		@return 返回流程id
 	 */
-	void doStartFlow(String key,String data) throws Exception;
+	String doStartFlow(String key,String data) throws Exception;
 }
