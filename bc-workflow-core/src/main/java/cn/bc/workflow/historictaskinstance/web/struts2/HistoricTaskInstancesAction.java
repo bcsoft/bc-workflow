@@ -202,7 +202,8 @@ public class HistoricTaskInstancesAction extends
 		columns.add(new HiddenColumn4MapKey("procinstId", "procinstid"));
 		columns.add(new HiddenColumn4MapKey("procinstName", "procinstname"));
 		columns.add(new HiddenColumn4MapKey("procinstKey", "procinstkey"));
-		columns.add(new HiddenColumn4MapKey("name", "name"));
+		columns.add(new HiddenColumn4MapKey("procinstTaskName", "name"));
+		columns.add(new HiddenColumn4MapKey("procinstTaskKey", "taskdefkey"));
 		columns.add(new HiddenColumn4MapKey("subject", "subject"));
 		return columns;
 	}
@@ -364,6 +365,7 @@ public class HistoricTaskInstancesAction extends
 									procinstName:流程实例名称,
 									procinstKey:流程Key,
 									procinstTaskName:任务名称,
+									procinstTaskKey:任务key,
 									procinstTaskId:任务id  }*/
 	
 	public String startFlow() throws Exception {

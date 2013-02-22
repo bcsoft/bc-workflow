@@ -81,7 +81,8 @@ public class MyHistoricTaskInstancesAction extends
 		columns.add(new HiddenColumn4MapKey("procinstId", "procinstid"));
 		columns.add(new HiddenColumn4MapKey("procinstName", "procinstname"));
 		columns.add(new HiddenColumn4MapKey("procinstKey", "procinstkey"));
-		columns.add(new HiddenColumn4MapKey("name", "name"));
+		columns.add(new HiddenColumn4MapKey("procinstTaskName", "name"));
+		columns.add(new HiddenColumn4MapKey("procinstTaskKey", "taskdefkey"));
 		columns.add(new HiddenColumn4MapKey("subject", "subject"));
 		return columns;
 	}
