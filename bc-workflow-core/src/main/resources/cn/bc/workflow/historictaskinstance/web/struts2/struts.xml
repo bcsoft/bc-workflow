@@ -23,6 +23,7 @@
 		<action name="conditions" class="historicTaskInstancesAction" method="conditions">
 			<result name="success">/bc-workflow/historictaskinstance/conditions.jsp</result>
 		</action>
+		<action name="startFlow" class="historicTaskInstancesAction" method="startFlow"/>
 	</package>
 	<!-- 部门经办监控 -->
 	<package name="groupHistoricTaskInstancesAction" extends="bc-default" namespace="/bc-workflow/groupHistoricTaskInstances">

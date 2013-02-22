@@ -63,8 +63,8 @@ public class GroupHistoricTaskInstancesAction extends
 	
 	@Override
 	protected String getHtmlPageJs() {
-		return this.getHtmlPageNamespace() + "/historictaskinstance/select.js,"
-				+this.getHtmlPageNamespace() + "/historictaskinstance/group/select.js";
+		return super.getHtmlPageJs()+","
+				+this.getHtmlPageNamespace() + "/historictaskinstance/group/view.js";
 	}
 
 

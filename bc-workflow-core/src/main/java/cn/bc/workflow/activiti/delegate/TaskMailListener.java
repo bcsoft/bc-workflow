@@ -64,11 +64,16 @@ public class TaskMailListener implements TaskListener {
 		if (ignoreVarName != null
 				&& ignoreVarName.getExpressionText().length() > 0) {
 			if (delegateTask
-					.hasVariableLocal(ignoreVarName.getExpressionText())) {
+					.hasVariable(ignoreVarName.getExpressionText())) {
+				
+				// true 不发送
 				if ((Boolean) delegateTask.getVariable(ignoreVarName
 						.getExpressionText())) {
 					return;
 				}
+			
+			}else{//流程还没此变量时 不进行邮件的发送
+				return;
 			}
 		}
 
