@@ -41,6 +41,7 @@ import cn.bc.web.ui.html.grid.TextColumn4MapKey;
 import cn.bc.web.ui.html.page.PageOption;
 import cn.bc.web.ui.html.toolbar.Toolbar;
 import cn.bc.web.ui.html.toolbar.ToolbarButton;
+import cn.bc.web.ui.html.toolbar.ToolbarMenuButton;
 import cn.bc.web.ui.json.Json;
 import cn.bc.workflow.service.WorkflowService;
 import cn.bc.workflow.todo.service.TodoService;
@@ -175,20 +176,27 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>> {
 					.setText(getText("flow.start"))
 					.setClick("bc.myTodoView.startflow"));
 		}
+		
+		// "更多"按钮
+		ToolbarMenuButton menuButton = new ToolbarMenuButton(
+				getText("label.operate"))
+				.setChange("bc.myTodoView.selectMenuButtonItem");
+		tb.addButton(menuButton);
 
-		tb.addButton(new ToolbarButton().setIcon("ui-icon-pencil")
-				.setText(getText("label.sign.task"))
-				.setClick("bc.myTodoView.signTask"));
+		menuButton.addMenuItem(getText("label.sign.task"),
+				"signTask");
+		
 		if (this.isDelegate()) {
-			tb.addButton(new ToolbarButton().setIcon("ui-icon-person")
-					.setText(getText("label.delegate.task"))
-					.setClick("bc.myTodoView.delegateTask"));
+			menuButton.addMenuItem(getText("label.delegate.task"),
+					"delegateTask");
 		}
 		if (this.isAssign()) {
-			tb.addButton(new ToolbarButton().setIcon("ui-icon-flag")
-					.setText(getText("label.assign.task"))
-					.setClick("bc.myTodoView.assignTask"));
+			menuButton.addMenuItem(getText("label.assign.task"),
+					"assignTask");
 		}
+		
+		menuButton.addMenuItem(getText("flow.task.requirement"),
+				"requirement");
 
 		tb.addButton(Toolbar.getDefaultToolbarRadioGroup(this.getStatus(),
 				"status", 2, getText("title.click2changeSearchStatus")));
@@ -285,10 +293,16 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>> {
 				getText("flow.task.category"), 180).setSortable(true)
 				.setUseTitleFromLabel(true));
 
-		columns.add(new HiddenColumn4MapKey("procInstId", "procInstId"));
 		columns.add(new HiddenColumn4MapKey("assignee", "assignee"));
 		columns.add(new HiddenColumn4MapKey("type", "type"));////任务的类型：1-个人任务，2-候选任务(包括岗位任务和候选人任务)
-		//columns.add(new HiddenColumn4MapKey("groupIds", "groupIds"));// 候选岗位列表
+		
+		//数据纠正需要用到的数据
+		columns.add(new HiddenColumn4MapKey("procinstId", "procInstId"));
+		columns.add(new HiddenColumn4MapKey("procinstName", "processName"));
+		columns.add(new HiddenColumn4MapKey("procinstKey", "key"));
+		columns.add(new HiddenColumn4MapKey("procinstTaskName", "taskName"));
+		columns.add(new HiddenColumn4MapKey("procinstTaskKey", "taskKey"));
+		columns.add(new HiddenColumn4MapKey("subject", "subject"));
 
 		return columns;
 	}
@@ -340,9 +354,9 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>> {
 	protected String getHtmlPageJs() {
 		return this.getContextPath() + "/bc-workflow/todo/my/view.js" + ","
 				+ this.getContextPath() + "/bc/identity/identity.js" + ","
-				+ this.getContextPath() + "/bc-workflow/select/selectUsers.js"
-				+ "," + this.getContextPath()
-				+ "/bc-workflow/historicprocessinstance/select.js";
+				+ this.getContextPath() + "/bc-workflow/select/selectUsers.js"+ "," 
+				+ this.getContextPath()+ "/bc-workflow/historicprocessinstance/select.js"+ "," 
+				+ this.getContextPath()+ "/bc-workflow/historictaskinstance/view.js";
 	}
 
 	@Override
@@ -375,7 +389,7 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>> {
 		StringBuffer sql = new StringBuffer();
 		
 		sql.append("select a.id_,b.suspension_state_ as status,a.proc_inst_id_ as procinstid,a.name_ as taskname,a.due_date_ as duedate,a.create_time_ as createtime");
-		sql.append(",d.name_ as processname,a.description_ as desc_,a.assignee_ as assignee");
+		sql.append(",d.name_ as processname,a.description_ as desc_,a.assignee_ as assignee,d.key_ as key,a.task_def_key_ as task_def_key");
 		//任务的类型：1-个人任务，2-候选任务
 		sql.append(",case when a.assignee_ is not null then 1 else 2 end as type_");
 		//流程主题
@@ -398,9 +412,11 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>> {
 				map.put("taskName", rs[i++]); // 任务名称
 				map.put("dueDate", rs[i++]); // 办理期限
 				map.put("createTime", rs[i++]); // 发送时间
-				map.put("processName", rs[i++]); // 分类 流程名称
+				map.put("processName", rs[i++]); // 流程名称
 				map.put("desc", rs[i++]); // 任务附加说明
 				map.put("assignee", rs[i++]); // 任务处理人code
+				map.put("key", rs[i++]); // 流程编码
+				map.put("taskKey", rs[i++]); // 流程编码
 				map.put("type", rs[i++]); // 任务的类型：1-个人任务，2-候选任务
 				map.put("subject", rs[i++]); // 实例标题
 				return map;

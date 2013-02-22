@@ -44,4 +44,17 @@ public interface HistoricTaskInstanceService {
 	 * @return
 	 */
 	List<String> findTaskNames();
+	
+	/**
+	 * 
+	 * @param key 流程的key
+	 * @param data json格式 { 
+							procinstId:流程实例id,
+							procinstName:流程实例名称,
+							procinstKey:流程KEY,
+							procinstTaskName:任务名称,
+							procinstTaskId:任务id  }
+		@return 返回流程id
+	 */
+	String doStartFlow(String key,String data) throws Exception;
 }
