@@ -278,8 +278,8 @@ public class DeployServiceImpl extends DefaultCrudService<Deploy> implements
 				wfCode, resCode);
 	}
 
-	public DeployResource findDeployResourceCode(String deployCode) {
-		return this.deployDao.findDeployResourceCode(deployCode);
+	public DeployResource findDeployResourceByCode(Long deployId, String deployCode) {
+		return this.deployDao.findDeployResourceByCode(deployId, deployCode);
 	}
 
 	public Deploy doCopyDeploy(Long id) {

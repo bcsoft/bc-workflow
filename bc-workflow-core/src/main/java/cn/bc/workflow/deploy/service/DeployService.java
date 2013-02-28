@@ -93,10 +93,11 @@ public interface DeployService extends CrudService<Deploy> {
 	
 	/**
 	 * 通过流程编码获取流程资源
-	 * @param deployCode
+	 * @param deployCode 资源编码
+	 * @param deployId 部署ID
 	 * @return
 	 */
-	public DeployResource findDeployResourceCode(String deployCode);
+	public DeployResource findDeployResourceByCode(Long deployId, String deployCode);
 
 	/**
 	 * 升级流程部署操作

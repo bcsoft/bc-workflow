@@ -14,6 +14,7 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import cn.bc.BCConstants;
+import cn.bc.core.exception.CoreException;
 import cn.bc.core.query.condition.Condition;
 import cn.bc.core.query.condition.impl.AndCondition;
 import cn.bc.core.query.condition.impl.EqualsCondition;
@@ -34,7 +35,7 @@ import cn.bc.workflow.deploy.domain.DeployResource;
 public class DeployDaoImpl extends HibernateCrudJpaDao<Deploy> implements
 		DeployDao {
 	protected final Log logger = LogFactory.getLog(getClass());
-	
+
 	private JdbcTemplate jdbcTemplate;
 
 	@Autowired
@@ -75,48 +76,49 @@ public class DeployDaoImpl extends HibernateCrudJpaDao<Deploy> implements
 		}
 		return this.createQuery().condition(c).count() > 0;
 	}
-	
-	
-	public Deploy loadByCodeAndId(String code,Long currentId){
-		if(code == null )
+
+	public Deploy loadByCodeAndId(String code, Long currentId) {
+		if (code == null)
 			return null;
 		AndCondition c = new AndCondition();
 		c.add(new EqualsCondition("code", code));
-		//状态正常
+		// 状态正常
 		c.add(new EqualsCondition("status", BCConstants.STATUS_ENABLED));
-		
-		if(currentId != null){
-			//id不等于本对象
-			c.add(new NotEqualsCondition("id",currentId));
+
+		if (currentId != null) {
+			// id不等于本对象
+			c.add(new NotEqualsCondition("id", currentId));
 		}
 		return this.createQuery().condition(c).singleResult();
 	}
-	
-	//模板分类
+
+	// 模板分类
 	public List<Map<String, String>> findCategoryOption() {
-		String hql="SELECT d.category,1";
-		   hql+=" FROM bc_wf_deploy d";
-		   hql+=" GROUP BY d.category";
-		 return	HibernateJpaNativeQuery.executeNativeSql(getJpaTemplate(), hql,null
-		 	,new RowMapper<Map<String, String>>() {
-				public Map<String, String> mapRow(Object[] rs, int rowNum) {
-					Map<String, String> oi = new HashMap<String, String>();
-					int i = 0;
-					oi.put("value", rs[i++].toString());
-					return oi;
-				}
-		});
+		String hql = "SELECT d.category,1";
+		hql += " FROM bc_wf_deploy d";
+		hql += " GROUP BY d.category";
+		return HibernateJpaNativeQuery.executeNativeSql(getJpaTemplate(), hql,
+				null, new RowMapper<Map<String, String>>() {
+					public Map<String, String> mapRow(Object[] rs, int rowNum) {
+						Map<String, String> oi = new HashMap<String, String>();
+						int i = 0;
+						oi.put("value", rs[i++].toString());
+						return oi;
+					}
+				});
 	}
 
 	/**
 	 * 通过流程部署id判断此信息是否发布
+	 * 
 	 * @param excludeId
 	 * @return
 	 */
 	public Long isReleased(Long excludeId) {
 		Long id = null;
-		String sql = "select d.id from bc_wf_deploy d where d.id='"+excludeId+"'" +
-				"and d.deployment_id is null and d.status_!='"+BCConstants.STATUS_DRAFT+"'";
+		String sql = "select d.id from bc_wf_deploy d where d.id='" + excludeId
+				+ "'" + "and d.deployment_id is null and d.status_!='"
+				+ BCConstants.STATUS_DRAFT + "'";
 		try {
 			id = this.jdbcTemplate.queryForLong(sql);
 		} catch (EmptyResultDataAccessException e) {
@@ -127,15 +129,16 @@ public class DeployDaoImpl extends HibernateCrudJpaDao<Deploy> implements
 
 	/**
 	 * 通过流程id判断此信息是否已发起
+	 * 
 	 * @param excludeId
 	 * @return
 	 */
 	public Long isStarted(String deploymentId) {
 		Long id = null;
-		String sql = "select DISTINCT ard.id_ from act_re_deployment ard" +
-				" inner join act_re_procdef arp on ard.id_ = arp.deployment_id_"+
-				" inner join act_ru_execution ae on arp.id_ = ae.proc_def_id_ "+
-				" where ard.id_='"+deploymentId+"'";
+		String sql = "select DISTINCT ard.id_ from act_re_deployment ard"
+				+ " inner join act_re_procdef arp on ard.id_ = arp.deployment_id_"
+				+ " inner join act_ru_execution ae on arp.id_ = ae.proc_def_id_ "
+				+ " where ard.id_='" + deploymentId + "'";
 		try {
 			id = this.jdbcTemplate.queryForLong(sql);
 		} catch (EmptyResultDataAccessException e) {
@@ -154,12 +157,13 @@ public class DeployDaoImpl extends HibernateCrudJpaDao<Deploy> implements
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
-	public ArrayList<Object> isUniqueResourceCodeAndExtCheck(Long id, String codes) {
+	public ArrayList<Object> isUniqueResourceCodeAndExtCheck(Long id,
+			String codes) {
 		List<?> result;
-		String [] codeAry = codes.split(",");
-		if(codeAry.length == 0){
+		String[] codeAry = codes.split(",");
+		if (codeAry.length == 0) {
 			return null;
-		}else{
+		} else {
 			List<Object> args = new ArrayList<Object>();
 			StringBuffer hql = new StringBuffer();
 			if (id == null) {
@@ -172,7 +176,7 @@ public class DeployDaoImpl extends HibernateCrudJpaDao<Deploy> implements
 				hql.append(")");
 				result = this.getJpaTemplate().find(hql.toString(),
 						args.toArray());
-			}else{
+			} else {
 				hql.append("select dr.code from DeployResource dr where dr.deploy.id !=? and dr.code in (?");
 				args.add(id);
 				args.add(codeAry[0]);
@@ -194,21 +198,24 @@ public class DeployDaoImpl extends HibernateCrudJpaDao<Deploy> implements
 
 	/**
 	 * 通过流程部署记录id和流程编码和部署资源编码查找对应部署资源
+	 * 
 	 * @param dmId
 	 * @param wfCode
 	 * @param resCode
 	 * @return
 	 */
-	public DeployResource findDeployResourceByDmIdAndwfCodeAndresCode(String dmId,String wfCode, String resCode) {
+	public DeployResource findDeployResourceByDmIdAndwfCodeAndresCode(
+			String dmId, String wfCode, String resCode) {
 		DeployResource dr = null;
-		List<?> list = this.getJpaTemplate().find(
-				"from DeployResource dr where dr.deploy.deploymentId=? and dr.deploy.code=? and dr.code=?",
-				new Object[] { dmId,wfCode,resCode });
-		if(list.size() == 0){
+		List<?> list = this
+				.getJpaTemplate()
+				.find("from DeployResource dr where dr.deploy.deploymentId=? and dr.deploy.code=? and dr.code=?",
+						new Object[] { dmId, wfCode, resCode });
+		if (list.size() == 0) {
 			logger.debug("异常！根据流程部署记录id,流程编码,流程资源编码查找不了流程资源！");
-		} else if(list.size() == 1){
+		} else if (list.size() == 1) {
 			dr = (DeployResource) list.get(0);
-		}else{
+		} else {
 			dr = (DeployResource) list.get(0);
 			if (logger.isDebugEnabled()) {
 				logger.debug("异常！存在两个或两个以上同一编码的资源，已选择第一个资源显示！");
@@ -219,23 +226,27 @@ public class DeployDaoImpl extends HibernateCrudJpaDao<Deploy> implements
 
 	/**
 	 * 通过流程编码获取流程资源
+	 * 
 	 * @param deployCode
+	 *            资源编码
+	 * @param deployId
+	 *            部署ID
 	 * @return
 	 */
-	public DeployResource findDeployResourceCode(String deployCode) {
+	public DeployResource findDeployResourceByCode(Long deployId,
+			String deployCode) {
 		DeployResource dr = null;
 		List<?> list = this.getJpaTemplate().find(
-				"from DeployResource dr where dr.code=?",
-				new Object[] { deployCode });
-		if(list.size() == 0){
+				"from DeployResource dr where dr.deploy.id=? and dr.code=?",
+				new Object[] { deployId, deployCode });
+		if (list.size() == 0) {
 			logger.debug("异常！流程编码查找不了流程资源！");
-		} else if(list.size() == 1){
+		} else if (list.size() == 1) {
 			dr = (DeployResource) list.get(0);
-		}else{
+		} else {
 			dr = (DeployResource) list.get(0);
-			if (logger.isDebugEnabled()) {
-				logger.debug("异常！存在两个或两个以上同一编码的资源，已选择第一个资源显示！");
-			}
+			throw new CoreException("not single result resource: deployId="
+					+ deployId + ",resCode=" + deployCode);
 		}
 		return dr;
 	}

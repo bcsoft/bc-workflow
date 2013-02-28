@@ -77,8 +77,7 @@ public class WorkspaceAction extends AbstractBaseAction {
 
 		try {
 			// this.error = "AAA";
-			this.errorDetail = new StringBuffer(
-					"AAA DDDDDDDDDDDDDDDDDD<br/>	    	cccccccccccccc");
+			// this.errorDetail = new StringBuffer("[无]");
 			// id为流程实例的id
 			Assert.assertNotEmpty(id);
 
@@ -100,6 +99,6 @@ public class WorkspaceAction extends AbstractBaseAction {
 	private void initPageOption() {
 		pageOption = new PageOption();
 		pageOption.setHeight(500).setWidth(700).setMinimizable(true)
-				.setMaximizable(true).setMinWidth(450).setMinHeight(250);
+				.setMaximizable(true).setMinWidth(700).setMinHeight(250);
 	}
 }
