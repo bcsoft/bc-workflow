@@ -19,8 +19,18 @@ public interface WorkflowModuleRelationDao extends CrudDao<WorkflowModuleRelatio
 	 * 
 	 * @param mid
 	 * @param mtype
+	 * @param key
 	 * @param globalKeys
 	 * @return
 	 */
-	List<Map<String,Object>> findList(Long mid,String mtype,String[] globalKeys);
+	List<Map<String,Object>> findList(Long mid,String mtype,String key,String[] globalKeys);
+	
+	/**
+	 * 通过mid mtype key 返回是否存在流程关系
+	 * @param mid 模块ID
+	 * @param mtype 模块类型
+	 * @param key 流程编码
+	 * @return true：是 false：否
+	 */
+	boolean hasRelation(Long mid,String mtype,String key);
 }
