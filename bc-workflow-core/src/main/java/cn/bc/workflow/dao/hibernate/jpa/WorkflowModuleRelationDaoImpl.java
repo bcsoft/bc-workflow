@@ -59,11 +59,18 @@ public class WorkflowModuleRelationDaoImpl extends
 		hql += " INNER JOIN act_hi_procinst b on b.proc_inst_id_=a.pid";
 		hql += " INNER JOIN act_re_procdef c on c.id_=b.proc_def_id_";
 		hql += " left join act_ru_execution f on a.pid = f.proc_inst_id_";
-		hql += " where f.parent_id_ is null and a.mid=? and a.mtype=?";
-		args.add(mid);
-		args.add(mtype);
+		hql += " where f.parent_id_ is null ";
+		if(mid!=null){
+			hql+=" and a.mid=? ";
+			args.add(mid);
+		}
 		
-		if(key!=null&&key.length()>0){
+		if(mtype!=null && mtype.length()>0){
+			hql+=" and a.mtype=? ";
+			args.add(mtype);
+		}
+		
+		if(key!=null && key.length()>0){
 			hql+=" and c.key_=? ";
 			args.add(key);
 		}
