@@ -5,7 +5,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javax.sql.DataSource;
+
 import org.activiti.engine.impl.persistence.entity.SuspensionState;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.util.StringUtils;
 
 import cn.bc.orm.hibernate.jpa.HibernateCrudJpaDao;
 import cn.bc.orm.hibernate.jpa.HibernateJpaNativeQuery;
@@ -22,12 +29,18 @@ import cn.bc.workflow.service.WorkspaceServiceImpl;
 public class WorkflowModuleRelationDaoImpl extends
 		HibernateCrudJpaDao<WorkflowModuleRelation> implements
 		WorkflowModuleRelationDao {
-	/*
-	 * private static Log logger = LogFactory
-	 * .getLog(WorkflowModuleRelationDaoImpl.class);
-	 */
+	
+	private static Log logger = LogFactory
+	.getLog(WorkflowModuleRelationDaoImpl.class);
+	
+	private JdbcTemplate jdbcTemplate;
 
-	public List<Map<String, Object>> findList(Long mid, String mtype,
+	@Autowired
+	public void setDataSource(DataSource dataSource) {
+		this.jdbcTemplate = new JdbcTemplate(dataSource);
+	}
+
+	public List<Map<String, Object>> findList(Long mid, String mtype,String key,
 			String[] globalKeys) {
 		// sql占位符替换参数
 		List<Object> args = new ArrayList<Object>();
@@ -46,11 +59,29 @@ public class WorkflowModuleRelationDaoImpl extends
 		hql += " INNER JOIN act_hi_procinst b on b.proc_inst_id_=a.pid";
 		hql += " INNER JOIN act_re_procdef c on c.id_=b.proc_def_id_";
 		hql += " left join act_ru_execution f on a.pid = f.proc_inst_id_";
-		hql += " where f.parent_id_ is null and a.mid=? and a.mtype=?";
-		args.add(mid);
-		args.add(mtype);
+		hql += " where f.parent_id_ is null ";
+		if(mid!=null){
+			hql+=" and a.mid=? ";
+			args.add(mid);
+		}
+		
+		if(mtype!=null && mtype.length()>0){
+			hql+=" and a.mtype=? ";
+			args.add(mtype);
+		}
+		
+		if(key!=null && key.length()>0){
+			hql+=" and c.key_=? ";
+			args.add(key);
+		}
+		
 		hql += " ORDER BY b.start_time_ DESC";
 		final String[] globalKeys_ = globalKeys;
+		
+		if(logger.isDebugEnabled()){
+			logger.debug("sql:="+hql);
+			logger.debug("args:="+StringUtils.collectionToCommaDelimitedString(args));
+		}
 
 		return HibernateJpaNativeQuery.executeNativeSql(getJpaTemplate(), hql,
 				args.toArray(),
@@ -92,5 +123,33 @@ public class WorkflowModuleRelationDaoImpl extends
 					}
 				});
 	}
+
+	public boolean hasRelation(Long mid, String mtype, String key) {
+		// sql占位符替换参数
+		List<Object> args = new ArrayList<Object>();
+		String hql = "SELECT count(*)";
+		hql += " FROM bc_wf_module_relation a";
+		if(key!=null&&key.length()>0){
+			hql += " INNER JOIN act_hi_procinst b on b.proc_inst_id_=a.pid";
+			hql += " INNER JOIN act_re_procdef c on c.id_=b.proc_def_id_";
+		}
+		hql += " WHERE a.mid=? and a.mtype=?";
+		args.add(mid);
+		args.add(mtype);
+		
+		if(key!=null&&key.length()>0){
+			hql+=" and c.key_=?";
+			args.add(key);
+		}
+		
+		if(logger.isDebugEnabled()){
+			logger.debug("sql:="+hql);
+			logger.debug("args:="+StringUtils.collectionToCommaDelimitedString(args));
+		}
+		
+		return this.jdbcTemplate.queryForInt(hql,args.toArray())>0;
+	}
+	
+	
 
 }

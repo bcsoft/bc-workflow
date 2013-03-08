@@ -27,7 +27,20 @@ public class WorkflowModuleRelationServiceImpl extends DefaultCrudService<Workfl
 	}
 
 	public List<Map<String, Object>> findList(Long mid, String mtype,String[] globalKeys) {
-		return this.workflowModuleRelationDao.findList(mid, mtype,globalKeys);
+		return this.workflowModuleRelationDao.findList(mid, mtype,null,globalKeys);
+	}
+
+	public List<Map<String, Object>> findList(Long mid, String mtype,
+			String key, String[] globalKeys) {
+		return this.workflowModuleRelationDao.findList(mid, mtype,key,globalKeys);
+	}
+
+	public boolean hasRelation(Long mid, String mtype) {
+		return this.workflowModuleRelationDao.hasRelation(mid, mtype, null);
+	}
+
+	public boolean hasRelation4Key(Long mid, String mtype, String key) {
+		return this.workflowModuleRelationDao.hasRelation(mid, mtype, key);
 	}
 
 }
