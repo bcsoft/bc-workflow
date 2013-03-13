@@ -96,6 +96,11 @@
 			<artifactId>bc-log</artifactId>
 			<version>${framework.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>cn.bc</groupId>
+			<artifactId>bc-acl</artifactId>
+			<version>${framework.version}</version>
+		</dependency>
 
 		<!-- provided -->
 		<dependency>

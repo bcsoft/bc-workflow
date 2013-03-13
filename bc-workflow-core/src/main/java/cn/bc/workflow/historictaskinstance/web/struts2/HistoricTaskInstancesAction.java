@@ -25,6 +25,7 @@ import cn.bc.db.jdbc.RowMapper;
 import cn.bc.db.jdbc.SqlObject;
 import cn.bc.identity.web.SystemContext;
 import cn.bc.option.domain.OptionItem;
+import cn.bc.web.formater.AbstractFormater;
 import cn.bc.web.formater.CalendarFormater;
 import cn.bc.web.formater.EntityStatusFormater;
 import cn.bc.web.struts2.ViewAction;
@@ -69,7 +70,6 @@ public class HistoricTaskInstancesAction extends
 				getText("key.role.bc.workflow"));
 	}
 	
-
 	@Override
 	protected OrderCondition getGridOrderCondition() {
 		return new OrderCondition("a.start_time_", Direction.Desc);
@@ -134,11 +134,6 @@ public class HistoricTaskInstancesAction extends
 					}
 				}
 
-				// 格式化耗时
-				if (map.get("duration") != null)
-					map.put("frmDuration",
-							DateUtils.getWasteTime(Long.parseLong(map.get(
-									"duration").toString())));
 				return map;
 			}
 		});
@@ -187,7 +182,16 @@ public class HistoricTaskInstancesAction extends
 						new CalendarFormater("yyyy-MM-dd HH:mm:ss")));
 		
 		columns.add(new TextColumn4MapKey("a.duration_", "frmDuration",
-				getText("flow.task.duration"), 80).setSortable(true));
+				getText("flow.task.duration"), 80).setSortable(true)
+				.setValueFormater(new AbstractFormater<String>() {
+					@SuppressWarnings("unchecked")
+					@Override
+					public String format(Object context, Object value) {
+						Object duration_obj=((Map<String, Object>)context).get("duration");
+						if(duration_obj==null)return null;
+						return DateUtils.getWasteTime(Long.parseLong(duration_obj.toString()));
+					}	
+				}));
 		// 流程
 		columns.add(new TextColumn4MapKey("c.name_", "procinstname",
 				getText("flow.task.category")).setSortable(true)

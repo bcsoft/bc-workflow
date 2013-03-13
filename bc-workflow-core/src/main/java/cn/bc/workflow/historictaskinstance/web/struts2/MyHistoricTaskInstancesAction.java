@@ -15,8 +15,10 @@ import cn.bc.core.query.condition.impl.AndCondition;
 import cn.bc.core.query.condition.impl.EqualsCondition;
 import cn.bc.core.query.condition.impl.IsNotNullCondition;
 import cn.bc.core.query.condition.impl.IsNullCondition;
+import cn.bc.core.util.DateUtils;
 import cn.bc.identity.web.SystemContext;
 import cn.bc.option.domain.OptionItem;
+import cn.bc.web.formater.AbstractFormater;
 import cn.bc.web.formater.CalendarFormater;
 import cn.bc.web.formater.EntityStatusFormater;
 import cn.bc.web.ui.html.grid.Column;
@@ -67,7 +69,16 @@ public class MyHistoricTaskInstancesAction extends
 				.setValueFormater(new CalendarFormater("yyyy-MM-dd HH:mm")));
 	
 		columns.add(new TextColumn4MapKey("a.duration_", "frmDuration",
-				getText("flow.task.duration"), 80).setSortable(true));
+				getText("flow.task.duration"), 80).setSortable(true)
+				.setValueFormater(new AbstractFormater<String>() {
+					@SuppressWarnings("unchecked")
+					@Override
+					public String format(Object context, Object value) {
+						Object duration_obj=((Map<String, Object>)context).get("duration");
+						if(duration_obj==null)return null;
+						return DateUtils.getWasteTime(Long.parseLong(duration_obj.toString()));
+					}	
+				}));
 		// 流程
 		columns.add(new TextColumn4MapKey("c.name_", "procinstname",
 				getText("flow.task.category")).setSortable(true)

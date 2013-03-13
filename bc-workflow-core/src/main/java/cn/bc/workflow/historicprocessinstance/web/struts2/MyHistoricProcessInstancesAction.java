@@ -55,7 +55,7 @@ public class MyHistoricProcessInstancesAction extends HistoricProcessInstancesAc
 				getText("flow.instance.subject"), 200).setSortable(true)
 				.setUseTitleFromLabel(true));
 		// 流程
-		columns.add(new TextColumn4MapKey("b.name_", "category",
+		columns.add(new TextColumn4MapKey("b.name_", "procinstName",
 				getText("flow.instance.name"), 200).setSortable(true)
 				.setUseTitleFromLabel(true));
 		columns.add(new TextColumn4MapKey("", "todo_names",

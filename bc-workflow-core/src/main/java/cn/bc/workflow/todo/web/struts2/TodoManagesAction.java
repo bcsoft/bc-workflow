@@ -140,7 +140,7 @@ public class TodoManagesAction extends ViewAction<Map<String, Object>>{
 		
 		ac.add(new IsNullCondition("b.parent_id_"));
 
-		return ac.isEmpty() ? null : ac;
+		return ac;
 	}
 	
 	@Override

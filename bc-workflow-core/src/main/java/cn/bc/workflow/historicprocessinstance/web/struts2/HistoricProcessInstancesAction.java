@@ -76,6 +76,13 @@ public class HistoricProcessInstancesAction extends
 		return !context.hasAnyRole(getText("key.role.bc.admin"),
 				getText("key.role.bc.workflow"));
 	}
+	
+	public boolean isAccessControl() {
+		// 流程访问控制
+		SystemContext context = (SystemContext) this.getContext();
+		return context
+				.hasAnyRole(getText("key.role.bc.workflow.accessControl"));
+	}
 
 	@Override
 	protected OrderCondition getGridOrderCondition() {
@@ -87,10 +94,11 @@ public class HistoricProcessInstancesAction extends
 		SqlObject<Map<String, Object>> sqlObject = new SqlObject<Map<String, Object>>();
 		// 构建查询语句,where和order by不要包含在sql中(要统一放到condition中)
 		StringBuffer sql = new StringBuffer();
-		sql.append("select a.id_,b.name_ as category,a.start_time_,a.end_time_,a.duration_,f.suspension_state_ status,a.proc_inst_id_");
+		sql.append("select a.id_,b.name_ as procinstname,a.start_time_,a.end_time_,a.duration_,f.suspension_state_ status,a.proc_inst_id_");
 		sql.append(",e.version_ as version,b.version_ as aVersion,b.key_ as key,c.name");
 		sql.append(",getProcessInstanceSubject(a.proc_inst_id_) as subject");
 		sql.append(",getprocesstodotasknames(a.proc_inst_id_) as  todo_names");
+		sql.append(",getaccessactors4docidtype4docidcharacter(a.id_,'ProcessInstance')");
 		sql.append(" from act_hi_procinst a");
 		sql.append(" left join act_ru_execution f on a.id_ = f.proc_inst_id_");
 		sql.append(" inner join act_re_procdef b on b.id_=a.proc_def_id_");
@@ -108,11 +116,21 @@ public class HistoricProcessInstancesAction extends
 				Map<String, Object> map = new HashMap<String, Object>();
 				int i = 0;
 				map.put("id", rs[i++]);
-				map.put("category", rs[i++]);
+				map.put("procinstName", rs[i++]);
 				map.put("start_time", rs[i++]);
 				map.put("end_time", rs[i++]);
 				map.put("duration", rs[i++]);
 				map.put("status", rs[i++]);
+				map.put("procinstid", rs[i++]);
+				map.put("version", rs[i++]);
+				map.put("aVersion", rs[i++]);
+				map.put("key", rs[i++]);
+				map.put("startName", rs[i++]);// 发起人
+				map.put("subject", rs[i++]);
+				map.put("todo_names", rs[i++]);
+				map.put("accessactors", rs[i++]);
+				map.put("accessControlDocType","ProcessInstance");
+				
 				if (map.get("end_time") != null) {//已结束
 					map.put("status", WorkspaceServiceImpl.COMPLETE);
 				} else {
@@ -122,20 +140,7 @@ public class HistoricProcessInstancesAction extends
 						map.put("status", String.valueOf(SuspensionState.SUSPENDED.getStateCode()));
 					}
 				}
-
-				// 格式化耗时
-				if (map.get("duration") != null)
-					map.put("frmDuration",
-							DateUtils.getWasteTime(Long.parseLong(map.get(
-									"duration").toString())));
-
-				map.put("procinstid", rs[i++]);
-				map.put("version", rs[i++]);
-				map.put("aVersion", rs[i++]);
-				map.put("key", rs[i++]);
-				map.put("startName", rs[i++]);// 发起人
-				map.put("subject", rs[i++]);
-				map.put("todo_names", rs[i++]);
+				
 				return map;
 			}
 		});
@@ -156,7 +161,7 @@ public class HistoricProcessInstancesAction extends
 				getText("flow.instance.subject"), 200).setSortable(true)
 				.setUseTitleFromLabel(true));
 		// 流程
-		columns.add(new TextColumn4MapKey("b.name_", "category",
+		columns.add(new TextColumn4MapKey("b.name_", "procinstName",
 				getText("flow.instance.name"), 200).setSortable(true)
 				.setUseTitleFromLabel(true));
 		columns.add(new TextColumn4MapKey("", "todo_names",
@@ -195,13 +200,30 @@ public class HistoricProcessInstancesAction extends
 				getText("flow.instance.endTime"), 150).setSortable(true)
 				.setUseTitleFromLabel(true)
 				.setValueFormater(new CalendarFormater("yyyy-MM-dd HH:mm:ss")));
-		columns.add(new TextColumn4MapKey("a.duration_", "frmDuration",
-				getText("flow.instance.duration"), 80).setSortable(true));
+		columns.add(new TextColumn4MapKey("a.duration_", "duration",
+				getText("flow.instance.duration"), 80).setSortable(true)
+				.setValueFormater(new AbstractFormater<String>() {
+					@SuppressWarnings("unchecked")
+					@Override
+					public String format(Object context, Object value) {
+						Object duration_obj=((Map<String, Object>)context).get("duration");
+						if(duration_obj==null)return null;
+						return DateUtils.getWasteTime(Long.parseLong(duration_obj.toString()));
+					}	
+				}));
+		if(this.isAccessControl()){
+			columns.add(new TextColumn4MapKey("", "accessactors",
+					getText("flow.accessControl.accessActorAndRole")).setSortable(true)
+					.setUseTitleFromLabel(true));
+		}
+		
 		columns.add(new TextColumn4MapKey("b.key_", "key",
 				getText("flow.instance.key"), 180).setSortable(true)
 				.setUseTitleFromLabel(true));
 		columns.add(new HiddenColumn4MapKey("procinstid", "procinstid"));
 		columns.add(new HiddenColumn4MapKey("status", "status"));
+		columns.add(new HiddenColumn4MapKey("accessControlDocType", "accessControlDocType"));
+		columns.add(new HiddenColumn4MapKey("accessControlDocName", "procinstName"));
 		return columns;
 	}
 
@@ -239,7 +261,7 @@ public class HistoricProcessInstancesAction extends
 
 	@Override
 	protected PageOption getHtmlPageOption() {
-		return super.getHtmlPageOption().setWidth(800).setMinWidth(400)
+		return super.getHtmlPageOption().setWidth(850).setMinWidth(400)
 				.setHeight(400).setMinHeight(300);
 	}
 
@@ -280,6 +302,13 @@ public class HistoricProcessInstancesAction extends
 				.hasAnyRole("BC_WORKFLOW_INSTANCE_DELETE")) {
 			tb.addButton(this.getDefaultDeleteToolbarButton());
 		}
+		
+		if(this.isAccessControl()){
+			// 访问监控
+			tb.addButton(new ToolbarButton().setIcon("ui-icon-wrench")
+					.setText(getText("flow.accessControl"))
+					.setClick("bc.historicprocessinstance.accessControl"));
+		}
 
 		tb.addButton(Toolbar.getDefaultToolbarRadioGroup(this.getStatus(),
 				"status", 3, getText("title.click2changeSearchStatus")));
@@ -318,7 +347,7 @@ public class HistoricProcessInstancesAction extends
 		
 		ac.add(new IsNullCondition("f.parent_id_"));
 
-		return ac.isEmpty() ? null : ac;
+		return ac;
 	}
 
 	@Override
@@ -338,8 +367,9 @@ public class HistoricProcessInstancesAction extends
 	@Override
 	protected String getHtmlPageJs() {
 		return this.getHtmlPageNamespace()
-				+ "/historicprocessinstance/select.js"+","+
-				this.getHtmlPageNamespace() + "/historicprocessinstance/view.js";
+				+ "/historicprocessinstance/select.js"
+				+","+this.getHtmlPageNamespace() + "/historicprocessinstance/view.js"
+				+","+this.getContextPath()+"/bc/acl/accessControl.js";
 	}
 
 	@Override

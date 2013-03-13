@@ -179,8 +179,6 @@ public class DeploysAction extends ViewAction<Map<String, Object>> {
 		columns.add(new TextColumn4MapKey("d.file_date", "file_date",
 				getText("deploy.fileDate"), 80).setUseTitleFromLabel(true)
 				.setValueFormater(new CalendarFormater("yyyy-MM-dd HH:mm")));
-		
-		columns.add(new HiddenColumn4MapKey("accessactors", "accessactors"));
 		columns.add(new HiddenColumn4MapKey("uid", "uid"));
 		columns.add(new HiddenColumn4MapKey("status", "status"));
 		columns.add(new HiddenColumn4MapKey("accessControlDocType", "accessControlDocType"));

@@ -4,16 +4,18 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.activiti.engine.impl.persistence.entity.SuspensionState;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Controller;
 
+import cn.bc.acl.domain.AccessActor;
+import cn.bc.acl.service.AccessService;
 import cn.bc.core.query.condition.Condition;
 import cn.bc.core.query.condition.impl.AndCondition;
-import cn.bc.core.query.condition.impl.IsNullCondition;
+import cn.bc.core.query.condition.impl.OrCondition;
 import cn.bc.core.query.condition.impl.QlCondition;
+import cn.bc.core.util.DateUtils;
 import cn.bc.identity.domain.Actor;
 import cn.bc.identity.domain.ActorRelation;
 import cn.bc.identity.service.ActorService;
@@ -27,7 +29,7 @@ import cn.bc.web.ui.html.grid.IdColumn4MapKey;
 import cn.bc.web.ui.html.grid.TextColumn4MapKey;
 import cn.bc.web.ui.html.toolbar.Toolbar;
 import cn.bc.web.ui.html.toolbar.ToolbarButton;
-import cn.bc.workflow.service.WorkspaceServiceImpl;
+import cn.bc.workflow.deploy.domain.Deploy;
 
 /**
  * 部门经办流程监控视图Action
@@ -41,6 +43,12 @@ import cn.bc.workflow.service.WorkspaceServiceImpl;
 public class GroupHistoricProcessInstancesAction extends HistoricProcessInstancesAction {
 	private static final long serialVersionUID = 1L;
 	private ActorService actorService;
+	private AccessService accessService;
+
+	@Autowired
+	public void setAccessService(AccessService accessService) {
+		this.accessService = accessService;
+	}
 	
 	@Autowired
 	public void setActorService(ActorService actorService) {
@@ -77,57 +85,6 @@ public class GroupHistoricProcessInstancesAction extends HistoricProcessInstance
 	}
 
 	@Override
-	protected Condition getGridSpecalCondition() {
-		// 状态条件
-		AndCondition ac = new AndCondition();
-		if (status != null && status.length() > 0) {
-			String[] ss = status.split(",");
-			if (ss.length == 1) {
-				String sqlstr="";
-				if (ss[0].equals(String.valueOf(SuspensionState.ACTIVE.getStateCode()))) {
-					sqlstr += " a.end_time_ is null";
-					sqlstr += " and ((b.suspension_state_ = "+SuspensionState.ACTIVE.getStateCode()+")";
-					sqlstr += " and (f.suspension_state_ ="+SuspensionState.ACTIVE.getStateCode()+"))";
-				} else if (ss[0].equals(String
-						.valueOf(SuspensionState.SUSPENDED.getStateCode()))){
-					sqlstr += " a.end_time_ is null";
-					sqlstr += " and ((b.suspension_state_ = "+SuspensionState.SUSPENDED.getStateCode()+")";
-					sqlstr += " or (f.suspension_state_ ="+SuspensionState.SUSPENDED.getStateCode()+"))";
-				} else if (ss[0].equals(String.valueOf(WorkspaceServiceImpl.COMPLETE))){
-					sqlstr += " a.end_time_ is not null";
-				} 
-				ac.add(new QlCondition(sqlstr,new Object[]{}));
-			}
-		}
-		
-		// 保存的用户id键值集合
-		String codes ="";
-		
-		List<Actor> ownActors=this.getOwnActorCodes();
-		
-		if(ownActors==null||ownActors.size()==0){
-			codes="''";
-		}else{
-			for(Actor a:ownActors){
-				codes+="'"+a.getCode()+"',";
-			}
-			codes=codes.substring(0, codes.lastIndexOf(","));
-		}
-		
-		String sql = "";
-		sql += "exists(";
-		sql += "select 1 ";
-		sql += " from act_hi_taskinst d";
-		sql += " where a.id_=d.proc_inst_id_ and d.end_time_ is not null and d.assignee_ in (";
-		sql += codes+")";
-		sql += ")";
-		ac.add(new QlCondition(sql));
-		ac.add(new IsNullCondition("f.parent_id_"));
-
-		return ac.isEmpty() ? null : ac;
-	}
-
-	@Override
 	protected List<Column> getGridColumns() {
 		List<Column> columns = new ArrayList<Column>();
 		columns.add(new IdColumn4MapKey("a.id_", "id"));
@@ -141,7 +98,7 @@ public class GroupHistoricProcessInstancesAction extends HistoricProcessInstance
 				getText("flow.instance.subject"), 200).setSortable(true)
 				.setUseTitleFromLabel(true));
 		// 流程
-		columns.add(new TextColumn4MapKey("b.name_", "category",
+		columns.add(new TextColumn4MapKey("b.name_", "procName",
 				getText("flow.instance.name"), 200).setSortable(true)
 				.setUseTitleFromLabel(true));
 		columns.add(new TextColumn4MapKey("", "todo_names",
@@ -171,8 +128,17 @@ public class GroupHistoricProcessInstancesAction extends HistoricProcessInstance
 				getText("flow.instance.endTime"), 150).setSortable(true)
 				.setUseTitleFromLabel(true)
 				.setValueFormater(new CalendarFormater("yyyy-MM-dd HH:mm:ss")));
-		columns.add(new TextColumn4MapKey("a.duration_", "frmDuration",
-				getText("flow.instance.duration"), 80).setSortable(true));
+		columns.add(new TextColumn4MapKey("a.duration_", "duration",
+				getText("flow.instance.duration"), 80).setSortable(true)
+				.setValueFormater(new AbstractFormater<String>() {
+					@SuppressWarnings("unchecked")
+					@Override
+					public String format(Object context, Object value) {
+						Object duration_obj=((Map<String, Object>)context).get("duration");
+						if(duration_obj==null)return null;
+						return DateUtils.getWasteTime(Long.parseLong(duration_obj.toString()));
+					}	
+				}));
 		columns.add(new TextColumn4MapKey("b.key_", "key",
 				getText("flow.instance.key"), 180).setSortable(true)
 				.setUseTitleFromLabel(true));
@@ -181,8 +147,32 @@ public class GroupHistoricProcessInstancesAction extends HistoricProcessInstance
 		return columns;
 	}
 	
-	/*获取属于当前用户拥有的指定岗位对应的上组织下的对应用户*/
-	private List<Actor> getOwnActorCodes(){
+	@Override
+	protected Condition getGridSpecalCondition() {
+		AndCondition ac = (AndCondition) super.getGridSpecalCondition();
+		
+		QlCondition ownActors_ql=this.getOwnActorCondition();
+		QlCondition deploy_ql=this.getDeployAccessControlCondition();
+		QlCondition pi_ql=this.getProcessInstanceAccessControlCondition();
+		
+		OrCondition or=new OrCondition();
+		
+		if(deploy_ql!=null)or.add(deploy_ql);
+		if(pi_ql!=null)or.add(pi_ql);
+		
+		if(or.isEmpty()){
+			ac.add(ownActors_ql);
+		}else{
+			ac.add(or.add(ownActors_ql).setAddBracket(true));
+		}
+		return ac;
+	}
+	
+	/*获取属于当前用户拥有的指定岗位对应的上组织下的对应用户的条件*/
+	private QlCondition getOwnActorCondition(){
+		String sql="exists(select 1 from act_hi_taskinst oac_a";
+		sql+=" where a.id_=oac_a.proc_inst_id_ and oac_a.end_time_ is not null and oac_a.assignee_ in (";
+		
 		// 查找当前登录用户条件
 		SystemContext context = (SystemContext) this.getContext();
 		//当前用户
@@ -191,7 +181,9 @@ public class GroupHistoricProcessInstancesAction extends HistoricProcessInstance
 		List<Actor> ownedGroups=this.actorService.findMaster(actor.getId(),
 				new Integer[] { ActorRelation.TYPE_BELONG },
 				new Integer[] { Actor.TYPE_GROUP });
-		if(ownedGroups==null||ownedGroups.size()==0)return null;
+		if(ownedGroups==null||ownedGroups.size()==0){
+			return new QlCondition(sql+"''))");
+		}
 		
 		//部门领导的岗位
 		List<Actor> leaderGroups=new ArrayList<Actor>();
@@ -200,7 +192,9 @@ public class GroupHistoricProcessInstancesAction extends HistoricProcessInstance
 			if(this.getText("flow.group.leaderDepartmentGroupNames").indexOf(a.getName())!=-1)
 				leaderGroups.add(a);
 		}
-		if(leaderGroups.size()==0)return null;
+		if(leaderGroups.size()==0){
+			return new QlCondition(sql+"''))");
+		}
 		
 		//部门领导岗位对应的上级组织但不包括“宝城”
 		List<Actor> leaderUppers=new ArrayList<Actor>();
@@ -212,25 +206,131 @@ public class GroupHistoricProcessInstancesAction extends HistoricProcessInstance
 				leaderUppers.add(leaderUpper);
 			}	
 		}
-		if(leaderUppers.size()==0)return null;
+		if(leaderUppers.size()==0){
+			return new QlCondition(sql+"''))");
+		}
 
 		//上级组织拥有的用户
-		List<Actor> ownActors=new ArrayList<Actor>();
-		List<Actor> _ownActors;
+		List<Actor> ownActors=null;
+		List<Actor> users;
 		for(Actor a:leaderUppers){
-			_ownActors=this.actorService.findFollower(a.getId(), 
+			users=this.actorService.findFollower(a.getId(), 
 					new Integer[] { ActorRelation.TYPE_BELONG },
 					new Integer[] { Actor.TYPE_USER});
-			if(_ownActors==null)continue;
+			if(users==null)continue;
 			
-			for(Actor _a:_ownActors){
+			if(ownActors==null)ownActors=new ArrayList<Actor>();
+			
+			for(Actor _a:users){
 				if(!ownActors.contains(_a)){
 					ownActors.add(_a);
 				}
 			}
 		}
 		
-		return ownActors;
+		
+		
+		if(ownActors==null){
+			return new QlCondition(sql+"''))");
+		}
+		
+		for(int i=0;i<ownActors.size();i++){
+			if(i>0)sql+=",";
+			
+			sql+="'"+ownActors.get(i).getCode()+"'";
+		}
+		
+		sql+="))";
+		
+		return new QlCondition(sql);
+	}
+
+	//获取可访问属于流程部署的任务的条件
+	private QlCondition getDeployAccessControlCondition(){
+		// 查找当前登录用户条件
+		SystemContext context = (SystemContext) this.getContext();
+		//当前用户
+		Actor actor=context.getUser();
+		//流程部署的监控
+		List<AccessActor> aa4list= this.accessService.find(actor, Deploy.class.getSimpleName());
+		if(aa4list==null||aa4list.size()==0)return null;
+		
+		//流程部署的id
+		List<String> deployIds=new ArrayList<String>();
+		
+		for(AccessActor aa :aa4list){
+			//先进性权限的判断
+			//查阅
+			if(AccessActor.ROLE_TRUE.equals(aa.getRole().substring(aa.getRole().length()-1))){
+				deployIds.add(aa.getAccessDoc().getDocId());
+			}else{
+				//编辑
+				if(AccessActor.ROLE_TRUE.equals(
+						aa.getRole().substring(aa.getRole().length()-2,aa.getRole().length()-1))){
+					deployIds.add(aa.getAccessDoc().getDocId());
+				}
+				
+			}
+		}
+		
+		if(deployIds.size()==0)return null;
+		
+		String sql="exists(select 1 from act_hi_taskinst dc_a";
+		sql+=" inner join act_re_procdef dc_b on dc_b.id_=dc_a.proc_def_id_";
+		sql+=" inner join bc_wf_deploy dc_c on dc_c.deployment_id=dc_b.deployment_id_";
+		sql+=" where a.id_=dc_a.proc_inst_id_ and dc_a.end_time_ is not null and dc_c.id in(";
+		
+		for(int i=0;i<deployIds.size();i++){
+			if(i>0)sql+=",";
+			
+			sql+=deployIds.get(i);
+		}
+		sql+="))";
+		
+		return new QlCondition(sql);
+	}
+	
+	//获取可访问属于流程实例的任务的条件
+	private QlCondition getProcessInstanceAccessControlCondition(){
+		// 查找当前登录用户条件
+		SystemContext context = (SystemContext) this.getContext();
+		//当前用户
+		Actor actor=context.getUser();
+		//流程部署的监控
+		List<AccessActor> aa4list= this.accessService.find(actor, "ProcessInstance");
+		if(aa4list==null||aa4list.size()==0)return null;
+		
+		//流程实例的id
+		List<String> pIds=new ArrayList<String>();
+		
+		for(AccessActor aa :aa4list){
+			//先进性权限的判断
+			//查阅
+			if(AccessActor.ROLE_TRUE.equals(aa.getRole().substring(aa.getRole().length()-1))){
+				pIds.add(aa.getAccessDoc().getDocId());
+			}else{
+				//编辑
+				if(AccessActor.ROLE_TRUE.equals(
+						aa.getRole().substring(aa.getRole().length()-2,aa.getRole().length()-1))){
+					pIds.add(aa.getAccessDoc().getDocId());
+				}
+				
+			}
+		}
+		
+		if(pIds.size()==0)return null;
+		
+		String sql="exists(select 1 from act_hi_taskinst pi_a";
+		sql+=" where a.id_=pi_a.proc_inst_id_ and pi_a.end_time_ is not null and pi_a.proc_inst_id_ in(";
+		
+		for(int i=0;i<pIds.size();i++){
+			if(i>0)sql+=",";
+			
+			sql+="'"+pIds.get(i)+"'";
+		}
+		sql+="))";
+		
+		return new QlCondition(sql);
 	}
 	
 }
