@@ -64,6 +64,13 @@ public class DeploysAction extends ViewAction<Map<String, Object>> {
 		return context
 				.hasAnyRole(getText("key.role.bc.workflow.deploy.cascade"));
 	}
+	
+	public boolean isAccessControl() {
+		// 流程访问控制
+		SystemContext context = (SystemContext) this.getContext();
+		return context
+				.hasAnyRole(getText("key.role.bc.workflow.accessControl"));
+	}
 
 	@Override
 	protected OrderCondition getGridOrderCondition() {
@@ -89,6 +96,7 @@ public class DeploysAction extends ViewAction<Map<String, Object>> {
 		sql.append(",d.modified_date,d.status_ as status,d.version_ as version");
 		sql.append(",d.category,d.size_ as size,ap.actor_name as pname,d.deploy_date");
 		sql.append(",getdeployuser(d.id)");
+		sql.append(",getaccessactors4docidtype4docidinteger(d.id,'"+Deploy.class.getSimpleName()+"')");
 		sql.append(" from bc_wf_deploy d");
 		sql.append(" inner join bc_identity_actor_history au on au.id=d.author_id ");
 		sql.append(" left join bc_identity_actor_history am on am.id=d.modifier_id");
@@ -123,6 +131,8 @@ public class DeploysAction extends ViewAction<Map<String, Object>> {
 				map.put("pname", rs[i++]);
 				map.put("deploy_date", rs[i++]);
 				map.put("users", rs[i++]);
+				map.put("accessactors", rs[i++]);
+				map.put("accessControlDocType",Deploy.class.getSimpleName());
 				return map;
 			}
 		});
@@ -144,8 +154,6 @@ public class DeploysAction extends ViewAction<Map<String, Object>> {
 				getText("deploy.tfsubject"), 200).setUseTitleFromLabel(true));
 		columns.add(new TextColumn4MapKey("d.version_", "version",
 				getText("deploy.version"), 50).setUseTitleFromLabel(true));
-		// columns.add(new TextColumn4MapKey("d.source", "source",
-		// getText("deploy.source"), 150).setUseTitleFromLabel(true));
 		if (!my) {
 			columns.add(new TextColumn4MapKey("", "users",
 					getText("deploy.user"), 120).setUseTitleFromLabel(true));
@@ -156,30 +164,27 @@ public class DeploysAction extends ViewAction<Map<String, Object>> {
 		columns.add(new TextColumn4MapKey("d.code", "code",
 				getText("deploy.code"), 150).setSortable(true)
 				.setUseTitleFromLabel(true));
-		// columns.add(new TextColumn4MapKey("d.path", "path",
-		// getText("deploy.tfpath"), 250).setUseTitleFromLabel(true));
-		// columns.add(new TextColumn4MapKey("d.size_", "size",
-		// getText("deploy.file.size"),65).setUseTitleFromLabel(true)
-		// .setValueFormater(new FileSizeFormater()));
-		// columns.add(new TextColumn4MapKey("d.desc_", "desc_",
-		// getText("deploy.desc"), 100).setUseTitleFromLabel(true));
 		columns.add(new TextColumn4MapKey("ap.actor_name", "pname",
 				getText("deploy.deployer"), 130));
 		columns.add(new TextColumn4MapKey("d.deploy_date", "deploy_date",
 				getText("deploy.deployDate"), 130)
 				.setValueFormater(new CalendarFormater("yyyy-MM-dd HH:mm")));
+		if(this.isAccessControl()){
+			columns.add(new TextColumn4MapKey("", "accessactors",
+					getText("flow.accessControl.accessActorAndRole")).setSortable(true)
+					.setUseTitleFromLabel(true));
+		}
 		columns.add(new TextColumn4MapKey("au.actor_name", "uname",
 				getText("deploy.author"), 80));
 		columns.add(new TextColumn4MapKey("d.file_date", "file_date",
-				getText("deploy.fileDate")).setUseTitleFromLabel(true)
+				getText("deploy.fileDate"), 80).setUseTitleFromLabel(true)
 				.setValueFormater(new CalendarFormater("yyyy-MM-dd HH:mm")));
-		// columns.add(new TextColumn4MapKey("am.actor_name", "mname",
-		// getText("deploy.modifier"), 80));
-		// columns.add(new TextColumn4MapKey("d.modified_date", "modified_date",
-		// getText("deploy.modifiedDate"), 130)
-		// .setValueFormater(new CalendarFormater("yyyy-MM-dd HH:mm")));
+		
+		columns.add(new HiddenColumn4MapKey("accessactors", "accessactors"));
 		columns.add(new HiddenColumn4MapKey("uid", "uid"));
 		columns.add(new HiddenColumn4MapKey("status", "status"));
+		columns.add(new HiddenColumn4MapKey("accessControlDocType", "accessControlDocType"));
+		columns.add(new HiddenColumn4MapKey("accessControlDocName", "subject"));
 		return columns;
 	}
 
@@ -259,6 +264,14 @@ public class DeploysAction extends ViewAction<Map<String, Object>> {
 				tb.addButton(getDefaultDeleteToolbarButton());
 			}
 		}
+		
+		
+		if(this.isAccessControl()){
+			// 访问监控
+			tb.addButton(new ToolbarButton().setIcon("ui-icon-wrench")
+					.setText(getText("flow.accessControl"))
+					.setClick("bc.deploy.accessControl"));
+		}
 
 		// 状态按钮组
 		tb.addButton(Toolbar.getDefaultToolbarRadioGroup(this.getStatuses(),
@@ -294,7 +307,8 @@ public class DeploysAction extends ViewAction<Map<String, Object>> {
 
 	@Override
 	protected String getHtmlPageJs() {
-		return this.getHtmlPageNamespace() + "/deploy/view.js";
+		return this.getHtmlPageNamespace() + "/deploy/view.js"
+				+","+this.getContextPath()+"/bc/acl/accessControl.js";
 	}
 
 	public String json;
