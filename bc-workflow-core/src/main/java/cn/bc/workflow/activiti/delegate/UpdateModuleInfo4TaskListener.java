@@ -40,6 +40,11 @@ public class UpdateModuleInfo4TaskListener implements TaskListener {
 	private Expression parameter;
 
 	/**
+	 * 是否执行更新方法
+	 */
+	private Expression isExecuteUpdateMethod;
+
+	/**
 	 * 更新对象的id
 	 */
 	private Expression updateObjectId;
@@ -81,6 +86,67 @@ public class UpdateModuleInfo4TaskListener implements TaskListener {
 					new Object[] {
 							Long.valueOf(case4InfractTrafficId.toString()),
 							args });
+		}
+
+		// 判断是否执行更新方法
+		String execute = isExecuteUpdateMethod.getExpressionText();
+		if (execute != null) {
+			if (execute.indexOf("$") != -1) {
+				Object isExecute = arg0.getVariable(execute.substring(
+						execute.indexOf("{") + 1, execute.indexOf("}")));
+				// 如果为true就执行
+				if (isExecute != null) {
+					if (isExecute.toString().equals("true")) {
+						executeUpdateMethod(arg0);
+					}
+				}
+			}
+		} else {
+			// 如果不配置默认执行
+			// 组装参数
+			executeUpdateMethod(arg0);
+		}
+
+	}
+
+	/**
+	 * 更新方法的实现
+	 * 
+	 * @param execution
+	 */
+	private void executeUpdateMethod(DelegateTask execution) {
+		Map<String, Object> arguments = JsonUtils.toMap(parameter
+				.getExpressionText());
+		Map<String, Object> args = new HashMap<String, Object>();
+		Set<String> keySet = arguments.keySet();
+		for (String key : keySet) {
+
+			Object arg = arguments.get(key);
+			if (arg instanceof String) {
+				String value = arg.toString();
+				// 如果包含"$"号就取变量值
+				if (value.indexOf("$") != -1) {
+					args.put(key, execution.getVariable(value.substring(
+							value.indexOf("{") + 1, value.indexOf("}"))));
+				} else {
+					args.put(key, arguments.get(key));
+				}
+
+			} else {
+				args.put(key, arguments.get(key));
+				logger.debug(arguments.get(key) + " :arguments.get(key): "
+						+ arguments.get(key).getClass());
+			}
+		}
+		// 获取id
+		String ObjectId = updateObjectId.getExpressionText();
+		if (ObjectId.indexOf("$") != -1) {
+
+			Object ModuleId = execution.getVariable(ObjectId.substring(
+					ObjectId.indexOf("{") + 1, ObjectId.indexOf("}")));
+			SpringUtils.invokeBeanMethod(serviceName.getExpressionText(),
+					serviceMethod.getExpressionText(),
+					new Object[] { Long.valueOf(ModuleId.toString()), args });
 		}
 	}
 

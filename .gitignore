@@ -10,3 +10,4 @@ Thumbs.db
 build
 bin
 .bpmn
+.DS_Store
