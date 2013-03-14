@@ -50,6 +50,13 @@ public class TodoGroupsAction extends TodoManagesAction {
 		this.actorService = actorService;
 	}
 	
+	public boolean isGroupControl() {
+		// 部门监控
+		SystemContext context = (SystemContext) this.getContext();
+		return context
+				.hasAnyRole(getText("key.role.bc.workflow.group"));
+	}
+	
 	@Override
 	protected Toolbar getHtmlPageToolbar() {
 		Toolbar tb = new Toolbar();
@@ -96,14 +103,15 @@ public class TodoGroupsAction extends TodoManagesAction {
 		
 		OrCondition or=new OrCondition();
 		
+		if(ownActors_in!=null)or.add(ownActors_in);
 		if(ownGroups_ql!=null)or.add(ownGroups_ql);
 		if(deploy_ql!=null)or.add(deploy_ql);
 		if(pi_ql!=null)or.add(pi_ql);
 		
 		if(or.isEmpty()){
-			ac.add(ownActors_in);
+			ac.add(new QlCondition("false"));
 		}else{
-			ac.add(or.add(ownActors_in).setAddBracket(true));
+			ac.add(or.setAddBracket(true));
 		}
 		
 		return ac;
@@ -118,6 +126,8 @@ public class TodoGroupsAction extends TodoManagesAction {
 	
 	/*初始化ownActors*/
 	private void initOwnActors(){
+		if(!this.isGroupControl())return;
+		
 		// 查找当前登录用户条件
 		SystemContext context = (SystemContext) this.getContext();
 		//当前用户
@@ -171,6 +181,7 @@ public class TodoGroupsAction extends TodoManagesAction {
 	
 	/*初始化*/
 	private void initOwnGroups(){
+		if(!this.isGroupControl())return;
 		if(this.ownActors==null)return;
 		
 		List<Actor> _ownGroups = null;
@@ -213,7 +224,7 @@ public class TodoGroupsAction extends TodoManagesAction {
 
 	private QlCondition getProcessInstanceAccessControlCondition() {
 		//流程部署的监控
-		List<AccessActor> aa4list= this.accessService.find(actor, "ProcessInstance");
+		List<AccessActor> aa4list= this.accessService.find(this.actor, "ProcessInstance");
 		if(aa4list==null||aa4list.size()==0)return null;
 		
 		//流程实例的id
@@ -251,7 +262,7 @@ public class TodoGroupsAction extends TodoManagesAction {
 
 	private QlCondition getDeployAccessControlCondition() {
 		//流程部署的监控
-		List<AccessActor> aa4list= this.accessService.find(actor, Deploy.class.getSimpleName());
+		List<AccessActor> aa4list= this.accessService.find(this.actor, Deploy.class.getSimpleName());
 		if(aa4list==null||aa4list.size()==0)return null;
 		
 		//流程部署的id
@@ -291,14 +302,13 @@ public class TodoGroupsAction extends TodoManagesAction {
 	
 	/*获取属于当前用户拥有的指定岗位对应的上组织下的对应用户的条件*/
 	private InCondition getOwnActorsCondition(){
+		if(this.ownActors==null)return null;
+		
 		List<String> ownActorCodes=new ArrayList<String>();
-		if(this.ownActors==null){
-			ownActorCodes.add("''");
-		}else{
-			for(Actor a:ownActors){
-				ownActorCodes.add(a.getCode());
-			}
+		for(Actor a:ownActors){
+			ownActorCodes.add(a.getCode());
 		}
+		
 		return new InCondition("a.assignee_",ownActorCodes);
 	}
 

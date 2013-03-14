@@ -54,6 +54,13 @@ public class GroupHistoricTaskInstancesAction extends
 	protected String getFormActionName() {
 		return "groupHistoricTaskInstance" ;
 	}
+	
+	public boolean isGroupControl() {
+		// 部门监控
+		SystemContext context = (SystemContext) this.getContext();
+		return context
+				.hasAnyRole(getText("key.role.bc.workflow.group"));
+	}
 
 
 	@Override
@@ -84,17 +91,19 @@ public class GroupHistoricTaskInstancesAction extends
 		// 状态条件
 		AndCondition ac = new AndCondition();
 		
-		InCondition ownActorCodes_ic=this.getOwnActorCondition();
+		InCondition ownActors_ic=this.getOwnActorCondition();
 		QlCondition deploy_qc=this.getDeployAccessControlCondition();
 		QlCondition pi_qc=this.getProcessInstanceAccessControlCondition();
-		OrCondition or=new OrCondition();
 		
+		OrCondition or=new OrCondition();
 		if(deploy_qc!=null)or.add(deploy_qc);
 		if(pi_qc!=null)or.add(pi_qc);
+		if(ownActors_ic!=null)or.add(ownActors_ic);
+		
 		if(or.isEmpty()){
-			ac.add(ownActorCodes_ic);
+			ac.add(new QlCondition("false"));
 		}else{
-			ac.add(or.add(ownActorCodes_ic).setAddBracket(true));
+			ac.add(or.setAddBracket(true));
 		}
 		
 		// 结束时间不能为空
@@ -106,6 +115,8 @@ public class GroupHistoricTaskInstancesAction extends
 	
 	/*获取属于当前用户拥有的指定岗位对应的上组织下的对应用户的条件*/
 	private InCondition getOwnActorCondition(){
+		if(!this.isGroupControl())return null;
+		
 		// 查找当前登录用户条件
 		SystemContext context = (SystemContext) this.getContext();
 		//当前用户
@@ -117,25 +128,30 @@ public class GroupHistoricTaskInstancesAction extends
 		if(ownedGroups==null||ownedGroups.size()==0)return null;
 		
 		//部门领导的岗位
-		List<Actor> leaderGroups=new ArrayList<Actor>();
+		List<Actor> leaderGroups=null;
 		//判断用户拥有的岗位名称是否为指定的部门领导岗位名称
 		for(Actor a:ownedGroups){
-			if(this.getText("flow.group.leaderDepartmentGroupNames").indexOf(a.getName())!=-1)
+			if(this.getText("flow.group.leaderDepartmentGroupNames").indexOf(a.getName())!=-1){
+				if(leaderGroups==null)leaderGroups=new ArrayList<Actor>();
+				
 				leaderGroups.add(a);
+			}
 		}
-		if(leaderGroups.size()==0)return null;
+		if(leaderGroups==null)return null;
 		
 		//部门领导岗位对应的上级组织但不包括“宝城”
-		List<Actor> leaderUppers=new ArrayList<Actor>();
+		List<Actor> leaderUppers=null;
 		Actor leaderUpper;
 		for(Actor a:leaderGroups){
 			leaderUpper=this.actorService.loadBelong(a.getId(), 
 					new Integer[] { Actor.TYPE_DEPARTMENT,Actor.TYPE_UNIT });
 			if(!leaderUpper.getCode().equals("baochengzongbu")){
+				if(leaderUppers==null)leaderUppers=new ArrayList<Actor>();
+				
 				leaderUppers.add(leaderUpper);
 			}	
 		}
-		if(leaderUppers.size()==0)return null;
+		if(leaderUppers==null)return null;
 
 		//上级组织拥有的用户
 		List<Actor> ownActors=new ArrayList<Actor>();
@@ -145,7 +161,7 @@ public class GroupHistoricTaskInstancesAction extends
 					new Integer[] { ActorRelation.TYPE_BELONG },
 					new Integer[] { Actor.TYPE_USER});
 			if(_ownActors==null)continue;
-			
+
 			for(Actor _a:_ownActors){
 				if(!ownActors.contains(_a)){
 					ownActors.add(_a);
@@ -153,13 +169,12 @@ public class GroupHistoricTaskInstancesAction extends
 			}
 		}
 		
+		if(ownActors==null||ownActors.size()==0)return null;
+		
 		List<String> ownActorCodes=new ArrayList<String>();
-		if(ownActors==null||ownActors.size()==0){
-			ownActorCodes.add("''");
-		}else{
-			for(Actor a:ownActors){
-				ownActorCodes.add(a.getCode());
-			}
+
+		for(Actor a:ownActors){
+			ownActorCodes.add(a.getCode());
 		}
 		
 		return new InCondition("a.assignee_",ownActorCodes);
