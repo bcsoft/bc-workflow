@@ -141,6 +141,12 @@ public class HistoricProcessInstancesAction extends
 					}
 				}
 				
+				if(map.get("subject")!=null&&!map.get("subject").toString().equals("")){
+					map.put("accessControlDocName", map.get("subject").toString());
+				}else{
+					map.put("accessControlDocName", map.get("procinstName").toString());
+				}
+				
 				return map;
 			}
 		});
@@ -223,7 +229,7 @@ public class HistoricProcessInstancesAction extends
 		columns.add(new HiddenColumn4MapKey("procinstid", "procinstid"));
 		columns.add(new HiddenColumn4MapKey("status", "status"));
 		columns.add(new HiddenColumn4MapKey("accessControlDocType", "accessControlDocType"));
-		columns.add(new HiddenColumn4MapKey("accessControlDocName", "procinstName"));
+		columns.add(new HiddenColumn4MapKey("accessControlDocName", "accessControlDocName"));
 		return columns;
 	}
 
