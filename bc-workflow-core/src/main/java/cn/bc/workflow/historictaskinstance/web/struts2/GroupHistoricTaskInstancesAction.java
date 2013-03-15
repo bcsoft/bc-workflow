@@ -62,6 +62,11 @@ public class GroupHistoricTaskInstancesAction extends
 				.hasAnyRole(getText("key.role.bc.workflow.group"));
 	}
 
+	@Override
+	protected String getGridDblRowMethod() {
+		return "bc.groupHistoricTaskInstanceSelectView.open";
+	}
+	
 
 	@Override
 	protected Toolbar getHtmlPageToolbar() {
@@ -69,7 +74,7 @@ public class GroupHistoricTaskInstancesAction extends
 		// 查看
 		tb.addButton(new ToolbarButton().setIcon("ui-icon-check")
 				.setText(getText("label.read"))
-				.setClick("bc.historicTaskInstanceSelectView.open"));
+				.setClick("bc.groupHistoricTaskInstanceSelectView.open"));
 		tb.addButton(new ToolbarButton().setIcon("ui-icon-search")
 				.setText(getText("flow.task.flow"))
 				.setClick("bc.groupHistoricTaskInstanceSelectView.viewflow"));
@@ -187,7 +192,7 @@ public class GroupHistoricTaskInstancesAction extends
 		//当前用户
 		Actor actor=context.getUser();
 		//流程部署的监控
-		List<AccessActor> aa4list= this.accessService.find(actor, Deploy.class.getSimpleName());
+		List<AccessActor> aa4list= this.accessService.findByDocType(actor.getId(), Deploy.class.getSimpleName());
 		if(aa4list==null||aa4list.size()==0)return null;
 		
 		//流程部署的id
@@ -232,7 +237,7 @@ public class GroupHistoricTaskInstancesAction extends
 		//当前用户
 		Actor actor=context.getUser();
 		//流程部署的监控
-		List<AccessActor> aa4list= this.accessService.find(actor, "ProcessInstance");
+		List<AccessActor> aa4list= this.accessService.findByDocType(actor.getId(), "ProcessInstance");
 		if(aa4list==null||aa4list.size()==0)return null;
 		
 		//流程实例的id

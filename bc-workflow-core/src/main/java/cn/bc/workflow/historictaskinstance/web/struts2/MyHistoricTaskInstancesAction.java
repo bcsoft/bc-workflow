@@ -80,7 +80,7 @@ public class MyHistoricTaskInstancesAction extends
 					}	
 				}));
 		// 流程
-		columns.add(new TextColumn4MapKey("c.name_", "procinstname",
+		columns.add(new TextColumn4MapKey("c.name_", "procinstName",
 				getText("flow.task.category")).setSortable(true)
 				.setUseTitleFromLabel(true));
 		//流程状态
@@ -89,11 +89,11 @@ public class MyHistoricTaskInstancesAction extends
 				.setValueFormater(new EntityStatusFormater(getPStatus())));
 
 		columns.add(new HiddenColumn4MapKey("assignee", "assignee"));
-		columns.add(new HiddenColumn4MapKey("procinstId", "procinstid"));
-		columns.add(new HiddenColumn4MapKey("procinstName", "procinstname"));
-		columns.add(new HiddenColumn4MapKey("procinstKey", "procinstkey"));
+		columns.add(new HiddenColumn4MapKey("procinstId", "procinstId"));
+		columns.add(new HiddenColumn4MapKey("procinstName", "procinstName"));
+		columns.add(new HiddenColumn4MapKey("procinstKey", "procinstKey"));
 		columns.add(new HiddenColumn4MapKey("procinstTaskName", "name"));
-		columns.add(new HiddenColumn4MapKey("procinstTaskKey", "taskdefkey"));
+		columns.add(new HiddenColumn4MapKey("procinstTaskKey", "taskDefKey"));
 		columns.add(new HiddenColumn4MapKey("subject", "subject"));
 		return columns;
 	}

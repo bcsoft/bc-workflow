@@ -99,6 +99,7 @@ public class HistoricProcessInstancesAction extends
 		sql.append(",getProcessInstanceSubject(a.proc_inst_id_) as subject");
 		sql.append(",getprocesstodotasknames(a.proc_inst_id_) as  todo_names");
 		sql.append(",getaccessactors4docidtype4docidcharacter(a.id_,'ProcessInstance')");
+		sql.append(",e.id as deploy_id");
 		sql.append(" from act_hi_procinst a");
 		sql.append(" left join act_ru_execution f on a.id_ = f.proc_inst_id_");
 		sql.append(" inner join act_re_procdef b on b.id_=a.proc_def_id_");
@@ -116,7 +117,7 @@ public class HistoricProcessInstancesAction extends
 				Map<String, Object> map = new HashMap<String, Object>();
 				int i = 0;
 				map.put("id", rs[i++]);
-				map.put("procinstName", rs[i++]);
+				map.put("procinst_name", rs[i++]);
 				map.put("start_time", rs[i++]);
 				map.put("end_time", rs[i++]);
 				map.put("duration", rs[i++]);
@@ -125,10 +126,11 @@ public class HistoricProcessInstancesAction extends
 				map.put("version", rs[i++]);
 				map.put("aVersion", rs[i++]);
 				map.put("key", rs[i++]);
-				map.put("startName", rs[i++]);// 发起人
+				map.put("start_name", rs[i++]);// 发起人
 				map.put("subject", rs[i++]);
 				map.put("todo_names", rs[i++]);
 				map.put("accessactors", rs[i++]);
+				map.put("deployId", rs[i++]);
 				map.put("accessControlDocType","ProcessInstance");
 				
 				if (map.get("end_time") != null) {//已结束
@@ -144,7 +146,7 @@ public class HistoricProcessInstancesAction extends
 				if(map.get("subject")!=null&&!map.get("subject").toString().equals("")){
 					map.put("accessControlDocName", map.get("subject").toString());
 				}else{
-					map.put("accessControlDocName", map.get("procinstName").toString());
+					map.put("accessControlDocName", map.get("procinst_name").toString());
 				}
 				
 				return map;
@@ -167,7 +169,7 @@ public class HistoricProcessInstancesAction extends
 				getText("flow.instance.subject"), 200).setSortable(true)
 				.setUseTitleFromLabel(true));
 		// 流程
-		columns.add(new TextColumn4MapKey("b.name_", "procinstName",
+		columns.add(new TextColumn4MapKey("b.name_", "procinst_name",
 				getText("flow.instance.name"), 200).setSortable(true)
 				.setUseTitleFromLabel(true));
 		columns.add(new TextColumn4MapKey("", "todo_names",
@@ -195,7 +197,7 @@ public class HistoricProcessInstancesAction extends
 					
 				}));
 		// 发起人
-		columns.add(new TextColumn4MapKey("a.first_", "startName",
+		columns.add(new TextColumn4MapKey("a.first_", "start_name",
 				getText("flow.instance.startName"), 80).setSortable(true)
 				.setUseTitleFromLabel(true));
 		columns.add(new TextColumn4MapKey("a.start_time_", "start_time",
@@ -230,6 +232,7 @@ public class HistoricProcessInstancesAction extends
 		columns.add(new HiddenColumn4MapKey("status", "status"));
 		columns.add(new HiddenColumn4MapKey("accessControlDocType", "accessControlDocType"));
 		columns.add(new HiddenColumn4MapKey("accessControlDocName", "accessControlDocName"));
+		columns.add(new HiddenColumn4MapKey("deployId", "deployId"));
 		return columns;
 	}
 

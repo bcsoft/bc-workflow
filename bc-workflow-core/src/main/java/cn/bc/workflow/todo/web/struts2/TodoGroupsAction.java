@@ -64,7 +64,7 @@ public class TodoGroupsAction extends TodoManagesAction {
 		// 查看按钮
 		tb.addButton(new ToolbarButton().setIcon("ui-icon-check")
 				.setText(getText("label.read"))
-				.setClick("bc.todoView.open"));
+				.setClick("bc.todoGroupView.open"));
 				
 		tb.addButton(new ToolbarButton().setIcon("ui-icon-person")
 				.setText(getText("label.delegate.task"))
@@ -87,6 +87,17 @@ public class TodoGroupsAction extends TodoManagesAction {
 	@Override
 	protected String getFormActionName() {
 		return "group";
+	}
+	
+	@Override
+	protected String getGridDblRowMethod() {
+		return "bc.todoGroupView.open";
+	}
+	
+	@Override
+	protected String getHtmlPageJs() {
+		return super.getHtmlPageJs()+ ","
+				+ this.getContextPath() + "/bc-workflow/todo/group/view.js";
 	}
 
 	@Override
@@ -224,7 +235,7 @@ public class TodoGroupsAction extends TodoManagesAction {
 
 	private QlCondition getProcessInstanceAccessControlCondition() {
 		//流程部署的监控
-		List<AccessActor> aa4list= this.accessService.find(this.actor, "ProcessInstance");
+		List<AccessActor> aa4list= this.accessService.findByDocType(this.actor.getId(), "ProcessInstance");
 		if(aa4list==null||aa4list.size()==0)return null;
 		
 		//流程实例的id
@@ -262,7 +273,7 @@ public class TodoGroupsAction extends TodoManagesAction {
 
 	private QlCondition getDeployAccessControlCondition() {
 		//流程部署的监控
-		List<AccessActor> aa4list= this.accessService.find(this.actor, Deploy.class.getSimpleName());
+		List<AccessActor> aa4list= this.accessService.findByDocType(this.actor.getId(), Deploy.class.getSimpleName());
 		if(aa4list==null||aa4list.size()==0)return null;
 		
 		//流程部署的id

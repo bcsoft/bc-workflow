@@ -89,6 +89,7 @@ public class TodoManagesAction extends ViewAction<Map<String, Object>>{
 		sql.append(",(select string_agg(g2.name,',') from act_ru_identitylink t2 inner join bc_identity_actor g2 on g2.code=t2.user_id_ where t2.task_id_= a.id_) as users");
 					//候选岗位
 		sql.append(",(select string_agg(g1.name,',') from act_ru_identitylink t1 inner join bc_identity_actor g1 on g1.code=t1.group_id_ where t1.task_id_= a.id_) as groups");
+		sql.append(",(select id from bc_wf_deploy deploy where deploy.deployment_id=d.deployment_id_) as deploy_id");
 		sql.append(" from act_ru_task a");
 		sql.append(" inner join act_ru_execution b on b.proc_inst_id_ = a.proc_inst_id_");
 		sql.append(" inner join act_re_procdef d on d.id_ = a.proc_def_id_");
@@ -118,6 +119,14 @@ public class TodoManagesAction extends ViewAction<Map<String, Object>>{
 				map.put("subject", rs[i++]); 
 				map.put("users", rs[i++]); //  候选人员列表
 				map.put("groups", rs[i++]); //  候选岗位列表
+				map.put("deployId", rs[i++]);
+				
+				map.put("accessControlDocType","ProcessInstance");
+				if(map.get("subject")!=null&&!map.get("subject").toString().equals("")){
+					map.put("accessControlDocName", map.get("subject").toString());
+				}else{
+					map.put("accessControlDocName", map.get("processName").toString());
+				}
 				return map;
 			}
 		});
@@ -284,6 +293,9 @@ public class TodoManagesAction extends ViewAction<Map<String, Object>>{
 		
 		columns.add(new HiddenColumn4MapKey("procInstId", "procInstId"));
 		columns.add(new HiddenColumn4MapKey("type", "type"));
+		columns.add(new HiddenColumn4MapKey("deployId", "deployId"));
+		columns.add(new HiddenColumn4MapKey("accessControlDocType", "accessControlDocType"));
+		columns.add(new HiddenColumn4MapKey("accessControlDocName", "accessControlDocName"));
 		return columns;
 	}
 

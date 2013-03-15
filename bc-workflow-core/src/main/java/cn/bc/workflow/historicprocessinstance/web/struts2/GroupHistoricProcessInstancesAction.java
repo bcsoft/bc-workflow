@@ -80,7 +80,7 @@ public class GroupHistoricProcessInstancesAction extends HistoricProcessInstance
 		// 查看
 		tb.addButton(new ToolbarButton().setIcon("ui-icon-check")
 				.setText(getText("label.read"))
-				.setClick("bc.historicProcessInstanceSelectView.open"));
+				.setClick("bc.groupHistoricprocessinstance.open"));
 		
 		tb.addButton(Toolbar.getDefaultToolbarRadioGroup(this.getStatus(),
 				"status", 3, getText("title.click2changeSearchStatus")));
@@ -89,6 +89,16 @@ public class GroupHistoricProcessInstancesAction extends HistoricProcessInstance
 		tb.addButton(this.getDefaultSearchToolbarButton());
 
 		return tb;
+	}
+	
+	@Override
+	protected String getGridDblRowMethod() {
+		return "bc.groupHistoricprocessinstance.open";
+	}
+
+	@Override
+	protected String getHtmlPageJs() {
+		return this.getHtmlPageNamespace() + "/historicprocessinstance/group/view.js";
 	}
 
 	@Override
@@ -105,7 +115,7 @@ public class GroupHistoricProcessInstancesAction extends HistoricProcessInstance
 				getText("flow.instance.subject"), 200).setSortable(true)
 				.setUseTitleFromLabel(true));
 		// 流程
-		columns.add(new TextColumn4MapKey("b.name_", "procName",
+		columns.add(new TextColumn4MapKey("b.name_", "procinst_name",
 				getText("flow.instance.name"), 200).setSortable(true)
 				.setUseTitleFromLabel(true));
 		columns.add(new TextColumn4MapKey("", "todo_names",
@@ -124,7 +134,7 @@ public class GroupHistoricProcessInstancesAction extends HistoricProcessInstance
 					
 				}));
 		// 发起人
-		columns.add(new TextColumn4MapKey("a.first_", "startName",
+		columns.add(new TextColumn4MapKey("a.first_", "start_name",
 				getText("flow.instance.startName"), 80).setSortable(true)
 				.setUseTitleFromLabel(true));
 		columns.add(new TextColumn4MapKey("a.start_time_", "start_time",
@@ -151,6 +161,9 @@ public class GroupHistoricProcessInstancesAction extends HistoricProcessInstance
 				.setUseTitleFromLabel(true));
 		columns.add(new HiddenColumn4MapKey("procinstid", "procinstid"));
 		columns.add(new HiddenColumn4MapKey("status", "status"));
+		columns.add(new HiddenColumn4MapKey("accessControlDocType", "accessControlDocType"));
+		columns.add(new HiddenColumn4MapKey("accessControlDocName", "accessControlDocName"));
+		columns.add(new HiddenColumn4MapKey("deployId", "deployId"));
 		return columns;
 	}
 	
@@ -254,7 +267,7 @@ public class GroupHistoricProcessInstancesAction extends HistoricProcessInstance
 		//当前用户
 		Actor actor=context.getUser();
 		//流程部署的监控
-		List<AccessActor> aa4list= this.accessService.find(actor, Deploy.class.getSimpleName());
+		List<AccessActor> aa4list= this.accessService.findByDocType(actor.getId(), Deploy.class.getSimpleName());
 		if(aa4list==null||aa4list.size()==0)return null;
 		
 		//流程部署的id
@@ -299,7 +312,7 @@ public class GroupHistoricProcessInstancesAction extends HistoricProcessInstance
 		//当前用户
 		Actor actor=context.getUser();
 		//流程部署的监控
-		List<AccessActor> aa4list= this.accessService.find(actor, "ProcessInstance");
+		List<AccessActor> aa4list= this.accessService.findByDocType(actor.getId(), "ProcessInstance");
 		if(aa4list==null||aa4list.size()==0)return null;
 		
 		//流程实例的id
