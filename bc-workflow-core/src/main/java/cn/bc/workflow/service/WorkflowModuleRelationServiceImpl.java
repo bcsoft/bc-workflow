@@ -15,24 +15,29 @@ import cn.bc.workflow.domain.WorkflowModuleRelation;
  * @author lbj
  * 
  */
-public class WorkflowModuleRelationServiceImpl extends DefaultCrudService<WorkflowModuleRelation>
-		implements WorkflowModuleRelationService {
+public class WorkflowModuleRelationServiceImpl extends
+		DefaultCrudService<WorkflowModuleRelation> implements
+		WorkflowModuleRelationService {
 
 	private WorkflowModuleRelationDao workflowModuleRelationDao;
 
 	@Autowired
-	public void setModuleRelationDao(WorkflowModuleRelationDao workflowModuleRelationDao) {
+	public void setModuleRelationDao(
+			WorkflowModuleRelationDao workflowModuleRelationDao) {
 		this.workflowModuleRelationDao = workflowModuleRelationDao;
 		this.setCrudDao(workflowModuleRelationDao);
 	}
 
-	public List<Map<String, Object>> findList(Long mid, String mtype,String[] globalKeys) {
-		return this.workflowModuleRelationDao.findList(mid, mtype,null,globalKeys);
+	public List<Map<String, Object>> findList(Long mid, String mtype,
+			String[] globalKeys) {
+		return this.workflowModuleRelationDao.findList(mid, mtype, null,
+				globalKeys);
 	}
 
 	public List<Map<String, Object>> findList(Long mid, String mtype,
 			String key, String[] globalKeys) {
-		return this.workflowModuleRelationDao.findList(mid, mtype,key,globalKeys);
+		return this.workflowModuleRelationDao.findList(mid, mtype, key,
+				globalKeys);
 	}
 
 	public boolean hasRelation(Long mid, String mtype) {
@@ -41,6 +46,12 @@ public class WorkflowModuleRelationServiceImpl extends DefaultCrudService<Workfl
 
 	public boolean hasRelation4Key(Long mid, String mtype, String key) {
 		return this.workflowModuleRelationDao.hasRelation(mid, mtype, key);
+	}
+
+	public List<Map<String, Object>> findList(String[] mtype,
+			String[] propertys, String[] values, String[] globalKeys) {
+		return this.workflowModuleRelationDao.findList(mtype, propertys,
+				values, globalKeys);
 	}
 
 }
