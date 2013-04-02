@@ -8,10 +8,11 @@ import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Controller;
 
+import cn.bc.acl.domain.AccessActor;
+import cn.bc.acl.service.AccessService;
 import cn.bc.core.query.condition.Condition;
 import cn.bc.core.query.condition.impl.AndCondition;
 import cn.bc.core.query.condition.impl.InCondition;
-import cn.bc.core.query.condition.impl.IsNullCondition;
 import cn.bc.core.query.condition.impl.OrCondition;
 import cn.bc.core.query.condition.impl.QlCondition;
 import cn.bc.identity.domain.Actor;
@@ -20,6 +21,7 @@ import cn.bc.identity.service.ActorService;
 import cn.bc.identity.web.SystemContext;
 import cn.bc.web.ui.html.toolbar.Toolbar;
 import cn.bc.web.ui.html.toolbar.ToolbarButton;
+import cn.bc.workflow.deploy.domain.Deploy;
 
 /**
  * 部门的待办监控视图Action
@@ -31,66 +33,30 @@ import cn.bc.web.ui.html.toolbar.ToolbarButton;
 @Controller
 public class TodoGroupsAction extends TodoManagesAction {
 	private static final long serialVersionUID = 1L;
+	private List<Actor> ownActors;//当前用户拥有的指定岗位对应的上组织下的对应用户
+	private List<Actor> ownGroups;//ownActors 拥有的岗位
+	private Actor actor;//当前用户
+	
 	private ActorService actorService;
+	private AccessService accessService;
+
+	@Autowired
+	public void setAccessService(AccessService accessService) {
+		this.accessService = accessService;
+	}
 	
 	@Autowired
 	public void setActorService(ActorService actorService) {
 		this.actorService = actorService;
 	}
-
-	@Override
-	protected Condition getGridSpecalCondition() {
-		AndCondition ac=(AndCondition) super.getGridSpecalCondition();
-		
-		OrCondition or=new OrCondition();
-		
-		List<String> ownActorCodes=new ArrayList<String>();
-		List<Actor> ownActors=this.getOwnActorCodes();
-		if(ownActors==null||ownActors.size()==0){
-			ownActorCodes.add("''");
-		}else{
-			for(Actor a:ownActors){
-				ownActorCodes.add(a.getCode());
-			}
-		}
-		
-		or.add(new InCondition("a.assignee_",ownActorCodes));
-		
-		if(ownActors!=null&&ownActors.size()>0){
-
-			//获取部门所有用户 其所拥有的岗位
-			List<Actor> ownActorOwnGroups = this.getOwnActorOwnGroups(ownActors);
-			
-			String ql_c="exists(select 1 from act_ru_identitylink c where c.task_id_ = a.id_ and ";
-				//候选人
-				ql_c+="(c.user_id_ in (";
-				for(String code:ownActorCodes){
-					ql_c+="'"+code+"',";
-				}
-				ql_c=ql_c.substring(0, ql_c.lastIndexOf(","));
-				ql_c+=")";
-				
-				//候选岗位
-				if (ownActorOwnGroups.size() > 0) {
-					ql_c +=" or c.group_id_ in(";
-					for(Actor a:ownActorOwnGroups){
-						ql_c+="'"+a.getCode()+"',";
-					}
-					ql_c=ql_c.substring(0, ql_c.lastIndexOf(","));
-					ql_c+=")";
-				}
-				ql_c+=")";
-			ql_c+=")";
-			
 	
-			or.add(new AndCondition(new IsNullCondition("a.assignee_"),new QlCondition(ql_c)).setAddBracket(true));
-		}
-		
-		ac.add(or.setAddBracket(true));
-		
-		return ac.isEmpty()?null:ac;
+	public boolean isGroupControl() {
+		// 部门监控
+		SystemContext context = (SystemContext) this.getContext();
+		return context
+				.hasAnyRole(getText("key.role.bc.workflow.group"));
 	}
-
+	
 	@Override
 	protected Toolbar getHtmlPageToolbar() {
 		Toolbar tb = new Toolbar();
@@ -98,7 +64,7 @@ public class TodoGroupsAction extends TodoManagesAction {
 		// 查看按钮
 		tb.addButton(new ToolbarButton().setIcon("ui-icon-check")
 				.setText(getText("label.read"))
-				.setClick("bc.todoView.open"));
+				.setClick("bc.todoGroupView.open"));
 				
 		tb.addButton(new ToolbarButton().setIcon("ui-icon-person")
 				.setText(getText("label.delegate.task"))
@@ -123,8 +89,56 @@ public class TodoGroupsAction extends TodoManagesAction {
 		return "group";
 	}
 	
-	/*获取属于当前用户拥有的指定岗位对应的上组织下的对应用户*/
-	private List<Actor> getOwnActorCodes(){
+	@Override
+	protected String getGridDblRowMethod() {
+		return "bc.todoGroupView.open";
+	}
+	
+	@Override
+	protected String getHtmlPageJs() {
+		return super.getHtmlPageJs()+ ","
+				+ this.getContextPath() + "/bc-workflow/todo/group/view.js";
+	}
+
+	@Override
+	protected Condition getGridSpecalCondition() {
+		AndCondition ac=(AndCondition) super.getGridSpecalCondition();
+		this.initActor();
+		this.initOwnActors();
+		this.initOwnGroups();
+		
+		InCondition ownActors_in=this.getOwnActorsCondition();
+		QlCondition ownGroups_ql=this.getOwnGroupsCondition();
+		QlCondition deploy_ql=this.getDeployAccessControlCondition();
+		QlCondition pi_ql=this.getProcessInstanceAccessControlCondition();
+		
+		OrCondition or=new OrCondition();
+		
+		if(ownActors_in!=null)or.add(ownActors_in);
+		if(ownGroups_ql!=null)or.add(ownGroups_ql);
+		if(deploy_ql!=null)or.add(deploy_ql);
+		if(pi_ql!=null)or.add(pi_ql);
+		
+		if(or.isEmpty()){
+			ac.add(new QlCondition("false"));
+		}else{
+			ac.add(or.setAddBracket(true));
+		}
+		
+		return ac;
+	}
+
+	private void initActor(){
+		// 查找当前登录用户条件
+		SystemContext context = (SystemContext) this.getContext();
+		//当前用户
+		this.actor=context.getUser();
+	}
+	
+	/*初始化ownActors*/
+	private void initOwnActors(){
+		if(!this.isGroupControl())return;
+		
 		// 查找当前登录用户条件
 		SystemContext context = (SystemContext) this.getContext();
 		//当前用户
@@ -133,7 +147,7 @@ public class TodoGroupsAction extends TodoManagesAction {
 		List<Actor> ownedGroups=this.actorService.findMaster(actor.getId(),
 				new Integer[] { ActorRelation.TYPE_BELONG },
 				new Integer[] { Actor.TYPE_GROUP });
-		if(ownedGroups==null||ownedGroups.size()==0)return null;
+		if(ownedGroups==null||ownedGroups.size()==0)return;
 		
 		//部门领导的岗位
 		List<Actor> leaderGroups=new ArrayList<Actor>();
@@ -142,7 +156,7 @@ public class TodoGroupsAction extends TodoManagesAction {
 			if(this.getText("flow.group.leaderDepartmentGroupNames").indexOf(a.getName())!=-1)
 				leaderGroups.add(a);
 		}
-		if(leaderGroups.size()==0)return null;
+		if(leaderGroups.size()==0)return;
 		
 		//部门领导岗位对应的上级组织但不包括“宝城”
 		List<Actor> leaderUppers=new ArrayList<Actor>();
@@ -154,48 +168,160 @@ public class TodoGroupsAction extends TodoManagesAction {
 				leaderUppers.add(leaderUpper);
 			}	
 		}
-		if(leaderUppers.size()==0)return null;
+		if(leaderUppers.size()==0)return;
 
 		//上级组织拥有的用户
-		List<Actor> ownActors=new ArrayList<Actor>();
-		List<Actor> _ownActors;
+		List<Actor> _ownActors=null;
+		List<Actor> actors;
 		for(Actor a:leaderUppers){
-			_ownActors=this.actorService.findFollower(a.getId(), 
+			actors=this.actorService.findFollower(a.getId(), 
 					new Integer[] { ActorRelation.TYPE_BELONG },
 					new Integer[] { Actor.TYPE_USER});
-			if(_ownActors==null)continue;
 			
-			for(Actor _a:_ownActors){
-				if(!ownActors.contains(_a)){
-					ownActors.add(_a);
-				}
+			if(actors==null)continue;
+			if(_ownActors==null)_ownActors=new ArrayList<Actor>();
+			
+			for(Actor _a:actors){
+				if(!_ownActors.contains(_a))_ownActors.add(_a);
+				
 			}
 		}
 		
-		return ownActors;
+		this.ownActors=_ownActors;
 	}
-
-	/*获取属于当前用户拥有的指定岗位对应的上组织下的对应用户所拥有的岗位集合*/
-	private List<Actor> getOwnActorOwnGroups(List<Actor> users){
-		//用户拥有的岗位
-		List<Actor> ownGroups=new ArrayList<Actor>();
-		List<Actor> _ownGroups;
+	
+	/*初始化*/
+	private void initOwnGroups(){
+		if(!this.isGroupControl())return;
+		if(this.ownActors==null)return;
+		
+		List<Actor> _ownGroups = null;
+		//声明每一个用户拥有的岗位
+		List<Actor> _userOwnGroups;
 		
 		//获取每一个用户拥有的岗位加入到集合中
-		for(Actor a: users){
-			_ownGroups=this.actorService.findMaster(a.getId(),
+		for(Actor a: this.ownActors){
+			_userOwnGroups=this.actorService.findMaster(a.getId(),
 					new Integer[] { ActorRelation.TYPE_BELONG },
 					new Integer[] { Actor.TYPE_GROUP });
-			if(_ownGroups!=null&&_ownGroups.size()>0){
-				for(Actor _a: _ownGroups){
-					if(!ownGroups.contains(_a)){
-						ownGroups.add(_a);
-					}
-				}	
+			
+			if(_userOwnGroups==null)continue;
+				
+			if(_ownGroups==null)_ownGroups=new ArrayList<Actor>();
+			
+			for(Actor _a: _userOwnGroups){
+				if(!_ownGroups.contains(_a))_ownGroups.add(_a);
+			}	
+			
+		}
+		
+		this.ownGroups=_ownGroups;
+	}
+
+	private QlCondition getOwnGroupsCondition() {
+		if(this.ownGroups==null)return null;
+		
+		String sql="exists(select 1 from act_ru_identitylink ogc_a where ogc_a.task_id_ = a.id_ and";
+			   sql+=" ogc_a.group_id_ in(";
+			   
+			   for(int i=0;i<ownGroups.size();i++){
+					if(i>0)sql+=",";
+					
+					sql+="'"+ownGroups.get(i).getCode()+"'";
+				}
+			   sql+="))";
+		return new QlCondition(sql);
+	}
+
+	private QlCondition getProcessInstanceAccessControlCondition() {
+		//流程部署的监控
+		List<AccessActor> aa4list= this.accessService.findByDocType(this.actor.getId(), "ProcessInstance");
+		if(aa4list==null||aa4list.size()==0)return null;
+		
+		//流程实例的id
+		List<String> pIds=new ArrayList<String>();
+		
+		for(AccessActor aa :aa4list){
+			//先进性权限的判断
+			//查阅
+			if(AccessActor.ROLE_TRUE.equals(aa.getRole().substring(aa.getRole().length()-1))){
+				pIds.add(aa.getAccessDoc().getDocId());
+			}else{
+				//编辑
+				if(AccessActor.ROLE_TRUE.equals(
+						aa.getRole().substring(aa.getRole().length()-2,aa.getRole().length()-1))){
+					pIds.add(aa.getAccessDoc().getDocId());
+				}
+				
 			}
 		}
 		
-		return ownGroups;
+		if(pIds.size()==0)return null;
+		
+		String sql="exists(select 1 from act_ru_task pi_a";
+		sql+=" where pi_a.id_=a.id_ and pi_a.proc_inst_id_ in(";
+		
+		for(int i=0;i<pIds.size();i++){
+			if(i>0)sql+=",";
+			
+			sql+="'"+pIds.get(i)+"'";
+		}
+		sql+="))";
+		
+		return new QlCondition(sql);
 	}
+
+	private QlCondition getDeployAccessControlCondition() {
+		//流程部署的监控
+		List<AccessActor> aa4list= this.accessService.findByDocType(this.actor.getId(), Deploy.class.getSimpleName());
+		if(aa4list==null||aa4list.size()==0)return null;
+		
+		//流程部署的id
+		List<String> deployIds=new ArrayList<String>();
+		
+		for(AccessActor aa :aa4list){
+			//先进性权限的判断
+			//查阅
+			if(AccessActor.ROLE_TRUE.equals(aa.getRole().substring(aa.getRole().length()-1))){
+				deployIds.add(aa.getAccessDoc().getDocId());
+			}else{
+				//编辑
+				if(AccessActor.ROLE_TRUE.equals(
+						aa.getRole().substring(aa.getRole().length()-2,aa.getRole().length()-1))){
+					deployIds.add(aa.getAccessDoc().getDocId());
+				}
+				
+			}
+		}
+		
+		if(deployIds.size()==0)return null;
+		
+		String sql="exists(select 1 from act_ru_task dc_a";
+		sql+=" inner join act_re_procdef dc_b on dc_b.id_=dc_a.proc_def_id_";
+		sql+=" inner join bc_wf_deploy dc_c on dc_c.deployment_id=dc_b.deployment_id_";
+		sql+=" where dc_a.id_=a.id_ and dc_c.id in(";
+		
+		for(int i=0;i<deployIds.size();i++){
+			if(i>0)sql+=",";
+			
+			sql+=deployIds.get(i);
+		}
+		sql+="))";
+		
+		return new QlCondition(sql);
+	}
+	
+	/*获取属于当前用户拥有的指定岗位对应的上组织下的对应用户的条件*/
+	private InCondition getOwnActorsCondition(){
+		if(this.ownActors==null)return null;
+		
+		List<String> ownActorCodes=new ArrayList<String>();
+		for(Actor a:ownActors){
+			ownActorCodes.add(a.getCode());
+		}
+		
+		return new InCondition("a.assignee_",ownActorCodes);
+	}
+
 
 }

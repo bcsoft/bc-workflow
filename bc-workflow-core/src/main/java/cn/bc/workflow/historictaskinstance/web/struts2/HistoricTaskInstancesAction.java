@@ -25,6 +25,7 @@ import cn.bc.db.jdbc.RowMapper;
 import cn.bc.db.jdbc.SqlObject;
 import cn.bc.identity.web.SystemContext;
 import cn.bc.option.domain.OptionItem;
+import cn.bc.web.formater.AbstractFormater;
 import cn.bc.web.formater.CalendarFormater;
 import cn.bc.web.formater.EntityStatusFormater;
 import cn.bc.web.struts2.ViewAction;
@@ -69,7 +70,6 @@ public class HistoricTaskInstancesAction extends
 				getText("key.role.bc.workflow"));
 	}
 	
-
 	@Override
 	protected OrderCondition getGridOrderCondition() {
 		return new OrderCondition("a.start_time_", Direction.Desc);
@@ -84,6 +84,7 @@ public class HistoricTaskInstancesAction extends
 		sql.append(",a.task_def_key_,b.end_time_ as p_end_time,a.due_date_ as due_date,d.name as receiver");
 		sql.append(",getProcessInstanceSubject(a.proc_inst_id_) as subject");
 		sql.append(",h.suspension_state_ pstatus,c.key_ procinstkey");
+		sql.append(",(select id from bc_wf_deploy deploy where deploy.deployment_id=c.deployment_id_) as deploy_id");
 		sql.append(" from act_hi_taskinst a");
 		sql.append(" inner join act_hi_procinst b on b.proc_inst_id_=a.proc_inst_id_");
 		sql.append(" inner join act_re_procdef c on c.id_=a.proc_def_id_");
@@ -100,19 +101,21 @@ public class HistoricTaskInstancesAction extends
 				Map<String, Object> map = new HashMap<String, Object>();
 				int i = 0;
 				map.put("id", rs[i++]);
-				map.put("procinstname", rs[i++]);
+				map.put("procinstName", rs[i++]);
 				map.put("name", rs[i++]);
 				map.put("start_time", rs[i++]);
 				map.put("end_time", rs[i++]);
 				map.put("duration", rs[i++]);
-				map.put("procinstid", rs[i++]);
-				map.put("taskdefkey", rs[i++]);
+				map.put("procinstId", rs[i++]);
+				map.put("taskDefKey", rs[i++]);
 				map.put("p_end_time", rs[i++]);
 				map.put("due_date", rs[i++]);
 				map.put("receiver", rs[i++]);
 				map.put("subject", rs[i++]);
 				map.put("pstatus", rs[i++]);
-				map.put("procinstkey", rs[i++]);
+				map.put("procinstKey", rs[i++]);
+				map.put("deployId", rs[i++]);
+				map.put("accessControlDocType","ProcessInstance");
 
 				// 根据结束时间取得状态
 				if (map.get("end_time") != null) {
@@ -133,12 +136,13 @@ public class HistoricTaskInstancesAction extends
 						map.put("pstatus", String.valueOf(SuspensionState.SUSPENDED.getStateCode()));
 					}
 				}
+				
+				if(map.get("subject")!=null&&!map.get("subject").toString().equals("")){
+					map.put("accessControlDocName", map.get("subject").toString());
+				}else{
+					map.put("accessControlDocName", map.get("procinstName").toString());
+				}
 
-				// 格式化耗时
-				if (map.get("duration") != null)
-					map.put("frmDuration",
-							DateUtils.getWasteTime(Long.parseLong(map.get(
-									"duration").toString())));
 				return map;
 			}
 		});
@@ -187,9 +191,18 @@ public class HistoricTaskInstancesAction extends
 						new CalendarFormater("yyyy-MM-dd HH:mm:ss")));
 		
 		columns.add(new TextColumn4MapKey("a.duration_", "frmDuration",
-				getText("flow.task.duration"), 80).setSortable(true));
+				getText("flow.task.duration"), 80).setSortable(true)
+				.setValueFormater(new AbstractFormater<String>() {
+					@SuppressWarnings("unchecked")
+					@Override
+					public String format(Object context, Object value) {
+						Object duration_obj=((Map<String, Object>)context).get("duration");
+						if(duration_obj==null)return null;
+						return DateUtils.getWasteTime(Long.parseLong(duration_obj.toString()));
+					}	
+				}));
 		// 流程
-		columns.add(new TextColumn4MapKey("c.name_", "procinstname",
+		columns.add(new TextColumn4MapKey("c.name_", "procinstName",
 				getText("flow.task.category")).setSortable(true)
 				.setUseTitleFromLabel(true));
 		//流程状态
@@ -197,14 +210,17 @@ public class HistoricTaskInstancesAction extends
 				getText("flow.task.pstatus"), 80).setSortable(true)
 				.setValueFormater(new EntityStatusFormater(getPStatus())));
 
-		columns.add(new TextColumn4MapKey("a.task_def_key_", "taskdefkey",
+		columns.add(new TextColumn4MapKey("a.task_def_key_", "taskDefKey",
 				"任务key值", 80));
-		columns.add(new HiddenColumn4MapKey("procinstId", "procinstid"));
-		columns.add(new HiddenColumn4MapKey("procinstName", "procinstname"));
-		columns.add(new HiddenColumn4MapKey("procinstKey", "procinstkey"));
+		columns.add(new HiddenColumn4MapKey("procinstId", "procinstId"));
+		columns.add(new HiddenColumn4MapKey("procinstName", "procinstName"));
+		columns.add(new HiddenColumn4MapKey("procinstKey", "procinstKey"));
 		columns.add(new HiddenColumn4MapKey("procinstTaskName", "name"));
-		columns.add(new HiddenColumn4MapKey("procinstTaskKey", "taskdefkey"));
+		columns.add(new HiddenColumn4MapKey("procinstTaskKey", "taskDefKey"));
 		columns.add(new HiddenColumn4MapKey("subject", "subject"));
+		columns.add(new HiddenColumn4MapKey("accessControlDocType", "accessControlDocType"));
+		columns.add(new HiddenColumn4MapKey("accessControlDocName", "accessControlDocName"));
+		columns.add(new HiddenColumn4MapKey("deployId", "deployId"));
 		return columns;
 	}
 

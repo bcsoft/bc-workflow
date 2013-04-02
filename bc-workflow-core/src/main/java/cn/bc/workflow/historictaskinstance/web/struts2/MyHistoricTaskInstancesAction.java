@@ -15,8 +15,10 @@ import cn.bc.core.query.condition.impl.AndCondition;
 import cn.bc.core.query.condition.impl.EqualsCondition;
 import cn.bc.core.query.condition.impl.IsNotNullCondition;
 import cn.bc.core.query.condition.impl.IsNullCondition;
+import cn.bc.core.util.DateUtils;
 import cn.bc.identity.web.SystemContext;
 import cn.bc.option.domain.OptionItem;
+import cn.bc.web.formater.AbstractFormater;
 import cn.bc.web.formater.CalendarFormater;
 import cn.bc.web.formater.EntityStatusFormater;
 import cn.bc.web.ui.html.grid.Column;
@@ -67,9 +69,18 @@ public class MyHistoricTaskInstancesAction extends
 				.setValueFormater(new CalendarFormater("yyyy-MM-dd HH:mm")));
 	
 		columns.add(new TextColumn4MapKey("a.duration_", "frmDuration",
-				getText("flow.task.duration"), 80).setSortable(true));
+				getText("flow.task.duration"), 80).setSortable(true)
+				.setValueFormater(new AbstractFormater<String>() {
+					@SuppressWarnings("unchecked")
+					@Override
+					public String format(Object context, Object value) {
+						Object duration_obj=((Map<String, Object>)context).get("duration");
+						if(duration_obj==null)return null;
+						return DateUtils.getWasteTime(Long.parseLong(duration_obj.toString()));
+					}	
+				}));
 		// 流程
-		columns.add(new TextColumn4MapKey("c.name_", "procinstname",
+		columns.add(new TextColumn4MapKey("c.name_", "procinstName",
 				getText("flow.task.category")).setSortable(true)
 				.setUseTitleFromLabel(true));
 		//流程状态
@@ -78,11 +89,11 @@ public class MyHistoricTaskInstancesAction extends
 				.setValueFormater(new EntityStatusFormater(getPStatus())));
 
 		columns.add(new HiddenColumn4MapKey("assignee", "assignee"));
-		columns.add(new HiddenColumn4MapKey("procinstId", "procinstid"));
-		columns.add(new HiddenColumn4MapKey("procinstName", "procinstname"));
-		columns.add(new HiddenColumn4MapKey("procinstKey", "procinstkey"));
+		columns.add(new HiddenColumn4MapKey("procinstId", "procinstId"));
+		columns.add(new HiddenColumn4MapKey("procinstName", "procinstName"));
+		columns.add(new HiddenColumn4MapKey("procinstKey", "procinstKey"));
 		columns.add(new HiddenColumn4MapKey("procinstTaskName", "name"));
-		columns.add(new HiddenColumn4MapKey("procinstTaskKey", "taskdefkey"));
+		columns.add(new HiddenColumn4MapKey("procinstTaskKey", "taskDefKey"));
 		columns.add(new HiddenColumn4MapKey("subject", "subject"));
 		return columns;
 	}

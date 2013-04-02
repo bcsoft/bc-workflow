@@ -55,7 +55,7 @@ public class MyHistoricProcessInstancesAction extends HistoricProcessInstancesAc
 				getText("flow.instance.subject"), 200).setSortable(true)
 				.setUseTitleFromLabel(true));
 		// 流程
-		columns.add(new TextColumn4MapKey("b.name_", "category",
+		columns.add(new TextColumn4MapKey("b.name_", "procinst_name",
 				getText("flow.instance.name"), 200).setSortable(true)
 				.setUseTitleFromLabel(true));
 		columns.add(new TextColumn4MapKey("", "todo_names",
@@ -74,7 +74,7 @@ public class MyHistoricProcessInstancesAction extends HistoricProcessInstancesAc
 					
 				}));
 		// 发起人
-		columns.add(new TextColumn4MapKey("a.first_", "startName",
+		columns.add(new TextColumn4MapKey("a.first_", "start_name",
 				getText("flow.instance.startName"), 80).setSortable(true)
 				.setUseTitleFromLabel(true));
 		columns.add(new TextColumn4MapKey("a.start_time_", "start_time",
