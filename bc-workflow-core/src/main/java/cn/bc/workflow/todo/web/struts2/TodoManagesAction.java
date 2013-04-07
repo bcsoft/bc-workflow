@@ -322,7 +322,9 @@ public class TodoManagesAction extends ViewAction<Map<String, Object>>{
 
 	@Override
 	protected String[] getGridSearchFields() {
-		return new String [] {"d.name_","a.name_","a.description_","a.assignee_","c.name","getProcessInstanceSubject(a.proc_inst_id_)"};
+		return new String [] {"d.name_","a.name_","a.description_","a.assignee_"
+				,"c.name","getProcessInstanceSubject(a.proc_inst_id_)"
+				,"(select string_agg(g1.name,',') from act_ru_identitylink t1 inner join bc_identity_actor g1 on g1.code=t1.group_id_ where t1.task_id_= a.id_)"};
 	}
 	
 	@Override
