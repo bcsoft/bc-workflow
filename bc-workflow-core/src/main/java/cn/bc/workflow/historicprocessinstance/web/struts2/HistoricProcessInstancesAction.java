@@ -67,7 +67,7 @@ public class HistoricProcessInstancesAction extends
 		this.workflowService = workflowService;
 	}
 
-	public String status;
+	public String status="1";//默认待办中
 
 	@Override
 	public boolean isReadonly() {
@@ -320,7 +320,7 @@ public class HistoricProcessInstancesAction extends
 		}
 
 		tb.addButton(Toolbar.getDefaultToolbarRadioGroup(this.getStatus(),
-				"status", 3, getText("title.click2changeSearchStatus")));
+				"status", 0, getText("title.click2changeSearchStatus")));
 		
 
 		// 搜索按钮
