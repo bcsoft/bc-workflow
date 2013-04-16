@@ -47,7 +47,7 @@ public class MyHistoricTaskInstancesAction extends
 		columns.add(new IdColumn4MapKey("a.id_", "id"));
 		// 主题
 		columns.add(new TextColumn4MapKey(
-				"getProcessInstanceSubject(a.proc_inst_id_)", "subject",
+				"", "subject",
 				getText("flow.task.subject"), 200).setSortable(true)
 				.setUseTitleFromLabel(true));
 		// 名称

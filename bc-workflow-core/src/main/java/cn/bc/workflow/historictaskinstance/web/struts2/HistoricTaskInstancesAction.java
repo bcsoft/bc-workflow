@@ -12,6 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Controller;
+import org.springframework.util.Assert;
 
 import cn.bc.BCConstants;
 import cn.bc.core.query.condition.Condition;
@@ -77,21 +78,43 @@ public class HistoricTaskInstancesAction extends
 
 	@Override
 	protected SqlObject<Map<String, Object>> getSqlObject() {
-		SqlObject<Map<String, Object>> sqlObject = new SqlObject<Map<String, Object>>();
-		// 构建查询语句,where和order by不要包含在sql中(要统一放到condition中)
-		StringBuffer sql = new StringBuffer();
-		sql.append("select a.id_,c.name_ as procinstname,a.name_ as name,a.start_time_,a.end_time_,a.duration_,a.proc_inst_id_");
-		sql.append(",a.task_def_key_,b.end_time_ as p_end_time,a.due_date_ as due_date,d.name as receiver");
-		sql.append(",getProcessInstanceSubject(a.proc_inst_id_) as subject");
-		sql.append(",h.suspension_state_ pstatus,c.key_ procinstkey");
-		sql.append(",(select id from bc_wf_deploy deploy where deploy.deployment_id=c.deployment_id_) as deploy_id");
-		sql.append(" from act_hi_taskinst a");
-		sql.append(" inner join act_hi_procinst b on b.proc_inst_id_=a.proc_inst_id_");
-		sql.append(" inner join act_re_procdef c on c.id_=a.proc_def_id_");
-		sql.append(" left join act_ru_execution h on h.proc_inst_id_ = a.proc_inst_id_");
-		sql.append(" left join bc_identity_actor d on d.code=a.assignee_");
-		sqlObject.setSql(sql.toString());
+		SqlObject<Map<String, Object>> sqlObject = new SqlObject<Map<String, Object>>() {
+			// 自己根据条件构建实际的sql
+			@Override
+			public String getSql(Condition condition) {
+				Assert.notNull(condition);
+				return getSelect() + " " + getFromWhereSql(condition);
+			}
 
+			@Override
+			public String getFromWhereSql(Condition condition) {
+				Assert.notNull(condition);
+				String expression = condition.getExpression();
+				if (!expression.startsWith("order by")) {
+					expression = "where " + expression;
+				}
+				return getFrom().replace("${condition}", expression);
+			}
+		};
+		
+		// 构建查询语句,where和order by不要包含在sql中(要统一放到condition中)
+		StringBuffer selectSql = new StringBuffer();
+		selectSql.append("select t.*,getProcessInstanceSubject(t.proc_inst_id_) as subject");
+
+		StringBuffer fromSql = new StringBuffer();
+		fromSql.append(" from (select a.id_,c.name_ as procinstname,a.name_ as name,a.start_time_,a.end_time_,a.duration_,a.proc_inst_id_");
+		fromSql.append(",a.task_def_key_,b.end_time_ as p_end_time,a.due_date_ as due_date,d.name as receiver");
+		fromSql.append(",h.suspension_state_ pstatus,c.key_ procinstkey");
+		fromSql.append(",(select id from bc_wf_deploy deploy where deploy.deployment_id=c.deployment_id_) as deploy_id");
+		fromSql.append(" from act_hi_taskinst a");
+		fromSql.append(" inner join act_hi_procinst b on b.proc_inst_id_=a.proc_inst_id_");
+		fromSql.append(" inner join act_re_procdef c on c.id_=a.proc_def_id_");
+		fromSql.append(" left join act_ru_execution h on h.proc_inst_id_ = a.proc_inst_id_");
+		fromSql.append(" left join bc_identity_actor d on d.code=a.assignee_");
+		fromSql.append(" ${condition} ) t");
+
+		sqlObject.setSelect(selectSql.toString());
+		sqlObject.setFrom(fromSql.toString());
 		// 注入参数
 		sqlObject.setArgs(null);
 
@@ -111,10 +134,10 @@ public class HistoricTaskInstancesAction extends
 				map.put("p_end_time", rs[i++]);
 				map.put("due_date", rs[i++]);
 				map.put("receiver", rs[i++]);
-				map.put("subject", rs[i++]);
 				map.put("pstatus", rs[i++]);
 				map.put("procinstKey", rs[i++]);
 				map.put("deployId", rs[i++]);
+				map.put("subject", rs[i++]);
 				map.put("accessControlDocType","ProcessInstance");
 
 				// 根据结束时间取得状态
@@ -160,7 +183,7 @@ public class HistoricTaskInstancesAction extends
 				.setValueFormater(new EntityStatusFormater(getStatus())));
 		// 主题
 		columns.add(new TextColumn4MapKey(
-				"getProcessInstanceSubject(a.proc_inst_id_)", "subject",
+				"", "subject",
 				getText("flow.task.subject"), 200).setSortable(true)
 				.setUseTitleFromLabel(true));
 		// 名称
@@ -231,7 +254,10 @@ public class HistoricTaskInstancesAction extends
 
 	@Override
 	protected String[] getGridSearchFields() {
-		return new String[] { "d.name", "a.name_", "c.name_",
+		return new String[] { 
+				"d.name"
+				, "a.name_"
+				, "c.name_",
 				"getProcessInstanceSubject(a.proc_inst_id_)" };
 	}
 
