@@ -107,7 +107,7 @@ public class TodoManagesAction extends ViewAction<Map<String, Object>>{
 				int i = 0;
 				map.put("id", rs[i++]);
 				map.put("status", rs[i++]);
-				map.put("procInstId", rs[i++]); //流程实例id
+				map.put("procinstId", rs[i++]); //流程实例id
 				map.put("taskName", rs[i++]); // 标题
 				map.put("dueDate", rs[i++]); // 办理期限
 				map.put("createTime", rs[i++]); //  发送时间
@@ -291,7 +291,7 @@ public class TodoManagesAction extends ViewAction<Map<String, Object>>{
 				getText("todo.personal.arpName"),180)
 				.setSortable(true).setUseTitleFromLabel(true));
 		
-		columns.add(new HiddenColumn4MapKey("procInstId", "procInstId"));
+		columns.add(new HiddenColumn4MapKey("procinstId", "procinstId"));
 		columns.add(new HiddenColumn4MapKey("type", "type"));
 		columns.add(new HiddenColumn4MapKey("deployId", "deployId"));
 		columns.add(new HiddenColumn4MapKey("accessControlDocType", "accessControlDocType"));
