@@ -1021,7 +1021,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 		// 设置Activiti认证用户
 		String initiator = setAuthenticatedUser();
 
-		// 启动流程：TODO 表单信息的处理
+		// 启动流程： 表单信息的处理
 		ProcessInstance pi = runtimeService.startProcessInstanceByKey(key,
 				variables);
 		if (logger.isDebugEnabled()) {
@@ -1037,6 +1037,11 @@ public class WorkflowServiceImpl implements WorkflowService {
 
 	public Map<String, Object> findGlobalValue(String pid, String[] valueKeys) {
 		return this.workflowDao.findGlobalValue(pid, valueKeys);
+	}
+
+	public Object findLocalValue(String pid, String taskKey,
+			String localValueKey) {
+		return this.workflowDao.findLocalValue(pid, taskKey, localValueKey);
 	}
 
 }
