@@ -6,6 +6,7 @@ import javax.sql.DataSource;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.junit.Assert;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 
@@ -63,6 +64,24 @@ public class WorkflowDaoImpl implements WorkflowDao {
 		}	
 		
 		return this.jdbcTemplate.queryForMap(sql);
+	}
+
+	public Object findLocalValue(String pid, String taskKey,
+			String localValueKey) {
+		Assert.assertNotNull(pid);
+		Assert.assertNotNull(taskKey);
+		Assert.assertNotNull(localValueKey);
+		
+		Object[] args=new Object[]{pid,taskKey,localValueKey};
+		
+		String sql="select getprocesstasklocalvalue(?,?,?) from bc_dual";
+		
+		if (logger.isDebugEnabled()) {
+			logger.debug("sql=" + sql);
+			logger.debug("args="+args.toString());
+		}
+		
+		return this.jdbcTemplate.queryForObject(sql, Object.class, args);
 	}
 
 	

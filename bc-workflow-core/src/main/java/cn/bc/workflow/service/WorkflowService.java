@@ -276,4 +276,14 @@ public interface WorkflowService {
 	 * @return {流程全部变量key:流程全部变量value}
 	 */
 	Map<String,Object> findGlobalValue(String pid,String[] valueKeys);
+	
+	/**
+	 * 查找流程任务最新的本地变量
+	 * 
+	 * @param pid
+	 * @param taskKey
+	 * @param localValueKey
+	 * @return
+	 */
+	Object findLocalValue(String pid,String taskKey,String localValueKey);
 }
