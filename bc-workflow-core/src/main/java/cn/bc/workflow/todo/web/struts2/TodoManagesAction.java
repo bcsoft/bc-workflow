@@ -270,7 +270,12 @@ public class TodoManagesAction extends ViewAction<Map<String, Object>>{
 				}));
 		// 办理人
 		columns.add(new TextColumn4MapKey("c.name", "aname",
-				getText("todo.personal.assignee"), 60).setUseTitleFromLabel(true));
+				getText("todo.personal.assignee"), 60).setSortable(true)
+				.setUseTitleFromLabel(true));
+		// 候选岗位
+		columns.add(new TextColumn4MapKey("groups", "groups",
+				getText("todo.personal.groupIds"), 150).setSortable(true)
+				.setUseTitleFromLabel(true));
 		// 办理期限
 		columns.add(new TextColumn4MapKey("art.due_date_", "dueDate",
 				getText("todo.personal.dueDate"), 140).setSortable(true)
@@ -280,12 +285,11 @@ public class TodoManagesAction extends ViewAction<Map<String, Object>>{
 		columns.add(new TextColumn4MapKey("art.create_time_", "createTime",
 				getText("todo.personal.createTime"), 140).setSortable(true)
 				.setValueFormater(new CalendarFormater("yyyy-MM-dd HH:mm:ss")));
-		// 候选岗位
-		columns.add(new TextColumn4MapKey("groups", "groups",
-				getText("todo.personal.groupIds"), 150).setUseTitleFromLabel(true));
+		
 		// 候选人
-		columns.add(new TextColumn4MapKey("users", "users",
-				getText("todo.personal.userIds")).setUseTitleFromLabel(true));
+		/*columns.add(new TextColumn4MapKey("users", "users",
+				getText("todo.personal.userIds")).setSortable(true)
+				.setUseTitleFromLabel(true));*/
 		// 分类
 		columns.add(new TextColumn4MapKey("d.name_", "processName",
 				getText("todo.personal.arpName"),180)
