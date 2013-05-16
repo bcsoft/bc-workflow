@@ -188,11 +188,13 @@ public class HistoricTaskInstancesAction extends
 				.setUseTitleFromLabel(true));
 		// 名称
 		columns.add(new TextColumn4MapKey("a.name_", "name",
-				getText("flow.task.name"), 200).setUseTitleFromLabel(true));
+				getText("flow.task.name"), 200).setSortable(true)
+				.setUseTitleFromLabel(true));
 
 		
 		columns.add(new TextColumn4MapKey("d.name", "receiver",
-				getText("flow.task.actor"), 120).setUseTitleFromLabel(true));
+				getText("flow.task.actor"), 120).setSortable(true)
+				.setUseTitleFromLabel(true));
 		
 		//办理期限
 		columns.add(new TextColumn4MapKey("a.due_date_", "due_date",
@@ -234,7 +236,8 @@ public class HistoricTaskInstancesAction extends
 				.setValueFormater(new EntityStatusFormater(getPStatus())));
 
 		columns.add(new TextColumn4MapKey("a.task_def_key_", "taskDefKey",
-				"任务key值", 80));
+				"任务key值", 80).setSortable(true)
+				.setUseTitleFromLabel(true));
 		columns.add(new HiddenColumn4MapKey("procinstId", "procinstId"));
 		columns.add(new HiddenColumn4MapKey("procinstName", "procinstName"));
 		columns.add(new HiddenColumn4MapKey("procinstKey", "procinstKey"));
