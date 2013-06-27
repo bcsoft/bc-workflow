@@ -11,3 +11,5 @@ build
 bin
 .bpmn
 .DS_Store
+*.iml
+.idea
