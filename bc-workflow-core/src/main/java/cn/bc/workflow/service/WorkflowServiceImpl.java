@@ -464,8 +464,8 @@ public class WorkflowServiceImpl implements WorkflowService {
 	public InputStream getDiagram(Long deployId) {
 		InputStream inputStream = null;
 		Deploy deploy = deployService.load(deployId);
-		DeployResource dr = this.deployService.findDeployResourceByCode(deployId,
-				deploy.getCode());
+		DeployResource dr = this.deployService.findDeployResourceByCode(
+				deployId, deploy.getCode());
 		// 根据流程编码不能获取流程部署资源,则获取指定Activiti流程部署的相关资源文件流
 		if (dr != null) {
 			inputStream = this.getDeployDiagram(dr);
@@ -596,6 +596,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 			taskParams = new HashMap<String, Object>();
 			taskParams.put("id", task.getId());
 			taskParams.put("code", taskCode);
+			taskParams.put("name", task.getName());
 			taskParams.put("owner", task.getOwner());
 			taskParams.put("assignee", getActorNameByCode(task.getAssignee()));
 			taskParams.put("assigneeCode", task.getAssignee());
