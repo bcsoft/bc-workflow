@@ -214,99 +214,85 @@ public class FlowAttachFileAction extends ActionSupport {
 		}
 
 		if (isConvertFile(flowAttach.getExt())) {
-			// 获取文件流
-			InputStream inputStream = new FileInputStream(path);
-			ByteArrayOutputStream outputStream = new ByteArrayOutputStream(
-					BUFFER);
-			byte[] bs = null;
-
 			if (this.from == null || this.from.length() == 0)
 				this.from = flowAttach.getExt();
 			if (this.to == null || this.to.length() == 0)
 				this.to = getText("jodconverter.to.extension");// 没有指定就是用系统默认的配置转换为pdf
 
-			// 声明需要转换的流
-			InputStream is = null;
 			// 声明格式化参数
 			Map<String, Object> params;
-			// 判断是否为可格式化类型
-			// 格式化操作
+			// 判断是否为可格式化
 			if (flowAttach.getFormatted()) {
-				// docx
+				ByteArrayOutputStream outputStream = new ByteArrayOutputStream(
+						BUFFER);
+				byte[] bs = null;
+				// 声明需要转换的流
+				InputStream file_is = new FileInputStream(path);
 				if (flowAttach.getExt().equals(
 						templateTypeService.loadByCode("word-docx")
 								.getExtension())) {
 					params = getParams(flowAttach);
-					XWPFDocument docx = DocxUtils.format(inputStream, params);
+					XWPFDocument docx = DocxUtils.format(file_is, params);
 					ByteArrayOutputStream out = new ByteArrayOutputStream();
 					docx.write(out);
-					is = new ByteArrayInputStream(out.toByteArray());
-					out.close();
 					// convert
-					OfficeUtils.convert(is, this.from, outputStream, this.to);
+					OfficeUtils.convert(
+							new ByteArrayInputStream(out.toByteArray()),
+							this.from, outputStream, this.to);
+					out.close();
 					bs = outputStream.toByteArray();
-					// xls
 				} else if (flowAttach.getExt().equals(
 						templateTypeService.loadByCode("xls").getExtension())) {
 					params = getParams(flowAttach);
-					HSSFWorkbook xls = XlsUtils.format(inputStream, params);
+					HSSFWorkbook xls = XlsUtils.format(file_is, params);
 					ByteArrayOutputStream out = new ByteArrayOutputStream();
 					xls.write(out);
-					is = new ByteArrayInputStream(out.toByteArray());
-					out.close();
 					// convert
-					OfficeUtils.convert(is, this.from, outputStream, this.to);
+					OfficeUtils.convert(
+							new ByteArrayInputStream(out.toByteArray()),
+							this.from, outputStream, this.to);
+					out.close();
 					bs = outputStream.toByteArray();
-					// xlsx
 				} else if (flowAttach.getExt().equals(
 						templateTypeService.loadByCode("xlsx").getExtension())) {
 					params = getParams(flowAttach);
-					XSSFWorkbook xlsx = XlsxUtils.format(inputStream, params);
+					XSSFWorkbook xlsx = XlsxUtils.format(file_is, params);
 					ByteArrayOutputStream out = new ByteArrayOutputStream();
 					xlsx.write(out);
-					is = new ByteArrayInputStream(out.toByteArray());
-					out.close();
 					// convert
-					OfficeUtils.convert(is, this.from, outputStream, this.to);
+					OfficeUtils.convert(
+							new ByteArrayInputStream(out.toByteArray()),
+							this.from, outputStream, this.to);
+					out.close();
 					bs = outputStream.toByteArray();
-					// html
 				} else if (flowAttach.getExt().equals(
 						templateTypeService.loadByCode("html").getExtension())) {
 					this.to = flowAttach.getExt();
 					params = getParams(flowAttach);
 					bs = FreeMarkerUtils.format(
-							TemplateUtils.loadText(inputStream), params)
-							.getBytes();
+							TemplateUtils.loadText(file_is), params).getBytes();
 				} else {
-					is = inputStream;
 					// convert
-					OfficeUtils.convert(is, this.from, outputStream, this.to);
+					OfficeUtils.convert(file_is, this.from, outputStream,
+							this.to);
 					bs = outputStream.toByteArray();
 				}
+				this.inputStream = new ByteArrayInputStream(bs);
 			} else {
-				is = inputStream;
-				// convert
-				OfficeUtils.convert(is, this.from, outputStream, this.to);
-				bs = outputStream.toByteArray();
+				//无需格式化的转换
+				this.inputStream = OfficeUtils.convert(FlowAttach.DATA_SUB_PATH
+						+ File.separator + flowAttach.getPath(), this.to, true);
 			}
 
 			if (logger.isDebugEnabled())
 				logger.debug("convert:" + DateUtils.getWasteTime(startTime));
 
-			// 设置下载文件的参数（设置不对的话，浏览器是不会直接打开的）
-			this.inputStream = new ByteArrayInputStream(bs);
-			this.inputStream.close();
 			this.contentType = AttachUtils.getContentType(this.to);
-			this.contentLength = bs.length;
-
 		} else {
-			// 设置下载文件的参数
 			this.contentType = AttachUtils.getContentType(flowAttach.getExt());
-			// 无需转换的文档直接下载处理
-			File file = new File(path);
-			this.contentLength = file.length();
-			this.inputStream = new FileInputStream(file);
+			this.inputStream = new FileInputStream(path);
 		}
+		this.contentLength = this.inputStream.available();
 
 		// 设置下载的文件名
 		this.filename = flowAttach.getSubject().lastIndexOf(".") == -1 ? flowAttach
@@ -322,7 +308,7 @@ public class FlowAttachFileAction extends ActionSupport {
 		// 附件保存相对路径
 		String resolatePath = FlowAttach.DATA_SUB_PATH + File.separator
 				+ flowAttach.getPath();
-		// 创建文件上传日志
+		
 		saveAttachHistory(flowAttach.getSubject(), AttachHistory.TYPE_INLINE,
 				resolatePath, flowAttach.getExt(), "FlowAttach",
 				flowAttach.getUid());
