@@ -1,13 +1,19 @@
 package cn.bc.workflow.flowattach.web.struts2;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
+import org.activiti.engine.HistoryService;
+import org.activiti.engine.history.HistoricTaskInstance;
 import org.apache.struts2.ServletActionContext;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
@@ -15,6 +21,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.util.FileCopyUtils;
 import org.springframework.util.StringUtils;
 
+import cn.bc.core.exception.CoreException;
 import cn.bc.core.util.DateUtils;
 import cn.bc.docs.domain.Attach;
 import cn.bc.docs.domain.AttachHistory;
@@ -31,8 +38,10 @@ import cn.bc.web.ui.html.page.ButtonOption;
 import cn.bc.web.ui.html.page.PageOption;
 import cn.bc.web.ui.json.Json;
 import cn.bc.web.util.WebUtils;
+import cn.bc.workflow.domain.ExcutionLog;
 import cn.bc.workflow.flowattach.domain.FlowAttach;
 import cn.bc.workflow.flowattach.service.FlowAttachService;
+import cn.bc.workflow.service.ExcutionLogService;
 
 /**
  * 流程附件信息表单Action
@@ -57,6 +66,18 @@ public class FlowAttachAction extends FileEntityAction<Long, FlowAttach> {
 	private TemplateService templateService;
 	private TemplateParamService templateParamService;
 	private AttachService attachService;
+	private ExcutionLogService excutionLogService;
+	private HistoryService historyService;
+	
+	@Autowired
+	public void setHistoryService(HistoryService historyService) {
+		this.historyService = historyService;
+	}
+
+	@Autowired
+	public void setExcutionLogService(ExcutionLogService excutionLogService) {
+		this.excutionLogService = excutionLogService;
+	}
 
 	@Autowired
 	public void setAttachService(AttachService attachService) {
@@ -387,6 +408,168 @@ public class FlowAttachAction extends FileEntityAction<Long, FlowAttach> {
 			json.put("formatted", fa.getFormatted());
 		}
 		this.json = json.toString();
+		return "json";
+	}
+	
+	public String fromTid;//从哪个任务
+	public String fromTids;//从哪个任务，多个请用逗号链接
+
+	/**
+	 * 将任务的附件复制到另外一个任务中
+	 * 
+	 * @return 
+	 * @throws Exception
+	 */
+	public String copy2Task() throws Exception{
+		//声明变量
+		JSONObject json = new JSONObject();
+		List<FlowAttach> attachs = null;
+		String taskNames="";
+		HistoricTaskInstance fromTask;
+		HistoricTaskInstance task;
+		//验证
+		if(this.tid == null || this.tid.equals("")){
+			throw new CoreException("must set tid!");
+		}
+		task = this.historyService.createHistoricTaskInstanceQuery().taskId(this.tid).singleResult();
+		if (task == null) {
+			throw new CoreException("can't find taskHistory: tid=" + this.tid);
+		}
+		if(this.fromTid!=null && this.fromTid.length()>0){
+			 fromTask = this.historyService.createHistoricTaskInstanceQuery().taskId(this.fromTid).singleResult();
+			if ( fromTask == null) {
+				throw new CoreException("can't find taskHistory: fromTid=" + this.fromTid);
+			}
+			taskNames+= fromTask.getName();
+			attachs =this.flowAttachService.findAttachsByTask(new String[]{this.fromTid});
+		}else if(this.fromTids!=null && this.fromTids.length()>0){
+			for(String _tid:fromTids.split(",")){
+				 fromTask = this.historyService.createHistoricTaskInstanceQuery().taskId(_tid).singleResult();
+				if ( fromTask == null) {
+					throw new CoreException("can't find taskHistory: fromTid=" + _tid);
+				}
+				taskNames+=(taskNames.length()>0?"、":"")+ fromTask.getName();
+			}
+			attachs =this.flowAttachService.findAttachsByTask(this.fromTids.split(","));
+		}else{
+			throw new CoreException("must set tid!");
+		}
+		
+		//没找到附件
+		if(attachs == null){
+			json.put("success", false);
+			json.put("msg", "获取失败");
+			this.json = json.toString();
+			return "json";
+		}
+		
+		Calendar now = Calendar.getInstance();
+		// 所保存文件存储的相对路径（年月），避免超出目录内文件数的限制
+		String subFolder = new SimpleDateFormat("yyyyMM").format(now
+				.getTime());
+		// 所保存文件存储的绝对路径
+		String appRealDir = Attach.DATA_REAL_PATH + File.separator 
+				+ FlowAttach.DATA_SUB_PATH;
+		// 所保存文件所在的目录的绝对路径名
+		String realFileDir = appRealDir + File.separator + subFolder;
+		
+		// 不含路径的文件名
+		String fileName;
+		// 所保存文件的绝对路径名
+		String realFilePath;
+		// 上下文
+		SystemContext sc = (SystemContext) this.getContext();
+		ActorHistory h = sc.getUserHistory();
+		
+		JSONArray ja = new JSONArray();
+		JSONObject jo;
+		//已经保存的新任务附件
+		FlowAttach tofa;
+
+		Set<TemplateParam> paramSet;
+
+		//复制附件
+		for(FlowAttach fa:attachs){
+			// 构建文件要保存到的目录
+			File _fileDir = new File(realFileDir);
+			if (!_fileDir.exists()) {
+				if (logger.isFatalEnabled())
+					logger.fatal("mkdir=" + realFileDir);
+				_fileDir.mkdirs();
+			}
+			// 不含路径的文件名
+			fileName = new SimpleDateFormat("yyyyMMddHHmmssSSSS")
+					.format(now.getTime()) + "." + fa.getExt();
+			// 所保存文件的绝对路径名
+			realFilePath = realFileDir + File.separator + fileName;
+		
+			// 直接复制附件
+			if (logger.isInfoEnabled())
+				logger.info("pure copy file");
+			FileCopyUtils.copy(new FileInputStream(
+					appRealDir + File.separator + fa.getPath())
+					, new FileOutputStream(realFilePath));
+			
+			tofa = new FlowAttach();
+			tofa.setCommon(fa.isCommon());
+			tofa.setDesc(fa.getDesc());
+			tofa.setExt(fa.getExt());
+			tofa.setFormatted(fa.getFormatted());
+			tofa.setPid(task.getProcessInstanceId());
+			tofa.setSize(fa.getSize());
+			tofa.setSubject(fa.getSubject());
+			tofa.setType(fa.getType());
+			tofa.setUid(this.getIdGeneratorService().next(FlowAttach.ATTACH_TYPE));
+			tofa.setTid(this.tid);
+			tofa.setFileDate(now);
+			tofa.setAuthor(h);
+			tofa.setModifiedDate(now);
+			tofa.setModifier(h);
+			tofa.setPath(subFolder+ File.separator +fileName);
+			
+			if(fa.getParams()==null||fa.getParams().size()==0){
+				tofa.setParams(null);
+			}else{
+				paramSet = new LinkedHashSet<TemplateParam>();
+				for(TemplateParam p : fa.getParams()){
+					paramSet.add(p);
+				}
+				tofa.setParams(paramSet);
+			}
+			
+			tofa=this.flowAttachService.save(tofa);
+			jo = new JSONObject();
+			jo.put("id", tofa.getId());
+			jo.put("uid", tofa.getUid());
+			jo.put("subject", tofa.getSubject());
+			jo.put("size", tofa.getSize());
+			jo.put("path", tofa.getPath());
+			jo.put("formatted", fa.getFormatted());
+			jo.put("author", tofa.getAuthor().getName());
+			jo.put("fileDate", DateUtils.formatCalendar2Second(tofa.getFileDate()));
+			ja.put(jo);
+		}
+		
+		//生成日志
+		ExcutionLog log=new ExcutionLog();
+		log.setFileDate(Calendar.getInstance());
+		log.setAuthorId(h.getId());
+		log.setAuthorCode(h.getCode());
+		log.setAuthorName(h.getName());
+		log.setListener(FlowAttachAction.class.getName());
+		log.setType(ExcutionLog.TYPE_PROCESS_SYNC_INFO);
+		log.setProcessInstanceId(task.getProcessInstanceId());
+		log.setExcutionId(task.getId());
+		log.setExcutionCode(task.getTaskDefinitionKey());
+		log.setExcutionName(task.getName());
+		log.setDescription("同步"+taskNames+"任务的附件，");
+		this.excutionLogService.save(log);
+		
+		json.put("success", true);
+		json.put("msg", "获取成功");
+		json.put("attachs", ja);
+		
+		this.json=json.toString();
 		return "json";
 	}
 }
