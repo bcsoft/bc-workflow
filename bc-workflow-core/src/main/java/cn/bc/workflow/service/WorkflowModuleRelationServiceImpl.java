@@ -3,8 +3,10 @@ package cn.bc.workflow.service;
 import java.util.List;
 import java.util.Map;
 
+import org.commontemplate.util.Assert;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import cn.bc.core.query.condition.impl.EqualsCondition;
 import cn.bc.core.service.DefaultCrudService;
 import cn.bc.workflow.dao.WorkflowModuleRelationDao;
 import cn.bc.workflow.domain.WorkflowModuleRelation;
@@ -52,6 +54,11 @@ public class WorkflowModuleRelationServiceImpl extends
 			String[] propertys, String[] values, String[] globalKeys) {
 		return this.workflowModuleRelationDao.findList(mtype, propertys,
 				values, globalKeys);
+	}
+	
+	public List<WorkflowModuleRelation> findList(String pid){
+		Assert.assertNotNull(pid);
+		return this.createQuery().condition(new EqualsCondition("pid", pid)).list();
 	}
 
 }

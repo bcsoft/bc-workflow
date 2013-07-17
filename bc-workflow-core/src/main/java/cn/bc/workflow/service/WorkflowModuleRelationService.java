@@ -93,4 +93,11 @@ public interface WorkflowModuleRelationService extends
 	 * @return true：是 false：否
 	 */
 	boolean hasRelation4Key(Long mid, String mtype, String key);
+	
+	/**
+	 * 流程实例Id 查找对象集合
+	 * @param pid
+	 * @return
+	 */
+	List<WorkflowModuleRelation> findList(String pid);
 }

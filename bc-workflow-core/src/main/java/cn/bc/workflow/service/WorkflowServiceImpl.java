@@ -50,6 +50,7 @@ import cn.bc.workflow.deploy.domain.Deploy;
 import cn.bc.workflow.deploy.domain.DeployResource;
 import cn.bc.workflow.deploy.service.DeployService;
 import cn.bc.workflow.domain.ExcutionLog;
+import cn.bc.workflow.domain.WorkflowModuleRelation;
 import cn.bc.workflow.flowattach.domain.FlowAttach;
 import cn.bc.workflow.flowattach.service.FlowAttachService;
 
@@ -73,6 +74,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 	private HistoryService historyService;
 	private ActorService actorService;
 	private DeployService deployService;
+	private WorkflowModuleRelationService workflowModuleRelationService;
 
 	private WorkflowDao workflowDao;
 
@@ -136,11 +138,17 @@ public class WorkflowServiceImpl implements WorkflowService {
 	public void setDeployService(DeployService deployService) {
 		this.deployService = deployService;
 	}
-
+	
 	// @Autowired
 	// public void setFormService(FormService formService) {
 	// this.formService = formService;
 	// }
+	
+	@Autowired
+	public void setWorkflowModuleRelationService(
+			WorkflowModuleRelationService workflowModuleRelationService) {
+		this.workflowModuleRelationService = workflowModuleRelationService;
+	}
 
 	/**
 	 * 获取当前用户的帐号信息
@@ -894,6 +902,9 @@ public class WorkflowServiceImpl implements WorkflowService {
 		if (instanceIds == null || instanceIds.length == 0) {
 			throw new CoreException("没有指定要删除的流程实例信息！");
 		}
+		
+		List<WorkflowModuleRelation> wmrs;
+		List<Long> wmrIds;
 
 		for (String id : instanceIds) {
 			HistoricProcessInstance pi = this.historyService
@@ -902,6 +913,18 @@ public class WorkflowServiceImpl implements WorkflowService {
 			if (pi == null) {
 				throw new CoreException("要删除的流程实例在系统总已经不存在：id=" + id);
 			}
+			
+			//删除流程模块关系
+			wmrs=this.workflowModuleRelationService.findList(id);
+			if(wmrs!=null && wmrs.size()>0){
+				wmrIds = new ArrayList<Long>();
+				for(WorkflowModuleRelation wmr : wmrs){
+					wmrIds.add(wmr.getId());
+				}
+				this.workflowModuleRelationService.delete(wmrIds.toArray(new Long[]{}));
+			}
+			
+			
 			boolean flowing = pi.getEndTime() == null;
 
 			// 删除流转中数据
