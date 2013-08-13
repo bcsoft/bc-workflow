@@ -11,6 +11,7 @@
 		</action>
 		<action name="paging" class="myHistoricTaskInstancesAction" method="paging">
 		</action>
+		<action name="export" class="myHistoricTaskInstancesAction" method="export"/>
 		<action name="conditions" class="myHistoricTaskInstancesAction" method="conditions">
 			<result name="success">/bc-workflow/historictaskinstance/my/conditions.jsp</result>
 		</action>
@@ -20,6 +21,7 @@
 		<action name="list" class="historicTaskInstancesAction" method="list"/>
 		<action name="data" class="historicTaskInstancesAction" method="data"/>
 		<action name="paging" class="historicTaskInstancesAction" method="paging"/>
+		<action name="export" class="historicTaskInstancesAction" method="export"/>
 		<action name="conditions" class="historicTaskInstancesAction" method="conditions">
 			<result name="success">/bc-workflow/historictaskinstance/conditions.jsp</result>
 		</action>
@@ -30,6 +32,7 @@
 		<action name="list" class="groupHistoricTaskInstancesAction" method="list"/>
 		<action name="data" class="groupHistoricTaskInstancesAction" method="data"/>
 		<action name="paging" class="groupHistoricTaskInstancesAction" method="paging"/>
+		<action name="export" class="groupHistoricTaskInstancesAction" method="export"/>
 		<action name="conditions" class="groupHistoricTaskInstancesAction" method="conditions">
 			<result name="success">/bc-workflow/historictaskinstance/conditions.jsp</result>
 		</action>
