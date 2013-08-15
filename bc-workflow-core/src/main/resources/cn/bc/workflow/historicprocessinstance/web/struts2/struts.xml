@@ -11,6 +11,7 @@
 		<action name="delete" class="historicProcessInstancesAction" method="delete"/>
 		<action name="doActive" class="historicProcessInstancesAction" method="doActive"/>
 		<action name="doSuspended" class="historicProcessInstancesAction" method="doSuspended"/>
+		<action name="export" class="historicProcessInstancesAction" method="export"/>
 		<action name="conditions" class="historicProcessInstancesAction" method="conditions">
 			<result name="success">/bc-workflow/historicprocessinstance/conditions.jsp</result>
 		</action>
@@ -20,6 +21,7 @@
 		<action name="list" class="myHistoricProcessInstancesAction" method="list"/>
 		<action name="data" class="myHistoricProcessInstancesAction" method="data"/>
 		<action name="paging" class="myHistoricProcessInstancesAction" method="paging"/>
+		<action name="export" class="myHistoricProcessInstancesAction" method="export"/>
 		<action name="conditions" class="myHistoricProcessInstancesAction" method="conditions">
 			<result name="success">/bc-workflow/historicprocessinstance/my/conditions.jsp</result>
 		</action>
@@ -30,6 +32,7 @@
 		<action name="list" class="groupHistoricProcessInstancesAction" method="list"/>
 		<action name="data" class="groupHistoricProcessInstancesAction" method="data"/>
 		<action name="paging" class="groupHistoricProcessInstancesAction" method="paging"/>
+		<action name="export" class="groupHistoricProcessInstancesAction" method="export"/>
 		<action name="conditions" class="groupHistoricProcessInstancesAction" method="conditions">
 			<result name="success">/bc-workflow/historicprocessinstance/conditions.jsp</result>
 		</action>

@@ -8,6 +8,7 @@
 		<action name="personals/list" class="todoPersonalsAction" method="list"/>
 		<action name="personals/paging" class="todoPersonalsAction" method="paging"/>
 		<action name="personals/data" class="todoPersonalsAction" method="data"/>
+		<action name="personals/export" class="todoPersonalsAction" method="export"/>
 		<action name="personals/isSigned" class="todoPersonalsAction" method="isSigned"/>
 		<action name="personals/claimTask" class="todoPersonalsAction" method="claimTask"/>
 		<action name="personals/conditions" class="todoPersonalsAction" method="conditions">
@@ -18,6 +19,7 @@
 		<action name="manages/list" class="todoManagesAction" method="list"/>
 		<action name="manages/paging" class="todoManagesAction" method="paging"/>
 		<action name="manages/data" class="todoManagesAction" method="data"/>
+		<action name="manages/export" class="todoManagesAction" method="export"/>
 		<action name="manages/conditions" class="todoManagesAction" method="conditions">
 			<result name="success">/bc-workflow/todo/conditions.jsp</result>
 		</action>
@@ -31,6 +33,7 @@
 		<action name="groups/list" class="todoGroupsAction" method="list"/>
 		<action name="groups/paging" class="todoGroupsAction" method="paging"/>
 		<action name="groups/data" class="todoGroupsAction" method="data"/>
+		<action name="groups/export" class="todoGroupsAction" method="export"/>
 		<action name="groups/conditions" class="todoGroupsAction" method="conditions">
 			<result name="success">/bc-workflow/todo/conditions.jsp</result>
 		</action>
