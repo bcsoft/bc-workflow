@@ -279,9 +279,15 @@ public class FlowAttachFileAction extends ActionSupport {
 				}
 				this.inputStream = new ByteArrayInputStream(bs);
 			} else {
-				//无需格式化的转换
-				this.inputStream = OfficeUtils.convert(FlowAttach.DATA_SUB_PATH
-						+ File.separator + flowAttach.getPath(), this.to, true);
+				//对html特殊处理
+				if(flowAttach.getExt().equals(
+						templateTypeService.loadByCode("html").getExtension())){
+					this.to = flowAttach.getExt();
+					this.inputStream = new FileInputStream(path);
+				}else{
+					this.inputStream = OfficeUtils.convert(FlowAttach.DATA_SUB_PATH
+							+ File.separator + flowAttach.getPath(), this.to, true);
+				}
 			}
 
 			if (logger.isDebugEnabled())
