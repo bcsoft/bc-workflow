@@ -487,9 +487,14 @@ public class FlowAttachAction extends FileEntityAction<Long, FlowAttach> {
 		FlowAttach tofa;
 
 		Set<TemplateParam> paramSet;
+		
+		int index=0;
 
 		//复制附件
 		for(FlowAttach fa:attachs){
+			//再次加载当前时间
+			now = Calendar.getInstance();
+			
 			// 构建文件要保存到的目录
 			File _fileDir = new File(realFileDir);
 			if (!_fileDir.exists()) {
@@ -499,7 +504,7 @@ public class FlowAttachAction extends FileEntityAction<Long, FlowAttach> {
 			}
 			// 不含路径的文件名
 			fileName = new SimpleDateFormat("yyyyMMddHHmmssSSSS")
-					.format(now.getTime()) + "." + fa.getExt();
+					.format(now.getTime())+(index++) + "." + fa.getExt();
 			// 所保存文件的绝对路径名
 			realFilePath = realFileDir + File.separator + fileName;
 		
