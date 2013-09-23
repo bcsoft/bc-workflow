@@ -29,7 +29,6 @@ import cn.bc.option.domain.OptionItem;
 import cn.bc.web.formater.AbstractFormater;
 import cn.bc.web.formater.CalendarFormater;
 import cn.bc.web.formater.EntityStatusFormater;
-import cn.bc.web.struts2.ViewAction;
 import cn.bc.web.ui.html.grid.Column;
 import cn.bc.web.ui.html.grid.HiddenColumn4MapKey;
 import cn.bc.web.ui.html.grid.IdColumn4MapKey;
@@ -40,6 +39,7 @@ import cn.bc.web.ui.html.toolbar.ToolbarButton;
 import cn.bc.web.ui.json.Json;
 import cn.bc.workflow.historictaskinstance.service.HistoricTaskInstanceService;
 import cn.bc.workflow.service.WorkspaceServiceImpl;
+import cn.bc.workflow.web.struts2.ViewAction;
 
 /**
  * 经办、任务监控视图Action
@@ -361,12 +361,7 @@ public class HistoricTaskInstancesAction extends
 
 	@Override
 	protected String getHtmlPageJs() {
-		return this.getHtmlPageNamespace() + "/historictaskinstance/view.js";
-	}
-
-	@Override
-	protected String getHtmlPageNamespace() {
-		return this.getContextPath() + "/bc-workflow";
+		return this.getModuleContextPath() + "/historictaskinstance/view.js";
 	}
 
 	// ==高级搜索代码开始==

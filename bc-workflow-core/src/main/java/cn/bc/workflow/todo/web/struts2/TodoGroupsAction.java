@@ -85,8 +85,14 @@ public class TodoGroupsAction extends TodoManagesAction {
 	}
 
 	@Override
+	protected String getHtmlPageTitle() {
+		return this.getText("group.title");
+	}
+
+
+	@Override
 	protected String getFormActionName() {
-		return "group";
+		return "todo/group";
 	}
 	
 	@Override
@@ -97,7 +103,7 @@ public class TodoGroupsAction extends TodoManagesAction {
 	@Override
 	protected String getHtmlPageJs() {
 		return super.getHtmlPageJs()+ ","
-				+ this.getContextPath() + "/bc-workflow/todo/group/view.js";
+				+ this.getModuleContextPath() + "/todo/group/view.js";
 	}
 
 	@Override

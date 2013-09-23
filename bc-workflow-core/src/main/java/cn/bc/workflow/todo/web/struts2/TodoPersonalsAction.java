@@ -33,7 +33,6 @@ import cn.bc.option.domain.OptionItem;
 import cn.bc.web.formater.AbstractFormater;
 import cn.bc.web.formater.CalendarFormater;
 import cn.bc.web.formater.EntityStatusFormater;
-import cn.bc.web.struts2.ViewAction;
 import cn.bc.web.ui.html.grid.Column;
 import cn.bc.web.ui.html.grid.HiddenColumn4MapKey;
 import cn.bc.web.ui.html.grid.IdColumn4MapKey;
@@ -45,6 +44,7 @@ import cn.bc.web.ui.html.toolbar.ToolbarMenuButton;
 import cn.bc.web.ui.json.Json;
 import cn.bc.workflow.service.WorkflowService;
 import cn.bc.workflow.todo.service.TodoService;
+import cn.bc.workflow.web.struts2.ViewAction;
 
 /**
  * 我的待办视图Action
@@ -325,12 +325,12 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>> {
 
 	@Override
 	protected String getFormActionName() {
-		return "personal";
+		return "todo/personal";
 	}
 
 	@Override
-	protected String getHtmlPageNamespace() {
-		return this.getContextPath() + "/bc-workflow/todo";
+	protected String getHtmlPageTitle() {
+		return this.getText("personal.title");
 	}
 
 	@Override
@@ -352,11 +352,11 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>> {
 
 	@Override
 	protected String getHtmlPageJs() {
-		return this.getContextPath() + "/bc-workflow/todo/my/view.js" + ","
+		return this.getModuleContextPath() + "/todo/my/view.js" + ","
 				+ this.getContextPath() + "/bc/identity/identity.js" + ","
-				+ this.getContextPath() + "/bc-workflow/select/selectUsers.js"+ "," 
-				+ this.getContextPath()+ "/bc-workflow/historicprocessinstance/select.js"+ "," 
-				+ this.getContextPath()+ "/bc-workflow/historictaskinstance/view.js";
+				+ this.getModuleContextPath() + "/select/selectUsers.js"+ "," 
+				+ this.getModuleContextPath()+ "/historicprocessinstance/select.js"+ "," 
+				+ this.getModuleContextPath()+ "/historictaskinstance/view.js";
 	}
 
 	@Override

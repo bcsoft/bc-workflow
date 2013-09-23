@@ -32,7 +32,6 @@ import cn.bc.option.domain.OptionItem;
 import cn.bc.web.formater.AbstractFormater;
 import cn.bc.web.formater.CalendarFormater;
 import cn.bc.web.formater.EntityStatusFormater;
-import cn.bc.web.struts2.ViewAction;
 import cn.bc.web.ui.html.grid.Column;
 import cn.bc.web.ui.html.grid.HiddenColumn4MapKey;
 import cn.bc.web.ui.html.grid.IdColumn4MapKey;
@@ -46,6 +45,7 @@ import cn.bc.web.ui.json.Json;
 import cn.bc.workflow.historictaskinstance.service.HistoricTaskInstanceService;
 import cn.bc.workflow.service.WorkflowService;
 import cn.bc.workflow.service.WorkspaceServiceImpl;
+import cn.bc.workflow.web.struts2.ViewAction;
 
 /**
  * 流程监控视图Action
@@ -68,7 +68,7 @@ public class HistoricProcessInstancesAction extends
 		this.workflowService = workflowService;
 	}
 
-	public String status="1";//默认待办中
+	public String status = "1";// 默认待办中
 
 	@Override
 	public boolean isReadonly() {
@@ -77,7 +77,7 @@ public class HistoricProcessInstancesAction extends
 		return !context.hasAnyRole(getText("key.role.bc.admin"),
 				getText("key.role.bc.workflow"));
 	}
-	
+
 	public boolean isAccessControl() {
 		// 流程访问控制
 		SystemContext context = (SystemContext) this.getContext();
@@ -110,11 +110,12 @@ public class HistoricProcessInstancesAction extends
 				return getFrom().replace("${condition}", expression);
 			}
 		};
-		
+
 		// 构建查询语句,where和order by不要包含在sql中(要统一放到condition中)
 		StringBuffer selectSql = new StringBuffer();
-		selectSql.append("select p.*,getProcessInstanceSubject(p.id_) as subject");
-		
+		selectSql
+				.append("select p.*,getProcessInstanceSubject(p.id_) as subject");
+
 		StringBuffer fromSql = new StringBuffer();
 		fromSql.append(" from (select a.id_,b.name_ as procinstname,a.start_time_,a.end_time_,a.duration_,f.suspension_state_ status,a.proc_inst_id_");
 		fromSql.append(",e.version_ as version,b.version_ as aVersion,b.key_ as key,c.name,e.id as deploy_id");
@@ -153,25 +154,35 @@ public class HistoricProcessInstancesAction extends
 				map.put("todo_names", rs[i++]);
 				map.put("accessactors", rs[i++]);
 				map.put("subject", rs[i++]);
-				
-				map.put("accessControlDocType","ProcessInstance");
-				
-				if (map.get("end_time") != null) {//已结束
+
+				map.put("accessControlDocType", "ProcessInstance");
+
+				if (map.get("end_time") != null) {// 已结束
 					map.put("status", WorkspaceServiceImpl.COMPLETE);
 				} else {
-					if(map.get("status").equals(String.valueOf(SuspensionState.ACTIVE.getStateCode()))){//流转中
-						map.put("status", String.valueOf(SuspensionState.ACTIVE.getStateCode()));
-					}else if(map.get("status").equals(String.valueOf(SuspensionState.SUSPENDED.getStateCode()))){//已暂停
-						map.put("status", String.valueOf(SuspensionState.SUSPENDED.getStateCode()));
+					if (map.get("status").equals(
+							String.valueOf(SuspensionState.ACTIVE
+									.getStateCode()))) {// 流转中
+						map.put("status", String.valueOf(SuspensionState.ACTIVE
+								.getStateCode()));
+					} else if (map.get("status").equals(
+							String.valueOf(SuspensionState.SUSPENDED
+									.getStateCode()))) {// 已暂停
+						map.put("status", String
+								.valueOf(SuspensionState.SUSPENDED
+										.getStateCode()));
 					}
 				}
-				
-				if(map.get("subject")!=null&&!map.get("subject").toString().equals("")){
-					map.put("accessControlDocName", map.get("subject").toString());
-				}else{
-					map.put("accessControlDocName", map.get("procinst_name").toString());
+
+				if (map.get("subject") != null
+						&& !map.get("subject").toString().equals("")) {
+					map.put("accessControlDocName", map.get("subject")
+							.toString());
+				} else {
+					map.put("accessControlDocName", map.get("procinst_name")
+							.toString());
 				}
-				
+
 				return map;
 			}
 		});
@@ -197,12 +208,15 @@ public class HistoricProcessInstancesAction extends
 				.setUseTitleFromLabel(true));
 		columns.add(new TextColumn4MapKey("", "todo_names",
 				getText("flow.instance.todoTask"), 200).setSortable(true)
-				.setUseTitleFromLabel(true).setValueFormater(new AbstractFormater<String>() {
+				.setUseTitleFromLabel(true)
+				.setValueFormater(new AbstractFormater<String>() {
 					@SuppressWarnings("unchecked")
 					@Override
 					public String format(Object context, Object value) {
-						String value_=StringUtils.toString(((Map<String, Object>) context).get("todo_names"));
-						if(value_!=null)
+						String value_ = StringUtils
+								.toString(((Map<String, Object>) context)
+										.get("todo_names"));
+						if (value_ != null)
 							return value_.replaceAll(";", ",");
 						return value_;
 					}
@@ -210,14 +224,16 @@ public class HistoricProcessInstancesAction extends
 		// 版本号
 		columns.add(new TextColumn4MapKey("e.version_", "version",
 				getText("flow.instance.version"), 50).setSortable(true)
-				.setUseTitleFromLabel(true).setValueFormater(new AbstractFormater<String>() {
+				.setUseTitleFromLabel(true)
+				.setValueFormater(new AbstractFormater<String>() {
 					@SuppressWarnings("unchecked")
 					@Override
 					public String format(Object context, Object value) {
 						Map<String, Object> version = (Map<String, Object>) context;
-						return version.get("version")+"  ("+version.get("aVersion")+")";
+						return version.get("version") + "  ("
+								+ version.get("aVersion") + ")";
 					}
-					
+
 				}));
 		// 发起人
 		columns.add(new TextColumn4MapKey("a.first_", "start_name",
@@ -237,24 +253,29 @@ public class HistoricProcessInstancesAction extends
 					@SuppressWarnings("unchecked")
 					@Override
 					public String format(Object context, Object value) {
-						Object duration_obj=((Map<String, Object>)context).get("duration");
-						if(duration_obj==null)return null;
-						return DateUtils.getWasteTime(Long.parseLong(duration_obj.toString()));
-					}	
+						Object duration_obj = ((Map<String, Object>) context)
+								.get("duration");
+						if (duration_obj == null)
+							return null;
+						return DateUtils.getWasteTime(Long
+								.parseLong(duration_obj.toString()));
+					}
 				}));
-		if(this.isAccessControl()){
+		if (this.isAccessControl()) {
 			columns.add(new TextColumn4MapKey("", "accessactors",
-					getText("flow.accessControl.accessActorAndRole")).setSortable(true)
-					.setUseTitleFromLabel(true));
+					getText("flow.accessControl.accessActorAndRole"))
+					.setSortable(true).setUseTitleFromLabel(true));
 		}
-		
+
 		columns.add(new TextColumn4MapKey("b.key_", "key",
 				getText("flow.instance.key"), 180).setSortable(true)
 				.setUseTitleFromLabel(true));
 		columns.add(new HiddenColumn4MapKey("procinstid", "procinstid"));
 		columns.add(new HiddenColumn4MapKey("status", "status"));
-		columns.add(new HiddenColumn4MapKey("accessControlDocType", "accessControlDocType"));
-		columns.add(new HiddenColumn4MapKey("accessControlDocName", "accessControlDocName"));
+		columns.add(new HiddenColumn4MapKey("accessControlDocType",
+				"accessControlDocType"));
+		columns.add(new HiddenColumn4MapKey("accessControlDocName",
+				"accessControlDocName"));
 		columns.add(new HiddenColumn4MapKey("deployId", "deployId"));
 		return columns;
 	}
@@ -282,12 +303,9 @@ public class HistoricProcessInstancesAction extends
 
 	@Override
 	protected String[] getGridSearchFields() {
-		return new String[] { 
-				"b.name_"
-				, "b.key_"
-				, "c.name"
-				,"getProcessInstanceSubject(a.id_)"
-				,"getprocesstodotasknames(a.id_)" };
+		return new String[] { "b.name_", "b.key_", "c.name",
+				"getProcessInstanceSubject(a.id_)",
+				"getprocesstodotasknames(a.id_)" };
 	}
 
 	@Override
@@ -316,7 +334,7 @@ public class HistoricProcessInstancesAction extends
 		tb.addButton(new ToolbarButton().setIcon("ui-icon-check")
 				.setText(getText("label.read"))
 				.setClick("bc.historicProcessInstanceSelectView.open"));
-	
+
 		// 发起流程
 		tb.addButton(new ToolbarButton().setIcon("ui-icon-bullet")
 				.setText(getText("flow.start"))
@@ -332,14 +350,14 @@ public class HistoricProcessInstancesAction extends
 					.setText(getText("lable.flow.suspended"))
 					.setClick("bc.historicprocessinstance.suspended"));
 		}
-		
+
 		// 流程实例级联删除
 		if (((SystemContext) this.getContext())
 				.hasAnyRole("BC_WORKFLOW_INSTANCE_DELETE")) {
 			tb.addButton(this.getDefaultDeleteToolbarButton());
 		}
-		
-		if(this.isAccessControl()){
+
+		if (this.isAccessControl()) {
 			// 访问监控
 			tb.addButton(new ToolbarButton().setIcon("ui-icon-wrench")
 					.setText(getText("flow.accessControl"))
@@ -348,7 +366,6 @@ public class HistoricProcessInstancesAction extends
 
 		tb.addButton(Toolbar.getDefaultToolbarRadioGroup(this.getStatus(),
 				"status", 0, getText("title.click2changeSearchStatus")));
-		
 
 		// 搜索按钮
 		tb.addButton(this.getDefaultSearchToolbarButton());
@@ -363,24 +380,29 @@ public class HistoricProcessInstancesAction extends
 		if (status != null && status.length() > 0) {
 			String[] ss = status.split(",");
 			if (ss.length == 1) {
-				String sqlstr="";
-				if (ss[0].equals(String.valueOf(SuspensionState.ACTIVE.getStateCode()))) {
+				String sqlstr = "";
+				if (ss[0].equals(String.valueOf(SuspensionState.ACTIVE
+						.getStateCode()))) {
 					sqlstr += " a.end_time_ is null";
-					sqlstr += " and ((b.suspension_state_ = "+SuspensionState.ACTIVE.getStateCode()+")";
-					sqlstr += " and (f.suspension_state_ ="+SuspensionState.ACTIVE.getStateCode()+"))";
+					sqlstr += " and ((b.suspension_state_ = "
+							+ SuspensionState.ACTIVE.getStateCode() + ")";
+					sqlstr += " and (f.suspension_state_ ="
+							+ SuspensionState.ACTIVE.getStateCode() + "))";
 				} else if (ss[0].equals(String
-						.valueOf(SuspensionState.SUSPENDED.getStateCode()))){
+						.valueOf(SuspensionState.SUSPENDED.getStateCode()))) {
 					sqlstr += " a.end_time_ is null";
-					sqlstr += " and ((b.suspension_state_ = "+SuspensionState.SUSPENDED.getStateCode()+")";
-					sqlstr += " or (f.suspension_state_ ="+SuspensionState.SUSPENDED.getStateCode()+"))";
-				} else if (ss[0].equals(String.valueOf(WorkspaceServiceImpl.COMPLETE))){
+					sqlstr += " and ((b.suspension_state_ = "
+							+ SuspensionState.SUSPENDED.getStateCode() + ")";
+					sqlstr += " or (f.suspension_state_ ="
+							+ SuspensionState.SUSPENDED.getStateCode() + "))";
+				} else if (ss[0].equals(String
+						.valueOf(WorkspaceServiceImpl.COMPLETE))) {
 					sqlstr += " a.end_time_ is not null";
-				} 
-				ac.add(new QlCondition(sqlstr,new Object[]{}));
+				}
+				ac.add(new QlCondition(sqlstr, new Object[] {}));
 			}
 		}
 
-		
 		ac.add(new IsNullCondition("f.parent_id_"));
 
 		return ac;
@@ -402,15 +424,11 @@ public class HistoricProcessInstancesAction extends
 
 	@Override
 	protected String getHtmlPageJs() {
-		return this.getHtmlPageNamespace()
-				+ "/historicprocessinstance/select.js"
-				+","+this.getHtmlPageNamespace() + "/historicprocessinstance/view.js"
-				+","+this.getContextPath()+"/bc/acl/accessControl.js";
-	}
-
-	@Override
-	protected String getHtmlPageNamespace() {
-		return this.getContextPath() + "/bc-workflow";
+		return this.getModuleContextPath()
+				+ "/historicprocessinstance/select.js" + ","
+				+ this.getModuleContextPath()
+				+ "/historicprocessinstance/view.js" + ","
+				+ this.getContextPath() + "/bc/acl/accessControl.js";
 	}
 
 	// ==高级搜索代码开始==
@@ -418,9 +436,9 @@ public class HistoricProcessInstancesAction extends
 	protected boolean useAdvanceSearch() {
 		return true;
 	}
-	
+
 	private HistoricTaskInstanceService historicTaskInstanceService;
-	
+
 	@Autowired
 	public void setHistoricTaskInstanceService(
 			HistoricTaskInstanceService historicTaskInstanceService) {
@@ -431,10 +449,11 @@ public class HistoricProcessInstancesAction extends
 
 	@Override
 	protected void initConditionsFrom() throws Exception {
-		List<String> values=this.historicTaskInstanceService.findProcessNames();
-		List<Map<String,String>> list = new ArrayList<Map<String,String>>();
-		Map<String,String> map;
-		for(String value : values){
+		List<String> values = this.historicTaskInstanceService
+				.findProcessNames();
+		List<Map<String, String>> list = new ArrayList<Map<String, String>>();
+		Map<String, String> map;
+		for (String value : values) {
 			map = new HashMap<String, String>();
 			map.put("key", value);
 			map.put("value", value);
@@ -445,7 +464,7 @@ public class HistoricProcessInstancesAction extends
 
 	// ==高级搜索代码结束==
 
-	public String id;	//流程实例id
+	public String id; // 流程实例id
 	public String ids;
 
 	/**
@@ -472,7 +491,6 @@ public class HistoricProcessInstancesAction extends
 		this.json = json.toString();
 		return "json";
 	}
-	
 
 	/** 激活流程 **/
 	public String doActive() {
@@ -483,7 +501,7 @@ public class HistoricProcessInstancesAction extends
 		this.json = json.toString();
 		return "json";
 	}
-	
+
 	/** 暂停流程 **/
 	public String doSuspended() {
 		Json json = new Json();

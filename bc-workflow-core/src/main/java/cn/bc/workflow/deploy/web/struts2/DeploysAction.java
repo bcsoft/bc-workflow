@@ -24,7 +24,6 @@ import cn.bc.identity.web.SystemContext;
 import cn.bc.option.domain.OptionItem;
 import cn.bc.web.formater.CalendarFormater;
 import cn.bc.web.formater.KeyValueFormater;
-import cn.bc.web.struts2.ViewAction;
 import cn.bc.web.ui.html.grid.Column;
 import cn.bc.web.ui.html.grid.HiddenColumn4MapKey;
 import cn.bc.web.ui.html.grid.IdColumn4MapKey;
@@ -35,6 +34,7 @@ import cn.bc.web.ui.html.toolbar.ToolbarButton;
 import cn.bc.web.ui.json.Json;
 import cn.bc.workflow.deploy.domain.Deploy;
 import cn.bc.workflow.deploy.service.DeployService;
+import cn.bc.workflow.web.struts2.ViewAction;
 
 /**
  * 流程部署视图Action
@@ -226,11 +226,6 @@ public class DeploysAction extends ViewAction<Map<String, Object>> {
 	}
 
 	@Override
-	protected String getHtmlPageNamespace() {
-		return this.getContextPath() + "/bc-workflow";
-	}
-
-	@Override
 	protected PageOption getHtmlPageOption() {
 		return super.getHtmlPageOption().setWidth(890).setMinWidth(400)
 				.setHeight(400).setMinHeight(300);
@@ -305,7 +300,7 @@ public class DeploysAction extends ViewAction<Map<String, Object>> {
 
 	@Override
 	protected String getHtmlPageJs() {
-		return this.getHtmlPageNamespace() + "/deploy/view.js"
+		return this.getModuleContextPath() + "/deploy/view.js"
 				+","+this.getContextPath()+"/bc/acl/accessControl.js";
 	}
 
