@@ -98,7 +98,7 @@ public class GroupHistoricProcessInstancesAction extends HistoricProcessInstance
 
 	@Override
 	protected String getHtmlPageJs() {
-		return this.getHtmlPageNamespace() + "/historicprocessinstance/group/view.js";
+		return this.getModuleContextPath() + "/historicprocessinstance/group/view.js";
 	}
 
 	@Override

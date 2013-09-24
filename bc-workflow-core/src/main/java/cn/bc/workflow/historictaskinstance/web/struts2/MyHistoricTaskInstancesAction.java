@@ -152,9 +152,8 @@ public class MyHistoricTaskInstancesAction extends
 	@Override
 	protected String getHtmlPageJs() {
 		return super.getHtmlPageJs()+","
-				+this.getHtmlPageNamespace() + "/historictaskinstance/my/view.js";
+				+this.getModuleContextPath() + "/historictaskinstance/my/view.js";
 	}
-
 
 	// ==高级搜索代码开始==
 	@Override

@@ -87,9 +87,8 @@ public class GroupHistoricTaskInstancesAction extends
 	@Override
 	protected String getHtmlPageJs() {
 		return super.getHtmlPageJs()+","
-				+this.getHtmlPageNamespace() + "/historictaskinstance/group/view.js";
+				+this.getModuleContextPath() + "/historictaskinstance/group/view.js";
 	}
-
 
 	@Override
 	protected Condition getGridSpecalCondition() {
