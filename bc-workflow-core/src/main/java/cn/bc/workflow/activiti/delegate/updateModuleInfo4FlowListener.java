@@ -3,6 +3,7 @@
  */
 package cn.bc.workflow.activiti.delegate;
 
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -14,6 +15,10 @@ import org.apache.commons.logging.LogFactory;
 
 import cn.bc.core.util.JsonUtils;
 import cn.bc.core.util.SpringUtils;
+import cn.bc.identity.domain.ActorHistory;
+import cn.bc.identity.web.SystemContextHolder;
+import cn.bc.workflow.domain.ExcutionLog;
+import cn.bc.workflow.service.ExcutionLogService;
 
 /**
  * 流程更新模块的相关信息监听器
@@ -24,6 +29,8 @@ import cn.bc.core.util.SpringUtils;
 public class updateModuleInfo4FlowListener extends ExcutionLogListener {
 	protected final Log logger = LogFactory.getLog(getClass());
 
+	protected ExcutionLogService excutionLogService;
+	
 	/**
 	 * service名称
 	 */
@@ -47,6 +54,15 @@ public class updateModuleInfo4FlowListener extends ExcutionLogListener {
 	 * 更新对象的id
 	 */
 	private Expression updateObjectId;
+	
+	/**
+	 * 同步日志记录
+	 */
+	private Expression log;
+	
+	public updateModuleInfo4FlowListener(){
+		excutionLogService = SpringUtils.getBean(ExcutionLogService.class);
+	}
 
 	@Override
 	public void notify(DelegateExecution execution) throws Exception {
@@ -60,7 +76,9 @@ public class updateModuleInfo4FlowListener extends ExcutionLogListener {
 				if (isExecute != null) {
 					if (isExecute.toString().equals("true")) {
 						executeUpdateMethod(execution);
-
+						if(log!=null&& execution.hasVariable(log.getExpressionText())){
+							saveExcutionLog(execution,execution.getVariable(log.getExpressionText()).toString());
+						}
 					}
 				}
 			}
@@ -68,6 +86,9 @@ public class updateModuleInfo4FlowListener extends ExcutionLogListener {
 			// 如果不配置默认执行
 			// 组装参数
 			executeUpdateMethod(execution);
+			if(log!=null&& execution.hasVariable(log.getExpressionText())){
+				saveExcutionLog(execution,execution.getVariable(log.getExpressionText()).toString());
+			}
 		}
 
 	}
@@ -116,4 +137,24 @@ public class updateModuleInfo4FlowListener extends ExcutionLogListener {
 		}
 	}
 
+	private void saveExcutionLog(DelegateExecution excution,String desc){
+		// 创建同步日志
+		ExcutionLog log = new ExcutionLog();
+		log.setFileDate(Calendar.getInstance());
+		ActorHistory h = SystemContextHolder.get().getUserHistory();
+		log.setAuthorId(h.getId());
+		log.setAuthorCode(h.getCode());
+		log.setAuthorName(h.getName());
+		log.setAssigneeId(h.getId());
+		log.setAssigneeCode(h.getCode());
+		log.setAssigneeName(h.getName());
+
+		log.setListener(excution.getClass().getName());
+		log.setExcutionId(excution.getId());
+		log.setType(ExcutionLog.TYPE_PROCESS_SYNC_INFO);
+		log.setProcessInstanceId(excution.getProcessInstanceId());
+
+		log.setDescription(desc);
+		this.excutionLogService.save(log);
+	}
 }
