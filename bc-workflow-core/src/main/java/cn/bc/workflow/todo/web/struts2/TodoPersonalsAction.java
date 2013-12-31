@@ -70,7 +70,7 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>> {
 		this.workflowService = workflowService;
 	}
 
-	public String status = String.valueOf(SuspensionState.ACTIVE.getStateCode();// 默认处理中
+	public String status = String.valueOf(SuspensionState.ACTIVE.getStateCode());// 默认处理中
 
 	@Override
 	public boolean isReadonly() {
