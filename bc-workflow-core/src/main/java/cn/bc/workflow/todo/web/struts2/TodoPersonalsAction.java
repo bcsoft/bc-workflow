@@ -70,7 +70,7 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>> {
 		this.workflowService = workflowService;
 	}
 
-	public String status;
+	public String status = String.valueOf(SuspensionState.ACTIVE.getStateCode();// 默认处理中
 
 	@Override
 	public boolean isReadonly() {
@@ -199,7 +199,7 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>> {
 				"requirement");
 
 		tb.addButton(Toolbar.getDefaultToolbarRadioGroup(this.getStatus(),
-				"status", 2, getText("title.click2changeSearchStatus")));
+				"status", 0, getText("title.click2changeSearchStatus")));
 
 		// 搜索按钮
 		tb.addButton(this.getDefaultSearchToolbarButton());
