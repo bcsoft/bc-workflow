@@ -3,6 +3,7 @@
  */
 package cn.bc.workflow.activiti.delegate;
 
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -15,6 +16,10 @@ import org.apache.commons.logging.LogFactory;
 
 import cn.bc.core.util.JsonUtils;
 import cn.bc.core.util.SpringUtils;
+import cn.bc.identity.domain.ActorHistory;
+import cn.bc.identity.web.SystemContextHolder;
+import cn.bc.workflow.domain.ExcutionLog;
+import cn.bc.workflow.service.ExcutionLogService;
 
 /**
  * 流程更新模块的相关信息监听器
@@ -24,6 +29,8 @@ import cn.bc.core.util.SpringUtils;
  */
 public class UpdateModuleInfo4TaskListener implements TaskListener {
 	protected final Log logger = LogFactory.getLog(getClass());
+	
+	protected ExcutionLogService excutionLogService;
 
 	/**
 	 * service名称
@@ -48,8 +55,29 @@ public class UpdateModuleInfo4TaskListener implements TaskListener {
 	 * 更新对象的id
 	 */
 	private Expression updateObjectId;
+	
+	/**
+	 * 同步日志记录
+	 */
+	private Expression log;
+	
+	public UpdateModuleInfo4TaskListener(){
+		excutionLogService = SpringUtils.getBean(ExcutionLogService.class);
+	}
 
 	public void notify(DelegateTask arg0) {
+		if (logger.isDebugEnabled()) {
+			logger.debug("execution=" + arg0.getClass());
+			logger.debug("this=" + this.getClass());
+			logger.debug("id=" + arg0.getId());
+			logger.debug("eventName=" + arg0.getEventName());
+			logger.debug("processInstanceId"
+					+ arg0.getProcessInstanceId());
+			logger.debug("executionId=" + arg0.getExecutionId());
+			logger.debug("taskDefinitionKey="
+					+ arg0.getTaskDefinitionKey());
+		}
+		
 		// 组装参数
 		Map<String, Object> arguments = JsonUtils.toMap(parameter
 				.getExpressionText());
@@ -98,6 +126,9 @@ public class UpdateModuleInfo4TaskListener implements TaskListener {
 				if (isExecute != null) {
 					if (isExecute.toString().equals("true")) {
 						executeUpdateMethod(arg0);
+						if(log!=null&& arg0.hasVariable(log.getExpressionText())){
+							saveExcutionLog(arg0,arg0.getVariable(log.getExpressionText()).toString());
+						}
 					}
 				}
 			}
@@ -105,6 +136,9 @@ public class UpdateModuleInfo4TaskListener implements TaskListener {
 			// 如果不配置默认执行
 			// 组装参数
 			executeUpdateMethod(arg0);
+			if(log!=null&& arg0.hasVariable(log.getExpressionText())){
+				saveExcutionLog(arg0,arg0.getVariable(log.getExpressionText()).toString());
+			}
 		}
 
 	}
@@ -148,6 +182,32 @@ public class UpdateModuleInfo4TaskListener implements TaskListener {
 					serviceMethod.getExpressionText(),
 					new Object[] { Long.valueOf(ModuleId.toString()), args });
 		}
+	}
+	
+	private void saveExcutionLog(DelegateTask delegateTask,String desc){
+		// 创建同步日志
+		ExcutionLog log = new ExcutionLog();
+		log.setFileDate(Calendar.getInstance());
+		ActorHistory h = SystemContextHolder.get().getUserHistory();
+		log.setAuthorId(h.getId());
+		log.setAuthorCode(h.getCode());
+		log.setAuthorName(h.getName());
+		log.setAssigneeId(h.getId());
+		log.setAssigneeCode(h.getCode());
+		log.setAssigneeName(h.getName());
+
+		log.setListener(delegateTask.getClass().getName());
+		log.setExcutionId(delegateTask.getExecutionId());
+		log.setType(ExcutionLog.TYPE_PROCESS_SYNC_INFO);
+		log.setProcessInstanceId(delegateTask.getProcessInstanceId());
+
+		// 任务的ID、编码、名称
+		log.setTaskInstanceId(delegateTask.getId());
+		log.setExcutionCode(delegateTask.getTaskDefinitionKey());
+		log.setExcutionName(delegateTask.getName());
+
+		log.setDescription(desc);
+		this.excutionLogService.save(log);
 	}
 
 }
