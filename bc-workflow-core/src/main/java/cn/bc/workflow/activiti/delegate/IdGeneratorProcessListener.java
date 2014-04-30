@@ -5,6 +5,7 @@ package cn.bc.workflow.activiti.delegate;
 
 import java.util.Calendar;
 
+import cn.bc.web.formater.NumberFormater;
 import org.activiti.engine.delegate.DelegateExecution;
 import org.activiti.engine.delegate.ExecutionListener;
 import org.activiti.engine.impl.el.Expression;
@@ -14,7 +15,6 @@ import org.apache.commons.logging.LogFactory;
 import cn.bc.core.util.DateUtils;
 import cn.bc.core.util.SpringUtils;
 import cn.bc.identity.service.IdGeneratorService;
-import cn.bc.web.formater.NubmerFormater;
 
 /**
  * 初始化流程实例添加流水号变量值的监听器
@@ -94,7 +94,7 @@ public class IdGeneratorProcessListener implements ExecutionListener {
 
 		IdGeneratorService idGeneratorService = SpringUtils.getBean(
 				"idGeneratorService", IdGeneratorService.class);
-		NubmerFormater nf = new NubmerFormater(formatNumber.getExpressionText());
+		NumberFormater nf = new NumberFormater(formatNumber.getExpressionText());
 		String formatter = nf.format(idGeneratorService.nextValue(type));
 
 		String codeValue = "";
