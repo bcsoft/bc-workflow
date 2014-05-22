@@ -1,30 +1,10 @@
 package cn.bc.workflow.todo.web.struts2;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
-import org.activiti.engine.impl.persistence.entity.SuspensionState;
-import org.json.JSONArray;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.config.BeanDefinition;
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Controller;
-
 import cn.bc.core.Page;
 import cn.bc.core.query.Query;
 import cn.bc.core.query.condition.Condition;
 import cn.bc.core.query.condition.Direction;
-import cn.bc.core.query.condition.impl.AndCondition;
-import cn.bc.core.query.condition.impl.EqualsCondition;
-import cn.bc.core.query.condition.impl.InCondition;
-import cn.bc.core.query.condition.impl.IsNullCondition;
-import cn.bc.core.query.condition.impl.OrCondition;
-import cn.bc.core.query.condition.impl.OrderCondition;
-import cn.bc.core.query.condition.impl.QlCondition;
+import cn.bc.core.query.condition.impl.*;
 import cn.bc.core.util.StringUtils;
 import cn.bc.db.jdbc.RowMapper;
 import cn.bc.db.jdbc.SqlObject;
@@ -45,6 +25,16 @@ import cn.bc.web.ui.json.Json;
 import cn.bc.workflow.service.WorkflowService;
 import cn.bc.workflow.todo.service.TodoService;
 import cn.bc.workflow.web.struts2.ViewAction;
+import org.activiti.engine.impl.persistence.entity.SuspensionState;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Controller;
+
+import java.util.*;
 
 /**
  * 我的待办视图Action
@@ -360,12 +350,10 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>> {
 	}
 
 	@Override
-	protected Json getGridExtrasData() {
-		Json json = new Json();
+    protected void extendGridExtrasData(JSONObject json) throws JSONException {
 		// 状态条件
 		if (status != null && status.length() > 0)
 			json.put("status", status);
-		return json;
 	}
 
 	/**

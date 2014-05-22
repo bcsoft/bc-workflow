@@ -1,19 +1,5 @@
 package cn.bc.workflow.historictaskinstance.web.struts2;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
-import org.activiti.engine.impl.persistence.entity.SuspensionState;
-import org.json.JSONArray;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.config.BeanDefinition;
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Controller;
-import org.springframework.util.Assert;
-
 import cn.bc.BCConstants;
 import cn.bc.core.query.condition.Condition;
 import cn.bc.core.query.condition.Direction;
@@ -40,6 +26,17 @@ import cn.bc.web.ui.json.Json;
 import cn.bc.workflow.historictaskinstance.service.HistoricTaskInstanceService;
 import cn.bc.workflow.service.WorkspaceServiceImpl;
 import cn.bc.workflow.web.struts2.ViewAction;
+import org.activiti.engine.impl.persistence.entity.SuspensionState;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Controller;
+import org.springframework.util.Assert;
+
+import java.util.*;
 
 /**
  * 经办、任务监控视图Action
@@ -345,13 +342,10 @@ public class HistoricTaskInstancesAction extends
 	}
 
 	@Override
-	protected Json getGridExtrasData() {
-		Json json = new Json();
+    protected void extendGridExtrasData(JSONObject json) throws JSONException {
 		// 状态条件
 		if (status != null && status.length() > 0)
 			json.put("status", status);
-		
-		return json;
 	}
 
 	@Override

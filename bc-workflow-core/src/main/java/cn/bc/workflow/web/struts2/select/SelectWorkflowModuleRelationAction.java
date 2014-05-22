@@ -1,16 +1,5 @@
 package cn.bc.workflow.web.struts2.select;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
-import org.activiti.engine.impl.persistence.entity.SuspensionState;
-import org.springframework.beans.factory.config.BeanDefinition;
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Controller;
-
 import cn.bc.core.query.condition.Condition;
 import cn.bc.core.query.condition.Direction;
 import cn.bc.core.query.condition.impl.AndCondition;
@@ -28,8 +17,15 @@ import cn.bc.web.ui.html.grid.IdColumn4MapKey;
 import cn.bc.web.ui.html.grid.TextColumn4MapKey;
 import cn.bc.web.ui.html.page.HtmlPage;
 import cn.bc.web.ui.html.page.PageOption;
-import cn.bc.web.ui.json.Json;
 import cn.bc.workflow.service.WorkspaceServiceImpl;
+import org.activiti.engine.impl.persistence.entity.SuspensionState;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Controller;
+
+import java.util.*;
 
 /**
  * 选择流程模块关系视图Action
@@ -171,8 +167,7 @@ public class SelectWorkflowModuleRelationAction extends AbstractSelectPageAction
 	}
 
 	@Override
-	protected Json getGridExtrasData() {
-		Json json = new Json();
+    protected void extendGridExtrasData(JSONObject json) throws JSONException {
 		if(moduleId!=null)
 			json.put("moduleId", moduleId);
 		if(moduleType!=null&&moduleType.length()>0)
@@ -181,8 +176,6 @@ public class SelectWorkflowModuleRelationAction extends AbstractSelectPageAction
 			json.put("processKey", processKey);
 		if(complete!=null&&complete)
 			json.put("complete", complete);
-
-		return json;
 	}
 	
 	@Override

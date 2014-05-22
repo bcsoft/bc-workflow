@@ -3,19 +3,6 @@
  */
 package cn.bc.workflow.web.struts2.select;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
-import org.activiti.engine.TaskService;
-import org.activiti.engine.task.IdentityLink;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.config.BeanDefinition;
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Controller;
-
 import cn.bc.BCConstants;
 import cn.bc.core.query.condition.Condition;
 import cn.bc.core.query.condition.ConditionUtils;
@@ -33,7 +20,16 @@ import cn.bc.web.ui.html.grid.IdColumn4MapKey;
 import cn.bc.web.ui.html.grid.TextColumn4MapKey;
 import cn.bc.web.ui.html.page.HtmlPage;
 import cn.bc.web.ui.html.page.PageOption;
-import cn.bc.web.ui.json.Json;
+import org.activiti.engine.TaskService;
+import org.activiti.engine.task.IdentityLink;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Controller;
+
+import java.util.*;
 
 /**
  * 选择用户Action
@@ -221,15 +217,12 @@ public class SelectUsers4FlowAction extends
 	}
 
 	@Override
-	protected Json getGridExtrasData() {
-		Json json = new Json();
+    protected void extendGridExtrasData(JSONObject json) throws JSONException {
 		// 状态条件
 		if (this.status != null || this.status.length() != 0) {
 			json.put("status", status);
 		}
 		json.put("history", history);
-
-		return json.isEmpty() ? null : json;
 	}
 
 	@Override

@@ -1,21 +1,5 @@
 package cn.bc.workflow.historicprocessinstance.web.struts2;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
-import org.activiti.engine.impl.persistence.entity.SuspensionState;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.json.JSONArray;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.config.BeanDefinition;
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Controller;
-import org.springframework.util.Assert;
-
 import cn.bc.core.exception.CoreException;
 import cn.bc.core.query.condition.Condition;
 import cn.bc.core.query.condition.Direction;
@@ -46,6 +30,19 @@ import cn.bc.workflow.historictaskinstance.service.HistoricTaskInstanceService;
 import cn.bc.workflow.service.WorkflowService;
 import cn.bc.workflow.service.WorkspaceServiceImpl;
 import cn.bc.workflow.web.struts2.ViewAction;
+import org.activiti.engine.impl.persistence.entity.SuspensionState;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Controller;
+import org.springframework.util.Assert;
+
+import java.util.*;
 
 /**
  * 流程监控视图Action
@@ -409,12 +406,10 @@ public class HistoricProcessInstancesAction extends
 	}
 
 	@Override
-	protected Json getGridExtrasData() {
-		Json json = new Json();
+    protected void extendGridExtrasData(JSONObject json) throws JSONException {
 		// 状态条件
 		if (status != null && status.length() > 0)
 			json.put("status", status);
-		return json;
 	}
 
 	@Override

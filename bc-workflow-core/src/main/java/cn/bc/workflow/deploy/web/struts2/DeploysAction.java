@@ -1,17 +1,5 @@
 package cn.bc.workflow.deploy.web.struts2;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
-import org.json.JSONArray;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.config.BeanDefinition;
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Controller;
-
 import cn.bc.BCConstants;
 import cn.bc.core.query.condition.Condition;
 import cn.bc.core.query.condition.ConditionUtils;
@@ -35,6 +23,15 @@ import cn.bc.web.ui.json.Json;
 import cn.bc.workflow.deploy.domain.Deploy;
 import cn.bc.workflow.deploy.service.DeployService;
 import cn.bc.workflow.web.struts2.ViewAction;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Controller;
+
+import java.util.*;
 
 /**
  * 流程部署视图Action
@@ -288,14 +285,10 @@ public class DeploysAction extends ViewAction<Map<String, Object>> {
 	}
 
 	@Override
-	protected Json getGridExtrasData() {
-		Json json = new Json();
+    protected void extendGridExtrasData(JSONObject json) throws JSONException {
 		if (status != null && status.length() > 0) {
 			json.put("status", this.status);
 		}
-		if (json.isEmpty())
-			return null;
-		return json;
 	}
 
 	@Override
