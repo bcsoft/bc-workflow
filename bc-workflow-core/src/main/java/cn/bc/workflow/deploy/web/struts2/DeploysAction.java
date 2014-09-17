@@ -250,7 +250,7 @@ public class DeploysAction extends ViewAction<Map<String, Object>> {
 			
 
 			if (this.isCascade()) {
-					// 强制删除
+				// 级联删除
 				tb.addButton(getDefaultDeleteToolbarButton());
 			}
 		}
