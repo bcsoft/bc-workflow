@@ -14,6 +14,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.zip.ZipInputStream;
 
+import cn.bc.core.exception.PermissionDeniedException;
 import org.activiti.engine.RepositoryService;
 import org.activiti.engine.repository.Deployment;
 import org.apache.commons.logging.Log;
@@ -156,8 +157,7 @@ public class DeployServiceImpl extends DefaultCrudService<Deploy> implements
 		Deploy deploy = this.deployDao.load(deploymentId);
 		if (null != deploy && null != deploy.getDeploymentId()) {
 			if (isCascade) {
-				repositoryService.deleteDeployment(deploy.getDeploymentId(),
-						true);// 级联删除流程
+				repositoryService.deleteDeployment(deploy.getDeploymentId(), true);// 级联删除流程
 			} else {
 				repositoryService.deleteDeployment(deploy.getDeploymentId());// 删除流程
 			}
@@ -180,8 +180,12 @@ public class DeployServiceImpl extends DefaultCrudService<Deploy> implements
 
 	@Override
 	public void delete(Serializable id) {
+		if(!SystemContextHolder.get().hasAnyRole("BC_WORKFLOW_DEPLOY_CASCADE")){
+			throw new PermissionDeniedException("权限不足");
+		}
+
 		Deploy entity = this.deployDao.load(id);
-		if(entity.getStatus() == Deploy.STATUS_USING){
+		if(entity.getStatus() == Deploy.STATUS_USING || entity.getStatus() == Deploy.STATUS_STOPPED){
 			// 先级联取消发布
 			this.dodeployCancel((Long) id, true);
 		}

@@ -24,7 +24,7 @@ import cn.bc.workflow.service.ExcutionLogService;
  * 流程更新模块的相关信息监听器
  * 
  * @author zxr
- * 
+ * @deprecated replace by cn.bc.workflow.activiti.delegate.UpdateModuleInfoOfficial4FlowListener
  */
 public class updateModuleInfo4FlowListener extends ExcutionLogListener {
 	protected final Log logger = LogFactory.getLog(getClass());
