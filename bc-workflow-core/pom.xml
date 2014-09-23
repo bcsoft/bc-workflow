@@ -6,6 +6,7 @@
 		<version>2.4</version>
 		<relativePath>../bc-workflow-parent/pom.xml</relativePath>
 	</parent>
+	<version>2.4.1</version>
 	<artifactId>bc-workflow-core</artifactId>
 	<name>bc-workflow-core</name>
 	<description>工作流核心</description>
