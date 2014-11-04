@@ -175,10 +175,13 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 		// 待办信息处理
 		ws.put("todoInfo", buildWSTodoInfo(flowStatus, instance));
 
-		// 待办信息处理
+		// 已办信息处理
 		ws.put("doneInfo", buildWSDoneInfo(flowStatus, instance));
 
 		// 返回综合后的信息
+		if (logger.isDebugEnabled()) {
+			logger.debug("获取流程实例的工作空间显示信息为：" + ws.get("todoInfo"));
+		}
 		return ws;
 	}
 

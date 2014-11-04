@@ -61,6 +61,10 @@ public class HistoricTaskInstanceServiceImpl implements HistoricTaskInstanceServ
 		return this.workflowService.startFlowByKey(key, variables);
 
 	}
+
+	public List<String> findHisNames(String processInstanceId) {
+		return this.historicTaskInstanceDao.findHisNames(processInstanceId);
+	}
 	
 	
 }

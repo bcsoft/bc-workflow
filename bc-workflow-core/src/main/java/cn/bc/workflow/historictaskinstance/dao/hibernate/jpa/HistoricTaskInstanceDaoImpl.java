@@ -67,4 +67,15 @@ public class HistoricTaskInstanceDaoImpl implements HistoricTaskInstanceDao {
 		
 		return this.jdbcTemplate.queryForList(sql, String.class);
 	}
+
+	public List<String> findHisNames(String processInstanceId) {
+		String sql = "select assignee_";
+		sql += " FROM act_hi_actinst";
+		sql += " where proc_inst_id_ = ?";
+		sql += " and assignee_ is not null";
+		sql += " and act_id_ not in ('t040OperationDirectorCheck', 't050ServiceVP2Instruct', 't060ChairmanCheck')";
+		sql += " group by assignee_";
+		return this.jdbcTemplate.queryForList(sql,
+				new Object[] { processInstanceId }, String.class);
+	}
 }

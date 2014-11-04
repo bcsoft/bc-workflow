@@ -57,4 +57,12 @@ public interface HistoricTaskInstanceService {
 		@return 返回流程id
 	 */
 	String doStartFlow(String key,String data) throws Exception;
+
+	/**
+	 * 查找流程历史办理人
+	 * 
+	 * @param processInstanceId
+	 * @return
+	 */
+	List<String> findHisNames(String processInstanceId);
 }

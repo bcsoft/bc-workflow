@@ -46,4 +46,12 @@ public interface HistoricTaskInstanceDao {
 	 */
 	List<String> findTaskNames();
 
+	/**
+	 * 查找流程历史办理人
+	 * 
+	 * @param processInstanceId
+	 * @return
+	 */
+	List<String> findHisNames(String processInstanceId);
+
 }
