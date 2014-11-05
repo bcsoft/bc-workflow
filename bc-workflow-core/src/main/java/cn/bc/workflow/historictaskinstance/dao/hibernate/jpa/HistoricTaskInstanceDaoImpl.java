@@ -68,13 +68,32 @@ public class HistoricTaskInstanceDaoImpl implements HistoricTaskInstanceDao {
 		return this.jdbcTemplate.queryForList(sql, String.class);
 	}
 
-	public List<String> findHisNames(String processInstanceId) {
-		String sql = "select assignee_";
-		sql += " FROM act_hi_actinst";
+	public List<String> findTransactors(String processInstanceId,
+			String[] includeTaskKeys, String[] exclusiveTaskKeys) {
+		String sql = "select assignee_ as assignee";
+		sql += " FROM act_hi_taskinst";
 		sql += " where proc_inst_id_ = ?";
-		sql += " and assignee_ is not null";
-		sql += " and act_id_ not in ('t040OperationDirectorCheck', 't050ServiceVP2Instruct', 't060ChairmanCheck')";
-		sql += " group by assignee_";
+		if (includeTaskKeys == null && exclusiveTaskKeys == null)
+			return this.jdbcTemplate.queryForList(sql,
+					new Object[] { processInstanceId }, String.class);
+		if (exclusiveTaskKeys == null && includeTaskKeys.length > 0) {
+			String s = "";
+			for (int i = 0; i < includeTaskKeys.length; i++) {
+				s += "'" + includeTaskKeys[i] + "'";
+				if (i < includeTaskKeys.length - 1)
+					s += ",";
+			}
+			sql += " and task_def_key_ in(" + s + ")";
+		}
+		if (includeTaskKeys == null && exclusiveTaskKeys.length > 0) {
+			String s = "";
+			for (int i = 0; i < exclusiveTaskKeys.length; i++) {
+				s += "'" + exclusiveTaskKeys[i] + "'";
+				if (i < exclusiveTaskKeys.length - 1)
+					s += ",";
+			}
+			sql += " and task_def_key_ not in(" + s + ")";
+		}
 		return this.jdbcTemplate.queryForList(sql,
 				new Object[] { processInstanceId }, String.class);
 	}

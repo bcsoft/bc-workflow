@@ -62,9 +62,21 @@ public class HistoricTaskInstanceServiceImpl implements HistoricTaskInstanceServ
 
 	}
 
-	public List<String> findHisNames(String processInstanceId) {
-		return this.historicTaskInstanceDao.findHisNames(processInstanceId);
+	public List<String> findTransactors(String processInstanceId) {
+		return this.historicTaskInstanceDao.findTransactors(processInstanceId,
+				null, null);
 	}
-	
-	
+
+	public List<String> findTransactorsByIncludeTaskKeys(
+			String processInstanceId, String[] includeTaskKeys) {
+		return this.historicTaskInstanceDao.findTransactors(processInstanceId,
+				includeTaskKeys, null);
+	}
+
+	public List<String> findTransactorsByExclusiveTaskKeys(
+			String processInstanceId, String[] exclusiveTaskKeys) {
+		return this.historicTaskInstanceDao.findTransactors(processInstanceId,
+				null, exclusiveTaskKeys);
+	}
+
 }

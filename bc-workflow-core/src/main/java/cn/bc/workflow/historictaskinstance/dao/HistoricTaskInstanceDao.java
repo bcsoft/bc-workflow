@@ -49,9 +49,12 @@ public interface HistoricTaskInstanceDao {
 	/**
 	 * 查找流程历史办理人
 	 * 
-	 * @param processInstanceId
+	 * @param processInstanceId 流程实例ID
+	 * @param includeTaskKeys 在这些key中查找
+	 * @param exclusiveTaskKeys 不在这些key中查找
 	 * @return
 	 */
-	List<String> findHisNames(String processInstanceId);
+	List<String> findTransactors(String processInstanceId,
+			String[] includeTaskKeys, String[] exclusiveTaskKeys);
 
 }
