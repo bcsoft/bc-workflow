@@ -1,95 +1,96 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:p="http://www.springframework.org/schema/p"
-	xmlns:tx="http://www.springframework.org/schema/tx" xmlns:aop="http://www.springframework.org/schema/aop"
-	xmlns:context="http://www.springframework.org/schema/context"
-	xsi:schemaLocation="http://www.springframework.org/schema/beans
-        http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
-        http://www.springframework.org/schema/context
-        http://www.springframework.org/schema/context/spring-context-3.0.xsd
+	   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	   xmlns:tx="http://www.springframework.org/schema/tx"
+	   xmlns:aop="http://www.springframework.org/schema/aop"
+	   xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
         http://www.springframework.org/schema/tx
-        http://www.springframework.org/schema/tx/spring-tx-3.0.xsd
+        http://www.springframework.org/schema/tx/spring-tx-3.2.xsd
         http://www.springframework.org/schema/aop
-        http://www.springframework.org/schema/aop/spring-aop-3.0.xsd">
+        http://www.springframework.org/schema/aop/spring-aop-3.2.xsd">
 	<!-- WorkFlowService 配置 -->
 	<bean id="workflowDao" class="cn.bc.workflow.dao.hibernate.jpa.WorkflowDaoImpl"/>
 	<bean id="workflowService" class="cn.bc.workflow.service.WorkflowServiceImpl"/>
 	<tx:advice id="workflowServiceTxAdvice" transaction-manager="transactionManager">
 		<tx:attributes>
-			<tx:method name="deploy*" propagation="REQUIRED" read-only="false" />
-			<tx:method name="start*" propagation="REQUIRED" read-only="false" />
+			<tx:method name="deploy*" propagation="REQUIRED" read-only="false"/>
+			<tx:method name="start*" propagation="REQUIRED" read-only="false"/>
 			<tx:method name="claimTask" propagation="REQUIRED"
-				read-only="false" />
+					   read-only="false"/>
 			<tx:method name="completeTask" propagation="REQUIRED"
-				read-only="false" />
+					   read-only="false"/>
 			<tx:method name="delegateTask" propagation="REQUIRED"
-				read-only="false" />
+					   read-only="false"/>
 		</tx:attributes>
 	</tx:advice>
 	<aop:config>
 		<aop:pointcut id="workflowServiceMethod"
-			expression="this(cn.bc.workflow.service.WorkflowService)" />
+					  expression="this(cn.bc.workflow.service.WorkflowService)"/>
 		<aop:advisor pointcut-ref="workflowServiceMethod"
-			advice-ref="workflowServiceTxAdvice" />
+					 advice-ref="workflowServiceTxAdvice"/>
 	</aop:config>
 
 	<!-- WorkspaceService 配置 -->
-	<bean id="workspaceService" class="cn.bc.workflow.service.WorkspaceServiceImpl" />
+	<bean id="workspaceService" class="cn.bc.workflow.service.WorkspaceServiceImpl"/>
 	<tx:advice id="workspaceServiceTxAdvice" transaction-manager="transactionManager">
 		<tx:attributes>
-			<tx:method name="find*" propagation="REQUIRED" read-only="true" />
+			<tx:method name="find*" propagation="REQUIRED" read-only="true"/>
 		</tx:attributes>
 	</tx:advice>
 	<aop:config>
 		<aop:pointcut id="workspaceServiceMethod"
-			expression="this(cn.bc.workflow.service.WorkspaceService)" />
+					  expression="this(cn.bc.workflow.service.WorkspaceService)"/>
 		<aop:advisor pointcut-ref="workspaceServiceMethod"
-			advice-ref="workspaceServiceTxAdvice" />
+					 advice-ref="workspaceServiceTxAdvice"/>
 	</aop:config>
 
 	<!-- WorkflowFormService 配置 -->
-	<bean id="workflowFormService" class="cn.bc.workflow.service.WorkflowFormServiceImpl" />
+	<bean id="workflowFormService" class="cn.bc.workflow.service.WorkflowFormServiceImpl"/>
 	<tx:advice id="workflowFormServiceTxAdvice"
-		transaction-manager="transactionManager">
+			   transaction-manager="transactionManager">
 		<tx:attributes>
-			<tx:method name="get*" propagation="REQUIRED" read-only="true" />
+			<tx:method name="get*" propagation="REQUIRED" read-only="true"/>
 		</tx:attributes>
 	</tx:advice>
 	<aop:config>
 		<aop:pointcut id="workflowFormServiceMethod"
-			expression="this(cn.bc.workflow.service.WorkflowFormService)" />
+					  expression="this(cn.bc.workflow.service.WorkflowFormService)"/>
 		<aop:advisor pointcut-ref="workflowFormServiceMethod"
-			advice-ref="workflowFormServiceTxAdvice" />
+					 advice-ref="workflowFormServiceTxAdvice"/>
 	</aop:config>
 
 	<!-- 自定义的表单引擎 -->
-	<bean id="bcFormEngine" class="cn.bc.workflow.activiti.form.BcFormEngine" />
-	<bean id="bcFormService" class="cn.bc.workflow.activiti.FormServiceImpl" />
+	<bean id="bcFormEngine" class="cn.bc.workflow.activiti.form.BcFormEngine"/>
+	<bean id="bcFormService" class="cn.bc.workflow.activiti.FormServiceImpl"/>
 
 	<!-- 流转日志 -->
-	<bean id="excutionLogDao" class="cn.bc.workflow.dao.hibernate.jpa.ExcutionLogDaoImpl"
-		p:entityManagerFactory-ref="entityManagerFactory" />
-	<bean id="excutionLogService" class="cn.bc.workflow.service.ExcutionLogServiceImpl" />
+	<bean id="excutionLogDao" class="cn.bc.workflow.dao.hibernate.jpa.ExcutionLogDaoImpl">
+		<property name="entityManagerFactory" ref="entityManagerFactory"/>
+	</bean>
+	<bean id="excutionLogService" class="cn.bc.workflow.service.ExcutionLogServiceImpl"/>
 
 	<!-- 通用节点监听器：执行日志 -->
-	<bean id="excutionLogListener" class="cn.bc.workflow.activiti.delegate.ExcutionLogListener" />
+	<bean id="excutionLogListener" class="cn.bc.workflow.activiti.delegate.ExcutionLogListener"/>
 
 	<!-- 通用流程启动、结束监听器：执行日志 -->
-	<bean id="processLogListener" class="cn.bc.workflow.activiti.delegate.ProcessLogListener" />
+	<bean id="processLogListener" class="cn.bc.workflow.activiti.delegate.ProcessLogListener"/>
 
 	<!-- 通用任务节点创建、分配、完成监听器：任务日志 -->
-	<bean id="taskLogListener" class="cn.bc.workflow.activiti.delegate.TaskLogListener" />
+	<bean id="taskLogListener" class="cn.bc.workflow.activiti.delegate.TaskLogListener"/>
 
 	<!-- 通用流向节点take监听器：任务日志 -->
-	<bean id="flowLogListener" class="cn.bc.workflow.activiti.delegate.FlowLogListener" />
+	<bean id="flowLogListener" class="cn.bc.workflow.activiti.delegate.FlowLogListener"/>
 
 	<!-- 通用JavaDelegate监听器：任务日志 -->
 	<bean id="javaDelegateLogListener"
-		class="cn.bc.workflow.activiti.delegate.JavaDelegateLogListener" />
-		
+		  class="cn.bc.workflow.activiti.delegate.JavaDelegateLogListener"/>
+
 	<!-- 流程关系 -->
-	<bean id="workflowModuleRelationDao" class="cn.bc.workflow.dao.hibernate.jpa.WorkflowModuleRelationDaoImpl"
-		p:entityManagerFactory-ref="entityManagerFactory" />
-	<bean id="workflowModuleRelationService" class="cn.bc.workflow.service.WorkflowModuleRelationServiceImpl" 
-		p:moduleRelationDao-ref="workflowModuleRelationDao"/>
+	<bean id="workflowModuleRelationDao" class="cn.bc.workflow.dao.hibernate.jpa.WorkflowModuleRelationDaoImpl">
+		<property name="entityManagerFactory" ref="entityManagerFactory"/>
+	</bean>
+	<bean id="workflowModuleRelationService" class="cn.bc.workflow.service.WorkflowModuleRelationServiceImpl">
+		<property name="moduleRelationDao" ref="workflowModuleRelationDao"/>
+	</bean>
 </beans>
