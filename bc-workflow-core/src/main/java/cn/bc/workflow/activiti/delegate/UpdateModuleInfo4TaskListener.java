@@ -77,70 +77,29 @@ public class UpdateModuleInfo4TaskListener implements TaskListener {
 			logger.debug("taskDefinitionKey="
 					+ arg0.getTaskDefinitionKey());
 		}
-		
-		// 组装参数
-		Map<String, Object> arguments = JsonUtils.toMap(parameter
-				.getExpressionText());
-		Map<String, Object> args = new HashMap<String, Object>();
-		Set<String> keySet = arguments.keySet();
-		for (String key : keySet) {
-
-			Object arg = arguments.get(key);
-			if (arg instanceof String) {
-				String value = arg.toString();
-				// 如果包含"$"号就取变量值
-				if (value.indexOf("$") != -1) {
-					args.put(key, arg0.getVariable(value.substring(
-							value.indexOf("{") + 1, value.indexOf("}"))));
-				} else {
-					args.put(key, arguments.get(key));
-				}
-
-			} else {
-				args.put(key, arguments.get(key));
-				logger.debug(arguments.get(key) + " :arguments.get(key): "
-						+ arguments.get(key).getClass());
-			}
-		}
-		// 获取id
-		String caseId = updateObjectId.getExpressionText();
-		if (caseId.indexOf("$") != -1) {
-
-			Object case4InfractTrafficId = arg0.getVariable(caseId.substring(
-					caseId.indexOf("{") + 1, caseId.indexOf("}")));
-			SpringUtils.invokeBeanMethod(
-					serviceName.getExpressionText(),
-					serviceMethod.getExpressionText(),
-					new Object[] {
-							Long.valueOf(case4InfractTrafficId.toString()),
-							args });
-		}
 
 		// 判断是否执行更新方法
 		String execute = isExecuteUpdateMethod.getExpressionText();
-		if (execute != null) {
-			if (execute.indexOf("$") != -1) {
-				Object isExecute = arg0.getVariable(execute.substring(
-						execute.indexOf("{") + 1, execute.indexOf("}")));
-				// 如果为true就执行
-				if (isExecute != null) {
-					if (isExecute.toString().equals("true")) {
-						executeUpdateMethod(arg0);
-						if(log!=null&& arg0.hasVariable(log.getExpressionText())){
-							saveExcutionLog(arg0,arg0.getVariable(log.getExpressionText()).toString());
-						}
-					}
-				}
-			}
-		} else {
-			// 如果不配置默认执行
-			// 组装参数
-			executeUpdateMethod(arg0);
-			if(log!=null&& arg0.hasVariable(log.getExpressionText())){
-				saveExcutionLog(arg0,arg0.getVariable(log.getExpressionText()).toString());
+		if (execute == null)
+			return;
+		if (execute.indexOf("$") == -1)
+			return;
+
+		execute = execute.substring(execute.indexOf("{") + 1, execute.indexOf("}"));
+		boolean go = "true".equals(execute);// isExecuteUpdateMethod 设置为：${true}，就执行更新
+		if(!go){// 设置为其他变量，变量的值必须为true才执行更新
+			Object isExecute = arg0.getVariable(execute);
+			if (isExecute != null && "true".equalsIgnoreCase(isExecute.toString())) {
+				go = true;
 			}
 		}
 
+		if(go){
+			executeUpdateMethod(arg0);
+			if(log!=null&& arg0.hasVariable(log.getExpressionText())) {
+				saveExcutionLog(arg0,arg0.getVariable(log.getExpressionText()).toString());
+			}
+		}
 	}
 
 	/**
