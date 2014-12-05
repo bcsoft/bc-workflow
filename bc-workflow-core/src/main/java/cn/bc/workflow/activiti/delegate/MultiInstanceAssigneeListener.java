@@ -36,10 +36,10 @@ public class MultiInstanceAssigneeListener implements TaskListener{
 
 		@SuppressWarnings("rawtypes")
 		Map mvariable=(Map) delegateTask.getVariable("multiInstanceCollentionKey");
-		Object doa = mvariable.get("departmentOrAssignee");
+		Object doa = mvariable.get("groupOrAssignee");
 		String doaKey = null;
 
-		if (doa != null && "department".equals(doa)) {
+		if (doa != null && "group".equals(doa)) {
 			doaKey = (String) doa;
 			// 设置任务办理岗位
 			delegateTask.addCandidateGroup(mvariable.get(doaKey).toString());

@@ -55,9 +55,9 @@ public class IsAssigneeHaveAnyGroupListener implements TaskListener {
     private Expression exist;
 
     /**
-     * 是否区分部门的布尔值
+     * 是否在办理人所属部门下找岗位的布尔值
      */
-    private Expression isDivisionGrop;
+    private Expression isGetGroup;
 
     public void notify(DelegateTask delegateTask) {
         if (logger.isDebugEnabled()) {
@@ -69,6 +69,9 @@ public class IsAssigneeHaveAnyGroupListener implements TaskListener {
                     .getExpressionText() : null));
             logger.debug("customHaveGroupKey="
                     + (customHaveGroupKey != null ? customHaveGroupKey
+                    .getExpressionText() : null));
+            logger.debug("isGetGroup="
+                    + (isGetGroup != null ? isGetGroup
                     .getExpressionText() : null));
             logger.debug("taskId=" + delegateTask.getId());
             logger.debug("eventName=" + delegateTask.getEventName());
@@ -91,8 +94,9 @@ public class IsAssigneeHaveAnyGroupListener implements TaskListener {
 
         // 办理人所属部门
         Actor department = null;
-        Object isDivisionGroup = this.isDivisionGrop.getExpressionText();
+        Object isDivisionGroup = this.isGetGroup.getExpressionText();
 
+        // 获取办理人所属部门
         if (isDivisionGroup != null && Boolean.parseBoolean((String) isDivisionGroup)) {
             // 办理人
             Actor actor = this.actorService.loadByCode(delegateTask.getAssignee());
@@ -105,11 +109,12 @@ public class IsAssigneeHaveAnyGroupListener implements TaskListener {
             }
         }
 
-        // 岗位
+        // 获得岗位集合
         List<Actor> groups = (department != null)
                 ? this.findGroups(department.getId())
                 : this.findGroups(null);
 
+        // 设置错误提示信息
         if (groups == null || (groups != null && groups.size() == 0)) {
             if (isDivisionGroup == null)
                 throw new CoreException("配置的岗位名称没有在系统找到！");
@@ -125,7 +130,7 @@ public class IsAssigneeHaveAnyGroupListener implements TaskListener {
             i++;
         }
 
-        // 配置的岗位的用户
+        // 获得岗位下的用户集合
         List<Actor> users = this.findUsers(groupsId);
         // 定义拥有岗位的布尔值
         boolean haveGroup = false;
