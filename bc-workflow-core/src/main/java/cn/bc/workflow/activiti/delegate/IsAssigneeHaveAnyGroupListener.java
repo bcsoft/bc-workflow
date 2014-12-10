@@ -3,6 +3,7 @@
  */
 package cn.bc.workflow.activiti.delegate;
 
+import cn.bc.BCConstants;
 import cn.bc.core.exception.CoreException;
 import cn.bc.core.util.SpringUtils;
 import cn.bc.identity.domain.Actor;
@@ -190,7 +191,8 @@ public class IsAssigneeHaveAnyGroupListener implements TaskListener {
                 return groupService.findByCodes((belongId != null)
                                 ? new Long[]{belongId} : null, anyGroup,
                         new Integer[]{ActorRelation.TYPE_BELONG},
-                        new Integer[]{Actor.TYPE_GROUP});
+                        new Integer[]{Actor.TYPE_GROUP},
+                        new Integer[]{BCConstants.STATUS_ENABLED});
         }
         // 根据岗位名称获取岗位集合
         else if (anyGroupNames != null) {
@@ -199,7 +201,8 @@ public class IsAssigneeHaveAnyGroupListener implements TaskListener {
                 return groupService.findByNames((belongId != null)
                                 ? new Long[]{belongId} : null, anyGroup,
                         new Integer[]{ActorRelation.TYPE_BELONG},
-                        new Integer[]{Actor.TYPE_GROUP});
+                        new Integer[]{Actor.TYPE_GROUP},
+                        new Integer[]{BCConstants.STATUS_ENABLED});
         }
 
         return null;
