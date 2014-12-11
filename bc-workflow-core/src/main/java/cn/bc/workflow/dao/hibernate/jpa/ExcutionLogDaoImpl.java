@@ -178,11 +178,14 @@ public class ExcutionLogDaoImpl extends HibernateCrudJpaDao<ExcutionLog>
 				.createHistoricDetailQuery().processInstanceId(pi.getId())
 				.variableUpdates().orderByTime().asc().list();
 		HistoricVariableUpdate v;
+		Map<String, Object> globalParams = new LinkedHashMap<String, Object>();
 		for (HistoricDetail d : detail) {
 			v = (HistoricVariableUpdate) d;
 			if(v.getTaskId()  == null)
 			params.put(v.getVariableName(), v.getValue());
+			globalParams.put(v.getVariableName(), v.getValue());
 		}
+		params.put("global", globalParams);// 使用特殊的key记录全局流程变量
 
 		// 本地流程变量
 		detail = getHistoryService().createHistoricDetailQuery().taskId(taskId)
