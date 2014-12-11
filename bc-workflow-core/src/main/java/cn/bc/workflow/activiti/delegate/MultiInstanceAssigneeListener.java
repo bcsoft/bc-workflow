@@ -3,10 +3,16 @@
  */
 package cn.bc.workflow.activiti.delegate;
 
+import java.util.List;
 import java.util.Map;
 
+import cn.bc.BCConstants;
+import cn.bc.core.util.SpringUtils;
+import cn.bc.identity.domain.Actor;
+import cn.bc.identity.service.ActorService;
 import org.activiti.engine.delegate.DelegateTask;
 import org.activiti.engine.delegate.TaskListener;
+import org.activiti.engine.impl.el.Expression;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -26,6 +32,11 @@ public class MultiInstanceAssigneeListener implements TaskListener{
 	private static final Log logger = LogFactory
 			.getLog(MultiInstanceAssigneeListener.class);
 
+	/**
+	 * 岗位只有一个人是直接分配到人
+	 */
+	private Expression onlyOneUser;
+
 	public void notify(DelegateTask delegateTask) {
 		if (logger.isDebugEnabled()) {
 			logger.debug("taskDefinitionKey="
@@ -41,8 +52,25 @@ public class MultiInstanceAssigneeListener implements TaskListener{
 
 		if (doa != null && "group".equals(doa)) {
 			doaKey = (String) doa;
-			// 设置任务办理岗位
-			delegateTask.addCandidateGroup(mvariable.get(doaKey).toString());
+			String groupCode = mvariable.get(doaKey).toString();// 岗位Code
+
+			// 岗位只有一人直接分配到人
+			if (onlyOneUser != null && "true".equals(onlyOneUser.getExpressionText())) {
+				ActorService actorService = SpringUtils.getBean("actorService", ActorService.class);
+
+				Actor group = actorService.loadByCode(groupCode);
+				List<Actor> listUsers = actorService.findUser(group.getId(), new Integer[]{BCConstants.STATUS_ENABLED});
+
+				if (listUsers != null && listUsers.size() == 1) {// 分配到人
+					delegateTask.setAssignee(listUsers.get(0).getCode());
+				} else {// 分配到岗位
+					delegateTask.addCandidateGroup(groupCode);
+				}
+			} else {// 直接分配到岗位
+				// 设置任务办理岗位
+				delegateTask.addCandidateGroup(groupCode);
+			}
+
 		} else if (doa == null || doa != null && "assignee".equals(doa)) {
 			doaKey = "assignee";
 			// 设置任务办理人
