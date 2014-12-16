@@ -1,17 +1,5 @@
 package cn.bc.workflow.web.struts2;
 
-import java.io.PrintStream;
-import java.util.Calendar;
-import java.util.List;
-import java.util.Map;
-
-import org.apache.geronimo.mail.util.StringBufferOutputStream;
-import org.commontemplate.util.Assert;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.config.BeanDefinition;
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Controller;
-
 import cn.bc.acl.domain.AccessActor;
 import cn.bc.acl.domain.AccessHistory;
 import cn.bc.acl.service.AccessHistoryService;
@@ -22,6 +10,17 @@ import cn.bc.identity.web.SystemContext;
 import cn.bc.web.ui.html.page.PageOption;
 import cn.bc.workflow.deploy.domain.Deploy;
 import cn.bc.workflow.service.WorkspaceService;
+import org.commontemplate.util.Assert;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Controller;
+
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+import java.util.Calendar;
+import java.util.List;
+import java.util.Map;
 
 /**
  * 工作空间Action
@@ -107,9 +106,13 @@ public class WorkspaceAction extends AbstractBaseAction {
 			
 		} catch (Exception e) {
 			this.error = "打开工作空间异常";
-			this.errorDetail = new StringBuffer();
-			e.printStackTrace(new PrintStream(new StringBufferOutputStream(
-					errorDetail)));
+
+			//this.errorDetail = new StringBuffer();
+			//e.printStackTrace(new PrintStream(new .StringBufferOutputStream(errorDetail)));
+
+			ByteArrayOutputStream os = new ByteArrayOutputStream();
+			e.printStackTrace(new PrintStream(os));
+			this.errorDetail = new StringBuffer(os.toString());
 		}
 
 		return SUCCESS;

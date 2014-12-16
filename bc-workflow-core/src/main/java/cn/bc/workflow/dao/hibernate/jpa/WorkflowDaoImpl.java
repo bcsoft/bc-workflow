@@ -6,11 +6,11 @@ import javax.sql.DataSource;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.junit.Assert;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import cn.bc.workflow.dao.WorkflowDao;
+import org.springframework.util.Assert;
 
 /**
  * 流程Dao接口的实现
@@ -68,9 +68,9 @@ public class WorkflowDaoImpl implements WorkflowDao {
 
 	public Object findLocalValue(String pid, String taskKey,
 			String localValueKey) {
-		Assert.assertNotNull(pid);
-		Assert.assertNotNull(taskKey);
-		Assert.assertNotNull(localValueKey);
+		Assert.notNull(pid);
+		Assert.notNull(taskKey);
+		Assert.notNull(localValueKey);
 		
 		Object[] args=new Object[]{pid,taskKey,localValueKey};
 		
@@ -83,8 +83,4 @@ public class WorkflowDaoImpl implements WorkflowDao {
 		
 		return this.jdbcTemplate.queryForObject(sql, Object.class, args);
 	}
-
-	
-
-	 
-}  
+}

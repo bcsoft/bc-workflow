@@ -1,21 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:p="http://www.springframework.org/schema/p"
-	xmlns:tx="http://www.springframework.org/schema/tx" xmlns:aop="http://www.springframework.org/schema/aop"
-	xmlns:context="http://www.springframework.org/schema/context"
-	xsi:schemaLocation="http://www.springframework.org/schema/beans
-        http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
-        http://www.springframework.org/schema/context
-        http://www.springframework.org/schema/context/spring-context-3.0.xsd
-        http://www.springframework.org/schema/tx
-        http://www.springframework.org/schema/tx/spring-tx-3.0.xsd
-        http://www.springframework.org/schema/aop
-        http://www.springframework.org/schema/aop/spring-aop-3.0.xsd">
+	   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	   xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans-3.2.xsd">
 	<!-- Activiti的Spring集成配置 -->
 	<bean id="processEngineConfiguration" class="org.activiti.spring.SpringProcessEngineConfiguration">
-		<property name="dataSource" ref="dataSource" />
-		<property name="transactionManager" ref="transactionManager" />
-		<property name="databaseSchemaUpdate" value="true" />
+		<property name="dataSource" ref="dataSource"/>
+		<property name="transactionManager" ref="transactionManager"/>
+		<property name="databaseSchemaUpdate" value="true"/>
 
 		<!-- 历史的配置：
 			none-忽略所有历史归档；
@@ -23,19 +15,19 @@
 			audit-默认，存档所有的流程实例、活动实例以及提交的表单属性，以便通过表单进行的用户交互可被追溯和查证；
 			full-这是历史归档的最高级别，因此执行时最慢，这一级别存储了所有在 audit 中存储的信息，以及其它所有可能的细节如流程变量的更新
 		-->
-		<property name="history" value="audit" />
+		<property name="history" value="audit"/>
 
 		<!-- 邮件服务器的配置：mailServerHost、mailServerPort、mailServerDefaultFrom、mailServerUsername、mailServerPassword -->
-		<property name="mailServerHost" value="localhost" />
-		<property name="mailServerPort" value="5025" />
+		<property name="mailServerHost" value="localhost"/>
+		<property name="mailServerPort" value="5025"/>
 
 		<!-- 使用JPA需要的配置 -->
-		<property name="jpaEntityManagerFactory" ref="entityManagerFactory" />
-		<property name="jpaHandleTransaction" value="true" />
-		<property name="jpaCloseEntityManager" value="true" />
+		<property name="jpaEntityManagerFactory" ref="entityManagerFactory"/>
+		<property name="jpaHandleTransaction" value="true"/>
+		<property name="jpaCloseEntityManager" value="true"/>
 
 		<!-- 作业执行器的配置：JobExecutor是管理触发定时器线程的组件，默认在流程引擎启动时被激活，进行单元测试时，处理多线程是很多余的，可以将其关闭 -->
-		<property name="jobExecutorActivate" value="false" />
+		<property name="jobExecutorActivate" value="false"/>
 
 		<!-- 控制可以在流程配置文件内使用的spring bean的范围，不配置则代表所有spring bean都可以使用
 		<property name="beans">
@@ -52,39 +44,41 @@
 		<!-- 自定义用户、用户组的配置 -->
 		<property name="customSessionFactories">
 			<list>
-				<bean class="cn.bc.workflow.activiti.CustomUserManagerFactory"
-					p:userManager-ref="customUserManager" />
-				<bean class="cn.bc.workflow.activiti.CustomGroupManagerFactory"
-					p:groupManager-ref="customGroupManager" />
+				<bean class="cn.bc.workflow.activiti.CustomUserManagerFactory">
+					<property name="userManager" ref="customUserManager"/>
+				</bean>
+				<bean class="cn.bc.workflow.activiti.CustomGroupManagerFactory">
+					<property name="groupManager" ref="customGroupManager"/>
+				</bean>
 			</list>
 		</property>
 	</bean>
-	
+
 	<!-- 自定义Activiti的用户和用户组管理 -->
 	<bean id="customUserManager" class="cn.bc.workflow.activiti.CustomUserManager"/>
 	<bean id="customGroupManager" class="cn.bc.workflow.activiti.CustomGroupManager"/>
 
 	<!-- Activiti引擎服务 -->
 	<bean id="processEngine" class="org.activiti.spring.ProcessEngineFactoryBean">
-		<property name="processEngineConfiguration" ref="processEngineConfiguration" />
+		<property name="processEngineConfiguration" ref="processEngineConfiguration"/>
 	</bean>
 	<bean id="repositoryService" factory-bean="processEngine"
-		factory-method="getRepositoryService" />
+		  factory-method="getRepositoryService"/>
 	<bean id="runtimeService" factory-bean="processEngine"
-		factory-method="getRuntimeService" />
+		  factory-method="getRuntimeService"/>
 	<bean id="taskService" factory-bean="processEngine"
-		factory-method="getTaskService" />
+		  factory-method="getTaskService"/>
 	<bean id="formService" factory-bean="processEngine"
-		factory-method="getFormService" />
+		  factory-method="getFormService"/>
 	<bean id="historyService" factory-bean="processEngine"
-		factory-method="getHistoryService" />
+		  factory-method="getHistoryService"/>
 	<bean id="managementService" factory-bean="processEngine"
-		factory-method="getManagementService" />
+		  factory-method="getManagementService"/>
 	<bean id="identityService" factory-bean="processEngine"
-		factory-method="getIdentityService" />
+		  factory-method="getIdentityService"/>
 
 	<!-- Activiti测试驱动 -->
 	<bean id="activitiRule" class="cn.bc.workflow.test.activiti.ActivitiRule">
-		<property name="processEngine" ref="processEngine" />
+		<property name="processEngine" ref="processEngine"/>
 	</bean>
 </beans>

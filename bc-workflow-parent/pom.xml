@@ -66,8 +66,9 @@
 			</properties>
 			<dependencies>
 				<dependency>
-					<groupId>postgresql</groupId>
+					<groupId>org.postgresql</groupId>
 					<artifactId>postgresql</artifactId>
+					<scope>provided</scope>
 				</dependency>
 			</dependencies>
 		</profile>
@@ -224,6 +225,16 @@
 				<groupId>org.activiti</groupId>
 				<artifactId>activiti-camel</artifactId>
 				<version>${activiti-version}</version>
+				<exclusions>
+					<exclusion>
+						<groupId>commons-logging</groupId>
+						<artifactId>commons-logging</artifactId>
+					</exclusion>
+					<exclusion>
+						<groupId>commons-logging</groupId>
+						<artifactId>commons-logging-api</artifactId>
+					</exclusion>
+				</exclusions>
 			</dependency>
 			<dependency>
 				<groupId>org.activiti</groupId>
@@ -234,6 +245,16 @@
 				<groupId>org.activiti</groupId>
 				<artifactId>activiti-cxf</artifactId>
 				<version>${activiti-version}</version>
+				<exclusions>
+					<exclusion>
+						<groupId>commons-logging</groupId>
+						<artifactId>commons-logging</artifactId>
+					</exclusion>
+					<exclusion>
+						<groupId>commons-logging</groupId>
+						<artifactId>commons-logging-api</artifactId>
+					</exclusion>
+				</exclusions>
 			</dependency>
 			<dependency>
 				<groupId>org.activiti</groupId>
