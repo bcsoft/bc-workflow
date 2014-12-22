@@ -37,4 +37,8 @@
 			<result name="success">/bc-workflow/historictaskinstance/conditions.jsp</result>
 		</action>
 	</package>
+	<!-- 历史任务 -->
+	<package name="historicTaskInstanceAction" extends="bc-default" namespace="/bc-workflow/historicTaskInstanceAction">
+		<action name="findHisProcessTaskVarValue" class="historicTaskInstanceAction" method="findHisProcessTaskVarValue"/>
+	</package>
 </struts>
