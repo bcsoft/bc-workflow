@@ -4,6 +4,7 @@
 package cn.bc.workflow.historictaskinstance.dao;
 
 import java.util.List;
+import java.util.Map;
 
 
 /**
@@ -56,5 +57,15 @@ public interface HistoricTaskInstanceDao {
 	 */
 	List<String> findTransactors(String processInstanceId,
 			String[] includeTaskKeys, String[] exclusiveTaskKeys);
+
+	/**
+	 * 查找历史流程任务变量值，变量为本地变量
+	 *
+	 * @param processInstanceId 流程实例Id
+	 * @param taskKey 任务key
+	 * @param varName 变量名
+	 * @return
+	 */
+	List<Map<String, Object>> findHisProcessTaskVarValue(String processInstanceId, String taskKey, String varName);
 
 }

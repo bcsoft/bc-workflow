@@ -79,4 +79,9 @@ public class HistoricTaskInstanceServiceImpl implements HistoricTaskInstanceServ
 				null, exclusiveTaskKeys);
 	}
 
+	@Override
+	public List<Map<String, Object>> findHisProcessTaskVarValue(String processInstanceId, String taskKey, String varName) {
+		return this.historicTaskInstanceDao.findHisProcessTaskVarValue(processInstanceId, taskKey, varName);
+	}
+
 }
