@@ -20,7 +20,8 @@ import org.apache.commons.logging.LogFactory;
 import java.util.List;
 
 /**
- * 自动判断办理人是否在任意一个岗位中
+ * 自动判断办理人是否在任意一个岗位中<br/>
+ * 返回boolean型全局变量，以配置“customHaveGroupKey”的内容为key
  * <p>
  * 监听器在流程图中需要配置为"java class"类型，Fields参数中有两种配置方式：
  * <ul>
@@ -41,9 +42,9 @@ public class IsAssigneeHaveAnyGroupListener implements TaskListener {
     private Expression anyGroupCodes;
 
     /**
-     * 岗位名称，逗号可以连接多个
+     * 岗位名称，逗号可以连接多个，英文逗号“,”
      */
-    private Expression anyGroupNames;
+        private Expression anyGroupNames;
 
     /**
      * 是否拥有岗位的布尔值
@@ -95,7 +96,9 @@ public class IsAssigneeHaveAnyGroupListener implements TaskListener {
 
         // 办理人所属部门
         Actor department = null;
-        Object isDivisionGroup = this.isGetGroup.getExpressionText();
+        Object isDivisionGroup = null;
+        if (this.isGetGroup != null)
+            isDivisionGroup = this.isGetGroup.getExpressionText();
 
         // 获取办理人所属部门
         if (isDivisionGroup != null && Boolean.parseBoolean((String) isDivisionGroup)) {
