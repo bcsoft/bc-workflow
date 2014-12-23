@@ -15,6 +15,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import cn.bc.workflow.dao.WorkflowDao;
 import org.activiti.engine.HistoryService;
 import org.activiti.engine.RepositoryService;
 import org.activiti.engine.history.HistoricTaskInstance;
@@ -49,6 +50,7 @@ public class WorkflowFormServiceImpl implements WorkflowFormService {
 	private HistoryService historyService;
 	private RepositoryService repositoryService;
 	private DeployService deployService;
+	private WorkflowDao workflowDao;
 	
 	@Autowired
 	public void setTemplateService(TemplateService templateService) {
@@ -75,10 +77,21 @@ public class WorkflowFormServiceImpl implements WorkflowFormService {
 		this.deployService = deployService;
 	}
 
+	@Autowired
+	public void setWorkflowDao(WorkflowDao workflowDao) {
+		this.workflowDao = workflowDao;
+	}
+
 	public String getRenderedTaskForm(String taskId, boolean readonly) {
 		Map<String, Object> addParams = new HashMap<String, Object>();
 		addParams.put("readonly", String.valueOf(readonly));
 		return getRenderedTaskForm(taskId, addParams);
+	}
+
+	@Override
+	public List<Map<String, Object>> findSubProcessInstanceInfoById(String processInstanceId) {
+
+		return this.workflowDao.findSubProcessInstanceInfoById(processInstanceId);
 	}
 
 	public String getRenderedTaskForm(String taskId,

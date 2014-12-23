@@ -41,4 +41,12 @@ public interface WorkflowDao {
 	 * @return
 	 */
 	List<Map<String, Object>> findSubProcessInstanceInfoById(String processInstanceId);
+
+	/**
+	 * 通过流程实例Id，查找子流程经办信息
+	 *
+	 * @param processInstanceId 流程实例Id
+	 * @return
+	 */
+	List<Map<String, Object>> findProcessInstanceInfoById(String processInstanceId);
 }

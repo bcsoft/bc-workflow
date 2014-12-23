@@ -432,7 +432,7 @@ public class WorkflowAction extends AbstractBaseAction {
 		// id为子流程实例id
 		Assert.assertNotEmpty(id);
 
-		List<Map<String, Object>> info = this.workflowService.findSubProcessInstanceInfoById(id);
+		List<Map<String, Object>> info = this.workflowService.findProcessInstanceInfoById(id);
 
 		JSONArray jsonArray = new JSONArray(info);
 		this.json = jsonArray.toString();

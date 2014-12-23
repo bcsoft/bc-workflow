@@ -10,6 +10,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import cn.bc.web.ui.json.JsonArray;
 import org.activiti.engine.FormService;
 import org.activiti.engine.HistoryService;
 import org.activiti.engine.RepositoryService;
@@ -26,6 +27,7 @@ import org.activiti.engine.task.IdentityLink;
 import org.activiti.engine.task.Task;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.json.JSONArray;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.util.Assert;
@@ -177,6 +179,9 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 
 		// 已办信息处理
 		ws.put("doneInfo", buildWSDoneInfo(flowStatus, instance));
+
+		// 子流程信息
+		ws.put("subProcessInfo", new JSONArray(this.workflowFormService.findSubProcessInstanceInfoById(processInstanceId)).toString());
 
 		// 返回综合后的信息
 		if (logger.isDebugEnabled()) {
