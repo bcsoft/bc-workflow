@@ -80,7 +80,7 @@ public class HistoricTaskInstanceServiceImpl implements HistoricTaskInstanceServ
 	}
 
 	@Override
-	public List<Map<String, Object>> findHisProcessTaskVarValue(String processInstanceId, String taskKey, String varName) {
+	public List<Map<String, Object>> findHisProcessTaskVarValue(String processInstanceId, String[] taskKey, String[] varName) {
 		return this.historicTaskInstanceDao.findHisProcessTaskVarValue(processInstanceId, taskKey, varName);
 	}
 

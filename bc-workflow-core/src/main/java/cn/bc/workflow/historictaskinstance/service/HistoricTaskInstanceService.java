@@ -100,5 +100,5 @@ public interface HistoricTaskInstanceService {
 	 * @param varName 变量名
 	 * @return
 	 */
-	List<Map<String, Object>> findHisProcessTaskVarValue(String processInstanceId, String taskKey, String varName);
+	List<Map<String, Object>> findHisProcessTaskVarValue(String processInstanceId, String[] taskKey, String[] varName);
 }

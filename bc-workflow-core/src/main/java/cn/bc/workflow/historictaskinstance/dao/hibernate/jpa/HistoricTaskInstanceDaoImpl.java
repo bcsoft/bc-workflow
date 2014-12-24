@@ -100,16 +100,30 @@ public class HistoricTaskInstanceDaoImpl implements HistoricTaskInstanceDao {
 	}
 
 	@Override
-	public List<Map<String, Object>> findHisProcessTaskVarValue(String processInstanceId, String taskKey, String varName) {
-		String sql = "select a.name,d.text_";
+	public List<Map<String, Object>> findHisProcessTaskVarValue(String processInstanceId, String[] taskKey, String[] varName) {
+		String defKey = "";
+		String name = "";
+		for(int i = 0; i < taskKey.length; i++) {
+			defKey += ("'" + taskKey[i] + "'");
+			if (i < taskKey.length - 1)
+				defKey += ",";
+		}
+
+		for(int i = 0; i < varName.length; i++) {
+			name += ("'" + varName[i] + "'");
+			if (i < varName.length - 1)
+				name += ",";
+		}
+
+		String sql = "select a.name,d.name_,d.text_,t.task_def_key_";
 		sql += " from act_hi_detail d";
 		sql += " inner join act_hi_taskinst t on t.proc_inst_id_ = d.proc_inst_id_";
-		sql += " inner join bc_identity_actor a on a.code = t.assignee_";
+		sql += " left join bc_identity_actor a on a.code = t.assignee_";
 		sql += " where d.proc_inst_id_ = ?";
-		sql += " and t.task_def_key_ = ?";
+		sql += " and t.task_def_key_ in (" + defKey + ")";
 		sql += " and t.id_ = d.task_id_";
-		sql += " and d.name_ = ?";
+		sql += " and d.name_ in (" + name + ")";
 
-		return this.jdbcTemplate.queryForList(sql, processInstanceId, taskKey, varName);
+		return this.jdbcTemplate.queryForList(sql, processInstanceId);
 	}
 }

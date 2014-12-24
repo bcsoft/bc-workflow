@@ -31,7 +31,7 @@ public class HistoricTaskInstanceAction {
     public String id;// 任务、流程实例等的id，视具体情况而定
     public String key;// 任务、流程的编码，视具体情况而定
     public String ver;// 任务、流程的版本号，视具体情况而定
-    public String varName;// 变量名
+    public String params;// 参数 格式为 字符串“流程Code1:流程变量名1,流程Code2:流程变量名2”
 
     @Autowired
     public void setHistoricTaskInstanceService(HistoricTaskInstanceService historicTaskInstanceService) {
@@ -45,10 +45,18 @@ public class HistoricTaskInstanceAction {
      */
     public String findHisProcessTaskVarValue() {
         Assert.assertNotEmpty(id);      // id为流程实例id
-        Assert.assertNotEmpty(key);     // key为任务key
-        Assert.assertNotEmpty(varName); // varName为本地变量名
+        Assert.assertNotEmpty(params);
 
-        List<Map<String, Object>> listValues = this.historicTaskInstanceService.findHisProcessTaskVarValue(id, key, varName);
+        // params 格式为 字符串“key:value,key:value,key:value”
+        String[] keyAndVal = params.split(",");
+        String[] keys = new String[keyAndVal.length];
+        String[] vals = new String[keyAndVal.length];
+        for (int i = 0; i < keyAndVal.length; i++) {
+            keys[i] = keyAndVal[i].split(":")[0];
+            vals[i] = keyAndVal[i].split(":")[1];
+        }
+
+        List<Map<String, Object>> listValues = this.historicTaskInstanceService.findHisProcessTaskVarValue(id, keys, vals);
 
         JSONArray jsonArray = new JSONArray(listValues);
         this.json = jsonArray.toString();
