@@ -241,8 +241,13 @@ public class WorkflowAction extends AbstractBaseAction {
 
 	/**
 	 * 发起子流程
+	 * <p>必要变量：
+	 *     <ul><li><b>id</b> 当前任务的id</li>
+	 * 	   <li><b>key</b> 流程编码</li>
+	 *     <li><b>formData</b> 完成子流程第一个任务的表单内容</li></ul></p>
+	 * <p>发起成功后，将子流程实例Id设置为该任务的本地变量<b>subProcessInstanceId_lc</b></p>
 	 *
-	 * @return
+	 * @return json {"subProcessInstanceId", 子流程实例Id}
 	 * @throws Exception
 	 */
 	public String startSubProcess() throws Exception {
@@ -257,7 +262,7 @@ public class WorkflowAction extends AbstractBaseAction {
                     ? this.workflowService.startFlowByKey(key)
                     : this.workflowService.startFlowByDefinitionId(id);
 
-			// 获得待办任务
+			// 获得待办任务Id数组
 			String[] arrTaskIds = this.workflowService.findTaskIdByProcessInstanceId(processInstanceId);
 
 			// 完成任务
