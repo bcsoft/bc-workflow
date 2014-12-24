@@ -155,7 +155,7 @@ public class WorkflowDaoImpl implements WorkflowDao {
 		sql += " 	FROM act_hi_actinst";
 		sql += " 	where proc_inst_id_ = ahp.proc_inst_id_ and act_type_ = 'userTask'";
 		sql += " 	group by act_id_, start_time_ ";
-		sql += " 	order by start_time_ asc limit 1";
+		sql += " 	order by start_time_ asc offset 1 limit 1";
 		sql += " )order by aha.start_time_ asc";
 
 		if (logger.isDebugEnabled()) {
