@@ -3,25 +3,6 @@
  */
 package cn.bc.workflow.service;
 
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.Calendar;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
-import org.activiti.engine.HistoryService;
-import org.activiti.engine.RepositoryService;
-import org.activiti.engine.history.HistoricTaskInstance;
-import org.activiti.engine.repository.ProcessDefinition;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.util.Assert;
-import org.springframework.util.FileCopyUtils;
-
 import cn.bc.core.exception.CoreException;
 import cn.bc.core.util.DateUtils;
 import cn.bc.core.util.TemplateUtils;
@@ -33,14 +14,27 @@ import cn.bc.template.util.FreeMarkerUtils;
 import cn.bc.web.util.WebUtils;
 import cn.bc.workflow.deploy.domain.DeployResource;
 import cn.bc.workflow.deploy.service.DeployService;
+import org.activiti.engine.HistoryService;
+import org.activiti.engine.RepositoryService;
+import org.activiti.engine.history.HistoricTaskInstance;
+import org.activiti.engine.repository.ProcessDefinition;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.Assert;
+import org.springframework.util.FileCopyUtils;
+
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.*;
 
 /**
  * @author dragon
  * 
  */
 public class WorkflowFormServiceImpl implements WorkflowFormService {
-	private static final Log logger = LogFactory
-			.getLog(WorkflowFormServiceImpl.class);
+	private static final Logger logger = LoggerFactory.getLogger(WorkflowFormServiceImpl.class);
 	private ExcutionLogService excutionLogService;
 	private TemplateService templateService;
 	private HistoryService historyService;
@@ -78,8 +72,8 @@ public class WorkflowFormServiceImpl implements WorkflowFormService {
 		return getRenderedTaskForm(taskId, addParams);
 	}
 
-	public String getRenderedTaskForm(String taskId,
-			Map<String, Object> addParams) {
+	public String getRenderedTaskForm(String taskId,Map<String, Object> addParams) {
+		Date start = new Date();
 		// 获取任务信息
 		HistoricTaskInstance task = historyService
 				.createHistoricTaskInstanceQuery().taskId(taskId)
@@ -87,11 +81,13 @@ public class WorkflowFormServiceImpl implements WorkflowFormService {
 		if (task == null) {
 			throw new CoreException("can't find taskHistory: id=" + taskId);
 		}
+		logger.info("getRenderedTaskForm task {}", DateUtils.getWasteTime(start));
 
 		// 获取formKey
 		String formKey = excutionLogService.findTaskFormKey(taskId);
 		if (formKey == null || formKey.length() == 0)
 			return null;
+		logger.info("getRenderedTaskForm formKey {}", DateUtils.getWasteTime(start));
 
 		// 根据formKey确认模板渲染类型
 		int index = formKey.indexOf(":");
@@ -119,6 +115,7 @@ public class WorkflowFormServiceImpl implements WorkflowFormService {
 		if (logger.isDebugEnabled()) {
 			logger.debug("source=" + sourceFormString);
 		}
+		logger.info("getRenderedTaskForm loadFormTemplate {}", DateUtils.getWasteTime(start));
 
 		Map<String, Object> params = new LinkedHashMap<String, Object>();
 
@@ -138,9 +135,9 @@ public class WorkflowFormServiceImpl implements WorkflowFormService {
 		params.put("SystemContext",SystemContextHolder.get());
 
 		// 获取任务的流程变量
-		Map<String, Object> vs = this.excutionLogService
-				.findTaskVariables(taskId);
+		Map<String, Object> vs = this.excutionLogService.findTaskVariables(taskId);
 		params.putAll(vs);
+		logger.info("getRenderedTaskForm findTaskVariables {}", DateUtils.getWasteTime(start));
 
 		// 添加额外的格式化参数
 		if (addParams != null) {
@@ -159,6 +156,7 @@ public class WorkflowFormServiceImpl implements WorkflowFormService {
 		if (logger.isDebugEnabled()) {
 			logger.debug("form=" + form);
 		}
+		logger.info("getRenderedTaskForm formatForm {}", DateUtils.getWasteTime(start));
 
 		return form;
 	}

@@ -3,18 +3,15 @@
  */
 package cn.bc.workflow.service;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
-import org.activiti.engine.FormService;
-import org.activiti.engine.HistoryService;
-import org.activiti.engine.RepositoryService;
-import org.activiti.engine.RuntimeService;
-import org.activiti.engine.TaskService;
+import cn.bc.core.exception.CoreException;
+import cn.bc.core.util.DateUtils;
+import cn.bc.core.util.StringUtils;
+import cn.bc.identity.service.ActorService;
+import cn.bc.identity.web.SystemContext;
+import cn.bc.identity.web.SystemContextHolder;
+import cn.bc.workflow.flowattach.domain.FlowAttach;
+import cn.bc.workflow.flowattach.service.FlowAttachService;
+import org.activiti.engine.*;
 import org.activiti.engine.history.HistoricDetail;
 import org.activiti.engine.history.HistoricProcessInstance;
 import org.activiti.engine.history.HistoricTaskInstance;
@@ -24,20 +21,13 @@ import org.activiti.engine.repository.ProcessDefinition;
 import org.activiti.engine.runtime.ProcessInstance;
 import org.activiti.engine.task.IdentityLink;
 import org.activiti.engine.task.Task;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.util.Assert;
 
-import cn.bc.core.exception.CoreException;
-import cn.bc.core.util.DateUtils;
-import cn.bc.core.util.StringUtils;
-import cn.bc.identity.service.ActorService;
-import cn.bc.identity.web.SystemContext;
-import cn.bc.identity.web.SystemContextHolder;
-import cn.bc.workflow.flowattach.domain.FlowAttach;
-import cn.bc.workflow.flowattach.service.FlowAttachService;
+import java.util.*;
 
 /**
  * 工作流Service的实现
@@ -45,8 +35,7 @@ import cn.bc.workflow.flowattach.service.FlowAttachService;
  * @author dragon
  */
 public class WorkspaceServiceImpl implements WorkspaceService {
-	private static final Log logger = LogFactory
-			.getLog(WorkspaceServiceImpl.class);
+	private static final Logger logger = LoggerFactory.getLogger(WorkspaceServiceImpl.class);
 	private RepositoryService repositoryService;
 	private RuntimeService runtimeService;
 	private TaskService taskService;
@@ -115,6 +104,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 	}
 
 	public Map<String, Object> findWorkspaceInfo(String processInstanceId) {
+		Date start = new Date();
 		Assert.notNull(processInstanceId, "流程实例ID不能为空" + processInstanceId);
 		Map<String, Object> ws = new HashMap<String, Object>();
 
@@ -147,6 +137,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 			flowStatus = WorkspaceServiceImpl.COMPLETE;// 已结束
 		}
 		ws.put("flowStatus", flowStatus);
+		logger.info("获取流程实例信息耗时 {}", DateUtils.getWasteTime(start));
 
 		// 流程定义
 		ProcessDefinition definition = repositoryService
@@ -168,15 +159,19 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 
 		// 用户定义的流程实例标题 TODO 从流程变量中获取
 		ws.put("subject", definition.getName());
+		logger.info("获取流程定义信息耗时 {}", DateUtils.getWasteTime(start));
 
 		// 公共信息处理
 		ws.put("commonInfo", buildWSCommonInfo(flowStatus, instance));
+		logger.info("获取流程公共信息耗时 {}", DateUtils.getWasteTime(start));
 
 		// 待办信息处理
 		ws.put("todoInfo", buildWSTodoInfo(flowStatus, instance));
+		logger.info("获取流程待办信息耗时 {}", DateUtils.getWasteTime(start));
 
-		// 待办信息处理
+		// 经办信息处理
 		ws.put("doneInfo", buildWSDoneInfo(flowStatus, instance));
+		logger.info("获取流程经办信息耗时 {}", DateUtils.getWasteTime(start));
 
 		// 返回综合后的信息
 		return ws;

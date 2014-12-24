@@ -3,23 +3,6 @@
  */
 package cn.bc.workflow.web.struts2;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.InputStream;
-import java.util.Date;
-import java.util.List;
-
-import org.activiti.engine.RepositoryService;
-import org.activiti.engine.repository.ProcessDefinition;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.struts2.ServletActionContext;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.config.BeanDefinition;
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Controller;
-import org.springframework.util.StringUtils;
-
 import cn.bc.core.exception.CoreException;
 import cn.bc.core.util.DateUtils;
 import cn.bc.docs.domain.Attach;
@@ -27,8 +10,23 @@ import cn.bc.docs.web.AttachUtils;
 import cn.bc.web.util.WebUtils;
 import cn.bc.workflow.deploy.domain.DeployResource;
 import cn.bc.workflow.deploy.service.DeployService;
-
 import com.opensymphony.xwork2.ActionSupport;
+import org.activiti.engine.RepositoryService;
+import org.activiti.engine.repository.ProcessDefinition;
+import org.apache.struts2.ServletActionContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Controller;
+import org.springframework.util.StringUtils;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.util.Date;
+import java.util.List;
 
 /**
  * 直接的物理部署资源处理Action
@@ -39,7 +37,7 @@ import com.opensymphony.xwork2.ActionSupport;
 @Scope(BeanDefinition.SCOPE_PROTOTYPE)
 @Controller
 public class WorkflowResourceAction extends ActionSupport {
-	private static Log logger = LogFactory.getLog(WorkflowResourceAction.class);
+	private static final Logger logger = LoggerFactory.getLogger(WorkflowResourceAction.class);
 	private static final long serialVersionUID = 1L;
 	private DeployService deployService;
 	private RepositoryService repositoryService;

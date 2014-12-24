@@ -1,21 +1,5 @@
 package cn.bc.workflow.web.struts2;
 
-import java.io.InputStream;
-import java.util.Collection;
-import java.util.Date;
-import java.util.LinkedHashMap;
-import java.util.Map;
-
-import org.activiti.engine.repository.Deployment;
-import org.activiti.engine.task.Task;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.struts2.ServletActionContext;
-import org.commontemplate.util.Assert;
-import org.springframework.beans.factory.config.BeanDefinition;
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Controller;
-
 import cn.bc.core.exception.CoreException;
 import cn.bc.core.util.DateUtils;
 import cn.bc.core.util.JsonUtils;
@@ -24,6 +8,21 @@ import cn.bc.docs.web.AttachUtils;
 import cn.bc.identity.domain.ActorHistory;
 import cn.bc.web.ui.json.Json;
 import cn.bc.web.util.WebUtils;
+import org.activiti.engine.repository.Deployment;
+import org.activiti.engine.task.Task;
+import org.apache.struts2.ServletActionContext;
+import org.commontemplate.util.Assert;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.config.BeanDefinition;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Controller;
+
+import java.io.InputStream;
+import java.util.Collection;
+import java.util.Date;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * 流程处理Action
@@ -35,7 +34,7 @@ import cn.bc.web.util.WebUtils;
 @Controller
 public class WorkflowAction extends AbstractBaseAction {
 	private static final long serialVersionUID = 1L;
-	private static Log logger = LogFactory.getLog(WorkflowAction.class);
+	private static final Logger logger = LoggerFactory.getLogger(WorkflowAction.class);
 	public String toUser;
 	public String type;
 	public boolean cascade;

@@ -78,7 +78,7 @@
 		  factory-method="getIdentityService"/>
 
 	<!-- Activiti测试驱动 -->
-	<bean id="activitiRule" class="cn.bc.workflow.test.activiti.ActivitiRule">
+	<bean id="activitiRule" class="cn.bc.workflow.activiti.test.ActivitiRule">
 		<property name="processEngine" ref="processEngine"/>
 	</bean>
 </beans>
