@@ -1,6 +1,10 @@
 /*
 工作空间性能优化
 */
+
+-- 新建执行日志的 pid 索引
+--CREATE INDEX bcwfidx_excution_log_pid_type ON bc_wf_excution_log (pid, type_);
+
 -- drop function wf__find_process_instance_detail(varchar)
 CREATE OR REPLACE FUNCTION wf__find_process_instance_detail(id varchar)
 RETURNS json AS
@@ -15,6 +19,9 @@ $BODY$
  *		start_time: 【发起时间】,
  *		end_time: 【结束时间】,
  *		duration: 【integer 耗时(毫秒)】,
+ *		delete_reason: 【-varchar 删除原因】,
+ *		subject: 【varchar 流程标题】,
+ *		code: 【varchar 流水号】,
  *		// 发起人
  *		start_user: {
  *		  id: 【integer ID】,
@@ -50,6 +57,8 @@ $BODY$
  *		  },
  *		  ......
  *		],
+ *
+ *		bytearray_ids: 【[varchar] 流程变量为 serializable 类型对应的 bytearray_id_ 收集，应用需要另行通过表 act_ge_bytearray 获取对应的数据】,
  *
  *		// 经办信息
  *		done_tasks:[
@@ -148,22 +157,23 @@ declare
 	r json;
 BEGIN
 	-- 流程实例信息
-	with instance(id, pid, duration, start_time, end_time, status, start_user, definition) as (
+	with instance(id, pid, duration, start_time, end_time, status, delete_reason, start_user, definition, deploy) as (
 		select i.id_ id, i.super_process_instance_id_ pid, i.duration_ duration
 		, to_char(i.start_time_, 'YYYY-MM-DD HH24:MI:SS') start_time
 		, to_char(i.end_time_, 'YYYY-MM-DD HH24:MI:SS') end_time
-		-- 状态：0-流转中、1-已结束、2-暂停
+		-- 状态：1-流转中、2-暂停、3-已结束
 		, (case i.end_time_ is not null 
-				when true then 1 -- 已结束
+				when true then 3 -- 已结束
 				else (
 					case e.id_ is not null when true then 2 -- 已暂停
-					else 0 -- 流转中
+					else 1 -- 流转中
 					end
 				)
 				end
 			) as status
+		, delete_reason_ delete_reason
 		-- 流程发起人
-		, (select row_to_json(t) from (select a.id, a.code, a.name from bc_identity_actor a where a.code = i.start_user_id_) t) start_user
+		, (select row_to_json(t) from (select a.id, a.code, a.name, a.pname from bc_identity_actor a where a.code = i.start_user_id_) t) start_user
 		-- 流程定义
 		, (select row_to_json(t) from (
 				select d.id_ id, d.key_ as key, d.name_ as name, d.version_ as version, d.deployment_id_ as deployment_id
@@ -201,9 +211,9 @@ BEGIN
 				when 'double' then h.double_::text
 				when 'string' then h.text_
 				when 'date' then to_char(to_timestamp(h.long_ / 1000), 'YYYY-MM-DD HH24:MI:SS')
-				when 'serializable' then (select b.bytes_::text from act_ge_bytearray b where b.id_ = h.bytearray_id_)
+				when 'serializable' then h.bytearray_id_::text --(select b.bytes_::text from act_ge_bytearray b where b.id_ = h.bytearray_id_)
 				--when 'null' then null::text
-				else text_
+				else text_::text
 				end
 			) as value
 		from act_hi_detail h inner join variable_id v on v.id = h.id_
@@ -235,14 +245,14 @@ BEGIN
 			 */
 			case (t.assignee_ is not null) when true then (
 				select row_to_json(u) from (
-					select a.id, a.code, a.name, a.type_ as type, false candidate
+					select a.id, a.code, a.name, a.type_ as type, a.pname, false candidate
 					from bc_identity_actor a
 					where a.code = t.assignee_
 				) u)
 			-- 未签领的岗位任务：act_ru_identitylink 的 group_id_=[岗位编码]
 			else (
 				select row_to_json(u) from (
-					select a.id, a.code, a.name, a.type_ as type, true candidate
+					select a.id, a.code, a.name, a.type_ as type, a.pname, true candidate
 					from bc_identity_actor a
 					inner join act_ru_identitylink l on l.task_id_ = t.id_
 					where a.code = l.group_id_
@@ -271,9 +281,16 @@ BEGIN
 	select row_to_json(t) into r from (
 		-- 流程实例、定义、部署信息
 		select i.* 
+		-- 流程标题
+		, (select v.value from global_variable v where v.name = 'subject') subject
+		-- 流水号
+		, (select v.value from global_variable v where v.name = 'wf_code') code
 
 		-- 全局流程变量
 		, (select to_json(array_agg(row_to_json(v))) from global_variable v) variables
+
+		-- 流程变量为 serializable 类型对应的 bytearray_id_ 收集，应用需要另行通过表 act_ge_bytearray 获取对应的数据
+		, (select to_json(array_agg(v.value)) from variable v where v.type = 'serializable') bytearray_ids
 
 		-- 待办任务
 		, coalesce((select to_json(array_agg(row_to_json(t))) from task t where t.end_time is null), '[]'::json) todo_tasks
@@ -282,7 +299,7 @@ BEGIN
 		, coalesce((select to_json(array_agg(row_to_json(t))) from task t where t.end_time is not null), '[]'::json) done_tasks
 
 		-- 任务签领、委托日志
-		, (select to_json(array_agg(row_to_json(v))) from task_log v) task_logs
+		--, (select to_json(array_agg(row_to_json(v))) from task_log v) task_logs
 
 		from instance i
 	) t;

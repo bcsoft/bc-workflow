@@ -9,8 +9,6 @@ import cn.bc.identity.web.SystemContextHolder;
 import cn.bc.identity.web.SystemContextImpl;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
@@ -21,44 +19,23 @@ import java.util.Map;
 @RunWith(SpringJUnit4ClassRunner.class)
 @Transactional
 @ContextConfiguration("classpath:spring-test.xml")
-public class WorkspaceServiceImplTest {
-	private static final Logger logger = LoggerFactory.getLogger(WorkspaceServiceImplTest.class);
-
+public class WorkspaceServiceImpl_oldTest {
 	@Autowired
-	WorkspaceService workspaceService;
+	WorkspaceService_old workspaceService;
 	@Autowired
 	private UserService userService;
 	@Autowired
 	private ActorHistoryService actorHistoryService;
 
 	@Test
-	public void getProcessInstanceDetail() {
+	public void findWorkspaceInfo() {
 		this.mockSystemContext();
 
-		String processInstanceId = "3349285";//"3326570";
-		Map<String, Object> instanceDetail = workspaceService.getProcessInstanceDetail(processInstanceId);
+		String processInstanceId = "3326570";
+		Map<String, Object> ws = workspaceService.findWorkspaceInfo(processInstanceId);
 
-		logger.debug("instanceDetail={}", instanceDetail);
-		for (Map.Entry<String, Object> e : instanceDetail.entrySet()){
-			logger.debug("key={}", e.getKey());
-			logger.debug("value.class={}", e.getValue() != null ? e.getValue().getClass() : "null");
-			logger.debug("value={}", e.getValue());
-		}
-		logger.debug("variables.class={}", instanceDetail.get("variables").getClass());
-		logger.debug("variable={}", instanceDetail.get("variables"));
-		/**/
-	}
-
-
-	@Test
-	public void getWorkspaceData() {
-		this.mockSystemContext();
-		String processInstanceId = "3349285";//"3326570";
-		Map<String, Object> ws = workspaceService.getWorkspaceData(processInstanceId);
-		logger.debug("ws={}", ws);
-		for (Map.Entry<String, Object> e : ws.entrySet()){
-			//logger.debug("key={}, value.class={}, value={}", e.getKey(), e.getValue() != null ? e.getValue().getClass() : "null", e.getValue());
-		}
+		// Assert.assertNotNull(u);
+		// Assert.assertEquals("admin", u.getId());
 	}
 
 	private void mockSystemContext() {

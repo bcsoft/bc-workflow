@@ -24,7 +24,7 @@ import cn.bc.web.ui.html.toolbar.Toolbar;
 import cn.bc.web.ui.html.toolbar.ToolbarButton;
 import cn.bc.web.ui.json.Json;
 import cn.bc.workflow.historictaskinstance.service.HistoricTaskInstanceService;
-import cn.bc.workflow.service.WorkspaceServiceImpl;
+import cn.bc.workflow.service.WorkspaceServiceImpl_old;
 import cn.bc.workflow.web.struts2.ViewAction;
 import org.activiti.engine.impl.persistence.entity.SuspensionState;
 import org.json.JSONArray;
@@ -148,7 +148,7 @@ public class HistoricTaskInstancesAction extends
 				
 				//判断流程状态
 				if (map.get("pstatus") == null) {
-					map.put("pstatus", WorkspaceServiceImpl.COMPLETE);
+					map.put("pstatus", WorkspaceServiceImpl_old.COMPLETE);
 				} else{
 					if(map.get("pstatus").toString().equals(String.valueOf(SuspensionState.ACTIVE.getStateCode()))){//处理中
 						map.put("pstatus", String.valueOf(SuspensionState.ACTIVE.getStateCode()));
@@ -314,7 +314,7 @@ public class HistoricTaskInstancesAction extends
 				getText("done.status.processing"));
 		map.put(String.valueOf(SuspensionState.SUSPENDED.getStateCode()),
 				getText("done.status.suspended"));
-		map.put(String.valueOf(WorkspaceServiceImpl.COMPLETE),
+		map.put(String.valueOf(WorkspaceServiceImpl_old.COMPLETE),
 				getText("done.status.finished"));
 		map.put("", getText("bc.status.all"));
 		return map;

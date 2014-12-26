@@ -17,7 +17,7 @@ import cn.bc.web.ui.html.grid.IdColumn4MapKey;
 import cn.bc.web.ui.html.grid.TextColumn4MapKey;
 import cn.bc.web.ui.html.page.HtmlPage;
 import cn.bc.web.ui.html.page.PageOption;
-import cn.bc.workflow.service.WorkspaceServiceImpl;
+import cn.bc.workflow.service.WorkspaceServiceImpl_old;
 import org.activiti.engine.impl.persistence.entity.SuspensionState;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -79,7 +79,7 @@ public class SelectWorkflowModuleRelationAction extends AbstractSelectPageAction
 				map.put("subject", rs[i++]);
 				
 				if (map.get("end_time") != null) {//已结束
-					map.put("status", WorkspaceServiceImpl.COMPLETE);
+					map.put("status", WorkspaceServiceImpl_old.COMPLETE);
 				} else {
 					if(String.valueOf(SuspensionState.ACTIVE.getStateCode()).equals(map.get("suspension_state").toString())){//流转中
 						map.put("status", String.valueOf(SuspensionState.ACTIVE.getStateCode()));
@@ -127,7 +127,7 @@ public class SelectWorkflowModuleRelationAction extends AbstractSelectPageAction
 				getText("flow.instance.status.processing"));
 		map.put(String.valueOf(SuspensionState.SUSPENDED.getStateCode()),
 				getText("flow.instance.status.suspended"));
-		map.put(String.valueOf(WorkspaceServiceImpl.COMPLETE),
+		map.put(String.valueOf(WorkspaceServiceImpl_old.COMPLETE),
 				getText("flow.instance.status.finished"));
 		map.put("", getText("bc.status.all"));
 		return map;

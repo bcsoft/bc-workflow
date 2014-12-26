@@ -27,7 +27,7 @@ import cn.bc.web.ui.html.grid.TextColumn4MapKey;
 import cn.bc.web.ui.html.toolbar.Toolbar;
 import cn.bc.web.ui.html.toolbar.ToolbarButton;
 import cn.bc.workflow.historictaskinstance.service.HistoricTaskInstanceService;
-import cn.bc.workflow.service.WorkspaceServiceImpl;
+import cn.bc.workflow.service.WorkspaceServiceImpl_old;
 
 /**
  * 我的经办流程视图Action
@@ -142,7 +142,7 @@ public class MyHistoricProcessInstancesAction extends HistoricProcessInstancesAc
 					sqlstr += " a.end_time_ is null";
 					sqlstr += " and ((b.suspension_state_ = "+SuspensionState.SUSPENDED.getStateCode()+")";
 					sqlstr += " or (f.suspension_state_ ="+SuspensionState.SUSPENDED.getStateCode()+"))";
-				} else if (ss[0].equals(String.valueOf(WorkspaceServiceImpl.COMPLETE))){
+				} else if (ss[0].equals(String.valueOf(WorkspaceServiceImpl_old.COMPLETE))){
 					sqlstr += " a.end_time_ is not null";
 				} 
 				ac.add(new QlCondition(sqlstr,new Object[]{}));

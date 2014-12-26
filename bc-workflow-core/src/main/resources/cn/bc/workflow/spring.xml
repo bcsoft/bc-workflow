@@ -32,7 +32,7 @@
 	</aop:config>
 
 	<!-- WorkspaceService 配置 -->
-	<bean id="workspaceService" class="cn.bc.workflow.service.WorkspaceServiceImpl"/>
+	<bean id="workspaceService" class="cn.bc.workflow.service.WorkspaceServiceImpl_old"/>
 	<tx:advice id="workspaceServiceTxAdvice" transaction-manager="transactionManager">
 		<tx:attributes>
 			<tx:method name="find*" propagation="REQUIRED" read-only="true"/>

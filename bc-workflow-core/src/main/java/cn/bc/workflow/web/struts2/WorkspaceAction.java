@@ -11,6 +11,7 @@ import cn.bc.identity.web.SystemContext;
 import cn.bc.web.ui.html.page.PageOption;
 import cn.bc.workflow.deploy.domain.Deploy;
 import cn.bc.workflow.service.WorkspaceService;
+import cn.bc.workflow.service.WorkspaceService_old;
 import org.commontemplate.util.Assert;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -37,6 +38,10 @@ import java.util.Map;
 public class WorkspaceAction extends AbstractBaseAction {
 	private static final Logger logger = LoggerFactory.getLogger(WorkspaceAction.class);
 	private static final long serialVersionUID = 1L;
+
+	@Autowired
+	private WorkspaceService workspaceService;
+
 	public PageOption pageOption;// 对话框参数配置
 	public String title;// 对话框标题
 	public String error;// 异常的简要描述信息
@@ -44,14 +49,6 @@ public class WorkspaceAction extends AbstractBaseAction {
 	public Map<String, Object> ws;// 包含工作空间所要显示的所有数据
 	public Boolean isAccess=false;//通过的我的监控打开的工作控制 默认false
 	public String accessJson;//访问历史详细信息
-	
-	
-	private WorkspaceService workspaceService;
-
-	@Autowired
-	public void setWorkspaceService(WorkspaceService workspaceService) {
-		this.workspaceService = workspaceService;
-	}
 
 	/**
 	 * 打开边栏设计页面
@@ -102,7 +99,7 @@ public class WorkspaceAction extends AbstractBaseAction {
 			Assert.assertNotEmpty(id);
 
 			// 获取工作空间信息
-			this.ws = workspaceService.findWorkspaceInfo(id);
+			this.ws = workspaceService.getProcessInstanceDetail(id);
 			logger.info("获取工作空间信息总耗时 {}", DateUtils.getWasteTime(start));
 
 			// 对话框标题

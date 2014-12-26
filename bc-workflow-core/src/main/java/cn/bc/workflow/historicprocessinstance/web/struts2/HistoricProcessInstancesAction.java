@@ -28,7 +28,7 @@ import cn.bc.web.ui.html.toolbar.ToolbarButton;
 import cn.bc.web.ui.json.Json;
 import cn.bc.workflow.historictaskinstance.service.HistoricTaskInstanceService;
 import cn.bc.workflow.service.WorkflowService;
-import cn.bc.workflow.service.WorkspaceServiceImpl;
+import cn.bc.workflow.service.WorkspaceServiceImpl_old;
 import cn.bc.workflow.web.struts2.ViewAction;
 import org.activiti.engine.impl.persistence.entity.SuspensionState;
 import org.apache.commons.logging.Log;
@@ -155,7 +155,7 @@ public class HistoricProcessInstancesAction extends
 				map.put("accessControlDocType", "ProcessInstance");
 
 				if (map.get("end_time") != null) {// 已结束
-					map.put("status", WorkspaceServiceImpl.COMPLETE);
+					map.put("status", WorkspaceServiceImpl_old.COMPLETE);
 				} else {
 					if (map.get("status").equals(
 							String.valueOf(SuspensionState.ACTIVE
@@ -287,7 +287,7 @@ public class HistoricProcessInstancesAction extends
 				getText("flow.instance.status.processing"));
 		map.put(String.valueOf(SuspensionState.SUSPENDED.getStateCode()),
 				getText("flow.instance.status.suspended"));
-		map.put(String.valueOf(WorkspaceServiceImpl.COMPLETE),
+		map.put(String.valueOf(WorkspaceServiceImpl_old.COMPLETE),
 				getText("flow.instance.status.finished"));
 		map.put("", getText("bc.status.all"));
 		return map;
@@ -393,7 +393,7 @@ public class HistoricProcessInstancesAction extends
 					sqlstr += " or (f.suspension_state_ ="
 							+ SuspensionState.SUSPENDED.getStateCode() + "))";
 				} else if (ss[0].equals(String
-						.valueOf(WorkspaceServiceImpl.COMPLETE))) {
+						.valueOf(WorkspaceServiceImpl_old.COMPLETE))) {
 					sqlstr += " a.end_time_ is not null";
 				}
 				ac.add(new QlCondition(sqlstr, new Object[] {}));
