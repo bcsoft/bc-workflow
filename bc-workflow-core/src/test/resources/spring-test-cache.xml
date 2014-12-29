@@ -27,9 +27,9 @@
 				<bean class="org.springframework.cache.concurrent.ConcurrentMapCacheFactoryBean">
 					<property name="name" value="identity.resource"/>
 				</bean>
-				<!-- workflow 缓存 -->
+				<!-- workflow deploy resource 缓存 -->
 				<bean class="org.springframework.cache.concurrent.ConcurrentMapCacheFactoryBean">
-					<property name="name" value="workflow"/>
+					<property name="name" value="wfDeployResource"/>
 				</bean>
 			</set>
 		</property>

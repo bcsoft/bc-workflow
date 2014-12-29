@@ -47,17 +47,26 @@
 
 	<!-- WorkflowFormService 配置 -->
 	<bean id="workflowFormService" class="cn.bc.workflow.service.WorkflowFormServiceImpl"/>
-	<tx:advice id="workflowFormServiceTxAdvice"
-			   transaction-manager="transactionManager">
+	<tx:advice id="workflowFormServiceTxAdvice" transaction-manager="transactionManager">
 		<tx:attributes>
 			<tx:method name="get*" propagation="REQUIRED" read-only="true"/>
 		</tx:attributes>
 	</tx:advice>
 	<aop:config>
-		<aop:pointcut id="workflowFormServiceMethod"
-					  expression="this(cn.bc.workflow.service.WorkflowFormService)"/>
-		<aop:advisor pointcut-ref="workflowFormServiceMethod"
-					 advice-ref="workflowFormServiceTxAdvice"/>
+		<aop:pointcut id="workflowFormServiceMethod" expression="this(cn.bc.workflow.service.WorkflowFormService)"/>
+		<aop:advisor pointcut-ref="workflowFormServiceMethod" advice-ref="workflowFormServiceTxAdvice"/>
+	</aop:config>
+
+	<!-- WorkflowFormService_old 配置 -->
+	<bean id="workflowFormService_old" class="cn.bc.workflow.service.WorkflowFormServiceImpl_old"/>
+	<tx:advice id="workflowFormServiceTxAdvice_old" transaction-manager="transactionManager">
+		<tx:attributes>
+			<tx:method name="get*" propagation="REQUIRED" read-only="true"/>
+		</tx:attributes>
+	</tx:advice>
+	<aop:config>
+		<aop:pointcut id="workflowFormServiceMethod_old" expression="this(cn.bc.workflow.service.WorkflowFormService_old)"/>
+		<aop:advisor pointcut-ref="workflowFormServiceMethod_old" advice-ref="workflowFormServiceTxAdvice_old"/>
 	</aop:config>
 
 	<!-- 自定义的表单引擎 -->

@@ -99,7 +99,8 @@ public class WorkspaceAction extends AbstractBaseAction {
 			Assert.assertNotEmpty(id);
 
 			// 获取工作空间信息
-			this.ws = workspaceService.getProcessInstanceDetail(id);
+			this.ws = workspaceService.getWorkspaceData(id);
+			logger.debug("ws={}", ws);
 			logger.info("获取工作空间信息总耗时 {}", DateUtils.getWasteTime(start));
 
 			// 对话框标题

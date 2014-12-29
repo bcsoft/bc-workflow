@@ -1,31 +1,8 @@
 package cn.bc.workflow.deploy.service;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.io.Serializable;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.zip.ZipInputStream;
-
-import cn.bc.core.exception.PermissionDeniedException;
-import org.activiti.engine.RepositoryService;
-import org.activiti.engine.repository.Deployment;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.util.FileCopyUtils;
-import org.springframework.util.StringUtils;
-
 import cn.bc.BCConstants;
 import cn.bc.core.exception.CoreException;
+import cn.bc.core.exception.PermissionDeniedException;
 import cn.bc.core.service.DefaultCrudService;
 import cn.bc.docs.domain.Attach;
 import cn.bc.identity.domain.Actor;
@@ -38,6 +15,20 @@ import cn.bc.template.domain.TemplateParam;
 import cn.bc.workflow.deploy.dao.DeployDao;
 import cn.bc.workflow.deploy.domain.Deploy;
 import cn.bc.workflow.deploy.domain.DeployResource;
+import org.activiti.engine.RepositoryService;
+import org.activiti.engine.repository.Deployment;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.util.FileCopyUtils;
+import org.springframework.util.StringUtils;
+
+import java.io.*;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.zip.ZipInputStream;
 
 /**
  * Service接口的实现
@@ -45,9 +36,8 @@ import cn.bc.workflow.deploy.domain.DeployResource;
  * @author wis
  * 
  */
-public class DeployServiceImpl extends DefaultCrudService<Deploy> implements
-		DeployService {
-	private static Log logger = LogFactory.getLog(DeployServiceImpl.class);
+public class DeployServiceImpl extends DefaultCrudService<Deploy> implements DeployService {
+	private static Logger logger = LoggerFactory.getLogger(DeployServiceImpl.class);
 	private OperateLogService operateLogService;
 	private IdGeneratorService idGeneratorService;// 用于生成uid的服务
 
@@ -223,11 +213,10 @@ public class DeployServiceImpl extends DefaultCrudService<Deploy> implements
 		entity = this.deployDao.save(entity);
 	}
 
-
 	/**
 	 * 通过流程id判断此信息是否已发起
 	 * 
-	 * @param excludeId
+	 * @param deploymentId
 	 * @return
 	 */
 	public Long isStarted(String deploymentId) {
@@ -257,10 +246,8 @@ public class DeployServiceImpl extends DefaultCrudService<Deploy> implements
 	/**
 	 * 判断指定的编码与版本号是否唯一
 	 * 
-	 * @param currentId
-	 *            当前模板的id
-	 * @param codes
-	 *            当前模板要使用的编码列表
+	 * @param id 当前模板的id
+	 * @param codes 当前模板要使用的编码列表
 	 * @return
 	 */
 	public ArrayList<Object> isUniqueResourceCodeAndExtCheck(Long id,
@@ -327,8 +314,7 @@ public class DeployServiceImpl extends DefaultCrudService<Deploy> implements
 		// 构建文件要保存到的目录
 		File _fileDir = new File(realFileDir);
 		if (!_fileDir.exists()) {
-			if (logger.isFatalEnabled()) 
-				logger.fatal("mkdir=" + realFileDir);
+			logger.warn("mkdir={}", realFileDir);
 			_fileDir.mkdirs();
 		}
 		// 直接复制附件
@@ -396,8 +382,7 @@ public class DeployServiceImpl extends DefaultCrudService<Deploy> implements
 				// 构建文件要保存到的目录
 				File _fileDirDr = new File(realFileDirDr);
 				if (!_fileDirDr.exists()) {
-					if (logger.isFatalEnabled()) 
-						logger.fatal("mkdir=" + realFileDirDr);
+					logger.warn("mkdir={}", realFileDirDr);
 					_fileDirDr.mkdirs();
 				}
 				// 直接复制附件
@@ -436,4 +421,16 @@ public class DeployServiceImpl extends DefaultCrudService<Deploy> implements
 		return newDeploy;
 	}
 
+	@Override
+	@Cacheable(value = "wfDeployResource")
+	public String getResourceContent(String deploymentId, String resourceCode) {
+		// TODO load all resource to cache
+		logger.info("load deploy resource from db/IO. deploymentId={}, resourceCode={}", deploymentId, resourceCode);
+		InputStream in = this.deployDao.getResource(deploymentId, resourceCode);
+		try {
+			return new String(FileCopyUtils.copyToByteArray(in), "UTF-8");
+		} catch (IOException e) {
+			throw new CoreException(e);
+		}
+	}
 }

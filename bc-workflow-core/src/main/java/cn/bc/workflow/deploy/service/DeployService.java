@@ -1,5 +1,6 @@
 package cn.bc.workflow.deploy.service;
 
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -118,4 +119,13 @@ public interface DeployService extends CrudService<Deploy> {
 	 * @param excludeId
 	 */
 	public void dodeployChangeStatus(Long excludeId);
+
+	/**
+	 * 获取资源的文本内容
+	 * <p>如果资源为非文本格式，请不要使用此方法</p>
+	 * @param deploymentId Activiti的流程部署ID
+	 * @param resourceCode 资源编码
+	 * @return
+	 */
+	String getResourceContent(String deploymentId, String resourceCode);
 }

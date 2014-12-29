@@ -43,7 +43,7 @@ public class WorkspaceServiceImpl_old implements WorkspaceService_old {
 	private HistoryService historyService;
 	private FlowAttachService flowAttachService;
 	private ExcutionLogService excutionLogService;
-	private WorkflowFormService workflowFormService;
+	private WorkflowFormService_old workflowFormService;
 	private ActorService actorService;
 
 	public static final int COMPLETE = 3; //已结束
@@ -55,7 +55,7 @@ public class WorkspaceServiceImpl_old implements WorkspaceService_old {
 	}
 
 	@Autowired
-	public void setWorkflowFormService(WorkflowFormService workflowFormService) {
+	public void setWorkflowFormService(WorkflowFormService_old workflowFormService) {
 		this.workflowFormService = workflowFormService;
 	}
 

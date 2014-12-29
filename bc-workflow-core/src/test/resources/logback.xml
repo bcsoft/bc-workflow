@@ -92,8 +92,8 @@
 	<logger name="cn.bc.web.struts2.AbstractGridPageAction" level="WARN"/>
 
 	<logger name="cn.bc.workflow" level="INFO"/>
-	<logger name="cn.bc.workflow.service.WorkspaceServiceImplTest" level="DEBUG"/>
-	<logger name="cn.bc.workflow.service.WorkspaceServiceImpl" level="DEBUG"/>
+	<logger name="cn.bc.workflow.service.WorkspaceServiceImplTest" level="INFO"/>
+	<logger name="cn.bc.workflow.service.WorkspaceServiceImpl" level="INFO"/>
 	<logger name="cn.bc.workflow.cache.SpringCache" level="DEBUG"/>
 
 	<!-- 设置默认的日志级别: TRACE < DEBUG < INFO < WARN < ERROR -->

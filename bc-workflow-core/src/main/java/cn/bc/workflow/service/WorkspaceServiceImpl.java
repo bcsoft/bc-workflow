@@ -38,6 +38,9 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 	@Autowired
 	private JdbcTemplate jdbcTemplate;
 
+	@Autowired
+	private WorkflowFormService workflowFormService;
+
 	@Override
 	public Map<String, Object> getProcessInstanceDetail(String processInstanceId) {
 		Assert.hasLength(processInstanceId);
@@ -82,7 +85,22 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 	private void convertVariables(Map<String, Object> instanceDetail) {
 		// 全局流程变量
 		Object[] variables = (Object[]) instanceDetail.get("variables");
-		instanceDetail.put("variables", this.convertVariables(variables));
+		Map<String, Object> newVars = this.convertVariables(variables);
+		instanceDetail.put("variables", newVars);
+		if(newVars != null) {
+			// ==== 流程标题
+			String subject = (String) newVars.get("subject");
+			if (subject != null && !subject.isEmpty()) instanceDetail.put("subject", subject);
+			else instanceDetail.put("subject", ((Map<String, Object>) instanceDetail.get("definition")).get("key"));
+			// ==== 流程流水号
+			String code = (String) newVars.get("wf_code");
+			if (code != null && !code.isEmpty()) instanceDetail.put("code", code);
+			else instanceDetail.put("code", "");
+			// ==== 流程表单key
+			String formKey = (String) newVars.get("formKey");
+			if (formKey != null && !formKey.isEmpty()) instanceDetail.put("form_key", formKey);
+		}
+
 		// 待办流程变量
 		convertVariables4Tasks((Object[]) instanceDetail.get("todo_tasks"));
 		// 经办流程变量
@@ -95,13 +113,24 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 	 * @param tasks 任务集
 	 */
 	private void convertVariables4Tasks(Object[] tasks) {
-		if (tasks == null || tasks.length == 0)
-			return;
+		if (tasks == null || tasks.length == 0) return;
 
-		Map<String, Object> task;
+		Map<String, Object> task, newVars;
+		String subject, formKey;
 		for (Object t : tasks) {
 			task = (Map<String, Object>) t;
-			task.put("variables", convertVariables((Object[]) task.get("variables")));
+			newVars = convertVariables((Object[]) task.get("variables"));
+			task.put("variables", newVars);
+
+			if(newVars != null) {
+				// ==== 任务标题
+				subject = (String) newVars.get("subject");
+				if (subject != null && !subject.isEmpty()) task.put("subject", subject);
+				else task.put("subject", task.get("key"));
+				// ==== 任务表单key
+				formKey = (String) newVars.get("formKey");
+				if (formKey != null && !formKey.isEmpty()) task.put("form_key", formKey);
+			}
 		}
 	}
 
@@ -119,6 +148,11 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 		for (Object v : variables) {
 			var = (Map<String, Object>) v;
 			newVars.put((String) var.get("name"), convertVariableValue((String) var.get("type"), var.get("value")));
+
+			// 转换特殊类型的变量的值
+			for (Map.Entry<String, Object> e : newVars.entrySet()) {
+				convertSpecialKeyValue(e);
+			}
 		}
 		return newVars;
 	}
@@ -141,6 +175,21 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 			newValue = value;
 		}
 		return newValue;
+	}
+
+	/**
+	 * 特殊流程变量值的转换：当key使用list_、map_、array_前缀时，值进行特殊处理
+	 *
+	 * @param e 流程变量
+	 */
+	private void convertSpecialKeyValue(Map.Entry<String, Object> e) {
+		if (e.getKey().startsWith("list_") && e.getValue() instanceof String) {// 将字符串转化为List
+			e.setValue(JsonUtils.toCollection((String) e.getValue()));
+		} else if (e.getKey().startsWith("map_") && e.getValue() instanceof String) {// 将字符串转化为Map
+			e.setValue(JsonUtils.toMap((String) e.getValue()));
+		} else if (e.getKey().startsWith("array_") && e.getValue() instanceof String) {// 将字符串转化为数组
+			e.setValue(JsonUtils.toArray((String) e.getValue()));
+		}
 	}
 
 	/**
@@ -240,6 +289,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 
 		// 获取实例的标准格式数据
 		Map<String, Object> instance = this.getProcessInstanceDetail(processInstanceId);
+		logger.debug("instance={}", instance);
 
 		// 转换为原有工作空间需要的数据结构
 
@@ -254,7 +304,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 		ws.put("endTime", instance.get("end_time"));
 		ws.put("duration", instance.get("duration"));
 		ws.put("flowStatus", instance.get("status")); // 状态：1-流转中、2-暂停、3-已结束
-		ws.put("subject", definition.get("subject"));// 实例标题
+		ws.put("subject", instance.get("subject"));// 实例标题
 
 		// ==== 流程定义
 		ws.put("definitionId", definition.get("id"));
@@ -370,7 +420,8 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 			detail.add("结束时间：" + DateUtils.formatDateTime2Minute(DateUtils.getDate(end_time)));
 			detail.add("办理耗时：" + DateUtils.getWasteTimeCN(DateUtils.getDate(start_time), DateUtils.getDate(end_time)));
 		}
-		detail.add("流程版本：" + ((Map<String, Object>) instance.get("deploy")).get("version"));
+		Map<String, Object> deploy = (Map<String, Object>) instance.get("deploy");
+		detail.add("流程版本：" + deploy.get("name") + deploy.get("version") + " (" + deploy.get("key") + ")");
 
 		// 返回
 		return info;
@@ -422,6 +473,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 	 */
 	private String buildHeaderDefaultButtons(int flowStatus, String type, boolean isMyTask, boolean isShowSuspendedButton
 			, boolean isShowActiveButton, String hiddenButtonCodes) {
+		if(hiddenButtonCodes == null) hiddenButtonCodes = "";
 		SystemContext context = SystemContextHolder.get();
 		StringBuffer buttons = new StringBuffer();
 		if ("common".equals(type)) {
@@ -495,7 +547,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 		// 任务的意见、附件 TODO
 
 		// 生成展现用的数据
-		Map<String, Object> task;
+		Map<String, Object> task, form_item;
 		Map<String, Object> actor, master;// 待办人或待办岗, 委托人
 		Map<String, Object> local_variables;
 		Date now = new Date();
@@ -504,6 +556,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 		String userCode = context.getUser().getCode(); // 当前用户账号
 		for (Object t : tasks) {
 			task = (Map<String, Object>) t;
+			task.put("process_instance", instance);// 方便在任务内也可以访问流程实例的信息
 			actor = (Map<String, Object>) task.get("actor");
 			// 判断任务类型
 			if ((boolean) actor.get("candidate") == false) {    // 个人待办
@@ -548,8 +601,10 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 			items = new ArrayList<>();// 二级条目列表
 			taskItem.put("items", items);
 
-			// -- 表单信息 TODO
-			//buildFormInfo(flowStatus, items, task.getProcessInstanceId(), task.getId(), formKeys.get(task.getId()), !(isUserTask && isMyTask));
+			// -- 表单信息
+			form_item = buildTaskFormInfo(task, !(isUserTask && isMyTask));
+			if(form_item != null) items.add(form_item);
+			//buildTaskFormInfo(flowStatus, items, task.getProcessInstanceId(), task.getId(), formKeys.get(task.getId()), !(isUserTask && isMyTask));
 
 			// -- 意见、附件信息 TODO
 			//buildFlowAttachsInfo(flowStatus, items, this.findTaskFlowAttachs(task.getId(), allFlowAttachs));
@@ -583,7 +638,6 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 	 * @param instance 流程实例明细
 	 */
 	private Map<String, Object> buildWSDoneInfo(Map<String, Object> instance) {
-		int flowStatus = (int) instance.get("status");
 		Map<String, Object> info = new LinkedHashMap<>();
 		List<Map<String, Object>> taskItems = new ArrayList<>();// 一级条目列表
 		info.put("tasks", taskItems);
@@ -597,12 +651,12 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 		// 任务的意见、附件 TODO
 
 		// 生成展现用的数据
-		Map<String, Object> task;
-		Map<String, Object> actor, master;// 经办人, , 委托人
-		Map<String, Object> local_variables;
+		Map<String, Object> task, form_item;
+		Map<String, Object> actor, master, origin_actor;// 经办人, 委托人, 原办理人
 		String subject;
 		for (Object t : tasks) {
 			task = (Map<String, Object>) t;
+			task.put("process_instance", instance);// 方便在任务内也可以访问流程实例的信息
 			actor = (Map<String, Object>) task.get("actor");
 			// 任务的基本信息
 			taskItem = new HashMap<>();
@@ -614,8 +668,17 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 
 			// 执行委托操作的人
 			master = (Map<String, Object>) task.get("master");
-			taskItem.put("master", master != null ? master.get("name") : "");
-			taskItem.put("owner", taskItem.get("master"));
+			if(master != null){
+				taskItem.put("master", master.get("name"));
+				origin_actor = (Map<String, Object>) task.get("origin_actor");
+				if(origin_actor != null){
+					taskItem.put("originActor", origin_actor.get("name"));
+				}else{
+					taskItem.put("originActor", null);
+				}
+			}else{
+				taskItem.put("master", null);
+			}
 
 			taskItem.put("link", false);// 链接标题
 			taskItem.put("name", task.get("name"));// 名称
@@ -628,7 +691,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 				taskItem.put("subject", task.get("name"));// 任务名称作为标题
 			}
 			taskItem.put("hasButtons", false);// 有否操作按钮
-			taskItem.put("formKey", getTaskVariableValue(task, "formKey"));// 记录formKey
+			taskItem.put("formKey", task.get("form_key"));// 任务的表单Key
 			taskItem.put("desc", task.get("description"));// 任务描述说明
 			taskItem.put("priority", task.get("priority"));// 任务优先级
 
@@ -636,8 +699,9 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 			items = new ArrayList<>();// 二级条目列表
 			taskItem.put("items", items);
 
-			// -- 表单信息 TODO
-			//buildFormInfo(flowStatus, items, task.getProcessInstanceId(), task.getId(), formKeys.get(task.getId()), true);
+			// -- 表单信息
+			form_item = buildTaskFormInfo(task, true);
+			if(form_item != null) items.add(form_item);
 
 			// -- 意见、附件信息 TODO
 			//buildFlowAttachsInfo(WorkspaceServiceImpl_old.COMPLETE, items, this.findTaskFlowAttachs(task.getId(), allFlowAttachs));
@@ -660,5 +724,101 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 
 		// 返回
 		return info;
+	}
+
+	// 获取任务渲染区的数据
+	private Map<String, Object> buildTaskFormInfo(Map<String, Object> task, boolean readonly) {
+		Map<String, Object> instance = (Map<String, Object>) task.get("process_instance");
+		int flowStatus = (int) instance.get("status");
+		String taskId = (String) task.get("id");
+		String formKey = (String) task.get("form_key");
+		if (formKey == null || formKey.length() == 0) return null;
+		if (logger.isDebugEnabled()) {
+			logger.debug("taskId=" + taskId + ",formKey=" + formKey);
+		}
+
+		// 表单基本信息
+		Map<String, Object> item;
+		List<String> detail;
+		String type = "form";
+		item = new HashMap<>();
+		item.put("id", taskId);
+		item.put("pid", instance.get("id"));// 流程实例id
+		item.put("tid", taskId);// 任务id
+		item.put("type", type);// 信息类型
+		item.put("link", false);// 链接标题
+		item.put("buttons", this.buildItemDefaultButtons(flowStatus, type));// 操作按钮列表
+		item.put("hasButtons", item.get("buttons") != null);// 有否有操作按钮
+		item.put("iconClass", "ui-icon-document");// 左侧显示的小图标
+		item.put("subject", "完成任务前需要你处理如下信息：");// 标题信息
+
+		// 表单html
+		detail = new ArrayList<>();
+		item.put("detail", detail);
+		// detail.add("[表单信息]");
+
+		/*
+		int index = formKey.lastIndexOf(":");
+		String engine, from, key;
+		boolean separate;
+		if (index != -1) {
+			// @ref http://rongjih.blog.163.com/blog/static/33574461201263124922670/
+			String[] ss = formKey.substring(0, index).split(":");
+			key = formKey.substring(index + 1);
+			engine = ss[0];
+			if (ss.length == 1) {// engine:
+				separate = false;
+				from = "resource";
+			} else if (ss.length == 2) {// engine:from:
+				separate = false;
+				from = ss[1];
+			} else if (ss.length == 3) {// engine:separate:from:
+				separate = "true".equalsIgnoreCase(ss[1]);
+				from = ss[2];
+			} else {
+				throw new CoreException("unsupport config type:formKey=" + formKey);
+			}
+		} else {
+			key = formKey;
+			engine = "default";
+			from = "resource";
+			separate = false;
+		}
+		item.put("form_engine", engine);
+		item.put("form_from", from);// form
+		item.put("form_key", key);
+		item.put("form_seperate", separate);// old
+		item.put("form_separate", separate);
+		*/
+
+		// 渲染任务的表单
+		String html = this.workflowFormService.getRenderedTaskForm(task, readonly);
+		item.put("form_html", html);
+
+		detail.add(html);
+
+		return item;
+	}
+
+	/**
+	 * 创建默认的表单(form)、意见(comment)、附件(attach)操作按钮
+	 *
+	 * @param flowStatus 流转状态:1、2、3
+	 * @param type 类型: attach|form|comment
+	 * @return
+	 */
+	private String buildItemDefaultButtons(int flowStatus, String type) {
+		StringBuffer buttons = new StringBuffer();
+		if (flowStatus == SuspensionState.ACTIVE.getStateCode()) {
+			buttons.append(ITEM_BUTTON_EDIT);
+		}
+		buttons.append(ITEM_BUTTON_OPEN);
+		if ("attach".equals(type)) {
+			buttons.append(ITEM_BUTTON_DOWNLOAD);
+		}
+		if (flowStatus == SuspensionState.ACTIVE.getStateCode() && !"form".equals(type)) {
+			buttons.append(ITEM_BUTTON_DELETE);
+		}
+		return buttons.length() > 0 ? buttons.toString() : null;
 	}
 }

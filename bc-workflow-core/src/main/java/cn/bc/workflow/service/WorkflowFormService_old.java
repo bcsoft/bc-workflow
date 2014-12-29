@@ -8,22 +8,22 @@ import java.util.Map;
  * @author dragon
  * 
  */
-public interface WorkflowFormService {
+public interface WorkflowFormService_old {
 	/**
 	 * 渲染任务表单
 	 * 
-	 * @param task 任务
+	 * @param taskId 任务ID
 	 * @param addParams 附加的渲染参数
 	 * @return
 	 */
-	String getRenderedTaskForm(Map<String, Object> task, Map<String, Object> addParams);
+	String getRenderedTaskForm(String taskId, Map<String, Object> addParams);
 
 	/**
 	 * 渲染任务表单
 	 * 
-	 * @param task 任务
+	 * @param taskId 任务ID
 	 * @param readonly 是否以只读方式渲染
 	 * @return
 	 */
-	String getRenderedTaskForm(Map<String, Object> task, boolean readonly);
+	String getRenderedTaskForm(String taskId, boolean readonly);
 }

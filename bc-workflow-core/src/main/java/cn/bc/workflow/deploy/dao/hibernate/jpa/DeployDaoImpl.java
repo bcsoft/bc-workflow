@@ -1,5 +1,8 @@
 package cn.bc.workflow.deploy.dao.hibernate.jpa;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -7,9 +10,11 @@ import java.util.Map;
 
 import javax.sql.DataSource;
 
+import cn.bc.docs.domain.Attach;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 
@@ -28,12 +33,10 @@ import cn.bc.workflow.deploy.domain.DeployResource;
 
 /**
  * DAO接口的实现
- * 
+ *
  * @author wis
- * 
  */
-public class DeployDaoImpl extends HibernateCrudJpaDao<Deploy> implements
-		DeployDao {
+public class DeployDaoImpl extends HibernateCrudJpaDao<Deploy> implements DeployDao {
 	protected final Log logger = LogFactory.getLog(getClass());
 
 	private JdbcTemplate jdbcTemplate;
@@ -63,7 +66,7 @@ public class DeployDaoImpl extends HibernateCrudJpaDao<Deploy> implements
 	}
 
 	public boolean isUniqueCodeAndVersion(Long currentId, String code,
-			String version) {
+										  String version) {
 		Condition c;
 		if (currentId == null) {
 			c = new AndCondition().add(new EqualsCondition("code", code)).add(
@@ -110,7 +113,7 @@ public class DeployDaoImpl extends HibernateCrudJpaDao<Deploy> implements
 
 	/**
 	 * 通过流程部署id判断此信息是否发布
-	 * 
+	 *
 	 * @param excludeId
 	 * @return
 	 */
@@ -120,7 +123,7 @@ public class DeployDaoImpl extends HibernateCrudJpaDao<Deploy> implements
 				+ "'" + "and d.deployment_id is null and d.status_!='"
 				+ BCConstants.STATUS_DRAFT + "'";
 		try {
-			id = this.jdbcTemplate.queryForLong(sql);
+			id = this.jdbcTemplate.queryForObject(sql, Long.class);
 		} catch (EmptyResultDataAccessException e) {
 			e.getStackTrace();
 		}
@@ -129,7 +132,7 @@ public class DeployDaoImpl extends HibernateCrudJpaDao<Deploy> implements
 
 	/**
 	 * 通过流程id判断此信息是否已发起
-	 * 
+	 *
 	 * @param excludeId
 	 * @return
 	 */
@@ -140,7 +143,7 @@ public class DeployDaoImpl extends HibernateCrudJpaDao<Deploy> implements
 				+ " inner join act_ru_execution ae on arp.id_ = ae.proc_def_id_ "
 				+ " where ard.id_='" + deploymentId + "'";
 		try {
-			id = this.jdbcTemplate.queryForLong(sql);
+			id = this.jdbcTemplate.queryForObject(sql, Long.class);
 		} catch (EmptyResultDataAccessException e) {
 			e.getStackTrace();
 		}
@@ -149,16 +152,14 @@ public class DeployDaoImpl extends HibernateCrudJpaDao<Deploy> implements
 
 	/**
 	 * 判断指定的编码与版本号是否唯一
-	 * 
-	 * @param currentId
-	 *            当前模板的id
-	 * @param codes
-	 *            当前模板要使用的编码列表
+	 *
+	 * @param currentId 当前模板的id
+	 * @param codes     当前模板要使用的编码列表
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
 	public ArrayList<Object> isUniqueResourceCodeAndExtCheck(Long id,
-			String codes) {
+															 String codes) {
 		List<?> result;
 		String[] codeAry = codes.split(",");
 		if (codeAry.length == 0) {
@@ -198,7 +199,7 @@ public class DeployDaoImpl extends HibernateCrudJpaDao<Deploy> implements
 
 	/**
 	 * 通过流程部署记录id和流程编码和部署资源编码查找对应部署资源
-	 * 
+	 *
 	 * @param dmId
 	 * @param wfCode
 	 * @param resCode
@@ -210,7 +211,7 @@ public class DeployDaoImpl extends HibernateCrudJpaDao<Deploy> implements
 		List<?> list = this
 				.getJpaTemplate()
 				.find("from DeployResource dr where dr.deploy.deploymentId=? and dr.deploy.code=? and dr.code=?",
-						new Object[] { dmId, wfCode, resCode });
+						new Object[]{dmId, wfCode, resCode});
 		if (list.size() == 0) {
 			logger.debug("异常！根据流程部署记录id,流程编码,流程资源编码查找不了流程资源！");
 		} else if (list.size() == 1) {
@@ -226,19 +227,17 @@ public class DeployDaoImpl extends HibernateCrudJpaDao<Deploy> implements
 
 	/**
 	 * 通过流程编码获取流程资源
-	 * 
-	 * @param deployCode
-	 *            资源编码
-	 * @param deployId
-	 *            部署ID
+	 *
+	 * @param deployCode 资源编码
+	 * @param deployId   部署ID
 	 * @return
 	 */
 	public DeployResource findDeployResourceByCode(Long deployId,
-			String deployCode) {
+												   String deployCode) {
 		DeployResource dr = null;
 		List<?> list = this.getJpaTemplate().find(
 				"from DeployResource dr where dr.deploy.id=? and dr.code=?",
-				new Object[] { deployId, deployCode });
+				new Object[]{deployId, deployCode});
 		if (list.size() == 0) {
 			logger.debug("异常！流程编码查找不了流程资源！");
 		} else if (list.size() == 1) {
@@ -249,5 +248,23 @@ public class DeployDaoImpl extends HibernateCrudJpaDao<Deploy> implements
 					+ deployId + ",resCode=" + deployCode);
 		}
 		return dr;
+	}
+
+	@Override
+	public InputStream getResource(String deploymentId, String resourceCode) {
+		String sql = "SELECT r.path path FROM bc_wf_deploy_resource r inner join bc_wf_deploy d on d.id = r.pid\n" +
+				"\twhere d.deployment_id = ? and r.code = ?";
+		String path;
+		try {
+			path = this.jdbcTemplate.queryForObject(sql, String.class, deploymentId, resourceCode);
+		} catch (EmptyResultDataAccessException e) {
+			throw new CoreException("找不到指定的流程配置资源: deploymentId=" + deploymentId + ", resourceCode=" + resourceCode, e);
+		}
+		path = Attach.DATA_REAL_PATH + "/" + DeployResource.DATA_SUB_PATH + "/" + path;
+		try {
+			return new FileInputStream(path);
+		} catch (FileNotFoundException e) {
+			throw new CoreException("找不到指定的流程配置资源: deploymentId=" + deploymentId + ", resourceCode=" + resourceCode + ", path=" + path, e);
+		}
 	}
 }

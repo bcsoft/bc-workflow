@@ -72,6 +72,7 @@ $BODY$
  *		    duration: 【integer 耗时(毫秒)】,
  *		    due_date: 【到期日期】,
  *		    priority: 【integer 优先级】,
+ *		    priority: 【integer 优先级】,
  *		    description: 【varchar 描述】,
  *		    // 办理人
  *		    actor: {
@@ -276,15 +277,15 @@ BEGIN
 		) as origin_actor
 		from ACT_HI_TASKINST t
 		where t.proc_inst_id_ = $1
-		order by t.end_time_ desc, t.id_
+		order by t.start_time_ asc
 	)
 	select row_to_json(t) into r from (
 		-- 流程实例、定义、部署信息
 		select i.* 
 		-- 流程标题
-		, (select v.value from global_variable v where v.name = 'subject') subject
+		--, (select v.value from global_variable v where v.name = 'subject') subject
 		-- 流水号
-		, (select v.value from global_variable v where v.name = 'wf_code') code
+		--, (select v.value from global_variable v where v.name = 'wf_code') code
 
 		-- 全局流程变量
 		, (select to_json(array_agg(row_to_json(v))) from global_variable v) variables
@@ -296,7 +297,7 @@ BEGIN
 		, coalesce((select to_json(array_agg(row_to_json(t))) from task t where t.end_time is null), '[]'::json) todo_tasks
 
 		-- 经办任务
-		, coalesce((select to_json(array_agg(row_to_json(t))) from task t where t.end_time is not null), '[]'::json) done_tasks
+		, coalesce((select to_json(array_agg(row_to_json(t))) from task t where t.end_time is not null order by t.start_time), '[]'::json) done_tasks
 
 		-- 任务签领、委托日志
 		--, (select to_json(array_agg(row_to_json(v))) from task_log v) task_logs
