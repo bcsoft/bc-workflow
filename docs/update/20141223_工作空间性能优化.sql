@@ -48,12 +48,29 @@ $BODY$
  *		  deployment_id: 【varchar 部署ID】
  *		},
  *
- *		// 全局流程变量（变量的最新值，不含历史版本的值）(ACT_HI_DETAIL)
+ *		// 全局流程变量 (变量的最新值，不含历史版本的值) (ACT_HI_DETAIL)
  *		variables: [
  *		  {
  *		    name: 【varchar 名称】,
  *		    type: 【varchar 值类型 boolean|string|integer|long|double|date|serializable|null】,
  *		    value: 【integer 值 boolean|text|number|date|array|json】
+ *		  },
+ *		  ......
+ *		],
+ *
+ *		// 全局流程附件、意见 (BC_WF_ATTACH)
+ *		attachs: [
+ *		  {
+ *		    id: 【integer】,
+ *		    type: 【integer 类型：1-附件，2-意见】,
+ *		    pid: 【varchar 流程实例ID】,
+ *		    tid: 【varchar 任务实例ID】,
+ *		    subject: 【varchar 标题】,
+ *		    size: 【integer 附件大小】,
+ *		    path: 【varchar 附件相对路径】,
+ *		    desc: 【varchar 意见内容】,
+ *		    file_date: 【varchar 创建时间】,
+ *		    author: {id|code|name}
  *		  },
  *		  ......
  *		],
@@ -103,7 +120,24 @@ $BODY$
  *		      id: 【integer ID】,
  *		      code: 【varchar 账号】,
  *		      name: 【varchar 姓名】
- *		    }
+ *		    },
+ *
+ *		    // 附件、意见 (BC_WF_ATTACH)
+ *		    attachs: [
+ *		      {
+ *		        id: 【integer】,
+ *		        type: 【integer 类型：1-附件，2-意见】,
+ *		        pid: 【varchar 流程实例ID】,
+ *		        tid: 【varchar 任务实例ID】,
+ *		        subject: 【varchar 标题】,
+ *		        size: 【integer 附件大小】,
+ *		        path: 【varchar 附件相对路径】,
+ *		        desc: 【varchar 意见内容】,
+ *		        file_date: 【varchar 创建时间】,
+ *		        author: {id|code|name}
+ *		      },
+ *		      ......
+ *		    ]
  *		  },
  *		  ......
  *		],
@@ -148,7 +182,24 @@ $BODY$
  *		      id: 【integer ID】,
  *		      code: 【varchar 账号】,
  *		      name: 【varchar 姓名】
- *		    }
+ *		    },
+ *
+ *		    // 附件、意见 (BC_WF_ATTACH)
+ *		    attachs: [
+ *		      {
+ *		        id: 【integer】,
+ *		        type: 【integer 类型：1-附件，2-意见】,
+ *		        pid: 【varchar 流程实例ID】,
+ *		        tid: 【varchar 任务实例ID】,
+ *		        subject: 【varchar 标题】,
+ *		        size: 【integer 附件大小】,
+ *		        path: 【varchar 附件相对路径】,
+ *		        desc: 【varchar 意见内容】,
+ *		        file_date: 【varchar 创建时间】,
+ *		        author: {id|code|name}
+ *		      },
+ *		      ......
+ *		    ]
  *		  },
  *		  ......
  *		]
@@ -232,6 +283,13 @@ BEGIN
 		from bc_wf_excution_log l where pid = $1 and type_ in ('task_claim', 'task_delegate', 'task_create')
 		order by file_date desc
 	)
+	-- 附件、意见
+	, attach(id, pid, tid, type, subject, path, ext, size, author, file_date, description) as (
+		select a.id, a.pid, (case common when true then null else a.tid end) tid, a.type_ as type, a.subject, a.path_ as path, a.ext, a.size_ as size
+		, (select row_to_json(u) from (select h.id id, h.actor_code code, h.actor_name as name from bc_identity_actor_history h where h.id = a.author_id) u) author
+		, to_char(a.file_date, 'YYYY-MM-DD HH24:MI:SS') as file_date, a.desc_ as description
+		from bc_wf_attach a where pid = $1 order by a.file_date asc
+	)
 	-- 全部任务(ACT_HI_TASKINST)
 	, task(id, pid, start_time, end_time, key, name, duration, due_date, priority, description, actor
 		, assignee, owner, variables, claim_time, master, origin_actor) as (
@@ -275,6 +333,9 @@ BEGIN
 				and exists (select 0 from task_log l1 where l1.task_id = t.id_ and l1.type = 'task_delegate')
 				order by time desc limit 1
 		) as origin_actor
+		-- 任务的附件、意见
+		, (select to_json(array_agg(row_to_json(a))) from attach a where a.tid = t.id_) attachs
+
 		from ACT_HI_TASKINST t
 		where t.proc_inst_id_ = $1
 		order by t.start_time_ asc
@@ -282,13 +343,11 @@ BEGIN
 	select row_to_json(t) into r from (
 		-- 流程实例、定义、部署信息
 		select i.* 
-		-- 流程标题
-		--, (select v.value from global_variable v where v.name = 'subject') subject
-		-- 流水号
-		--, (select v.value from global_variable v where v.name = 'wf_code') code
-
 		-- 全局流程变量
 		, (select to_json(array_agg(row_to_json(v))) from global_variable v) variables
+
+		-- 流程全局附件、意见
+		, (select to_json(array_agg(row_to_json(a))) from attach a where a.tid is null) attachs
 
 		-- 流程变量为 serializable 类型对应的 bytearray_id_ 收集，应用需要另行通过表 act_ge_bytearray 获取对应的数据
 		, (select to_json(array_agg(v.value)) from variable v where v.type = 'serializable') bytearray_ids
@@ -297,7 +356,7 @@ BEGIN
 		, coalesce((select to_json(array_agg(row_to_json(t))) from task t where t.end_time is null), '[]'::json) todo_tasks
 
 		-- 经办任务
-		, coalesce((select to_json(array_agg(row_to_json(t))) from task t where t.end_time is not null order by t.start_time), '[]'::json) done_tasks
+		, coalesce((select to_json(array_agg(row_to_json(t))) from task t where t.end_time is not null), '[]'::json) done_tasks
 
 		-- 任务签领、委托日志
 		--, (select to_json(array_agg(row_to_json(v))) from task_log v) task_logs
@@ -315,7 +374,7 @@ $BODY$ LANGUAGE plpgsql;
 -- 流转中-done9-todo2： 3349285 司机新入职、留用审批流程 - 司机留用审批（崔土新2014-10-14) - IP7 13.20s
 -- 已结束-done8： 3326570 宝城公司公文处理流程 - 关于粤A.G4P40车辆公共替班钟继昌终止合同申请 - IP7 11.52s
 with wf(j) as (
-	select wf__find_process_instance_detail('3349285')
+	select wf__find_process_instance_detail('3313570')
 )
 -- 展开第一层的key
 select * from json_each((select wf.j from wf))

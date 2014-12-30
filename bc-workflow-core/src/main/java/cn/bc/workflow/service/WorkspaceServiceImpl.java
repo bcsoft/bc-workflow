@@ -9,7 +9,7 @@ import cn.bc.core.util.JsonUtils;
 import cn.bc.core.util.SerializeUtils;
 import cn.bc.identity.web.SystemContext;
 import cn.bc.identity.web.SystemContextHolder;
-import org.activiti.engine.impl.persistence.entity.SuspensionState;
+import cn.bc.workflow.flowattach.domain.FlowAttach;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -87,7 +87,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 		Object[] variables = (Object[]) instanceDetail.get("variables");
 		Map<String, Object> newVars = this.convertVariables(variables);
 		instanceDetail.put("variables", newVars);
-		if(newVars != null) {
+		if (newVars != null) {
 			// ==== 流程标题
 			String subject = (String) newVars.get("subject");
 			if (subject != null && !subject.isEmpty()) instanceDetail.put("subject", subject);
@@ -122,7 +122,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 			newVars = convertVariables((Object[]) task.get("variables"));
 			task.put("variables", newVars);
 
-			if(newVars != null) {
+			if (newVars != null) {
 				// ==== 任务标题
 				subject = (String) newVars.get("subject");
 				if (subject != null && !subject.isEmpty()) task.put("subject", subject);
@@ -391,9 +391,8 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 		// 构建表单条目 TODO
 
 		// 构建意见附件条目 TODO
-		//List<FlowAttach> flowAttachs = flowAttachService.findByProcess(instance.getId(), false);
-		//if (logger.isDebugEnabled()) logger.debug("flowAttachs={}", flowAttachs);
-		//buildFlowAttachsInfo(flowStatus, items, flowAttachs);
+		List<Map<String, Object>> attachItems = buildFlowAttachsInfo((Object[]) instance.get("attachs"), flowStatus);
+		if (attachItems != null) items.addAll(attachItems);
 
 		// 统计信息条目
 		item = new HashMap<>();
@@ -409,13 +408,13 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 		item.put("detail", detail);// 详细信息
 		String start_time = (String) instance.get("start_time");
 		detail.add("发起时间：" + ((Map<String, Object>) instance.get("start_user")).get("name") + " " + start_time);
-		if (flowStatus == SuspensionState.ACTIVE.getStateCode()) {
+		if (flowStatus == WorkspaceService.FLOWSTATUS_ACTIVE) {
 			detail.add("结束时间：" + "仍在流转中...");
 			detail.add("办理耗时：" + DateUtils.getWasteTimeCN(DateUtils.getDate(start_time)));
-		} else if (flowStatus == SuspensionState.SUSPENDED.getStateCode()) {
+		} else if (flowStatus == WorkspaceService.FLOWSTATUS_SUSPENDED) {
 			detail.add("结束时间：" + "流程已暂停...");
 			detail.add("办理耗时：" + DateUtils.getWasteTimeCN(DateUtils.getDate(start_time)));
-		} else if (flowStatus == WorkspaceServiceImpl_old.COMPLETE) {
+		} else if (flowStatus == WorkspaceService.FLOWSTATUS_COMPLETE) {
 			String end_time = (String) instance.get("end_time");
 			detail.add("结束时间：" + DateUtils.formatDateTime2Minute(DateUtils.getDate(end_time)));
 			detail.add("办理耗时：" + DateUtils.getWasteTimeCN(DateUtils.getDate(start_time), DateUtils.getDate(end_time)));
@@ -473,23 +472,23 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 	 */
 	private String buildHeaderDefaultButtons(int flowStatus, String type, boolean isMyTask, boolean isShowSuspendedButton
 			, boolean isShowActiveButton, String hiddenButtonCodes) {
-		if(hiddenButtonCodes == null) hiddenButtonCodes = "";
+		if (hiddenButtonCodes == null) hiddenButtonCodes = "";
 		SystemContext context = SystemContextHolder.get();
 		StringBuffer buttons = new StringBuffer();
 		if ("common".equals(type)) {
-			if (flowStatus == SuspensionState.ACTIVE.getStateCode()) {
+			if (flowStatus == WorkspaceService.FLOWSTATUS_ACTIVE) {
 				if (isShowSuspendedButton) {// 实例流转中,当前处理人是否拥有暂停权限或流程管理员才显示
 					buttons.append(ITEM_BUTTON_SUSPENDED);// 暂停按钮
 				}
 			}
-			if (flowStatus == SuspensionState.SUSPENDED.getStateCode()) {
+			if (flowStatus == WorkspaceService.FLOWSTATUS_SUSPENDED) {
 				if (isShowActiveButton) {// 实例已暂停,当前处理人是否拥有激活权限或流程管理员才显示
 					buttons.append(ITEM_BUTTON_ACTIVE);// 激活按钮
 				}
 			}
 
 			buttons.append(ITEM_BUTTON_SHOWDIAGRAM);// 查看流程图
-			if (flowStatus == SuspensionState.ACTIVE.getStateCode()
+			if (flowStatus == WorkspaceService.FLOWSTATUS_ACTIVE
 					&& context.hasAnyRole("BC_WORKFLOW_ADDGLOBALATTACH")) {// 有权限才能添加全局意见附件
 				if (hiddenButtonCodes.indexOf("BUTTON_ADDCOMMENT") == -1)
 					buttons.append(ITEM_BUTTON_ADDCOMMENT);// 添加意见
@@ -499,7 +498,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 			}
 			buttons.append(ITEM_BUTTON_SHOWLOG);// 查看流转日志
 		} else if ("todo_user".equals(type)) {
-			if (flowStatus == SuspensionState.ACTIVE.getStateCode() && isMyTask) {
+			if (flowStatus == WorkspaceService.FLOWSTATUS_ACTIVE && isMyTask) {
 				if (context.hasAnyRole("BC_WORKFLOW_DELEGATE"))// 有权限才能委派任务
 					buttons.append("<span class='mainOperate delegate'><span class='ui-icon ui-icon-person'></span><span class='text link'>委托任务</span></span>");
 
@@ -511,7 +510,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 				buttons.append("<span class='mainOperate finish'><span class='ui-icon ui-icon-check'></span><span class='text link'>完成办理</span></span>");
 			}
 		} else if ("todo_group".equals(type)) {
-			if (flowStatus == SuspensionState.ACTIVE.getStateCode()) {
+			if (flowStatus == WorkspaceService.FLOWSTATUS_ACTIVE) {
 				if (context.hasAnyRole("BC_WORKFLOW_ASSIGN"))// 有权限才能分派任务
 					buttons.append("<span class='mainOperate assign'><span class='ui-icon ui-icon-person'></span><span class='text link'>分派任务</span></span>");
 
@@ -544,16 +543,16 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 		boolean isUserTask;// 是否是个人待办:true-个人待办、false-组待办
 		boolean isMyTask;// 是否是我的个人或组待办
 
-		// 任务的意见、附件 TODO
-
 		// 生成展现用的数据
-		Map<String, Object> task, form_item;
+		Map<String, Object> task, formItem;
+		List<Map<String, Object>> attachItems;
 		Map<String, Object> actor, master;// 待办人或待办岗, 委托人
 		Map<String, Object> local_variables;
 		Date now = new Date();
 		String subject;
 		SystemContext context = SystemContextHolder.get();
 		String userCode = context.getUser().getCode(); // 当前用户账号
+		List<String> userGroups = context.getAttr(SystemContext.KEY_GROUPS); // 当前用户所在的所有岗位
 		for (Object t : tasks) {
 			task = (Map<String, Object>) t;
 			task.put("process_instance", instance);// 方便在任务内也可以访问流程实例的信息
@@ -566,8 +565,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 				isUserTask = false;    // 岗位待办
 
 				// 判断待办岗位是否是当前用户所在的岗位
-				List<String> groups = context.getAttr(SystemContext.KEY_GROUPS);
-				isMyTask = groups != null ? groups.contains(actor.get("code")) : false;
+				isMyTask = userGroups != null ? userGroups.contains(actor.get("code")) : false;
 			}
 
 			// 任务的基本信息
@@ -602,12 +600,14 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 			taskItem.put("items", items);
 
 			// -- 表单信息
-			form_item = buildTaskFormInfo(task, !(isUserTask && isMyTask));
-			if(form_item != null) items.add(form_item);
-			//buildTaskFormInfo(flowStatus, items, task.getProcessInstanceId(), task.getId(), formKeys.get(task.getId()), !(isUserTask && isMyTask));
+			if(isMyTask) {// 我的个人待办或岗位待办时方渲染表单
+				formItem = buildTaskFormInfo(task, !(isUserTask && isMyTask));
+				if (formItem != null) items.add(formItem);
+			}
 
-			// -- 意见、附件信息 TODO
-			//buildFlowAttachsInfo(flowStatus, items, this.findTaskFlowAttachs(task.getId(), allFlowAttachs));
+			// -- 意见、附件信息
+			attachItems = buildFlowAttachsInfo((Object[]) task.get("attachs"), flowStatus);
+			if (attachItems != null) items.addAll(attachItems);
 
 			// 任务的汇总信息
 			if (isUserTask) {
@@ -644,14 +644,13 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 		Map<String, Object> taskItem;
 		List<Map<String, Object>> items;// 详细信息：表单、意见、附件
 
-		// 待办经任务列表
+		// 经办任务列表
 		Object[] tasks = (Object[]) instance.get("done_tasks");
 		if (tasks == null || tasks.length == 0) return info;
 
-		// 任务的意见、附件 TODO
-
 		// 生成展现用的数据
-		Map<String, Object> task, form_item;
+		Map<String, Object> task, formItem;
+		List<Map<String, Object>> attachItems;
 		Map<String, Object> actor, master, origin_actor;// 经办人, 委托人, 原办理人
 		String subject;
 		for (Object t : tasks) {
@@ -668,15 +667,15 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 
 			// 执行委托操作的人
 			master = (Map<String, Object>) task.get("master");
-			if(master != null){
+			if (master != null) {
 				taskItem.put("master", master.get("name"));
 				origin_actor = (Map<String, Object>) task.get("origin_actor");
-				if(origin_actor != null){
+				if (origin_actor != null) {
 					taskItem.put("originActor", origin_actor.get("name"));
-				}else{
+				} else {
 					taskItem.put("originActor", null);
 				}
-			}else{
+			} else {
 				taskItem.put("master", null);
 			}
 
@@ -700,11 +699,12 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 			taskItem.put("items", items);
 
 			// -- 表单信息
-			form_item = buildTaskFormInfo(task, true);
-			if(form_item != null) items.add(form_item);
+			formItem = buildTaskFormInfo(task, true);
+			if (formItem != null) items.add(formItem);
 
-			// -- 意见、附件信息 TODO
-			//buildFlowAttachsInfo(WorkspaceServiceImpl_old.COMPLETE, items, this.findTaskFlowAttachs(task.getId(), allFlowAttachs));
+			// -- 意见、附件信息
+			attachItems = buildFlowAttachsInfo((Object[]) task.get("attachs"), WorkspaceService.FLOWSTATUS_COMPLETE);
+			if (attachItems != null) items.addAll(attachItems);
 
 			// 任务的汇总信息
 			String start_time = ((String) task.get("start_time")).substring(0, 16);// 精确到分钟
@@ -804,21 +804,76 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 	 * 创建默认的表单(form)、意见(comment)、附件(attach)操作按钮
 	 *
 	 * @param flowStatus 流转状态:1、2、3
-	 * @param type 类型: attach|form|comment
+	 * @param type       类型: attach|form|comment
 	 * @return
 	 */
 	private String buildItemDefaultButtons(int flowStatus, String type) {
 		StringBuffer buttons = new StringBuffer();
-		if (flowStatus == SuspensionState.ACTIVE.getStateCode()) {
+		if (flowStatus == WorkspaceService.FLOWSTATUS_ACTIVE) {
 			buttons.append(ITEM_BUTTON_EDIT);
 		}
 		buttons.append(ITEM_BUTTON_OPEN);
 		if ("attach".equals(type)) {
 			buttons.append(ITEM_BUTTON_DOWNLOAD);
 		}
-		if (flowStatus == SuspensionState.ACTIVE.getStateCode() && !"form".equals(type)) {
+		if (flowStatus == WorkspaceService.FLOWSTATUS_ACTIVE && !"form".equals(type)) {
 			buttons.append(ITEM_BUTTON_DELETE);
 		}
 		return buttons.length() > 0 ? buttons.toString() : null;
+	}
+
+
+	/**
+	 * 构建附件的显示信息
+	 *
+	 * @param flowStatus 流转状态
+	 * @param attachs 附件信息
+	 * @return
+	 */
+	private List<Map<String, Object>> buildFlowAttachsInfo(Object[] attachs, int flowStatus) {
+		if(attachs == null) return null;
+		List<Map<String, Object>> attachItems = new ArrayList<>();
+		Map<String, Object> item;
+		List<String> detail;
+		String itemType;
+		int attachType;
+		Map<String, Object> attach;
+		for (Object a : attachs) {
+			attach = (Map<String, Object>) a;
+			item = new HashMap<>();
+			attachItems.add(item);
+			item.put("id", attach.get("id"));
+			item.put("pid", attach.get("pid"));// 流程实例id
+			item.put("tid", attach.get("tid"));// 任务id
+			attachType = (int) attach.get("type");
+			if (FlowAttach.TYPE_ATTACHMENT == attachType) {
+				itemType = "attach";
+				item.put("iconClass", "ui-icon-link");// 左侧显示的小图标
+				item.put("subject", attach.get("subject"));// 附件名称
+				item.put("size", attach.get("size"));// 附件大小
+				item.put("sizeInfo", cn.bc.core.util.StringUtils.formatSize((int) attach.get("size")));// 附件大小的描述
+				item.put("path", attach.get("path"));// 附件相对路径
+			} else if (FlowAttach.TYPE_COMMENT == attachType) {
+				itemType = "comment";
+				item.put("iconClass", "ui-icon-comment");// 左侧显示的小图标
+				item.put("subject", attach.get("subject"));// 意见标题
+				item.put("desc", attach.get("description"));// 意见内容
+			} else {
+				logger.warn("不支持的 FlowAttach 类型:id={}, type={}", attach.get("id"), attachType);
+				itemType = "none";
+				item.put("iconClass", "ui-icon-lock");// 左侧显示的小图标
+				item.put("subject", "(未知类型)");
+			}
+			item.put("type", itemType);// 信息类型
+			item.put("link", true);// 链接标题
+			item.put("buttons", this.buildItemDefaultButtons(flowStatus, itemType));// 操作按钮列表
+			item.put("hasButtons", item.get("buttons") != null);// 有否操作按钮
+
+			// 详细信息
+			detail = new ArrayList<>();
+			item.put("detail", detail);
+			detail.add(((Map<String, Object>) attach.get("author")).get("name") + " " + ((String) attach.get("file_date")).substring(0, 16)); // 创建信息
+		}
+		return attachItems;
 	}
 }
