@@ -1,5 +1,6 @@
 package cn.bc.workflow.dao;
 
+import java.util.List;
 import java.util.Map;
 
 
@@ -30,4 +31,14 @@ public interface WorkflowDao {
 	 * @return
 	 */
 	Object findLocalValue(String pid,String taskKey,String localValueKey);
+
+	Map<String, Object> findMainProcessInstanceInfoById(String processInstanceId);
+
+	/**
+	 * 通过流程实例Id，查找子流程经办信息
+	 *
+	 * @param processInstanceId 流程实例Id
+	 * @return
+	 */
+	List<Map<String, Object>> findSubProcessInstanceInfoById(String processInstanceId);
 }

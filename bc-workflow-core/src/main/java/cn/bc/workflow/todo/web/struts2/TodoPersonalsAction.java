@@ -274,10 +274,6 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>> {
 		columns.add(new TextColumn4MapKey("art.due_date_", "dueDate",
 				getText("todo.personal.dueDate"), 120).setSortable(true)
 				.setValueFormater(new CalendarFormater("yyyy-MM-dd HH:mm")));
-		// 附加说明
-		columns.add(new TextColumn4MapKey("art.description_", "desc",
-				getText("todo.personal.description"))
-				.setUseTitleFromLabel(true));
 		// 流程
 		columns.add(new TextColumn4MapKey("processName", "processName",
 				getText("flow.task.category"), 180).setSortable(true)
@@ -377,7 +373,7 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>> {
 		StringBuffer sql = new StringBuffer();
 		
 		sql.append("select a.id_,b.suspension_state_ as status,a.proc_inst_id_ as procinstid,a.name_ as taskname,a.due_date_ as duedate,a.create_time_ as createtime");
-		sql.append(",d.name_ as processname,a.description_ as desc_,a.assignee_ as assignee,d.key_ as key,a.task_def_key_ as task_def_key");
+		sql.append(",d.name_ as processname,a.assignee_ as assignee,d.key_ as key,a.task_def_key_ as task_def_key");
 		//任务的类型：1-个人任务，2-候选任务
 		sql.append(",case when a.assignee_ is not null then 1 else 2 end as type_");
 		//流程主题
@@ -401,7 +397,6 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>> {
 				map.put("dueDate", rs[i++]); // 办理期限
 				map.put("createTime", rs[i++]); // 发送时间
 				map.put("processName", rs[i++]); // 流程名称
-				map.put("desc", rs[i++]); // 任务附加说明
 				map.put("assignee", rs[i++]); // 任务处理人code
 				map.put("key", rs[i++]); // 流程编码
 				map.put("taskKey", rs[i++]); // 流程编码

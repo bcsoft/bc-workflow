@@ -3,15 +3,19 @@
  */
 package cn.bc.workflow.service;
 
+import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import cn.bc.workflow.dao.WorkflowDao;
 import org.activiti.engine.HistoryService;
 import org.activiti.engine.RepositoryService;
 import org.activiti.engine.history.HistoricTaskInstance;
@@ -46,6 +50,7 @@ public class WorkflowFormServiceImpl implements WorkflowFormService {
 	private HistoryService historyService;
 	private RepositoryService repositoryService;
 	private DeployService deployService;
+	private WorkflowDao workflowDao;
 	
 	@Autowired
 	public void setTemplateService(TemplateService templateService) {
@@ -70,6 +75,11 @@ public class WorkflowFormServiceImpl implements WorkflowFormService {
 	@Autowired
 	public void setDeployService(DeployService deployService) {
 		this.deployService = deployService;
+	}
+
+	@Autowired
+	public void setWorkflowDao(WorkflowDao workflowDao) {
+		this.workflowDao = workflowDao;
 	}
 
 	public String getRenderedTaskForm(String taskId, boolean readonly) {
@@ -307,7 +317,7 @@ public class WorkflowFormServiceImpl implements WorkflowFormService {
 		// 获取文件流
 		try {
 			InputStream file = new FileInputStream(drRealPath);
-			return new String(FileCopyUtils.copyToByteArray(file));
+			return FileCopyUtils.copyToString(new InputStreamReader(file,"UTF-8"));
 		} catch (IOException e) {
 			logger.warn(e.getMessage(), e);
 			throw new CoreException(e.getMessage(), e);

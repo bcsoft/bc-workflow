@@ -23,6 +23,9 @@
 		<action name="deleteDeployment" class="workflowAction" method="deleteDeployment" />
 		<action name="deploy" class="workflowAction" method="deploy" />
 		<action name="startFlow" class="workflowAction" method="startFlow" />
+		<action name="startSubProcess" class="workflowAction" method="startSubProcess" />
+		<action name="findMainProcessInstanceInfo" class="workflowAction" method="findMainProcessInstanceInfo" />
+		<action name="findSubProcessInstanceInfo" class="workflowAction" method="findSubProcessInstanceInfo" />
 		<action name="claimTask" class="workflowAction" method="claimTask" />
 		<action name="completeTask" class="workflowAction" method="completeTask" />
 		<action name="delegateTask" class="workflowAction" method="delegateTask" />
