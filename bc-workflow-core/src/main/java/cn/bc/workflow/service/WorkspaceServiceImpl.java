@@ -187,7 +187,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 		ws.put("doneInfo", buildWSDoneInfo(flowStatus, instance));
 
 		// 子流程信息
-		ws.put("subProcessInfo", new JSONArray(this.workflowService.findSubProcessInstanceInfoById(processInstanceId)).toString());
+		ws.put("subProcessInfo", this.workflowService.findSubProcessInstanceInfoById(processInstanceId));
 
 		// 返回综合后的信息
 		if (logger.isDebugEnabled()) {
