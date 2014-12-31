@@ -117,16 +117,18 @@ public class WorkflowDaoImpl implements WorkflowDao {
 	public List<Map<String, Object>> findSubProcessInstanceInfoById(String processInstanceId) {
 		Assert.notNull(processInstanceId);
 
-		String sql = "select ahd.text_,ahp.start_time_,ahp.end_time_,ahd.task_id_";
+		String sql ="with main(proc_inst_id_,task_id_) as (";// 查找主流程表，获得子流程流程实例Id与所在任务Id
+		sql += " select text_,task_id_";
+		sql += " from act_hi_detail";
+		sql += " where proc_inst_id_ = ?";
+		sql += " and name_ = 'subProcessInstanceId'";
+		sql += ")'";
+		sql += "select ahd.text_,ahp.start_time_,ahp.end_time_,m.task_id_";
 		sql += " from act_hi_detail ahd";
 		sql += " inner join act_hi_procinst ahp on ahp.proc_inst_id_ = ahd.proc_inst_id_";
-		sql += " where ahd.proc_inst_id_ in (";
-		sql += " 	select text_";
-		sql += " 	from act_hi_detail";
-		sql += " 	where proc_inst_id_ = ?";
-		sql += " 	and name_ = 'subProcessInstanceId'";
-		sql += ") and ahd.name_ = 'mainProcessAssignedActorNames'";
-		sql += "and ahd.text_ is not null";
+		sql += " inner join main m on m.proc_inst_id_ = ahd.proc_inst_id_";
+		sql += " and ahd.name_ = 'mainProcessAssignedActorNames'";
+		sql += " and ahd.text_ is not null";
 
 		if (logger.isDebugEnabled()) {
 			logger.debug("sql=" + sql);
