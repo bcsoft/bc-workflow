@@ -1,10 +1,7 @@
 package cn.bc.workflow.web.struts2;
 
 import java.io.InputStream;
-import java.util.Collection;
-import java.util.Date;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 
 import org.activiti.engine.repository.Deployment;
 import org.activiti.engine.task.Task;
@@ -12,6 +9,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.struts2.ServletActionContext;
 import org.commontemplate.util.Assert;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Controller;
@@ -154,26 +153,26 @@ public class WorkflowAction extends AbstractBaseAction {
 
 	/**
 	 * 发起流程
-	 * 
+	 *
 	 * @return
 	 * @throws Exception
 	 */
 	public String startFlow() throws Exception {
 		try {
 			String processInstanceId = "";
-			
+
 			if(null != key && key.length() > 0){
 				//启动流程
 				processInstanceId = this.workflowService.startFlowByKey(key);
-				
+
 			}else{
 				// id为流程实例id
 				Assert.assertNotEmpty(id);
 				//启动流程
 				processInstanceId = this.workflowService.startFlowByDefinitionId(id);
-				
+
 			}
-			
+
 			// 返回信息
 			Json json = createSuccessMsg("启动成功！");
 			json.put("processInstance", processInstanceId);// 流程实例id
@@ -182,7 +181,7 @@ public class WorkflowAction extends AbstractBaseAction {
 		} catch (Exception e) {
 			json = createFailureMsg(e).toString();
 		}
-		
+
 		return JSON;
 	}
 
@@ -239,7 +238,65 @@ public class WorkflowAction extends AbstractBaseAction {
 
 		return JSON;
 	}
-	
+
+	/**
+	 * 发起子流程
+	 * <p>必要变量：
+	 *     <ul><li><b>id</b> 当前任务的id</li>
+	 * 	   <li><b>key</b> 流程编码</li>
+	 *     <li><b>formData</b> 完成子流程第一个任务的表单内容</li></ul></p>
+	 * <p>发起成功后，将子流程实例Id设置为该任务的本地变量<b>subProcessInstanceId_lc</b></p>
+	 *
+	 * @return json {"subProcessInstanceId", 子流程实例Id}
+	 * @throws Exception
+	 */
+	public String startSubProcess() throws Exception {
+		// id为当前任务的id
+		Assert.assertNotEmpty(id);
+		// key为流程编码
+		Assert.assertNotEmpty(key);
+		// 子流程的表单数据
+		Assert.assertNotEmpty(formData);
+
+		try {
+			// 流程变量
+			Object[] variables = buildFormVariables();
+			Map<String, Object> globalVariables = (Map<String, Object>) variables[0];
+			Map<String, Object> localVariables = (Map<String, Object>) variables[1];
+
+			if (null == globalVariables.get("mainProcessInstanceId"))
+				throw new Exception("mainProcessInstanceId 全局变量不能为空，该变量要作为子流程的主流程Id");
+
+			// 发起流程，获得流程实例id
+			String processInstanceId = this.workflowService.startFlowByKey(key, globalVariables);
+
+			// 获得待办任务Id数组
+			String[] arrTaskIds = this.workflowService.findTaskIdByProcessInstanceId(processInstanceId);
+
+			if (arrTaskIds == null)
+				throw new Exception("待办任务为空！");
+			if (arrTaskIds.length > 1)
+				throw new Exception("待办任务不能有多个！");
+
+			// 完成任务
+			this.workflowService.completeTask(arrTaskIds[0], null, localVariables);
+
+			// 设置本地变量：在当前任务中，子流程的流程实例id
+			this.taskService.setVariableLocal(id, "subProcessInstanceId", processInstanceId);
+			this.taskService.setVariableLocal(id, "mainProcessAssignedActorNames", globalVariables.get("mainProcessAssignedActorNames"));
+			this.taskService.setVariableLocal(id, "mainProcessAssignedActorCodes", globalVariables.get("mainProcessAssignedActorCodes"));
+
+			// 返回信息
+			Json json = createSuccessMsg("子流程启动成功！");
+			json.put("subProcessInstanceId", processInstanceId);// 流程实例id
+			this.json = json.toString();
+		} catch (Exception e) {
+			this.json = createFailureMsg(e).toString();
+		}
+
+		return JSON;
+	}
+
 	public String globalKeys;//多个逗号链接
 	
 	public String findGlobalValues() throws Exception {	
@@ -357,6 +414,40 @@ public class WorkflowAction extends AbstractBaseAction {
 		} catch (Exception e) {
 			json = createFailureMsg(e).toString();
 		}
+
+		return JSON;
+	}
+
+	/**
+	 * 获得主流程经办信息
+	 *
+	 * @return
+	 */
+	public String findMainProcessInstanceInfo() {
+		// id为流程实例id
+		Assert.assertNotEmpty(id);
+
+		Map<String, Object> info = this.workflowService.findMainProcessInstanceInfoById(id);
+
+		JSONObject json = new JSONObject(info);
+		this.json = json.toString();
+
+		return JSON;
+	}
+
+	/**
+	 * 通过流程实例Id获得子流程经办信息
+	 *
+	 * @return
+	 */
+	public String findSubProcessInstanceInfo() {
+		// id为主流程实例id
+		Assert.assertNotEmpty(id);
+
+		List<Map<String, Object>> info = this.workflowService.findSubProcessInstanceInfoById(id);
+
+		JSONArray jsonArray = new JSONArray(info);
+		this.json = jsonArray.toString();
 
 		return JSON;
 	}

@@ -1,5 +1,6 @@
 package cn.bc.workflow.dao.hibernate.jpa;
 
+import java.util.List;
 import java.util.Map;
 
 import javax.sql.DataSource;
@@ -82,5 +83,51 @@ public class WorkflowDaoImpl implements WorkflowDao {
 		}
 		
 		return this.jdbcTemplate.queryForObject(sql, Object.class, args);
+	}
+
+	@Override
+	public Map<String, Object> findMainProcessInstanceInfoById(String processInstanceId) {
+		Assert.notNull(processInstanceId);
+		String sql = "SELECT ahp.start_time_,ahp.end_time_,wlog.ename";
+		sql += " ,(";
+		sql += " 	select ahd.text_ ";
+		sql += " 	from act_hi_detail ahd";
+		sql += " 	where ahd.proc_inst_id_ = ahp.proc_inst_id_";
+		sql += " 	and ahd.name_ = 'subject'";
+		sql += " 	order by ahd.time_ asc limit 1";
+		sql += " ) as text_";
+		sql += " FROM act_hi_procinst ahp";
+		sql += " inner join bc_wf_excution_log wlog on wlog.pid = ahp.proc_inst_id_";
+		sql += " where ahp.proc_inst_id_ = (";
+		sql += " 	SELECT text_";
+		sql += " 		from act_hi_detail d";
+		sql += " 		where d.name_= 'mainProcessInstanceId'";// 主流程变量名
+		sql += " 		and d.proc_inst_id_ = ?";
+		sql += " )";
+		sql += " and wlog.type_ = 'process_start'";// 实例发起Code
+
+		if (logger.isDebugEnabled()) {
+			logger.debug("sql=" + sql);
+			logger.debug("processInstanceId="+processInstanceId);
+		}
+
+		return this.jdbcTemplate.queryForMap(sql, processInstanceId);
+	}
+
+	public List<Map<String, Object>> findSubProcessInstanceInfoById(String processInstanceId) {
+		Assert.notNull(processInstanceId);
+
+		String sql = "select ahd.text_,ahp.start_time_,ahp.end_time_,ahd.task_id_";
+		sql += " from act_hi_detail ahd";
+		sql += " inner join act_hi_procinst ahp on ahp.proc_inst_id_ = ahd.proc_inst_id_";
+		sql += " where ahd.proc_inst_id_ = ?";
+		sql += " and ahd.name_ = 'mainProcessAssignedActorNames'";
+
+		if (logger.isDebugEnabled()) {
+			logger.debug("sql=" + sql);
+			logger.debug("processInstanceId="+processInstanceId);
+		}
+
+		return this.jdbcTemplate.queryForList(sql, processInstanceId);
 	}
 }

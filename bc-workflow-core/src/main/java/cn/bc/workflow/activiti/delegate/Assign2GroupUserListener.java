@@ -52,6 +52,11 @@ public class Assign2GroupUserListener implements TaskListener {
 	private Expression groupName;
 
 	/**
+	 * 岗位名称是否为变量
+	 */
+	private Expression isGroupNameValue;
+
+	/**
 	 * 如果orgVariableName变量没有设置，是否使用initiator流程变量指定的人
 	 */
 	private Expression null2initiator;
@@ -70,6 +75,8 @@ public class Assign2GroupUserListener implements TaskListener {
 							.getExpressionText() : null));
 			logger.debug("groupName="
 					+ (groupName != null ? groupName.getExpressionText() : null));
+			logger.debug("isGroupNameValue="
+					+ (isGroupNameValue != null ? isGroupNameValue.getExpressionText() : null));
 			logger.debug("taskDefinitionKey="
 					+ delegateTask.getTaskDefinitionKey());
 			logger.debug("taskId=" + delegateTask.getId());
@@ -87,6 +94,12 @@ public class Assign2GroupUserListener implements TaskListener {
 						+ groupCode.getExpressionText() + "”的岗位");
 			}
 		} else {// 按岗位名称获取岗位
+			// 获得岗位名称
+			String gName = !(this.isGroupNameValue != null
+					&& "true".equals(this.isGroupNameValue.getExpressionText()))
+					? groupName.getExpressionText()// “groupName”是岗位名称的字符串
+					: (String) delegateTask.getVariable(groupName.getExpressionText());// “groupName”是变量
+
 			Long orgId = orgVariableName != null ? (Long) delegateTask
 					.getVariable(orgVariableName.getExpressionText()) : null;
 			if (orgId == null) {// 处理手动发起流程的情况
@@ -113,14 +126,14 @@ public class Assign2GroupUserListener implements TaskListener {
 								+ (groupName != null ? groupName
 										.getExpressionText() : null));
 					groups = actorService.findByName(
-							groupName.getExpressionText(),
-							new Integer[] { Actor.TYPE_GROUP },
-							new Integer[] { BCConstants.STATUS_ENABLED });
+							gName,
+							new Integer[]{Actor.TYPE_GROUP},
+							new Integer[]{BCConstants.STATUS_ENABLED });
 				}
 			} else {
 				// 查找指定单位下指定名称的岗位
 				groups = actorService.findFollowerWithName(orgId,
-						groupName.getExpressionText(),
+						gName,
 						new Integer[] { ActorRelation.TYPE_BELONG },
 						new Integer[] { Actor.TYPE_GROUP },
 						new Integer[] { BCConstants.STATUS_ENABLED });
@@ -130,10 +143,10 @@ public class Assign2GroupUserListener implements TaskListener {
 			}
 			if (groups.isEmpty()) {
 				throw new CoreException("id=" + orgId + "的单位没有配置名称为“"
-						+ groupName.getExpressionText() + "”的岗位");
+						+ gName + "”的岗位");
 			} else if (groups.size() > 1) {
 				throw new CoreException("id=" + orgId + "的单位下有多个名称为“"
-						+ groupName.getExpressionText() + "”的岗位");
+						+ gName + "”的岗位");
 			}
 			group = groups.get(0);
 			if (logger.isDebugEnabled()) {
