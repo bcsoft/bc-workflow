@@ -88,12 +88,6 @@ public class WorkflowFormServiceImpl implements WorkflowFormService {
 		return getRenderedTaskForm(taskId, addParams);
 	}
 
-	@Override
-	public List<Map<String, Object>> findSubProcessInstanceInfoById(String processInstanceId) {
-
-		return this.workflowDao.findSubProcessInstanceInfoById(processInstanceId);
-	}
-
 	public String getRenderedTaskForm(String taskId,
 			Map<String, Object> addParams) {
 		// 获取任务信息

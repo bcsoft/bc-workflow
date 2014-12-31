@@ -31,12 +31,4 @@ public interface WorkflowFormService {
 	 * @return
 	 */
 	String getRenderedTaskForm(String taskId, boolean readonly);
-
-	/**
-	 * 通过流程实例Id，查找子流程经办信息
-	 *
-	 * @param processInstanceId 流程实例Id
-	 * @return
-	 */
-	List<Map<String, Object>> findSubProcessInstanceInfoById(String processInstanceId);
 }
