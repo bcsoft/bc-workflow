@@ -255,29 +255,36 @@ public class WorkflowAction extends AbstractBaseAction {
 		Assert.assertNotEmpty(id);
 		// key为流程编码
 		Assert.assertNotEmpty(key);
+		// 子流程的表单数据
+		Assert.assertNotEmpty(formData);
 
 		try {
+			// 流程变量
+			Object[] variables = buildFormVariables();
+			Map<String, Object> globalVariables = (Map<String, Object>) variables[0];
+			Map<String, Object> localVariables = (Map<String, Object>) variables[1];
+
+			if (null == globalVariables.get("mainProcessInstanceId"))
+				throw new Exception("mainProcessInstanceId 全局变量不能为空，该变量要作为子流程的主流程Id");
+
 			// 发起流程，获得流程实例id
-			String processInstanceId = (null != key && key.length() > 0)
-                    ? this.workflowService.startFlowByKey(key)
-                    : this.workflowService.startFlowByDefinitionId(id);
+			String processInstanceId = this.workflowService.startFlowByKey(key, globalVariables);
 
 			// 获得待办任务Id数组
 			String[] arrTaskIds = this.workflowService.findTaskIdByProcessInstanceId(processInstanceId);
 
+			if (arrTaskIds == null)
+				throw new Exception("待办任务为空！");
+			if (arrTaskIds.length > 1)
+				throw new Exception("待办任务不能有多个！");
+
 			// 完成任务
-			if (arrTaskIds.length == 1) {// 1个待办任务
-                Object[] variables = buildFormVariables();
-                this.workflowService.completeTask(arrTaskIds[0],
-                        (Map<String, Object>) variables[0],
-                        (Map<String, Object>) variables[1]);
-
-            } else {// TODO 待办任务有多个，
-
-            }
+			this.workflowService.completeTask(arrTaskIds[0], null, localVariables);
 
 			// 设置本地变量：在当前任务中，子流程的流程实例id
-			this.taskService.setVariableLocal(id, "subProcessInstanceId_lc", processInstanceId);
+			this.taskService.setVariableLocal(id, "subProcessInstanceId", processInstanceId);
+			this.taskService.setVariableLocal(id, "mainProcessAssignedActorNames", globalVariables.get("mainProcessAssignedActorNames"));
+			this.taskService.setVariableLocal(id, "mainProcessAssignedActorCodes", globalVariables.get("mainProcessAssignedActorCodes"));
 
 			// 返回信息
 			Json json = createSuccessMsg("子流程启动成功！");
@@ -429,15 +436,15 @@ public class WorkflowAction extends AbstractBaseAction {
 	}
 
 	/**
-	 * 获得子流程经办信息
+	 * 通过流程实例Id获得子流程经办信息
 	 *
 	 * @return
 	 */
 	public String findSubProcessInstanceInfo() {
-		// id为子流程实例id
+		// id为主流程实例id
 		Assert.assertNotEmpty(id);
 
-		List<Map<String, Object>> info = this.workflowService.findProcessInstanceInfoById(id);
+		List<Map<String, Object>> info = this.workflowService.findSubProcessInstanceInfoById(id);
 
 		JSONArray jsonArray = new JSONArray(info);
 		this.json = jsonArray.toString();
