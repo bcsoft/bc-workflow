@@ -57,6 +57,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 	private FlowAttachService flowAttachService;
 	private ExcutionLogService excutionLogService;
 	private WorkflowFormService workflowFormService;
+	private WorkflowService workflowService;
 	private ActorService actorService;
 
 	public static final int COMPLETE = 3; //已结束
@@ -65,6 +66,11 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 	public void setActorService(
 			@Qualifier(value = "actorService") ActorService actorService) {
 		this.actorService = actorService;
+	}
+
+	@Autowired
+	public void setWorkflowService(WorkflowService workflowService) {
+		this.workflowService = workflowService;
 	}
 
 	@Autowired
@@ -181,7 +187,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 		ws.put("doneInfo", buildWSDoneInfo(flowStatus, instance));
 
 		// 子流程信息
-		ws.put("subProcessInfo", new JSONArray(this.workflowFormService.findSubProcessInstanceInfoById(processInstanceId)).toString());
+		ws.put("subProcessInfo", new JSONArray(this.workflowService.findSubProcessInstanceInfoById(processInstanceId)).toString());
 
 		// 返回综合后的信息
 		if (logger.isDebugEnabled()) {

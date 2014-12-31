@@ -1092,7 +1092,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 		return this.workflowDao.findMainProcessInstanceInfoById(processInstanceId);
 	}
 
-	public List<Map<String, Object>> findProcessInstanceInfoById(String processInstanceId) {
-		return this.workflowDao.findProcessInstanceInfoById(processInstanceId);
+	public List<Map<String, Object>> findSubProcessInstanceInfoById(String processInstanceId) {
+		return this.workflowDao.findSubProcessInstanceInfoById(processInstanceId);
 	}
 }

@@ -310,5 +310,5 @@ public interface WorkflowService {
 	 * @param processInstanceId 流程实例Id
 	 * @return
 	 */
-	List<Map<String, Object>> findProcessInstanceInfoById(String processInstanceId);
+	List<Map<String, Object>> findSubProcessInstanceInfoById(String processInstanceId);
 }
