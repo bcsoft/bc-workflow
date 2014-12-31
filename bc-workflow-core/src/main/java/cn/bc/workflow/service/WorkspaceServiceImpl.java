@@ -23,6 +23,7 @@ import org.activiti.engine.task.IdentityLink;
 import org.activiti.engine.task.Task;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.json.JSONArray;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.util.Assert;
@@ -175,7 +176,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 		ws.put("doneInfo", buildWSDoneInfo(flowStatus, instance));
 
 		// 子流程信息
-		ws.put("subProcessInfo", this.workflowService.findSubProcessInstanceInfoById(processInstanceId));
+		ws.put("subProcessInfo", new JSONArray(this.workflowService.findSubProcessInstanceInfoById(processInstanceId)).toString());
 
 		// 返回综合后的信息
 		if (logger.isDebugEnabled()) {
