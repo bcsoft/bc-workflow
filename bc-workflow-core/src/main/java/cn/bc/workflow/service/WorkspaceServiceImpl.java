@@ -3,19 +3,15 @@
  */
 package cn.bc.workflow.service;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
-import cn.bc.web.ui.json.JsonArray;
-import org.activiti.engine.FormService;
-import org.activiti.engine.HistoryService;
-import org.activiti.engine.RepositoryService;
-import org.activiti.engine.RuntimeService;
-import org.activiti.engine.TaskService;
+import cn.bc.core.exception.CoreException;
+import cn.bc.core.util.DateUtils;
+import cn.bc.core.util.StringUtils;
+import cn.bc.identity.service.ActorService;
+import cn.bc.identity.web.SystemContext;
+import cn.bc.identity.web.SystemContextHolder;
+import cn.bc.workflow.flowattach.domain.FlowAttach;
+import cn.bc.workflow.flowattach.service.FlowAttachService;
+import org.activiti.engine.*;
 import org.activiti.engine.history.HistoricDetail;
 import org.activiti.engine.history.HistoricProcessInstance;
 import org.activiti.engine.history.HistoricTaskInstance;
@@ -27,19 +23,11 @@ import org.activiti.engine.task.IdentityLink;
 import org.activiti.engine.task.Task;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.json.JSONArray;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.util.Assert;
 
-import cn.bc.core.exception.CoreException;
-import cn.bc.core.util.DateUtils;
-import cn.bc.core.util.StringUtils;
-import cn.bc.identity.service.ActorService;
-import cn.bc.identity.web.SystemContext;
-import cn.bc.identity.web.SystemContextHolder;
-import cn.bc.workflow.flowattach.domain.FlowAttach;
-import cn.bc.workflow.flowattach.service.FlowAttachService;
+import java.util.*;
 
 /**
  * 工作流Service的实现
