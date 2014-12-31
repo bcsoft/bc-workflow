@@ -101,7 +101,7 @@ public class WorkflowDaoImpl implements WorkflowDao {
 		sql += " where ahp.proc_inst_id_ = (";
 		sql += " 	SELECT text_";
 		sql += " 		from act_hi_detail d";
-		sql += " 		where d.name_= 'main_processInstanceId'";// 主流程变量名
+		sql += " 		where d.name_= 'mainProcessInstanceId'";// 主流程变量名
 		sql += " 		and d.proc_inst_id_ = ?";
 		sql += " )";
 		sql += " and wlog.type_ = 'process_start'";// 实例发起Code
@@ -117,46 +117,11 @@ public class WorkflowDaoImpl implements WorkflowDao {
 	public List<Map<String, Object>> findSubProcessInstanceInfoById(String processInstanceId) {
 		Assert.notNull(processInstanceId);
 
-		String sql = "select ahp.start_time_,ahp.end_time_,aht.name_,aht.assignee_,a.name,t.task_id_";
-		sql += " from (";
-		sql += " 	select task_id_ ,text_";
-		sql += " 	FROM act_hi_detail";
-		sql += " 	where proc_inst_id_ = ? and name_ = 'subProcessInstanceId_lc'";
-		sql += " 	group by task_id_, text_";
-		sql += " )t";
-		sql += " inner join act_hi_procinst ahp on ahp.proc_inst_id_ = t.text_";
-		sql += " inner join act_hi_taskinst aht on aht.proc_inst_id_ = t.text_";
-		sql += " inner join bc_identity_actor a on a.code = aht.assignee_";
-		sql += " where aht.task_def_key_ = (";
-		sql += " 	select task_def_key_ ";
-		sql += " 	from act_hi_taskinst where proc_inst_id_ = t.text_";
-		sql += " 	order by start_time_ asc limit 1";
-		sql += " )";
-
-		if (logger.isDebugEnabled()) {
-			logger.debug("sql=" + sql);
-			logger.debug("processInstanceId="+processInstanceId);
-		}
-
-		return this.jdbcTemplate.queryForList(sql, processInstanceId);
-	}
-
-	public List<Map<String, Object>> findProcessInstanceInfoById(String processInstanceId) {
-		Assert.notNull(processInstanceId);
-
-		String sql = "SELECT ahp.start_time_,ahp.end_time_,aha.act_name_,aha.assignee_,a.name";
-		sql += " FROM act_hi_procinst ahp";
-		sql += " inner join act_hi_actinst aha on aha.proc_inst_id_ = ahp.proc_inst_id_";
-		sql += " inner join bc_identity_actor a on a.code = aha.assignee_";
-		sql += " where ahp.proc_inst_id_ = ?";
-		sql += " and aha.act_type_ = 'userTask'";
-		sql += " and aha.act_id_ = (";
-		sql += " 	SELECT act_id_   ";
-		sql += " 	FROM act_hi_actinst";
-		sql += " 	where proc_inst_id_ = ahp.proc_inst_id_ and act_type_ = 'userTask'";
-		sql += " 	group by act_id_, start_time_ ";
-		sql += " 	order by start_time_ asc offset 1 limit 1";
-		sql += " )order by aha.start_time_ asc";
+		String sql = "select ahd.text_,ahp.start_time_,ahp.end_time_,ahd.task_id_";
+		sql += " from act_hi_detail ahd";
+		sql += " inner join act_hi_procinst ahp on ahp.proc_inst_id_ = ahd.proc_inst_id_";
+		sql += " where ahd.proc_inst_id_ = ?";
+		sql += " and ahd.name_ = 'mainProcessAssignedActorNames'";
 
 		if (logger.isDebugEnabled()) {
 			logger.debug("sql=" + sql);
