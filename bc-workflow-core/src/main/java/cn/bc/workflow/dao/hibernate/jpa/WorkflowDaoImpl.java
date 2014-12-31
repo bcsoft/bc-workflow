@@ -123,12 +123,15 @@ public class WorkflowDaoImpl implements WorkflowDao {
 		sql += " where proc_inst_id_ = ?";
 		sql += " and name_ = 'subProcessInstanceId'";
 		sql += ")";
-		sql += "select ahd.text_,ahp.start_time_,ahp.end_time_,m.task_id_";
-		sql += " from act_hi_detail ahd";
-		sql += " inner join act_hi_procinst ahp on ahp.proc_inst_id_ = ahd.proc_inst_id_";
-		sql += " inner join main m on m.proc_inst_id_ = ahd.proc_inst_id_";
-		sql += " and ahd.name_ = 'mainProcessAssignedActorNames'";
-		sql += " and ahd.text_ is not null";
+		sql += "select ahp.start_time_,ahp.end_time_,m.task_id_";
+		sql += " ,(";// 通过子流程实例获取办理人
+		sql += "  select text_ ";
+		sql += " 	from act_hi_detail ahd";
+		sql += " 	inner join main m on m.proc_inst_id_ = ahd.proc_inst_id_";
+		sql += " 	where name_= 'mainProcessAssignedActorNames'";
+		sql += " )";
+		sql += " from act_hi_procinst ahp";
+		sql += " inner join main m on m.proc_inst_id_ = ahp.proc_inst_id_";
 
 		if (logger.isDebugEnabled()) {
 			logger.debug("sql=" + sql);
