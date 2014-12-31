@@ -79,14 +79,15 @@ public class IsAssigneeHaveAnyGroupListener implements TaskListener {
             logger.debug("eventName=" + delegateTask.getEventName());
         }
 
-        Object customKey = delegateTask.getVariable(this.customHaveGroupKey
+        Object customKeyValue = delegateTask.getVariable(this.customHaveGroupKey
                 .getExpressionText());
 
         //默认配置或判断的customHaveGroupKey已为ture时不再进行判断
-        if (customKey != null
-                && (exist == null || exist.getExpressionText().equals("false") || (Boolean) customKey)) {
+        // origin: if (customKeyValue != null && (exist == null || exist.getExpressionText().equals("false") || (Boolean)customKeyValue)) {
+        if ((exist == null || exist.getExpressionText().equals("false")) && customKeyValue != null) {
             return;
         }
+
 
         // 任务还没有办理人 不进操作
         if (delegateTask.getAssignee() == null)
