@@ -34,13 +34,15 @@ import java.util.*;
 @Service
 public class WorkspaceServiceImpl implements WorkspaceService {
 	private static final Logger logger = LoggerFactory.getLogger(WorkspaceServiceImpl.class);
-	private WorkflowService workflowService;
 
 	@Autowired
 	private JdbcTemplate jdbcTemplate;
 
 	@Autowired
 	private WorkflowFormService workflowFormService;
+
+	@Autowired
+	private WorkflowService workflowService;
 
 	@Override
 	public Map<String, Object> getProcessInstanceDetail(String processInstanceId) {
