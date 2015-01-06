@@ -4,6 +4,7 @@
 package cn.bc.workflow.service;
 
 import java.io.InputStream;
+import java.util.List;
 import java.util.Map;
 
 import org.activiti.engine.repository.Deployment;
@@ -286,4 +287,28 @@ public interface WorkflowService {
 	 * @return
 	 */
 	Object findLocalValue(String pid,String taskKey,String localValueKey);
+
+	/**
+	 * 查找流程实例中的待办任务
+	 *
+	 * @param processInstanceId 流程实例ID
+	 * @return 待办任务ID数组
+	 */
+	String[] findTaskIdByProcessInstanceId(String processInstanceId);
+
+	/**
+	 * 通过流程实例Id，查找主流程经办信息
+	 *
+	 * @param processInstanceId 流程实例Id
+	 * @return
+	 */
+	Map<String, Object> findMainProcessInstanceInfoById(String processInstanceId);
+
+	/**
+	 * 通过流程实例Id，查找流程经办信息
+	 *
+	 * @param processInstanceId 流程实例Id
+	 * @return
+	 */
+	List<Map<String, Object>> findSubProcessInstanceInfoById(String processInstanceId);
 }

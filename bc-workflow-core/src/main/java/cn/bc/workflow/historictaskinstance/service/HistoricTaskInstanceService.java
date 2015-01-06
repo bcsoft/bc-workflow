@@ -4,6 +4,7 @@
 package cn.bc.workflow.historictaskinstance.service;
 
 import java.util.List;
+import java.util.Map;
 
 
 /**
@@ -57,4 +58,47 @@ public interface HistoricTaskInstanceService {
 		@return 返回流程id
 	 */
 	String doStartFlow(String key,String data) throws Exception;
+
+	/**
+	 * 查找经办人
+	 * 
+	 * @param processInstanceId
+	 *            流程实例id
+	 * @return 返回流程经办人列表
+	 */
+	List<String> findTransactors(String processInstanceId);
+
+	/**
+	 * 在欲包含的任务Key中查找经办人
+	 * 
+	 * @param processInstanceId
+	 *            流程实例id
+	 * @param includeTaskKeys
+	 *            欲包含的TaskKey
+	 * @return 返回流程经办人列表
+	 */
+	List<String> findTransactorsByIncludeTaskKeys(String processInstanceId,
+			String[] includeTaskKeys);
+
+	/**
+	 * 在欲排除的任务Key中查找经办人
+	 * 
+	 * @param processInstanceId
+	 *            流程实例id
+	 * @param exclusiveTaskKeys
+	 *            欲排除的TaskKey
+	 * @return 返回流程经办人列表
+	 */
+	List<String> findTransactorsByExclusiveTaskKeys(String processInstanceId,
+			String[] exclusiveTaskKeys);
+
+	/**
+	 * 查找历史流程任务变量值，变量为本地变量
+	 *
+	 * @param processInstanceId 流程实例Id
+	 * @param taskKey 任务key
+	 * @param varName 变量名
+	 * @return
+	 */
+	List<Map<String, Object>> findHisProcessTaskVarValue(String processInstanceId, String[] taskKey, String[] varName);
 }

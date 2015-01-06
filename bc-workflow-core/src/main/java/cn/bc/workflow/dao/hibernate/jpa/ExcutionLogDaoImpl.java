@@ -172,15 +172,19 @@ public class ExcutionLogDaoImpl extends HibernateCrudJpaDao<ExcutionLog>
 		if(logger.isInfoEnabled()) logger.info("findTaskVariables ProcessDefinition {}", DateUtils.getWasteTime(start));
 
 		// 全局流程变量
-		List<HistoricDetail> detail = getHistoryService()
+			List<HistoricDetail> detail = getHistoryService()
 				.createHistoricDetailQuery().processInstanceId(pi.getId())
 				.variableUpdates().orderByTime().asc().list();
 		HistoricVariableUpdate v;
+		Map<String, Object> globalParams = new LinkedHashMap<String, Object>();
 		for (HistoricDetail d : detail) {
 			v = (HistoricVariableUpdate) d;
-			if(v.getTaskId()  == null)
-			params.put(v.getVariableName(), v.getValue());
+			if(v.getTaskId()  == null) {
+				params.put(v.getVariableName(), v.getValue());
+				globalParams.put(v.getVariableName(), v.getValue());
+			}
 		}
+		params.put("global", globalParams);// 使用特殊的key记录全局流程变量
 		logger.info("global.size={}", detail.size());
 		if(logger.isInfoEnabled()) logger.info("findTaskVariables 全局HistoricDetail {}", DateUtils.getWasteTime(start));
 

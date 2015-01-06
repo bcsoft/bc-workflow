@@ -1057,4 +1057,31 @@ public class WorkflowServiceImpl implements WorkflowService {
 		return this.workflowDao.findLocalValue(pid, taskKey, localValueKey);
 	}
 
+	public String[] findTaskIdByProcessInstanceId(String processInstanceId) {
+		// 获得待办任务列表
+		List<Task> listTask = this.taskService.createTaskQuery()
+				.processInstanceId(processInstanceId)
+				.orderByTaskCreateTime().asc().list();
+
+		if (listTask.isEmpty())
+			return null;
+
+		String[] arrTaskIds = new String[listTask.size()];
+		int i = 0;
+		for (Task task : listTask) {
+			arrTaskIds[i] = task.getId();
+			i++;
+		}
+
+		return arrTaskIds;
+	}
+
+	@Override
+	public Map<String, Object> findMainProcessInstanceInfoById(String processInstanceId) {
+		return this.workflowDao.findMainProcessInstanceInfoById(processInstanceId);
+	}
+
+	public List<Map<String, Object>> findSubProcessInstanceInfoById(String processInstanceId) {
+		return this.workflowDao.findSubProcessInstanceInfoById(processInstanceId);
+	}
 }

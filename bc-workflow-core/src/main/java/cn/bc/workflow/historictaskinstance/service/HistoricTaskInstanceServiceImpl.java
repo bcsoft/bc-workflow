@@ -61,6 +61,27 @@ public class HistoricTaskInstanceServiceImpl implements HistoricTaskInstanceServ
 		return this.workflowService.startFlowByKey(key, variables);
 
 	}
-	
-	
+
+	public List<String> findTransactors(String processInstanceId) {
+		return this.historicTaskInstanceDao.findTransactors(processInstanceId,
+				null, null);
+	}
+
+	public List<String> findTransactorsByIncludeTaskKeys(
+			String processInstanceId, String[] includeTaskKeys) {
+		return this.historicTaskInstanceDao.findTransactors(processInstanceId,
+				includeTaskKeys, null);
+	}
+
+	public List<String> findTransactorsByExclusiveTaskKeys(
+			String processInstanceId, String[] exclusiveTaskKeys) {
+		return this.historicTaskInstanceDao.findTransactors(processInstanceId,
+				null, exclusiveTaskKeys);
+	}
+
+	@Override
+	public List<Map<String, Object>> findHisProcessTaskVarValue(String processInstanceId, String[] taskKey, String[] varName) {
+		return this.historicTaskInstanceDao.findHisProcessTaskVarValue(processInstanceId, taskKey, varName);
+	}
+
 }

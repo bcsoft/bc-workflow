@@ -34,6 +34,7 @@ import java.util.*;
 @Service
 public class WorkspaceServiceImpl implements WorkspaceService {
 	private static final Logger logger = LoggerFactory.getLogger(WorkspaceServiceImpl.class);
+	private WorkflowService workflowService;
 
 	@Autowired
 	private JdbcTemplate jdbcTemplate;
@@ -329,6 +330,9 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 		ws.put("doneInfo", buildWSDoneInfo(instance));
 		if (logger.isInfoEnabled()) logger.info("经办信息耗时 {}", DateUtils.getWasteTime(start));
 
+		// 子流程信息
+		ws.put("subProcessInfo", new org.json.JSONArray(this.workflowService.findSubProcessInstanceInfoById(processInstanceId)).toString());
+
 		// 返回综合后的信息
 		if (logger.isInfoEnabled()) logger.info("总耗时 {}", DateUtils.getWasteTime(start));
 		return ws;
@@ -390,7 +394,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 
 		// 构建表单条目 TODO
 
-		// 构建意见附件条目 TODO
+		// 构建意见附件条目
 		List<Map<String, Object>> attachItems = buildFlowAttachsInfo((Object[]) instance.get("attachs"), flowStatus);
 		if (attachItems != null) items.addAll(attachItems);
 

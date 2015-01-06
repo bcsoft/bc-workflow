@@ -1,5 +1,6 @@
 package cn.bc.workflow.dao.hibernate.jpa;
 
+import java.util.List;
 import java.util.Map;
 
 import javax.sql.DataSource;
@@ -82,5 +83,61 @@ public class WorkflowDaoImpl implements WorkflowDao {
 		}
 		
 		return this.jdbcTemplate.queryForObject(sql, Object.class, args);
+	}
+
+	@Override
+	public Map<String, Object> findMainProcessInstanceInfoById(String processInstanceId) {
+		Assert.notNull(processInstanceId);
+		String sql = "SELECT ahp.start_time_,ahp.end_time_,wlog.ename";
+		sql += " ,(";
+		sql += " 	select ahd.text_ ";
+		sql += " 	from act_hi_detail ahd";
+		sql += " 	where ahd.proc_inst_id_ = ahp.proc_inst_id_";
+		sql += " 	and ahd.name_ = 'subject'";
+		sql += " 	order by ahd.time_ asc limit 1";
+		sql += " ) as text_";
+		sql += " FROM act_hi_procinst ahp";
+		sql += " inner join bc_wf_excution_log wlog on wlog.pid = ahp.proc_inst_id_";
+		sql += " where ahp.proc_inst_id_ = (";
+		sql += " 	SELECT text_";
+		sql += " 		from act_hi_detail d";
+		sql += " 		where d.name_= 'mainProcessInstanceId'";// 主流程变量名
+		sql += " 		and d.proc_inst_id_ = ?";
+		sql += " )";
+		sql += " and wlog.type_ = 'process_start'";// 实例发起Code
+
+		if (logger.isDebugEnabled()) {
+			logger.debug("sql=" + sql);
+			logger.debug("processInstanceId="+processInstanceId);
+		}
+
+		return this.jdbcTemplate.queryForMap(sql, processInstanceId);
+	}
+
+	public List<Map<String, Object>> findSubProcessInstanceInfoById(String processInstanceId) {
+		Assert.notNull(processInstanceId);
+
+		String sql = "with main(proc_inst_id_,task_id_) as (";// 查找主流程表，获得子流程流程实例Id与所在任务Id
+		sql += " select text_,task_id_";
+		sql += " from act_hi_detail";
+		sql += " where proc_inst_id_ = ?";
+		sql += " and name_ = 'subProcessInstanceId'";
+		sql += ")";
+		sql += "select p.start_time_,p.end_time_,m.task_id_";
+		sql += " ,(";// 通过子流程实例获取办理人
+		sql += "  select d.text_ ";
+		sql += " 	from act_hi_detail d";
+		sql += " 	where d.proc_inst_id_ = p.proc_inst_id_ ";
+		sql += " 	and d.name_= 'mainProcessAssignedActorNames'";
+		sql += " )";
+		sql += " from act_hi_procinst p";
+		sql += " inner join main m on m.proc_inst_id_ = p.proc_inst_id_";
+
+		if (logger.isDebugEnabled()) {
+			logger.debug("sql=" + sql);
+			logger.debug("processInstanceId="+processInstanceId);
+		}
+
+		return this.jdbcTemplate.queryForList(sql, processInstanceId);
 	}
 }

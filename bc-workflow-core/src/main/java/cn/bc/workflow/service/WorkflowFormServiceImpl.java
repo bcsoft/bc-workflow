@@ -285,7 +285,7 @@ public class WorkflowFormServiceImpl implements WorkflowFormService {
 		// 获取文件流
 		try {
 			InputStream file = new FileInputStream(drRealPath);
-			return new String(FileCopyUtils.copyToByteArray(file));
+			return FileCopyUtils.copyToString(new InputStreamReader(file,"UTF-8"));
 		} catch (IOException e) {
 			logger.warn(e.getMessage(), e);
 			throw new CoreException(e.getMessage(), e);

@@ -10,6 +10,7 @@ import cn.bc.core.query.condition.impl.QlCondition;
 import cn.bc.db.jdbc.RowMapper;
 import cn.bc.db.jdbc.SqlObject;
 import cn.bc.identity.web.SystemContext;
+import cn.bc.web.formater.AbstractFormater;
 import cn.bc.web.formater.CalendarFormater;
 import cn.bc.web.struts2.AbstractSelectPageAction;
 import cn.bc.web.ui.html.grid.Column;
@@ -81,7 +82,7 @@ public class SelectProcessAction extends AbstractSelectPageAction<Map<String, Ob
 		SqlObject<Map<String, Object>> sqlObject = new SqlObject<Map<String, Object>>();
 		// 构建查询语句,where和order by不要包含在sql中(要统一放到condition中)
 		StringBuffer sql = new StringBuffer();
-		sql.append("select distinct a.id_,a.name_,e.version_,c.deploy_time_,a.key_");
+		sql.append("select distinct a.id_,a.name_,e.version_,c.deploy_time_,a.key_,e.desc_");
 		sql.append(" from act_re_procdef a");
 		sql.append(" inner join act_re_deployment c on c.id_=a.deployment_id_");
 		sql.append(" INNER join bc_wf_deploy e on e.deployment_id=c.id_");
@@ -102,6 +103,7 @@ public class SelectProcessAction extends AbstractSelectPageAction<Map<String, Ob
 				map.put("version", rs[i++]);
 				map.put("deploy_time", rs[i++]);
 				map.put("key", rs[i++]);
+				map.put("desc", rs[i++]);
 				return map;
 			}
 		});
@@ -114,6 +116,20 @@ public class SelectProcessAction extends AbstractSelectPageAction<Map<String, Ob
 		columns.add(new IdColumn4MapKey("a.id_", "id"));
 		columns.add(new TextColumn4MapKey("a.name_", "name",
 				getText("flow.name")).setSortable(true)
+				.setValueFormater(new AbstractFormater<String>() {
+					@Override
+					public String format(Object context, Object value) {
+						return (String)value;
+					}
+
+					@Override
+					public String getExportText(Object context, Object value) {
+						Map<String, String> map = (Map<String, String>)context;
+						String desc = map.get("desc");
+
+						return super.getExportText(context, (desc!=null && !"".equals(desc)) ? desc : value);
+					}
+				})
 				.setUseTitleFromLabel(true));
 		columns.add(new TextColumn4MapKey("a.version_", "version",
 				getText("flow.version"), 40).setUseTitleFromLabel(true));
