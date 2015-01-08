@@ -122,6 +122,7 @@ public class WorkflowFormServiceImpl implements WorkflowFormService {
 		Map<String, Object> local_variables = (Map<String, Object>) task.get("variables");
 		params.putAll(global_variables);// 先放全局变量
 		params.putAll(local_variables);// 再放本地变量(本地变量优先使用)
+		params.put("global", global_variables);// 使用特殊key记录全局变量
 		if(logger.isInfoEnabled()) logger.info("findTaskVariables waste {}", DateUtils.getWasteTime(start));
 
 		// 添加额外的格式化参数
