@@ -94,7 +94,7 @@ public class WorkflowFormServiceImpl implements WorkflowFormService {
 		params.put("ti_startTime", task.get("start_time"));
 		params.put("ti_endTime", task.get("end_time"));
 		params.put("ti_description", task.get("description"));
-		params.put("ti_assignee", ((Map<String, Object>) task.get("actor")).get("name"));
+		params.put("ti_assignee", ((Map<String, Object>) task.get("actor")).get("code"));
 		params.put("ti_owner", task.get("owner"));// TODO
 		params.put("ti_name", task.get("name"));
 		params.put("ti_priority", task.get("priority"));
@@ -104,7 +104,7 @@ public class WorkflowFormServiceImpl implements WorkflowFormService {
 		Map<String, Object> definition = (Map<String, Object>) process_instance.get("definition");
 		params.put("pi_businessKey", definition.get("key"));
 		params.put("pi_definitionId", definition.get("id"));
-		params.put("pi_startUserId", ((Map<String, Object>) process_instance.get("start_user")).get("name"));
+		params.put("pi_startUserId", ((Map<String, Object>) process_instance.get("start_user")).get("code"));
 		params.put("pi_deleteReason", process_instance.get("delete_reason"));
 		// ==== 流程定义的参数
 		params.put("pd_id", definition.get("id"));
