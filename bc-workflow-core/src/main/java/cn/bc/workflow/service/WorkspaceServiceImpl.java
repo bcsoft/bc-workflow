@@ -98,7 +98,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 			// ==== 流程流水号
 			String code = (String) newVars.get("wf_code");
 			if (code != null && !code.isEmpty()) instanceDetail.put("code", code);
-			else instanceDetail.put("code", "");
+			else instanceDetail.put("code", null);
 			// ==== 流程表单key
 			String formKey = (String) newVars.get("formKey");
 			if (formKey != null && !formKey.isEmpty()) instanceDetail.put("form_key", formKey);
@@ -129,10 +129,15 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 				// ==== 任务标题
 				subject = (String) newVars.get("subject");
 				if (subject != null && !subject.isEmpty()) task.put("subject", subject);
-				else task.put("subject", task.get("key"));
+				else task.put("subject", task.get("name"));
 				// ==== 任务表单key
 				formKey = (String) newVars.get("formKey");
 				if (formKey != null && !formKey.isEmpty()) task.put("form_key", formKey);
+				// ==== 是否隐藏表单附件
+				task.put("hideAttach", newVars.containsKey("hideAttach") ? (Boolean) newVars.get("hideAttach") : false);
+			}else{
+				task.put("subject", task.get("name"));
+				task.put("hideAttach", false);
 			}
 		}
 	}
@@ -308,6 +313,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 		ws.put("duration", instance.get("duration"));
 		ws.put("flowStatus", instance.get("status")); // 状态：1-流转中、2-暂停、3-已结束
 		ws.put("subject", instance.get("subject"));// 实例标题
+		ws.put("code", instance.get("code"));// 流水号
 
 		// ==== 流程定义
 		ws.put("definitionId", definition.get("id"));
@@ -612,8 +618,10 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 			}
 
 			// -- 意见、附件信息
-			attachItems = buildFlowAttachsInfo((Object[]) task.get("attachs"), flowStatus);
-			if (attachItems != null) items.addAll(attachItems);
+			if(!(boolean) task.get("hideAttach")) {
+				attachItems = buildFlowAttachsInfo((Object[]) task.get("attachs"), flowStatus);
+				if (attachItems != null) items.addAll(attachItems);
+			}
 
 			// 任务的汇总信息
 			if (isUserTask) {
@@ -687,14 +695,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 
 			taskItem.put("link", false);// 链接标题
 			taskItem.put("name", task.get("name"));// 名称
-
-			// 标题
-			subject = (String) getTaskVariableValue(task, "subject");
-			if (subject != null && subject.length() > 0) {
-				taskItem.put("subject", subject);// 标题
-			} else {
-				taskItem.put("subject", task.get("name"));// 任务名称作为标题
-			}
+			taskItem.put("subject", task.get("subject"));// 标题
 			taskItem.put("hasButtons", false);// 有否操作按钮
 			taskItem.put("formKey", task.get("form_key"));// 任务的表单Key
 			taskItem.put("desc", task.get("description"));// 任务描述说明
@@ -709,8 +710,10 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 			if (formItem != null) items.add(formItem);
 
 			// -- 意见、附件信息
-			attachItems = buildFlowAttachsInfo((Object[]) task.get("attachs"), WorkspaceService.FLOWSTATUS_COMPLETE);
-			if (attachItems != null) items.addAll(attachItems);
+			if (!(boolean) task.get("hideAttach")) {
+				attachItems = buildFlowAttachsInfo((Object[]) task.get("attachs"), WorkspaceService.FLOWSTATUS_COMPLETE);
+				if (attachItems != null) items.addAll(attachItems);
+			}
 
 			// 任务的汇总信息
 			String start_time = ((String) task.get("start_time")).substring(0, 16);// 精确到分钟
