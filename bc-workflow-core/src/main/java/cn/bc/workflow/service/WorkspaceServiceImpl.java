@@ -135,9 +135,12 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 				if (formKey != null && !formKey.isEmpty()) task.put("form_key", formKey);
 				// ==== 是否隐藏表单附件
 				task.put("hideAttach", newVars.containsKey("hideAttach") ? (Boolean) newVars.get("hideAttach") : false);
+				// ==== 是否为空表单
+				task.put("emptyForm", newVars.containsKey("emptyForm") ? (Boolean) newVars.get("emptyForm") : false);
 			}else{
 				task.put("subject", task.get("name"));
 				task.put("hideAttach", false);
+				task.put("emptyForm", false);
 			}
 		}
 	}
@@ -666,7 +669,6 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 		Map<String, Object> task, formItem;
 		List<Map<String, Object>> attachItems;
 		Map<String, Object> actor, master, origin_actor;// 经办人, 委托人, 原办理人
-		String subject;
 		for (Object t : tasks) {
 			task = (Map<String, Object>) t;
 			task.put("process_instance", instance);// 方便在任务内也可以访问流程实例的信息
@@ -737,6 +739,9 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 
 	// 获取任务渲染区的数据
 	private Map<String, Object> buildTaskFormInfo(Map<String, Object> task, boolean readonly) {
+		// 判断是否需要渲染表单
+		if(task.containsKey("emptyForm") && (boolean) task.get("emptyForm")) return null;
+
 		Map<String, Object> instance = (Map<String, Object>) task.get("process_instance");
 		int flowStatus = (int) instance.get("status");
 		String taskId = (String) task.get("id");
@@ -765,40 +770,6 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 		detail = new ArrayList<>();
 		item.put("detail", detail);
 		// detail.add("[表单信息]");
-
-		/*
-		int index = formKey.lastIndexOf(":");
-		String engine, from, key;
-		boolean separate;
-		if (index != -1) {
-			// @ref http://rongjih.blog.163.com/blog/static/33574461201263124922670/
-			String[] ss = formKey.substring(0, index).split(":");
-			key = formKey.substring(index + 1);
-			engine = ss[0];
-			if (ss.length == 1) {// engine:
-				separate = false;
-				from = "resource";
-			} else if (ss.length == 2) {// engine:from:
-				separate = false;
-				from = ss[1];
-			} else if (ss.length == 3) {// engine:separate:from:
-				separate = "true".equalsIgnoreCase(ss[1]);
-				from = ss[2];
-			} else {
-				throw new CoreException("unsupport config type:formKey=" + formKey);
-			}
-		} else {
-			key = formKey;
-			engine = "default";
-			from = "resource";
-			separate = false;
-		}
-		item.put("form_engine", engine);
-		item.put("form_from", from);// form
-		item.put("form_key", key);
-		item.put("form_seperate", separate);// old
-		item.put("form_separate", separate);
-		*/
 
 		// 渲染任务的表单
 		String html = this.workflowFormService.getRenderedTaskForm(task, readonly);

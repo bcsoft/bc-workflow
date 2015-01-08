@@ -50,6 +50,9 @@ public class WorkflowFormServiceImpl implements WorkflowFormService {
 
 	@Override
 	public String getRenderedTaskForm(Map<String, Object> task, Map<String, Object> addParams) {
+		// 判断是否需要渲染表单
+		if(task.containsKey("emptyForm") && (boolean) task.get("emptyForm")) return null;
+
 		Date start = new Date();
 		String taskId = (String) task.get("id");
 
