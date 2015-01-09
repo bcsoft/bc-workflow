@@ -169,6 +169,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 	}
 
 	private Object convertVariableValue(String type, Object value) {
+		if(value == null) return null;
 		Object newValue;
 		if ("string".equals(type)) {
 			newValue = value;
