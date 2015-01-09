@@ -773,7 +773,17 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 		// detail.add("[表单信息]");
 
 		// 渲染任务的表单
-		String html = this.workflowFormService.getRenderedTaskForm(task, readonly);
+		String html;
+		try {
+			html = this.workflowFormService.getRenderedTaskForm(task, readonly);
+		} catch (Exception e) {
+			if(logger.isErrorEnabled()) {
+				String code = SystemContextHolder.get() != null ? SystemContextHolder.get().getUser().getCode() : "";
+				logger.error("任务表单格式化异常：taskId={}, taskName={}, userCode={}", taskId, task.get("name"), code);
+				logger.error(e.getMessage(), e);
+			}
+			html = "错误：任务表单格式化异常，请联系管理员修正！(id=" + taskId + ")";
+		}
 		item.put("form_html", html);
 
 		detail.add(html);
