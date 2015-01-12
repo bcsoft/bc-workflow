@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	   xmlns:cache="http://www.springframework.org/schema/cache"
+	   xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
+	   http://www.springframework.org/schema/cache
+	   http://www.springframework.org/schema/cache/spring-cache.xsd">
+
+	<cache:annotation-driven cache-manager="bcCacheManager" mode="proxy"/>
+
+	<!-- generic cache manager
+		http://docs.spring.io/spring/docs/3.2.12.RELEASE/spring-framework-reference/htmlsingle/#cache
+	-->
+	<bean id="bcCacheManager" class="org.springframework.cache.support.SimpleCacheManager">
+		<property name="caches">
+			<set>
+				<!-- spring 默认的缓存 -->
+				<bean class="org.springframework.cache.concurrent.ConcurrentMapCacheFactoryBean">
+					<property name="name" value="default"/>
+				</bean>
+				<!-- test 缓存 -->
+				<bean class="org.springframework.cache.concurrent.ConcurrentMapCacheFactoryBean">
+					<property name="name" value="test"/>
+				</bean>
+				<!-- identity 缓存 -->
+				<bean class="org.springframework.cache.concurrent.ConcurrentMapCacheFactoryBean">
+					<property name="name" value="identity.resource"/>
+				</bean>
+				<!-- workflow deploy resource 缓存 -->
+				<bean class="org.springframework.cache.concurrent.ConcurrentMapCacheFactoryBean">
+					<property name="name" value="wfDeployResource"/>
+				</bean>
+			</set>
+		</property>
+	</bean>
+
+	<!-- ehcache的配置
+	<bean id="cacheManager" class="org.springframework.cache.ehcache.EhCacheManagerFactoryBean">
+		<property name="configLocation">
+			<value>classpath:ehcache.xml</value>
+		</property>
+		<property name="cacheManagerName">
+			<value>cn.bc.cache.framework</value>
+		</property>
+	</bean>
+	<bean id="bcCache" class="cn.bc.core.cache.EhcacheImpl">
+		<constructor-arg value="cn.bc.cache.framework" />
+		<constructor-arg ref="springCacheManager" />
+	</bean> -->
+</beans>

@@ -3,29 +3,6 @@
  */
 package cn.bc.workflow.service;
 
-import java.io.BufferedReader;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
-import java.util.Calendar;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-
-import cn.bc.workflow.dao.WorkflowDao;
-import org.activiti.engine.HistoryService;
-import org.activiti.engine.RepositoryService;
-import org.activiti.engine.history.HistoricTaskInstance;
-import org.activiti.engine.repository.ProcessDefinition;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.util.Assert;
-import org.springframework.util.FileCopyUtils;
-
 import cn.bc.core.exception.CoreException;
 import cn.bc.core.util.DateUtils;
 import cn.bc.core.util.TemplateUtils;
@@ -37,140 +14,146 @@ import cn.bc.template.util.FreeMarkerUtils;
 import cn.bc.web.util.WebUtils;
 import cn.bc.workflow.deploy.domain.DeployResource;
 import cn.bc.workflow.deploy.service.DeployService;
+import org.activiti.engine.HistoryService;
+import org.activiti.engine.RepositoryService;
+import org.activiti.engine.history.HistoricTaskInstance;
+import org.activiti.engine.repository.ProcessDefinition;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.util.Assert;
+import org.springframework.util.FileCopyUtils;
+
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.*;
 
 /**
  * @author dragon
  * 
  */
 public class WorkflowFormServiceImpl implements WorkflowFormService {
-	private static final Log logger = LogFactory
-			.getLog(WorkflowFormServiceImpl.class);
-	private ExcutionLogService excutionLogService;
+	private static final Logger logger = LoggerFactory.getLogger(WorkflowFormServiceImpl.class);
+	@Autowired
 	private TemplateService templateService;
-	private HistoryService historyService;
-	private RepositoryService repositoryService;
+
+	@Autowired
 	private DeployService deployService;
-	private WorkflowDao workflowDao;
-	
-	@Autowired
-	public void setTemplateService(TemplateService templateService) {
-		this.templateService = templateService;
-	}
 
-	@Autowired
-	public void setExcutionLogService(ExcutionLogService excutionLogService) {
-		this.excutionLogService = excutionLogService;
-	}
-
-	@Autowired
-	public void setHistoryService(HistoryService historyService) {
-		this.historyService = historyService;
-	}
-	
-	@Autowired
-	public void setRepositoryService(RepositoryService repositoryService) {
-		this.repositoryService = repositoryService;
-	}
-
-	@Autowired
-	public void setDeployService(DeployService deployService) {
-		this.deployService = deployService;
-	}
-
-	@Autowired
-	public void setWorkflowDao(WorkflowDao workflowDao) {
-		this.workflowDao = workflowDao;
-	}
-
-	public String getRenderedTaskForm(String taskId, boolean readonly) {
-		Map<String, Object> addParams = new HashMap<String, Object>();
+	@Override
+	public String getRenderedTaskForm(Map<String, Object> task, boolean readonly) {
+		Map<String, Object> addParams = new HashMap<>();
 		addParams.put("readonly", String.valueOf(readonly));
-		return getRenderedTaskForm(taskId, addParams);
+		return getRenderedTaskForm(task, addParams);
 	}
 
-	public String getRenderedTaskForm(String taskId,
-			Map<String, Object> addParams) {
-		// 获取任务信息
-		HistoricTaskInstance task = historyService
-				.createHistoricTaskInstanceQuery().taskId(taskId)
-				.singleResult();
-		if (task == null) {
-			throw new CoreException("can't find taskHistory: id=" + taskId);
-		}
+	@Override
+	public String getRenderedTaskForm(Map<String, Object> task, Map<String, Object> addParams) {
+		// 判断是否需要渲染表单
+		if(task.containsKey("emptyForm") && (boolean) task.get("emptyForm")) return null;
+
+		Date start = new Date();
+		String taskId = (String) task.get("id");
 
 		// 获取formKey
-		String formKey = excutionLogService.findTaskFormKey(taskId);
-		if (formKey == null || formKey.length() == 0)
-			return null;
+		String formKey = (String) task.get("form_key");
+		if (formKey == null || formKey.length() == 0) return null;
 
 		// 根据formKey确认模板渲染类型
 		int index = formKey.indexOf(":");
 		String engine, from, key;
 		if (index != -1) {// 平台定义的格式支持：http://rongjih.blog.163.com/blog/static/33574461201263124922670/
 			String[] ss = formKey.split(":");// “engine:from:key”格式
-			Assert.isTrue(ss.length == 3, "unsupport config type:formKey="
-					+ formKey);
+			Assert.isTrue(ss.length == 3, "unsupport config type: taskId=" + taskId + ", formKey=" + formKey);
 			engine = ss[0];// 格式化引擎类型
 			from = ss[1];// 来源类型
 			key = ss[2];// 实际的表单配置键，不能包含字符“:”
-		} else {// activiti内置的格式支持
+		} else {// activiti 内置的格式支持
 			engine = "default";
 			from = "res";
 			key = formKey;
 		}
-		if (logger.isInfoEnabled()) {
-			logger.info("engine=" + engine);
-			logger.info("from=" + from);
-			logger.info("key=" + key);
-		}
+		logger.info("taskId={}, engine={}, from={}, key={}", taskId, engine, from, key);
 
 		// 获取模板的原始内容
 		String sourceFormString = loadFormTemplate(task, from, key);
-		if (logger.isDebugEnabled()) {
-			logger.debug("source=" + sourceFormString);
-		}
+		logger.debug("form source={}", sourceFormString);
+		if(logger.isInfoEnabled()) logger.info("loadFormTemplate waste {}", DateUtils.getWasteTime(start));
 
-		Map<String, Object> params = new LinkedHashMap<String, Object>();
+		Map<String, Object> params = new LinkedHashMap<>();
 
-		// 添加一些全局变量
-		Calendar now = Calendar.getInstance();// 当前时间
+		Map<String, Object> process_instance = (Map<String, Object>) task.get("process_instance");
+		// 添加一些特殊变量
+		// ==== 当前时间
+		addCurrentTimeParams(params);
+		// ==== 系统上下文
+		params.put("context",SystemContextHolder.get());
+		params.put("SystemContext",SystemContextHolder.get());// old
+		// ==== 任务的参数
+		params.put("ti_id", task.get("id"));
+		params.put("ti_key", task.get("key"));
+		params.put("ti_deleteReason", task.get("delete_reason"));// deprecated
+		params.put("ti_startTime", task.get("start_time"));
+		params.put("ti_endTime", task.get("end_time"));
+		params.put("ti_description", task.get("description"));
+		params.put("ti_assignee", ((Map<String, Object>) task.get("actor")).get("code"));
+		params.put("ti_owner", task.get("owner"));// TODO
+		params.put("ti_name", task.get("name"));
+		params.put("ti_priority", task.get("priority"));
+		params.put("ti_dueDate", task.get("due_date"));
+		// ==== 流程实例的一些参数
+		params.put("pi_id", process_instance.get(""));
+		Map<String, Object> definition = (Map<String, Object>) process_instance.get("definition");
+		params.put("pi_businessKey", definition.get("key"));
+		params.put("pi_definitionId", definition.get("id"));
+		params.put("pi_startUserId", ((Map<String, Object>) process_instance.get("start_user")).get("code"));
+		params.put("pi_deleteReason", process_instance.get("delete_reason"));
+		// ==== 流程定义的参数
+		params.put("pd_id", definition.get("id"));
+		params.put("pd_category", definition.get("category"));// TODO
+		params.put("pd_deploymentId", definition.get("deployment_id"));
+		params.put("pd_key", definition.get("key"));
+		params.put("pd_name", definition.get("name"));
+		if(logger.isInfoEnabled()) logger.info("addSpecialParams waste {}", DateUtils.getWasteTime(start));
+
+		// 获取任务的流程变量
+		Map<String, Object> global_variables = (Map<String, Object>) process_instance.get("variables");
+		Map<String, Object> local_variables = (Map<String, Object>) task.get("variables");
+		params.putAll(global_variables);// 先放全局变量
+		params.putAll(local_variables);// 再放本地变量(本地变量优先使用)
+		params.put("global", global_variables);// 使用特殊key记录全局变量
+		if(logger.isInfoEnabled()) logger.info("findTaskVariables waste {}", DateUtils.getWasteTime(start));
+
+		// 添加额外的格式化参数
+		if (addParams != null) params.putAll(addParams);
+
+		// 添加一些任务的定义参数 old
+		//params.put("taskId", task.get("id"));
+		//params.put("taskKey", task.get("key"));
+		//params.put("processKey", ((Map<String, Object>) process_instance.get("definition")).get("key"));
+
+		// 格式化表单
+		logger.debug("params={}", params);
+		String form = formatForm(engine, sourceFormString, params);
+		logger.debug("form formatted={}", form);
+		if(logger.isInfoEnabled()) logger.info("formatForm {}", DateUtils.getWasteTime(start));
+
+		return form;
+	}
+
+	private void addCurrentTimeParams(Map<String, Object> params) {
+		Calendar now = Calendar.getInstance();
 		params.put("now", DateUtils.formatCalendar2Second(now));
 		params.put("now2d", DateUtils.formatCalendar2Day(now));
 		params.put("now2m", DateUtils.formatCalendar2Minute(now));
 		params.put("year", now.get(Calendar.YEAR) + "");
 		params.put("month", now.get(Calendar.MONTH) + 1);
 		params.put("day", now.get(Calendar.DAY_OF_MONTH));
-		// 加一个月
+		// ==== 当前时间加一个月
 		now.add(Calendar.MONTH, 1);
 		params.put("nextMonth", now.get(Calendar.MONTH) + 1);
 		params.put("nextMonthOfYear", now.get(Calendar.YEAR) + "");
-		//加载上下文信息
-		params.put("SystemContext",SystemContextHolder.get());
-
-		// 获取任务的流程变量
-		Map<String, Object> vs = this.excutionLogService
-				.findTaskVariables(taskId);
-		params.putAll(vs);
-
-		// 添加额外的格式化参数
-		if (addParams != null) {
-			params.putAll(addParams);
-		}
-
-		// 添加一些任务的定义参数
-		params.put("taskId", task.getId());
-		params.put("taskKey", task.getTaskDefinitionKey());
-		params.put("processKey", task.getProcessDefinitionId());
-
-		if (logger.isDebugEnabled()) {
-			logger.debug("params=" + params);
-		}
-		String form = formatForm(engine, sourceFormString, params);
-		if (logger.isDebugEnabled()) {
-			logger.debug("form=" + form);
-		}
-
-		return form;
 	}
 
 	/**
@@ -180,20 +163,16 @@ public class WorkflowFormServiceImpl implements WorkflowFormService {
 	 * @param params
 	 * @return
 	 */
-	private String formatForm(String engine, String source,
-			Map<String, Object> params) {
+	private String formatForm(String engine, String source, Map<String, Object> params) {
 		String form;
 
 		// 格式化
-		if ("fm".equalsIgnoreCase(engine)
-				|| "freemarker".equalsIgnoreCase(engine)) {// 使用freemarker模板引擎
+		if ("fm".equalsIgnoreCase(engine) || "freemarker".equalsIgnoreCase(engine)) {// 使用freemarker模板引擎
 			form = FreeMarkerUtils.format(source, params);
-		} else if ("ct".equalsIgnoreCase(engine)
-				|| "commontemplate".equalsIgnoreCase(engine)) {// 使用commontemplate模板引擎
+		} else if ("ct".equalsIgnoreCase(engine) || "commontemplate".equalsIgnoreCase(engine)) {// 使用commontemplate模板引擎
 			form = TemplateUtils.format(source, params);
 		} else {
-			throw new CoreException("unsupport form engine type:engine="
-					+ engine);
+			throw new CoreException("unsupport form engine type:engine=" + engine);
 		}
 		return form;
 	}
@@ -201,12 +180,12 @@ public class WorkflowFormServiceImpl implements WorkflowFormService {
 	/**
 	 * 获取表单的原始内容
 	 * 
-	 * @param from
-	 * @param key
+	 * @param task 任务
+	 * @param from 表单来源标识
+	 * @param key 资源编码
 	 * @return
 	 */
-	private String loadFormTemplate(HistoricTaskInstance task, String from,
-			String key) {
+	private String loadFormTemplate(Map<String, Object> task, String from, String key) {
 		String sourceFormString;
 		if ("tpl".equalsIgnoreCase(from)) {// 从模板中加载资源
 			sourceFormString = loadFormTemplateByTemplate(key);
@@ -280,40 +259,33 @@ public class WorkflowFormServiceImpl implements WorkflowFormService {
 	}
 
 	// 从流程部署资源中获取表单
-	private String loadFormTemplateByWFResource(HistoricTaskInstance task,
-			String key) {
+	private String loadFormTemplateByWFResource(Map<String, Object> task, String key) {
+		Map<String, Object> process_instance = (Map<String, Object>) task.get("process_instance");
+		Map<String, Object> process_definition = (Map<String, Object>) process_instance.get("definition");
+		String deploymentId = (String) process_definition.get("deployment_id");
 		String wfCode;// 流程编码
 		String resCode;// 资源编码
 		if (key.indexOf("/") == -1) {
-			wfCode = task.getProcessDefinitionId().substring(0,
-					task.getProcessDefinitionId().indexOf(":"));
+			wfCode = (String) process_definition.get("key");
 			resCode = key;
 		} else {
 			String[] cs = key.split("/");
 			wfCode = cs[0];
 			resCode = cs[1];
 		}
-		if (logger.isDebugEnabled()) {
-			logger.debug("wfCode=" + wfCode);
-			logger.debug("resCode=" + resCode);
-		}
-		//获取部署记录id
-		List<ProcessDefinition> list = repositoryService.createProcessDefinitionQuery()
-				.processDefinitionId(task.getProcessDefinitionId()).list();
-		DeployResource dr;
-		if(list.size() == 1){
-			dr = deployService.findDeployResourceByDmIdAndwfCodeAndresCode(
-					list.get(0).getDeploymentId(),wfCode, resCode);
-		}else{
-			throw new CoreException("通过流程定义id查找出多个流程定义对象!");
-		}
-		
+		logger.debug("deploymentId={}, wfCode={}, resCode={}", deploymentId, wfCode, resCode);
+
+		// 获取资源内容
+		return this.deployService.getResourceContent(deploymentId, resCode);
+
+		/*
+		String deployment_id = (String) process_definition.get("deployment_id");
+		DeployResource dr = deployService.findDeployResourceByDmIdAndwfCodeAndresCode(deployment_id, wfCode, resCode);
 		if(dr == null)
-			throw new CoreException("unsupport method:loadFormTemplateByWFResource");
+			throw new CoreException("找不到流程配置的资源文件：deployment_id=" + deployment_id + ", wfCode=" + wfCode + ", resCode=" + resCode);
 
 		// 上传部署资源的存储的绝对路径
-		String drRealPath = Attach.DATA_REAL_PATH + "/"
-				+ DeployResource.DATA_SUB_PATH + "/" + dr.getPath();
+		String drRealPath = Attach.DATA_REAL_PATH + "/" + DeployResource.DATA_SUB_PATH + "/" + dr.getPath();
 		// 获取文件流
 		try {
 			InputStream file = new FileInputStream(drRealPath);
@@ -322,7 +294,6 @@ public class WorkflowFormServiceImpl implements WorkflowFormService {
 			logger.warn(e.getMessage(), e);
 			throw new CoreException(e.getMessage(), e);
 		}
-		
+		*/
 	}
-	
 }

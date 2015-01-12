@@ -34,6 +34,11 @@
 	<bean id="transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager">
 		<property name="entityManagerFactory" ref="entityManagerFactory"/>
 	</bean>
+
+	<bean id="jdbcTemplate" class="org.springframework.jdbc.core.JdbcTemplate">
+		<constructor-arg ref="dataSource" />
+	</bean>
+
 	<bean id="jpaTemplate" class="org.springframework.orm.jpa.JpaTemplate">
 		<constructor-arg ref="entityManagerFactory"/>
 	</bean>

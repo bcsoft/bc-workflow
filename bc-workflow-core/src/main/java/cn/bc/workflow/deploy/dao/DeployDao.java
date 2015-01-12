@@ -1,5 +1,6 @@
 package cn.bc.workflow.deploy.dao;
 
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -92,4 +93,12 @@ public interface DeployDao extends CrudDao<Deploy> {
 	 * @return
 	 */
 	public DeployResource findDeployResourceByCode(Long deployId, String deployCode);
+
+	/**
+	 * 获取资源的文件流
+	 * @param deploymentId Activiti的流程部署ID
+	 * @param resourceCode 资源编码
+	 * @return
+	 */
+	InputStream getResource(String deploymentId, String resourceCode);
 }

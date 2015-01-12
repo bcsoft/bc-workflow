@@ -1,478 +1,468 @@
 /**
- * 
+ *
  */
 package cn.bc.workflow.service;
 
 import cn.bc.core.exception.CoreException;
 import cn.bc.core.util.DateUtils;
-import cn.bc.core.util.StringUtils;
-import cn.bc.identity.service.ActorService;
+import cn.bc.core.util.JsonUtils;
+import cn.bc.core.util.SerializeUtils;
 import cn.bc.identity.web.SystemContext;
 import cn.bc.identity.web.SystemContextHolder;
 import cn.bc.workflow.flowattach.domain.FlowAttach;
-import cn.bc.workflow.flowattach.service.FlowAttachService;
-import org.activiti.engine.*;
-import org.activiti.engine.history.HistoricDetail;
-import org.activiti.engine.history.HistoricProcessInstance;
-import org.activiti.engine.history.HistoricTaskInstance;
-import org.activiti.engine.history.HistoricVariableUpdate;
-import org.activiti.engine.impl.persistence.entity.SuspensionState;
-import org.activiti.engine.repository.ProcessDefinition;
-import org.activiti.engine.runtime.ProcessInstance;
-import org.activiti.engine.task.IdentityLink;
-import org.activiti.engine.task.Task;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.json.JSONArray;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.dao.DataAccessException;
+import org.springframework.dao.EmptyResultDataAccessException;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.ResultSetExtractor;
+import org.springframework.stereotype.Service;
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.*;
 
 /**
- * 工作流Service的实现
- * 
+ * 工作空间 Service
+ *
  * @author dragon
  */
+@Service
 public class WorkspaceServiceImpl implements WorkspaceService {
-	private static final Log logger = LogFactory
-			.getLog(WorkspaceServiceImpl.class);
-	private RepositoryService repositoryService;
-	private RuntimeService runtimeService;
-	private TaskService taskService;
-	private FormService formService;
-	private HistoryService historyService;
-	private FlowAttachService flowAttachService;
-	private ExcutionLogService excutionLogService;
+	private static final Logger logger = LoggerFactory.getLogger(WorkspaceServiceImpl.class);
+
+	@Autowired
+	private JdbcTemplate jdbcTemplate;
+
+	@Autowired
 	private WorkflowFormService workflowFormService;
+
+	@Autowired
 	private WorkflowService workflowService;
-	private ActorService actorService;
 
-	public static final int COMPLETE = 3; //已结束
+	@Override
+	public Map<String, Object> getProcessInstanceDetail(String processInstanceId) {
+		Assert.hasLength(processInstanceId);
+		Date start = new Date();
 
-	@Autowired
-	public void setActorService(
-			@Qualifier(value = "actorService") ActorService actorService) {
-		this.actorService = actorService;
-	}
+		// 获取流程实例明细
+		String sql = "select wf__find_process_instance_detail(?)";
+		logger.debug("sql={}", sql);
+		String jsonString;
+		try {
+			jsonString = this.jdbcTemplate.queryForObject(sql, String.class, processInstanceId);
+		} catch (EmptyResultDataAccessException e) {
+			throw new CoreException("could not find process instance by id=" + processInstanceId);
+		}
+		logger.debug("json={}", jsonString);
+		if (logger.isInfoEnabled()) logger.info("获取实例明细耗时 {}", DateUtils.getWasteTime(start));
 
-	@Autowired
-	public void setWorkflowService(WorkflowService workflowService) {
-		this.workflowService = workflowService;
-	}
+		// 转换成 Map
+		Map<String, Object> map = JsonUtils.toMap(jsonString);
+		if (logger.isInfoEnabled()) logger.info("转换成 Map 耗时 {}", DateUtils.getWasteTime(start));
+		//JsonObject map2 = Json.createReader(new StringReader(jsonString)).readObject();
+		//if(logger.isInfoEnabled()) logger.info("转换成 JsonObject 耗时 {}", DateUtils.getWasteTime(start));
 
-	@Autowired
-	public void setWorkflowFormService(WorkflowFormService workflowFormService) {
-		this.workflowFormService = workflowFormService;
-	}
+		// 处理 bytea 字段
+		this.dealByteArrayData(map);
+		if (logger.isInfoEnabled()) logger.info("处理 bytea 字段耗时 {}", DateUtils.getWasteTime(start));
 
-	@Autowired
-	public void setFlowAttachService(FlowAttachService flowAttachService) {
-		this.flowAttachService = flowAttachService;
-	}
+		// 转换 variables 数据结构
+		this.convertVariables(map);
+		if (logger.isInfoEnabled()) logger.info("转换 variables 数据结构耗时 {}", DateUtils.getWasteTime(start));
 
-	@Autowired
-	public void setRepositoryService(RepositoryService repositoryService) {
-		this.repositoryService = repositoryService;
-	}
-
-	@Autowired
-	public void setRuntimeService(RuntimeService runtimeService) {
-		this.runtimeService = runtimeService;
-	}
-
-	@Autowired
-	public void setTaskService(TaskService taskService) {
-		this.taskService = taskService;
-	}
-
-	@Autowired
-	public void setHistoryService(HistoryService historyService) {
-		this.historyService = historyService;
-	}
-
-	@Autowired
-	public void setFormService(FormService formService) {
-		this.formService = formService;
-	}
-
-	@Autowired
-	public void setExcutionLogService(ExcutionLogService excutionLogService) {
-		this.excutionLogService = excutionLogService;
+		if (logger.isInfoEnabled()) logger.info("总耗时 {}", DateUtils.getWasteTime(start));
+		return map;
 	}
 
 	/**
-	 * 获取当前用户的帐号信息
-	 * 
-	 * @return
+	 * 转换 variables 数据结构
+	 * <p>从数组 [{name:【name】,type:【type】,value:【value】}, ...] 转换为 Map {【name】: 【value】} 结构 </p>
+	 *
+	 * @param instanceDetail 实例明细
 	 */
-	private String getCurrentUserAccount() {
-		return SystemContextHolder.get().getUser().getCode();
+	private void convertVariables(Map<String, Object> instanceDetail) {
+		// 全局流程变量
+		Object[] variables = (Object[]) instanceDetail.get("variables");
+		Map<String, Object> newVars = this.convertVariables(variables);
+		instanceDetail.put("variables", newVars);
+		if (newVars != null) {
+			// ==== 流程标题
+			String subject = (String) newVars.get("subject");
+			if (subject != null && !subject.isEmpty()) instanceDetail.put("subject", subject);
+			else instanceDetail.put("subject", ((Map<String, Object>) instanceDetail.get("definition")).get("key"));
+			// ==== 流程流水号
+			String code = (String) newVars.get("wf_code");
+			if (code != null && !code.isEmpty()) instanceDetail.put("code", code);
+			else instanceDetail.put("code", null);
+			// ==== 流程表单key
+			String formKey = (String) newVars.get("formKey");
+			if (formKey != null && !formKey.isEmpty()) instanceDetail.put("form_key", formKey);
+		}
+
+		// 待办流程变量
+		convertVariables4Tasks((Object[]) instanceDetail.get("todo_tasks"));
+		// 经办流程变量
+		convertVariables4Tasks((Object[]) instanceDetail.get("done_tasks"));
 	}
 
-	public Map<String, Object> findWorkspaceInfo(String processInstanceId) {
-		Assert.notNull(processInstanceId, "流程实例ID不能为空" + processInstanceId);
-		Map<String, Object> ws = new HashMap<String, Object>();
+	/**
+	 * 转换任务的流程变量结构
+	 *
+	 * @param tasks 任务集
+	 */
+	private void convertVariables4Tasks(Object[] tasks) {
+		if (tasks == null || tasks.length == 0) return;
 
-		// 获取流程实例信息
-		HistoricProcessInstance instance = historyService
-				.createHistoricProcessInstanceQuery()
-				.processInstanceId(processInstanceId).singleResult();
-		Assert.notNull(instance, "找不到指定的流程实例记录：processInstanceId="
-				+ processInstanceId);
-		ws.put("id", instance.getId());
-		ws.put("businessKey", instance.getBusinessKey());
-		ws.put("deleteReason", instance.getDeleteReason());
-		ws.put("startUser", getActorNameByCode(instance.getStartUserId()));
-		ws.put("startTime", instance.getStartTime());
-		ws.put("endTime", instance.getEndTime());
-		ws.put("duration", instance.getDurationInMillis());
+		Map<String, Object> task, newVars;
+		String subject, formKey;
+		for (Object t : tasks) {
+			task = (Map<String, Object>) t;
+			newVars = convertVariables((Object[]) task.get("variables"));
+			task.put("variables", newVars);
 
-		int flowStatus;
-		// 流转状态
-		if (instance.getEndTime() == null) {
-			// 流程实例
-			ProcessInstance pi = runtimeService.createProcessInstanceQuery()
-					.processInstanceId(processInstanceId).singleResult();
-			if (pi.isSuspended()) {// 已暂停
-				flowStatus = SuspensionState.SUSPENDED.getStateCode();
-			} else {// 流转中
-				flowStatus = SuspensionState.ACTIVE.getStateCode();
+			if (newVars != null) {
+				// ==== 任务标题
+				subject = (String) newVars.get("subject");
+				if (subject != null && !subject.isEmpty()) task.put("subject", subject);
+				else task.put("subject", task.get("name"));
+				// ==== 任务表单key
+				formKey = (String) newVars.get("formKey");
+				if (formKey != null && !formKey.isEmpty()) task.put("form_key", formKey);
+				// ==== 是否隐藏表单附件
+				task.put("hideAttach", newVars.containsKey("hideAttach") ? (Boolean) newVars.get("hideAttach") : false);
+				// ==== 是否为空表单
+				task.put("emptyForm", newVars.containsKey("emptyForm") ? (Boolean) newVars.get("emptyForm") : false);
+			}else{
+				task.put("subject", task.get("name"));
+				task.put("hideAttach", false);
+				task.put("emptyForm", false);
 			}
-		} else {
-			flowStatus = WorkspaceServiceImpl.COMPLETE;// 已结束
 		}
-		ws.put("flowStatus", flowStatus);
+	}
 
-		// 流程定义
-		ProcessDefinition definition = repositoryService
-				.createProcessDefinitionQuery()
-				.processDefinitionId(instance.getProcessDefinitionId())
-				.singleResult();
+	/**
+	 * 转换 variables 数据结构
+	 * <p>从数组 [{name:【name】,type:【type】,value:【value】}, ...] 转换为 Map {【name】: 【value】} 结构 </p>
+	 *
+	 * @param variables 流程变量原始数组
+	 */
+	private Map<String, Object> convertVariables(Object[] variables) {
+		if (variables == null) return null;
 
-		ws.put("definitionId", definition.getId());
-		ws.put("definitionName", definition.getName());
-		ws.put("definitionCategory", definition.getCategory());
-		ws.put("definitionKey", definition.getKey());
-		ws.put("definitionVersion", definition.getVersion());
-		ws.put("definitionResourceName", definition.getResourceName());
-		ws.put("definitionDiagramResourceName",
-				definition.getDiagramResourceName());
+		Map<String, Object> newVars = new LinkedHashMap<>();
+		Map<String, Object> var;
+		for (Object v : variables) {
+			var = (Map<String, Object>) v;
+			newVars.put((String) var.get("name"), convertVariableValue((String) var.get("type"), var.get("value")));
 
-		// 流程发布
-		ws.put("deploymentId", definition.getDeploymentId());
+			// 转换特殊类型的变量的值
+			for (Map.Entry<String, Object> e : newVars.entrySet()) {
+				convertSpecialKeyValue(e);
+			}
+		}
+		return newVars;
+	}
 
-		// 用户定义的流程实例标题 TODO 从流程变量中获取
-		ws.put("subject", definition.getName());
+	private Object convertVariableValue(String type, Object value) {
+		if(value == null) return null;
+		Object newValue;
+		if ("string".equals(type)) {
+			newValue = value;
+		} else if ("boolean".equals(type)) {
+			newValue = new Boolean((String) value);
+		} else if ("integer".equals(type)) {
+			newValue = new Integer((String) value);
+		} else if ("long".equals(type)) {
+			newValue = new Long((String) value);
+		} else if ("double".equals(type)) {
+			newValue = new Double((String) value);
+		} else if ("date".equals(type)) {
+			newValue = new Timestamp(DateUtils.getDate((String) value).getTime());
+		} else {
+			newValue = value;
+		}
+		return newValue;
+	}
 
-		// 公共信息处理
-		ws.put("commonInfo", buildWSCommonInfo(flowStatus, instance));
+	/**
+	 * 特殊流程变量值的转换：当key使用list_、map_、array_前缀时，值进行特殊处理
+	 *
+	 * @param e 流程变量
+	 */
+	private void convertSpecialKeyValue(Map.Entry<String, Object> e) {
+		if (e.getKey().startsWith("list_") && e.getValue() instanceof String) {// 将字符串转化为List
+			e.setValue(JsonUtils.toCollection((String) e.getValue()));
+		} else if (e.getKey().startsWith("map_") && e.getValue() instanceof String) {// 将字符串转化为Map
+			e.setValue(JsonUtils.toMap((String) e.getValue()));
+		} else if (e.getKey().startsWith("array_") && e.getValue() instanceof String) {// 将字符串转化为数组
+			e.setValue(JsonUtils.toArray((String) e.getValue()));
+		}
+	}
+
+	/**
+	 * 处理流程实例的二进制流程变量数据，将二进制数据反序列化为相应的 Java 对象
+	 *
+	 * @param instanceDetail 流程实例明细数据
+	 */
+	private void dealByteArrayData(Map<String, Object> instanceDetail) {
+		Object[] ids = (Object[]) instanceDetail.get("bytearray_ids");
+		if (ids == null || ids.length == 0) return;
+
+		// 获取流程变量的二进制数据: [{id, bytes}, ...]
+		String sql = "select id_ id, bytes_ bytes from act_ge_bytearray where id_";
+		if (ids.length == 1) {
+			sql += " = '" + ids[0] + "'";
+		} else {
+			sql += " in ('" + ids[0] + "'";
+			for (int i = 1; i < ids.length; i++) {
+				sql += ", '" + ids[i] + "'";
+			}
+			sql += ")";
+		}
+		if (logger.isDebugEnabled()) {
+			logger.debug("args={}, sql={}", org.springframework.util.StringUtils.arrayToCommaDelimitedString(ids), sql);
+		}
+		Map<String, Object> id_bytes = this.jdbcTemplate.query(sql, new ResultSetExtractor<Map<String, Object>>() {
+			@Override
+			public Map<String, Object> extractData(ResultSet rs) throws SQLException, DataAccessException {
+				Map<String, Object> m = new LinkedHashMap<>();
+				while (rs.next()) {
+					m.put((String) rs.getObject(1), rs.getBytes("bytes"));
+				}
+				return m;
+			}
+		});
+		logger.debug("id_bytes={}", id_bytes);
+
+		// 将二进制流程变量数据反序列化为原始 Java 对象后，重新设置回流程变量中
+		// ==== 全局流程变量
+		logger.info("deserialize global variables");
+		deserializeByteArrayVariable(id_bytes, (Object[]) instanceDetail.get("variables"));
+		// ==== 待办流程变量
+		logger.info("deserialize todo task variables");
+		deserializeByteArrayVariable4Tasks(id_bytes, (Object[]) instanceDetail.get("todo_tasks"));
+		// ==== 经办流程变量
+		logger.info("deserialize done task variables");
+		deserializeByteArrayVariable4Tasks(id_bytes, (Object[]) instanceDetail.get("done_tasks"));
+	}
+
+	/**
+	 * 处理任务中二进制流程变量值的反序列化
+	 *
+	 * @param id_bytes 二进制值集 key=【id】, value=【bytes[]】
+	 * @param tasks    任务列表
+	 */
+	private void deserializeByteArrayVariable4Tasks(Map<String, Object> id_bytes, Object[] tasks) {
+		if (tasks == null || tasks.length == 0)
+			return;
+
+		Map<String, Object> task;
+		for (Object t : tasks) {
+			task = (Map<String, Object>) t;
+			deserializeByteArrayVariable(id_bytes, (Object[]) task.get("variables"));
+		}
+	}
+
+	/**
+	 * 处理二进制流程变量值的反序列化
+	 *
+	 * @param id_bytes  二进制值集 key=【id】, value=【bytes[]】
+	 * @param variables 流程变量列表
+	 */
+	private void deserializeByteArrayVariable(Map<String, Object> id_bytes, Object[] variables) {
+		if (variables == null || variables.length == 0)
+			return;
+
+		Map<String, Object> m;
+		byte[] bytes;
+		Object obj;
+		for (Object v : variables) {
+			m = (Map<String, Object>) v;
+			if ("serializable".equals(m.get("type"))) {
+				logger.info("deserialize {} for {}", m.get("value"), m.get("name"));
+				bytes = (byte[]) id_bytes.get(m.get("value"));    // id对应的二进制值
+				obj = SerializeUtils.deserialize(bytes);        // 将二进制值反序列化为原始 Java 对象
+				m.put("value", obj);
+				if (logger.isDebugEnabled())
+					logger.debug("	obj.class={}, obj={}", obj != null ? obj.getClass() : "null"
+							, obj instanceof Collection ? StringUtils.collectionToCommaDelimitedString((Collection) obj) : obj);
+			}
+		}
+	}
+
+	@Override
+	public Map<String, Object> getWorkspaceData(String processInstanceId) {
+		Date start = new Date();
+
+		// 获取实例的标准格式数据
+		Map<String, Object> instance = this.getProcessInstanceDetail(processInstanceId);
+		logger.debug("instance={}", instance);
+
+		// 转换为原有工作空间需要的数据结构
+
+		// ==== 流程实例
+		Map<String, Object> ws = new LinkedHashMap<>();
+		ws.put("id", instance.get("id"));
+		Map<String, Object> definition = (Map<String, Object>) instance.get("definition");
+		ws.put("businessKey", definition.get("key"));
+		ws.put("deleteReason", instance.get("delete_reason"));
+		ws.put("startUser", ((Map<String, Object>) instance.get("start_user")).get("name"));
+		ws.put("startTime", instance.get("start_time"));
+		ws.put("endTime", instance.get("end_time"));
+		ws.put("duration", instance.get("duration"));
+		ws.put("flowStatus", instance.get("status")); // 状态：1-流转中、2-暂停、3-已结束
+		ws.put("subject", instance.get("subject"));// 实例标题
+		ws.put("code", instance.get("code"));// 流水号
+
+		// ==== 流程定义
+		ws.put("definitionId", definition.get("id"));
+		ws.put("definitionName", definition.get("name"));
+		ws.put("definitionCategory", definition.get("category"));
+		ws.put("definitionKey", definition.get("key"));
+		ws.put("definitionVersion", definition.get("version"));
+		ws.put("definitionResourceName", "");// definition.get("resource_name"));
+		ws.put("definitionDiagramResourceName", "");// definition.get("diagram_resource_name"));
+		// ==== 流程发布
+		ws.put("deploymentId", definition.get("deployment_id"));
+
+		// ==== 公共信息处理
+		ws.put("commonInfo", buildWSCommonInfo(instance));
+		if (logger.isInfoEnabled()) logger.info("公共信息耗时 {}", DateUtils.getWasteTime(start));
 
 		// 待办信息处理
-		ws.put("todoInfo", buildWSTodoInfo(flowStatus, instance));
+		ws.put("todoInfo", buildWSTodoInfo(instance));
+		if (logger.isInfoEnabled()) logger.info("待办信息耗时 {}", DateUtils.getWasteTime(start));
 
-		// 已办信息处理
-		ws.put("doneInfo", buildWSDoneInfo(flowStatus, instance));
+		// 经办信息处理
+		ws.put("doneInfo", buildWSDoneInfo(instance));
+		if (logger.isInfoEnabled()) logger.info("经办信息耗时 {}", DateUtils.getWasteTime(start));
 
 		// 子流程信息
-		ws.put("subProcessInfo", new JSONArray(this.workflowService.findSubProcessInstanceInfoById(processInstanceId)).toString());
+		ws.put("subProcessInfo", new org.json.JSONArray(this.workflowService.findSubProcessInstanceInfoById(processInstanceId)).toString());
 
 		// 返回综合后的信息
-		if (logger.isDebugEnabled()) {
-			logger.debug("获取流程实例的工作空间显示信息为：" + ws.get("todoInfo"));
-		}
+		if (logger.isInfoEnabled()) logger.info("总耗时 {}", DateUtils.getWasteTime(start));
 		return ws;
 	}
 
 	/**
 	 * 构建工作空间公共信息
-	 * 
-	 * @param flowStatus
-	 *            流程是否仍在流转中
-	 * @param instance
-	 *            流程实例的历史记录
+	 *
+	 * @param instance 流程实例明细
 	 */
-	private Map<String, Object> buildWSCommonInfo(int flowStatus,
-			HistoricProcessInstance instance) {
-		Map<String, Object> info = new LinkedHashMap<String, Object>();
+	private Map<String, Object> buildWSCommonInfo(Map<String, Object> instance) {
+		int flowStatus = (int) instance.get("status");
+		Map<String, Object> info = new LinkedHashMap<>();
 
+		// ==== 判断激活、暂停按钮的显示权限 ==== 开始
 		// 实例流转中,当前处理人是否拥有暂停权限或流程管理员才显示
 		boolean isShowSuspendedButton = false;
 		// 实例已暂停,当前处理人是否拥有激活权限或流程管理员才显示
 		boolean isShowActiveButton = false;
-		
-		if(SystemContextHolder.get().hasAnyRole(//流程管理员拥有激活,暂停
-				"BC_WORKFLOW")){
+		SystemContext context = SystemContextHolder.get();
+		if (context.hasAnyRole("BC_WORKFLOW")) {    // 流程管理员有权限
 			isShowSuspendedButton = true;
 			isShowActiveButton = true;
-		}else{
-			String userCode = this.getCurrentUserAccount(); //当前登录用户的编码
-			
-			//当前任务
-			List<Task> task_list = taskService.createTaskQuery()
-					.processInstanceId(instance.getId()).list();
-			
-			if(task_list != null){
-				for(Task task:task_list){
-					if(userCode.equalsIgnoreCase(task.getAssignee())){//当前登录用户是处理人
-						Map<String,Object> roleMap = taskService.getVariablesLocal(task.getId());
-						if(roleMap.get("suspended") != null)//流程变量暂停不为空
-							isShowSuspendedButton = (Boolean) roleMap.get("suspended");
-						
-						if(roleMap.get("active") != null)//流程变量激活不为空
-							isShowActiveButton = (Boolean) roleMap.get("active");
+		} else {
+			String userCode = context.getUser().getCode(); // 当前用户账号
+			// 待办任务
+			Object[] todo_tasks = (Object[]) instance.get("todo_tasks");
+			if (todo_tasks != null) {
+				Map<String, Object> task;
+				for (Object t : todo_tasks) {
+					task = (Map<String, Object>) t;
+					// 当前用户是任务的待办人时，按流程变量的值控制权限
+					if (isTaskActor(task, userCode)) {
+						// 暂停权限
+						Object value = getTaskVariableValue(task, "suspended");
+						if (value != null) isShowSuspendedButton = (Boolean) value;
+
+						// 激活权限
+						value = getTaskVariableValue(task, "active");
+						if (value != null) isShowActiveButton = (Boolean) value;
 					}
 				}
 			}
 		}
-		
-		// 流程变量
-		HistoricVariableUpdate v;
-		List<HistoricDetail> variables = historyService
-				.createHistoricDetailQuery()
-				.processInstanceId(instance.getId()).variableUpdates()
-				.orderByTime().asc().list();
-		Map<String, Object> variableParams = new HashMap<String, Object>();
-		for (HistoricDetail hd : variables) {
-			v = (HistoricVariableUpdate) hd;
-			if (v.getTaskId() == null)
-				variableParams.put(v.getVariableName(),v);
-		}
-		
-		//读取隐藏按钮控制参数
-		String _hiddenButtonCodes=variableParams.containsKey("hiddenButtonCodes") ?
-				((HistoricVariableUpdate)variableParams.get("hiddenButtonCodes")).getValue().toString() : "";
-		
-		info.put("buttons", this.buildHeaderDefaultButtons(flowStatus,
-				"common", false, isShowSuspendedButton, isShowActiveButton,_hiddenButtonCodes));// 操作按钮列表
+		// ==== 判断激活、暂停按钮的显示权限 ==== 结束
+
+		// 读取隐藏按钮控制参数
+		Map<String, Object> global_variables = (Map<String, Object>) instance.get("variables");
+		String hiddenButtonCodes = global_variables != null ? (String) global_variables.get("hiddenButtonCodes") : null;
+		info.put("buttons", this.buildHeaderDefaultButtons(flowStatus, "common", false, isShowSuspendedButton, isShowActiveButton, hiddenButtonCodes));
 		info.put("hasButtons", info.get("buttons") != null);// 有否操作按钮
-		List<Map<String, Object>> items = new ArrayList<Map<String, Object>>();// 一级条目列表
+
+		// 一级条目列表
+		List<Map<String, Object>> items = new ArrayList<>();
 		info.put("items", items);
 		Map<String, Object> item;
 		List<String> detail;
 		String type;
 
-		// 构建表单条目
-		// item = new HashMap<String, Object>();
-		// items.add(item);
-		// type = "form";
-		// item.put("id", "id");// TODO
-		// item.put("type", type);// 信息类型
-		// item.put("iconClass", "ui-icon-document");// 左侧显示的小图标
-		// item.put("link", true);// 链接标题
-		// item.put("subject", "表单：测试表单");// 标题 TODO
-		// item.put("buttons", this.buildItemDefaultButtons(flowStatus, type));//
-		// 操作按钮列表
-		// item.put("hasButtons", item.get("buttons") != null);// 有否操作按钮
-		// detail = new ArrayList<String>();
-		// item.put("detail", detail);// 详细信息
-		// detail.add("小明 " + " " + "2012-01-01 00:00"); // 创建信息 TODO
+		// 构建表单条目 TODO
 
 		// 构建意见附件条目
-		List<FlowAttach> flowAttachs = flowAttachService.findByProcess(
-				instance.getId(), false);
-		if (logger.isDebugEnabled())
-			logger.debug("flowAttachs=" + flowAttachs);
-		buildFlowAttachsInfo(flowStatus, items, flowAttachs);
+		List<Map<String, Object>> attachItems = buildFlowAttachsInfo((Object[]) instance.get("attachs"), flowStatus);
+		if (attachItems != null) items.addAll(attachItems);
 
-		// 构建统计信息条目
-		item = new HashMap<String, Object>();
+		// 统计信息条目
+		item = new HashMap<>();
 		items.add(item);
 		type = "stat";
-		item.put("id", instance.getId());
+		item.put("id", instance.get("id"));
 		item.put("type", type);// 信息类型
 		item.put("iconClass", "ui-icon-flag");// 左侧显示的小图标
 		item.put("subject", "统计信息");// 标题
 		item.put("link", true);// 非链接标题
 		item.put("hasButtons", false);// 无操作按钮
-		detail = new ArrayList<String>();
+		detail = new ArrayList<>();
 		item.put("detail", detail);// 详细信息
-		detail.add("发起时间：" + getActorNameByCode(instance.getStartUserId())
-				+ " "
-				+ DateUtils.formatDateTime2Minute(instance.getStartTime()));
-		if(flowStatus == SuspensionState.ACTIVE.getStateCode()){
-			detail.add("结束时间："+"仍在流转中...");
-			detail.add("办理耗时："+DateUtils
-						.getWasteTimeCN(instance.getStartTime()));
-		}else if(flowStatus == SuspensionState.SUSPENDED.getStateCode()){
-			detail.add("结束时间："+"流程已暂停...");
-			detail.add("办理耗时："+DateUtils
-					.getWasteTimeCN(instance.getStartTime()));
-		}else if(flowStatus == WorkspaceServiceImpl.COMPLETE){
-			detail.add("结束时间："+DateUtils.formatDateTime2Minute(instance.getEndTime()));
-			detail.add("办理耗时："
-					+ DateUtils.getWasteTimeCN(instance.getStartTime(),
-							instance.getEndTime()));
+		String start_time = (String) instance.get("start_time");
+		detail.add("发起时间：" + ((Map<String, Object>) instance.get("start_user")).get("name") + " " + start_time);
+		if (flowStatus == WorkspaceService.FLOWSTATUS_ACTIVE) {
+			detail.add("结束时间：" + "仍在流转中...");
+			detail.add("办理耗时：" + DateUtils.getWasteTimeCN(DateUtils.getDate(start_time)));
+		} else if (flowStatus == WorkspaceService.FLOWSTATUS_SUSPENDED) {
+			detail.add("结束时间：" + "流程已暂停...");
+			detail.add("办理耗时：" + DateUtils.getWasteTimeCN(DateUtils.getDate(start_time)));
+		} else if (flowStatus == WorkspaceService.FLOWSTATUS_COMPLETE) {
+			String end_time = (String) instance.get("end_time");
+			detail.add("结束时间：" + DateUtils.formatDateTime2Minute(DateUtils.getDate(end_time)));
+			detail.add("办理耗时：" + DateUtils.getWasteTimeCN(DateUtils.getDate(start_time), DateUtils.getDate(end_time)));
 		}
-		detail.add("流程版本：" + instance.getProcessDefinitionId());
-		// detail.add("参与人数：" + "");// TODO
+		Map<String, Object> deploy = (Map<String, Object>) instance.get("deploy");
+		detail.add("流程版本：" + deploy.get("name") + deploy.get("version") + " (" + deploy.get("key") + ")");
 
 		// 返回
 		return info;
 	}
 
 	/**
-	 * 根据用户帐号获取用户的姓名
-	 * 
-	 * @param userCode
-	 *            用户帐号
+	 * 获取任务指定流程变量的值
+	 *
+	 * @param task         任务
+	 * @param variableName 变量名称
 	 * @return
 	 */
-	private String getActorNameByCode(String userCode) {
-		return actorService.loadActorNameByCode(userCode);
+	private Object getTaskVariableValue(Map<String, Object> task, String variableName) {
+		Map<String, Object> vars = (Map<String, Object>) task.get("variables");
+		return vars != null ? vars.get(variableName) : null;
 	}
 
 	/**
-	 * 根据用户帐号获取用户的全名称
-	 * 
-	 * @param userCode
-	 *            用户帐号
+	 * 判断指定的用户是否是该任务的办理人
+	 *
+	 * @param task     任务
+	 * @param userCode 用户账号
 	 * @return
 	 */
-	private String getActorFullNameByCode(String userCode) {
-		return actorService.loadActorFullNameByCode(userCode);
-	}
-
-	private void buildFormInfo(int flowStatus, List<Map<String, Object>> items,
-			String processInstanceId, String taskId, String formKey,
-			boolean readonly) {
-		if (formKey == null || formKey.length() == 0)
-			return;
-		if (logger.isDebugEnabled()) {
-			logger.debug("taskId=" + taskId + ",formKey=" + formKey);
-		}
-
-		// 表单基本信息
-		Map<String, Object> item;
-		List<String> detail;
-		String type = "form";
-		item = new HashMap<String, Object>();
-		items.add(item);
-		item.put("id", taskId);
-		item.put("pid", processInstanceId);// 流程实例id
-		item.put("tid", taskId);// 任务id
-		item.put("type", type);// 信息类型
-		item.put("link", false);// 链接标题
-		item.put("buttons", this.buildItemDefaultButtons(flowStatus, type));// 操作按钮列表
-		item.put("hasButtons", item.get("buttons") != null);// 有否操作按钮
-		item.put("iconClass", "ui-icon-document");// 左侧显示的小图标
-		item.put("subject", "完成任务前需要你处理如下信息：");// 标题信息
-
-		// 表单html
-		detail = new ArrayList<String>();
-		item.put("detail", detail);
-		// detail.add("[表单信息]");
-
-		int index = formKey.lastIndexOf(":");
-		String engine, from, key;
-		boolean seperate;
-		if (index != -1) {
-			String[] ss = formKey.substring(0, index).split(":");
-			key = formKey.substring(index + 1);
-			engine = ss[0];
-			if (ss.length == 1) {// engine:
-				seperate = false;
-				from = "resource";
-			} else if (ss.length == 2) {// engine:from:
-				seperate = false;
-				from = ss[1];
-			} else if (ss.length == 3) {// engine:seperate:from:
-				seperate = "true".equalsIgnoreCase(ss[1]);
-				from = ss[2];
-			} else {
-				throw new CoreException("unsupport config type:formKey="
-						+ formKey);
-			}
-		} else {
-			key = formKey;
-			engine = "default";
-			from = "resource";
-			seperate = false;
-		}
-		item.put("form_engine", engine);
-		item.put("form_from", from);// form
-		item.put("form_key", key);
-		item.put("form_seperate", seperate);
-
-		String html = (String) this.workflowFormService.getRenderedTaskForm(
-				taskId, readonly);
-		item.put("form_html", html);
-
-		detail.add(html);
-	}
-
-	/**
-	 * @param flowStatus
-	 * @param items
-	 * @param flowAttachs
-	 */
-	private void buildFlowAttachsInfo(int flowStatus,
-			List<Map<String, Object>> items, List<FlowAttach> flowAttachs) {
-		Map<String, Object> item;
-		List<String> detail;
-		String type;
-		for (FlowAttach flowAttach : flowAttachs) {
-			item = new HashMap<String, Object>();
-			items.add(item);
-			item.put("id", flowAttach.getId());
-			item.put("pid", flowAttach.getPid());// 流程实例id
-			item.put("tid", flowAttach.getTid());// 任务id
-			if (FlowAttach.TYPE_ATTACHMENT == flowAttach.getType()) {
-				type = "attach";
-				item.put("iconClass", "ui-icon-link");// 左侧显示的小图标
-				item.put("subject", flowAttach.getSubject());// 附件名称
-				item.put("size", flowAttach.getSize() + "");// 附件大小
-				item.put("path", flowAttach.getPath());// 附件相对路径
-				item.put("sizeInfo",
-						StringUtils.formatSize(flowAttach.getSize()));// 附件大小
-			} else if (FlowAttach.TYPE_COMMENT == flowAttach.getType()) {
-				type = "comment";
-				item.put("iconClass", "ui-icon-comment");// 左侧显示的小图标
-				item.put("subject", flowAttach.getSubject());// 意见标题
-				item.put("desc", flowAttach.getDesc());// 意见内容
-			} else {
-				logger.error("未支持的FlowAttach类型:type=" + flowAttach.getType());
-				type = "none";
-				item.put("iconClass", "ui-icon-lock");// 左侧显示的小图标
-				item.put("subject", "(未知类型)");
-			}
-			item.put("type", type);// 信息类型
-			item.put("link", true);// 链接标题
-			item.put("buttons", this.buildItemDefaultButtons(flowStatus, type));// 操作按钮列表
-			item.put("hasButtons", item.get("buttons") != null);// 有否操作按钮
-
-			// 详细信息
-			detail = new ArrayList<String>();
-			item.put("detail", detail);
-			detail.add(flowAttach.getAuthor().getName() + " "
-					+ DateUtils.formatCalendar2Minute(flowAttach.getFileDate())); // 创建信息
-		}
-	}
-
-	/**
-	 * 创建默认的表单(form)、意见(comment)、附件(attach)操作按钮
-	 * 
-	 * @param editable
-	 *            是否可编辑
-	 * @param type
-	 *            类型
-	 * @return
-	 */
-	private String buildItemDefaultButtons(int editable, String type) {
-		StringBuffer buttons = new StringBuffer();
-		if (editable == SuspensionState.ACTIVE.getStateCode()) {
-			buttons.append(ITEM_BUTTON_EDIT);
-		}
-		buttons.append(ITEM_BUTTON_OPEN);
-		if ("attach".equals(type)) {
-			buttons.append(ITEM_BUTTON_DOWNLOAD);
-		}
-		if (editable == SuspensionState.ACTIVE.getStateCode()
-				&& !"form".equals(type)) {
-			buttons.append(ITEM_BUTTON_DELETE);
-		}
-		return buttons.length() > 0 ? buttons.toString() : null;
+	private boolean isTaskActor(Map<String, Object> task, String userCode) {
+		return userCode.equals(((Map<String, Object>) task.get("actor")).get("code"));
 	}
 
 	private final static String ITEM_BUTTON_OPEN = "<span class='itemOperate open'><span class='ui-icon ui-icon-document-b'></span><span class='text link'>查看</span></span>";
@@ -481,72 +471,63 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 	private final static String ITEM_BUTTON_DOWNLOAD = "<span class='itemOperate download'><span class='ui-icon ui-icon-arrowthickstop-1-s'></span><span class='text link'>下载</span></span>";
 	private final static String ITEM_BUTTON_ADDCOMMENT = "<span class='mainOperate addComment'><span class='ui-icon ui-icon-document'></span><span class='text link'>添加意见</span></span>";
 	private final static String ITEM_BUTTON_ADDATTACH = "<span class='mainOperate addAttach'><span class='ui-icon ui-icon-arrowthick-1-n'></span><span class='text link'>添加附件</span></span>";
-
 	private final static String ITEM_BUTTON_SHOWDIAGRAM = "<span class='mainOperate flowImage'><span class='ui-icon ui-icon-image'></span><span class='text link'>查看流程图</span></span>";
 	private final static String ITEM_BUTTON_SHOWLOG = "<span class='mainOperate excutionLog'><span class='ui-icon ui-icon-tag' title='查看流转日志'></span></span>";
-
 	private final static String ITEM_BUTTON_ACTIVE = "<span class='mainOperate active'><span class='ui-icon ui-icon-play'></span><span class='text link'>激活流程</span></span>";
 	private final static String ITEM_BUTTON_SUSPENDED = "<span class='mainOperate suspended'><span class='ui-icon ui-icon-pause'></span><span class='text link'>暂停流程</span></span>";
 
 	/**
 	 * 创建默认的公共信息(common)、个人待办信息(todo_user)、岗位待办信息(todo_group)区标题右侧的操作按钮
-	 * 
-	 * @param flowStatus
-	 *            是否流转中
-	 * @param type
-	 *            类型
-	 * @param isMyTask
-	 *            是否是我的个人或岗位待办
-	 * @param isShowSuspendedButton
-	 *            是否显示暂停按钮
-	 * @param isShowActiveButton
-	 *            是否显示激活按钮
+	 *
+	 * @param flowStatus            是否流转中
+	 * @param type                  类型
+	 * @param isMyTask              是否是我的个人或岗位待办
+	 * @param isShowSuspendedButton 是否显示暂停按钮
+	 * @param isShowActiveButton    是否显示激活按钮
 	 * @return
 	 */
-	private String buildHeaderDefaultButtons(int flowStatus, String type,
-			boolean isMyTask, boolean isShowSuspendedButton,
-			boolean isShowActiveButton,String hiddenButtonCodes) {
+	private String buildHeaderDefaultButtons(int flowStatus, String type, boolean isMyTask, boolean isShowSuspendedButton
+			, boolean isShowActiveButton, String hiddenButtonCodes) {
+		if (hiddenButtonCodes == null) hiddenButtonCodes = "";
+		SystemContext context = SystemContextHolder.get();
 		StringBuffer buttons = new StringBuffer();
 		if ("common".equals(type)) {
-			
-			if (flowStatus == SuspensionState.ACTIVE.getStateCode()){
-				if(isShowSuspendedButton){// 实例流转中,当前处理人是否拥有暂停权限或流程管理员才显示
+			if (flowStatus == WorkspaceService.FLOWSTATUS_ACTIVE) {
+				if (isShowSuspendedButton) {// 实例流转中,当前处理人是否拥有暂停权限或流程管理员才显示
 					buttons.append(ITEM_BUTTON_SUSPENDED);// 暂停按钮
 				}
 			}
-			if (flowStatus == SuspensionState.SUSPENDED.getStateCode()){
-				if(isShowActiveButton){// 实例已暂停,当前处理人是否拥有激活权限或流程管理员才显示
+			if (flowStatus == WorkspaceService.FLOWSTATUS_SUSPENDED) {
+				if (isShowActiveButton) {// 实例已暂停,当前处理人是否拥有激活权限或流程管理员才显示
 					buttons.append(ITEM_BUTTON_ACTIVE);// 激活按钮
 				}
 			}
-			
+
 			buttons.append(ITEM_BUTTON_SHOWDIAGRAM);// 查看流程图
-			if (flowStatus == SuspensionState.ACTIVE.getStateCode()
-					&& SystemContextHolder.get().hasAnyRole(
-							"BC_WORKFLOW_ADDGLOBALATTACH")) {// 有权限才能添加全局意见附件
-				if(hiddenButtonCodes.indexOf("BUTTON_ADDCOMMENT") == -1)
+			if (flowStatus == WorkspaceService.FLOWSTATUS_ACTIVE
+					&& context.hasAnyRole("BC_WORKFLOW_ADDGLOBALATTACH")) {// 有权限才能添加全局意见附件
+				if (hiddenButtonCodes.indexOf("BUTTON_ADDCOMMENT") == -1)
 					buttons.append(ITEM_BUTTON_ADDCOMMENT);// 添加意见
-				
-				if(hiddenButtonCodes.indexOf("BUTTON_ADDATTACH") == -1)
+
+				if (hiddenButtonCodes.indexOf("BUTTON_ADDATTACH") == -1)
 					buttons.append(ITEM_BUTTON_ADDATTACH);// 添加附件
 			}
 			buttons.append(ITEM_BUTTON_SHOWLOG);// 查看流转日志
 		} else if ("todo_user".equals(type)) {
-			if (flowStatus == SuspensionState.ACTIVE.getStateCode() && isMyTask) {
-				if (SystemContextHolder.get()
-						.hasAnyRole("BC_WORKFLOW_DELEGATE"))// 有权限才能委派任务
+			if (flowStatus == WorkspaceService.FLOWSTATUS_ACTIVE && isMyTask) {
+				if (context.hasAnyRole("BC_WORKFLOW_DELEGATE"))// 有权限才能委派任务
 					buttons.append("<span class='mainOperate delegate'><span class='ui-icon ui-icon-person'></span><span class='text link'>委托任务</span></span>");
 
-				if(hiddenButtonCodes.indexOf("BUTTON_ADDCOMMENT") == -1)
+				if (hiddenButtonCodes.indexOf("BUTTON_ADDCOMMENT") == -1)
 					buttons.append(ITEM_BUTTON_ADDCOMMENT);// 添加意见
-				
-				if(hiddenButtonCodes.indexOf("BUTTON_ADDATTACH") == -1)
+
+				if (hiddenButtonCodes.indexOf("BUTTON_ADDATTACH") == -1)
 					buttons.append(ITEM_BUTTON_ADDATTACH);// 添加附件
 				buttons.append("<span class='mainOperate finish'><span class='ui-icon ui-icon-check'></span><span class='text link'>完成办理</span></span>");
 			}
 		} else if ("todo_group".equals(type)) {
-			if (flowStatus == SuspensionState.ACTIVE.getStateCode()) {
-				if (SystemContextHolder.get().hasAnyRole("BC_WORKFLOW_ASSIGN"))// 有权限才能分派任务
+			if (flowStatus == WorkspaceService.FLOWSTATUS_ACTIVE) {
+				if (context.hasAnyRole("BC_WORKFLOW_ASSIGN"))// 有权限才能分派任务
 					buttons.append("<span class='mainOperate assign'><span class='ui-icon ui-icon-person'></span><span class='text link'>分派任务</span></span>");
 
 				if (isMyTask)
@@ -560,283 +541,330 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 
 	/**
 	 * 构建工作空间待办信息
-	 * 
-	 * @param flowStatus
-	 *            流程是否仍在流转中
-	 * @param instance
-	 *            流程实例的历史记录
+	 *
+	 * @param instance 流程实例明细
 	 */
-	private Map<String, Object> buildWSTodoInfo(int flowStatus,
-			HistoricProcessInstance instance) {
-		Map<String, Object> info = new LinkedHashMap<String, Object>();
-		List<Map<String, Object>> taskItems = new ArrayList<Map<String, Object>>();// 一级条目列表
+	private Map<String, Object> buildWSTodoInfo(Map<String, Object> instance) {
+		int flowStatus = (int) instance.get("status");
+		Map<String, Object> info = new LinkedHashMap<>();
+		List<Map<String, Object>> taskItems = new ArrayList<>();// 一级条目列表
 		info.put("tasks", taskItems);
+
+		// 待办任务列表
+		Object[] tasks = (Object[]) instance.get("todo_tasks");
+		if (tasks == null || tasks.length == 0) return info;
+
 		Map<String, Object> taskItem;
 		List<Map<String, Object>> items;// 详细信息：表单、意见、附件
 		boolean isUserTask;// 是否是个人待办:true-个人待办、false-组待办
 		boolean isMyTask;// 是否是我的个人或组待办
 
-		// 获取待办列表
-		List<Task> tasks = this.taskService.createTaskQuery()
-				.processInstanceId(instance.getId()).orderByTaskCreateTime()
-				.asc().list();
-
-		// 获取所有任务的意见附件
-		List<String> tids = new ArrayList<String>();
-		for (Task task : tasks) {
-			tids.add(task.getId());
-		}
-		// 构建意见附件条目
-		List<FlowAttach> allFlowAttachs = flowAttachService.findByTask(tids
-				.toArray(new String[] {}));
-
-		// 获取表单formKey
-		Map<String, String> formKeys = excutionLogService
-				.findTaskFormKeys(instance.getId());
-
 		// 生成展现用的数据
+		Map<String, Object> task, formItem;
+		List<Map<String, Object>> attachItems;
+		Map<String, Object> actor, master;// 待办人或待办岗, 委托人
+		Map<String, Object> local_variables;
 		Date now = new Date();
-		Object subject;
-		for (Task task : tasks) {
-			List<IdentityLink> identityLinks;
+		String subject;
+		SystemContext context = SystemContextHolder.get();
+		String userCode = context.getUser().getCode(); // 当前用户账号
+		List<String> userGroups = context.getAttr(SystemContext.KEY_GROUPS); // 当前用户所在的所有岗位
+		for (Object t : tasks) {
+			task = (Map<String, Object>) t;
+			task.put("process_instance", instance);// 方便在任务内也可以访问流程实例的信息
+			actor = (Map<String, Object>) task.get("actor");
 			// 判断任务类型
-			if (task.getAssignee() != null) {
-				isUserTask = true;// 个人待办
-				isMyTask = task.getAssignee().equals(
-						this.getCurrentUserAccount());// 我的待办
-				identityLinks = null;
-			} else {
-				isUserTask = false;// 组待办
+			if ((boolean) actor.get("candidate") == false) {    // 个人待办
+				isUserTask = true;    // 个人待办
+				isMyTask = userCode.equals(actor.get("code"));    // 我的待办
+			} else {    // 岗位待办
+				isUserTask = false;    // 岗位待办
 
-				// 获取任务的组关联信息
-				identityLinks = this.taskService.getIdentityLinksForTask(task
-						.getId());
-				if (identityLinks == null || identityLinks.isEmpty()) {
-					throw new CoreException(
-							"can't find membership from table act_ru_identitylink: taskId="
-									+ task.getId());
-				}
-				isMyTask = judgeIsMyTask(identityLinks);
+				// 判断待办岗位是否是当前用户所在的岗位
+				isMyTask = userGroups != null ? userGroups.contains(actor.get("code")) : false;
 			}
 
 			// 任务的基本信息
-			taskItem = new HashMap<String, Object>();
+			taskItem = new HashMap<>();
 			if (isMyTask) {
-				taskItems.add(0, taskItem);
+				taskItems.add(0, taskItem);// 当前用户的待办放在最前
 			} else {
 				taskItems.add(taskItem);
 			}
-			taskItem.put("id", task.getId());// 任务id
-			taskItem.put("isUserTask", isUserTask);// 是否是个人待办:true-个人待办、false-组待办
+			taskItem.put("id", task.get("id"));// 任务id
+			taskItem.put("isUserTask", isUserTask);// 是否是个人待办:true-个人待办、false-岗位待办
 			taskItem.put("isMyTask", isMyTask);// 是否是我的个人或组待办
-			subject = taskService.getVariableLocal(task.getId(), "subject");
-			if (subject != null) {
+			subject = (String) getTaskVariableValue(task, "subject");
+			if (subject != null && subject.length() > 0) {
 				taskItem.put("subject", subject);// 标题
 			} else {
-				taskItem.put("subject", task.getName());// 标题
+				taskItem.put("subject", task.get("name"));// 任务名称作为标题
 			}
-			//读取隐藏按钮控制参数
-			Object obj_hiddenButtonCodes=taskService.getVariableLocal(task.getId(), "hiddenButtonCodes");
-			taskItem.put("buttons", this.buildHeaderDefaultButtons(flowStatus,
-					isUserTask ? "todo_user" : "todo_group", isMyTask, false,
-					false,obj_hiddenButtonCodes != null ? obj_hiddenButtonCodes.toString() : ""));// 操作按钮列表
+
+			// 读取隐藏按钮控制参数
+			local_variables = (Map<String, Object>) task.get("variables");
+			String hiddenButtonCodes = local_variables != null ? (String) local_variables.get("hiddenButtonCodes") : null;
+			taskItem.put("buttons", this.buildHeaderDefaultButtons(flowStatus, isUserTask ? "todo_user" : "todo_group",
+					isMyTask, false, false, hiddenButtonCodes));
 			taskItem.put("hasButtons", taskItem.get("buttons") != null);// 有否操作按钮
-			taskItem.put("formKey",
-					taskService.getVariableLocal(task.getId(), "formKey"));// 记录formKey
-			taskItem.put("desc", task.getDescription());// 任务描述说明
-			taskItem.put("priority", task.getPriority());// 任务优先级
+			taskItem.put("formKey", getTaskVariableValue(task, "formKey"));// 记录formKey
+			taskItem.put("desc", task.get("description"));// 任务描述说明
+			taskItem.put("priority", task.get("priority"));// 任务优先级
 
 			// 任务的详细信息
-			items = new ArrayList<Map<String, Object>>();// 二级条目列表
+			items = new ArrayList<>();// 二级条目列表
 			taskItem.put("items", items);
 
 			// -- 表单信息
-			buildFormInfo(flowStatus, items, task.getProcessInstanceId(),
-					task.getId(), formKeys.get(task.getId()),
-					!(isUserTask && isMyTask));
+			if(isMyTask) {// 我的个人待办或岗位待办时方渲染表单
+				formItem = buildTaskFormInfo(task, !(isUserTask && isMyTask));
+				if (formItem != null) items.add(formItem);
+			}
 
 			// -- 意见、附件信息
-			buildFlowAttachsInfo(flowStatus, items,
-					this.findTaskFlowAttachs(task.getId(), allFlowAttachs));
+			if(!(boolean) task.get("hideAttach")) {
+				attachItems = buildFlowAttachsInfo((Object[]) task.get("attachs"), flowStatus);
+				if (attachItems != null) items.addAll(attachItems);
+			}
 
 			// 任务的汇总信息
 			if (isUserTask) {
-				taskItem.put("actor",
-						"待办人：" + getActorNameByCode(task.getAssignee()));
+				// 执行委托操作的人
+				master = (Map<String, Object>) task.get("master");
+				taskItem.put("master", master != null ? master.get("name") : "");
+				taskItem.put("actor", "待办人：" + actor.get("name") + (master != null ? " (受" + master.get("name") + "委托)" : ""));
 			} else {
-				taskItem.put("actor", "待办岗："
-						+ getActorFullNameByCode(identityLinks.get(0)
-								.getGroupId()));
+				String pname = (String) actor.get("pname");
+				taskItem.put("actor", "待办岗：" + (pname == null ? actor.get("name") : pname + "/" + actor.get("name")));
 			}
-			taskItem.put(
-					"createTime",
-					"发起时间："
-							+ DateUtils.formatDateTime2Minute(task
-									.getCreateTime()));
-			if (task.getDueDate() != null) {
-				taskItem.put(
-						"dueDate",
-						"办理期限："
-								+ DateUtils.formatDateTime2Minute(task
-										.getDueDate()));
+			String start_time = ((String) task.get("start_time")).substring(0, 16);// 精确到分钟
+			taskItem.put("createTime", "发起时间：" + start_time);
+			if (task.get("due_date") != null) {
+				taskItem.put("dueDate", "办理期限：" + ((String) task.get("due_date")).substring(0, 16));// 精确到分钟
 			}
-			taskItem.put(
-					"wasteTime",
-					"办理耗时："
-							+ DateUtils.getWasteTimeCN(task.getCreateTime(),
-									now)
-							+ " (从"
-							+ DateUtils.formatDateTime2Minute(task
-									.getCreateTime()) + "到"
-							+ DateUtils.formatDateTime2Minute(now) + ")");
+			taskItem.put("wasteTime", "办理耗时：" + DateUtils.getWasteTimeCN(DateUtils.getDate((String) task.get("start_time")), now)
+					+ " (从" + start_time + "到" + DateUtils.formatDateTime2Minute(now) + ")");
 		}
 
 		// 返回
 		return info;
-	}
-
-	/**
-	 * 筛选出指定任务的意见、附件
-	 * 
-	 * @param taskId
-	 * @param allFlowAttachs
-	 * @return
-	 */
-	private List<FlowAttach> findTaskFlowAttachs(String taskId,
-			List<FlowAttach> allFlowAttachs) {
-		List<FlowAttach> taskFlowAttachs = new ArrayList<FlowAttach>();
-		for (FlowAttach flowAttach : allFlowAttachs) {
-			if (taskId.equals(flowAttach.getTid()))
-				taskFlowAttachs.add(flowAttach);
-		}
-		return taskFlowAttachs;
-	}
-
-	/**
-	 * 判断当前用户是否与IdentityLink有关
-	 * 
-	 * @param identityLinks
-	 * @return
-	 */
-	private boolean judgeIsMyTask(List<IdentityLink> identityLinks) {
-		if (identityLinks == null || identityLinks.isEmpty()) {
-			throw new CoreException(
-					"argument identityLinks can't be null or empty");
-		}
-
-		List<String> groups = SystemContextHolder.get().getAttr(
-				SystemContext.KEY_GROUPS);
-		for (IdentityLink l : identityLinks) {
-			if (l.getGroupId() != null && groups.contains(l.getGroupId())) {
-				return true;
-			}
-		}
-		return false;
 	}
 
 	/**
 	 * 构建工作空间已办信息
-	 * 
-	 * @param flowStatus
-	 *            流程是否仍在流转中
-	 * @param instance
-	 *            流程实例的历史记录
+	 *
+	 * @param instance 流程实例明细
 	 */
-	private Map<String, Object> buildWSDoneInfo(int flowStatus,
-			HistoricProcessInstance instance) {
-		Map<String, Object> info = new LinkedHashMap<String, Object>();
-		List<Map<String, Object>> taskItems = new ArrayList<Map<String, Object>>();// 一级条目列表
+	private Map<String, Object> buildWSDoneInfo(Map<String, Object> instance) {
+		Map<String, Object> info = new LinkedHashMap<>();
+		List<Map<String, Object>> taskItems = new ArrayList<>();// 一级条目列表
 		info.put("tasks", taskItems);
 		Map<String, Object> taskItem;
 		List<Map<String, Object>> items;// 详细信息：表单、意见、附件
 
-		// 获取待办列表
-		List<HistoricTaskInstance> tasks = this.historyService
-				.createHistoricTaskInstanceQuery()
-				.processInstanceId(instance.getId())
-				.taskDeleteReason("completed")
-				.orderByHistoricActivityInstanceStartTime().asc().list();
-
-		// 获取所有任务的意见附件
-		List<String> tids = new ArrayList<String>();
-		for (HistoricTaskInstance task : tasks) {
-			tids.add(task.getId());
-		}
-		// 构建意见附件条目
-		List<FlowAttach> allFlowAttachs = flowAttachService.findByTask(tids
-				.toArray(new String[] {}));
-
-		// 获取表单formKey
-		Map<String, String> formKeys = excutionLogService
-				.findTaskFormKeys(instance.getId());
+		// 经办任务列表
+		Object[] tasks = (Object[]) instance.get("done_tasks");
+		if (tasks == null || tasks.length == 0) return info;
 
 		// 生成展现用的数据
-		Object subject;
-		for (HistoricTaskInstance task : tasks) {
+		Map<String, Object> task, formItem;
+		List<Map<String, Object>> attachItems;
+		Map<String, Object> actor, master, origin_actor;// 经办人, 委托人, 原办理人
+		for (Object t : tasks) {
+			task = (Map<String, Object>) t;
+			task.put("process_instance", instance);// 方便在任务内也可以访问流程实例的信息
+			actor = (Map<String, Object>) task.get("actor");
 			// 任务的基本信息
-			taskItem = new HashMap<String, Object>();
+			taskItem = new HashMap<>();
 			taskItems.add(taskItem);
-			taskItem.put("key", task.getTaskDefinitionKey());// 任务的Key
-			taskItem.put("orderNo", task.getTaskDefinitionKey());// 使用任务的Key作为业务排序号
-			taskItem.put("id", task.getId());// 任务id
-			taskItem.put("assignee", getActorNameByCode(task.getAssignee()));// 办理人
-			taskItem.put("owner", getActorNameByCode(task.getOwner()));// 委托人
-			taskItem.put("link", false);// 链接标题
-			taskItem.put("name", task.getName());// 名称
-			subject = excutionLogService.getTaskVariableLocal(task.getId(),
-					"subject");
-			if (subject != null) {
-				taskItem.put("subject", subject);// 标题
+			taskItem.put("key", task.get("key"));// 任务的Key
+			taskItem.put("orderNo", task.get("key"));// 使用任务的Key作为业务排序号
+			taskItem.put("id", task.get("id"));// 任务id
+			taskItem.put("actor", actor.get("name"));// 办理人
+
+			// 执行委托操作的人
+			master = (Map<String, Object>) task.get("master");
+			if (master != null) {
+				taskItem.put("master", master.get("name"));
+				origin_actor = (Map<String, Object>) task.get("origin_actor");
+				if (origin_actor != null) {
+					taskItem.put("originActor", origin_actor.get("name"));
+				} else {
+					taskItem.put("originActor", null);
+				}
 			} else {
-				taskItem.put("subject", task.getName());// 标题
+				taskItem.put("master", null);
 			}
+
+			taskItem.put("link", false);// 链接标题
+			taskItem.put("name", task.get("name"));// 名称
+			taskItem.put("subject", task.get("subject"));// 标题
 			taskItem.put("hasButtons", false);// 有否操作按钮
-			taskItem.put("formKey",
-					excutionLogService.findTaskFormKey(task.getId()));// 记录formKey
-			taskItem.put("desc", task.getDescription());// 任务描述说明
-			taskItem.put("priority", task.getPriority());// 任务优先级
+			taskItem.put("formKey", task.get("form_key"));// 任务的表单Key
+			taskItem.put("desc", task.get("description"));// 任务描述说明
+			taskItem.put("priority", task.get("priority"));// 任务优先级
 
 			// 任务的详细信息
-			items = new ArrayList<Map<String, Object>>();// 二级条目列表
+			items = new ArrayList<>();// 二级条目列表
 			taskItem.put("items", items);
 
 			// -- 表单信息
-			buildFormInfo(flowStatus, items, task.getProcessInstanceId(),
-					task.getId(), formKeys.get(task.getId()), true);
+			formItem = buildTaskFormInfo(task, true);
+			if (formItem != null) items.add(formItem);
 
 			// -- 意见、附件信息
-			buildFlowAttachsInfo(WorkspaceServiceImpl.COMPLETE, items,
-					this.findTaskFlowAttachs(task.getId(), allFlowAttachs));
+			if (!(boolean) task.get("hideAttach")) {
+				attachItems = buildFlowAttachsInfo((Object[]) task.get("attachs"), WorkspaceService.FLOWSTATUS_COMPLETE);
+				if (attachItems != null) items.addAll(attachItems);
+			}
 
 			// 任务的汇总信息
-			taskItem.put("startTime",
-					DateUtils.formatDateTime(task.getStartTime()));// 任务创建时间
-			taskItem.put("endTime", DateUtils.formatDateTime(task.getEndTime()));// 任务完成时间
-			taskItem.put("startTime2m",
-					DateUtils.formatDateTime2Minute(task.getStartTime()));// 任务创建时间
-			taskItem.put("endTime2m",
-					DateUtils.formatDateTime2Minute(task.getEndTime()));// 任务完成时间
-			taskItem.put(
-					"wasteTime",
-					"办理耗时："
-							+ DateUtils.getWasteTimeCN(task.getStartTime(),
-									task.getEndTime())
-							+ " (从"
-							+ DateUtils.formatDateTime2Minute(task
-									.getStartTime())
-							+ "到"
-							+ DateUtils.formatDateTime2Minute(task.getEndTime())
-							+ ") - " + task.getTaskDefinitionKey());
-			if (task.getDueDate() != null) {
-				taskItem.put(
-						"dueDate",
-						"办理期限："
-								+ DateUtils.formatDateTime2Minute(task
-										.getDueDate()));
+			String start_time = ((String) task.get("start_time")).substring(0, 16);// 精确到分钟
+			String end_time = ((String) task.get("end_time")).substring(0, 16);// 精确到分钟
+			taskItem.put("startTime", task.get("start_time"));// 任务创建时间
+			taskItem.put("endTime", task.get("end_time"));// 任务完成时间
+			taskItem.put("startTime2m", start_time);// 任务创建时间
+			taskItem.put("endTime2m", end_time);// 任务完成时间
+			taskItem.put("wasteTime", "办理耗时："
+					+ DateUtils.getWasteTimeCN(DateUtils.getDate((String) task.get("start_time")),
+					DateUtils.getDate((String) task.get("end_time")))
+					+ " (从" + start_time + "到" + end_time + ") - " + task.get("key"));
+			if (task.get("due_date") != null) {
+				taskItem.put("dueDate", "办理期限：" + ((String) task.get("due_date")).substring(0, 16));// 精确到分钟
 			}
 		}
 
 		// 返回
 		return info;
+	}
+
+	// 获取任务渲染区的数据
+	private Map<String, Object> buildTaskFormInfo(Map<String, Object> task, boolean readonly) {
+		// 判断是否需要渲染表单
+		if(task.containsKey("emptyForm") && (boolean) task.get("emptyForm")) return null;
+
+		Map<String, Object> instance = (Map<String, Object>) task.get("process_instance");
+		int flowStatus = (int) instance.get("status");
+		String taskId = (String) task.get("id");
+		String formKey = (String) task.get("form_key");
+		if (formKey == null || formKey.length() == 0) return null;
+		if (logger.isDebugEnabled()) {
+			logger.debug("taskId=" + taskId + ",formKey=" + formKey);
+		}
+
+		// 表单基本信息
+		Map<String, Object> item;
+		List<String> detail;
+		String type = "form";
+		item = new HashMap<>();
+		item.put("id", taskId);
+		item.put("pid", instance.get("id"));// 流程实例id
+		item.put("tid", taskId);// 任务id
+		item.put("type", type);// 信息类型
+		item.put("link", false);// 链接标题
+		item.put("buttons", this.buildItemDefaultButtons(flowStatus, type));// 操作按钮列表
+		item.put("hasButtons", item.get("buttons") != null);// 有否有操作按钮
+		item.put("iconClass", "ui-icon-document");// 左侧显示的小图标
+		item.put("subject", "完成任务前需要你处理如下信息：");// 标题信息
+
+		// 表单html
+		detail = new ArrayList<>();
+		item.put("detail", detail);
+		// detail.add("[表单信息]");
+
+		// 渲染任务的表单
+		String html;
+		try {
+			html = this.workflowFormService.getRenderedTaskForm(task, readonly);
+		} catch (Exception e) {
+			if(logger.isErrorEnabled()) {
+				String code = SystemContextHolder.get() != null ? SystemContextHolder.get().getUser().getCode() : "";
+				logger.error("任务表单格式化异常：taskId={}, taskName={}, userCode={}", taskId, task.get("name"), code);
+				logger.error(e.getMessage(), e);
+			}
+			html = "错误：任务表单格式化异常，请联系管理员修正！(id=" + taskId + ")";
+		}
+		item.put("form_html", html);
+
+		detail.add(html);
+
+		return item;
+	}
+
+	/**
+	 * 创建默认的表单(form)、意见(comment)、附件(attach)操作按钮
+	 *
+	 * @param flowStatus 流转状态:1、2、3
+	 * @param type       类型: attach|form|comment
+	 * @return
+	 */
+	private String buildItemDefaultButtons(int flowStatus, String type) {
+		StringBuffer buttons = new StringBuffer();
+		if (flowStatus == WorkspaceService.FLOWSTATUS_ACTIVE) {
+			buttons.append(ITEM_BUTTON_EDIT);
+		}
+		buttons.append(ITEM_BUTTON_OPEN);
+		if ("attach".equals(type)) {
+			buttons.append(ITEM_BUTTON_DOWNLOAD);
+		}
+		if (flowStatus == WorkspaceService.FLOWSTATUS_ACTIVE && !"form".equals(type)) {
+			buttons.append(ITEM_BUTTON_DELETE);
+		}
+		return buttons.length() > 0 ? buttons.toString() : null;
+	}
+
+
+	/**
+	 * 构建附件的显示信息
+	 *
+	 * @param flowStatus 流转状态
+	 * @param attachs 附件信息
+	 * @return
+	 */
+	private List<Map<String, Object>> buildFlowAttachsInfo(Object[] attachs, int flowStatus) {
+		if(attachs == null) return null;
+		List<Map<String, Object>> attachItems = new ArrayList<>();
+		Map<String, Object> item;
+		List<String> detail;
+		String itemType;
+		int attachType;
+		Map<String, Object> attach;
+		for (Object a : attachs) {
+			attach = (Map<String, Object>) a;
+			item = new HashMap<>();
+			attachItems.add(item);
+			item.put("id", attach.get("id"));
+			item.put("pid", attach.get("pid"));// 流程实例id
+			item.put("tid", attach.get("tid"));// 任务id
+			attachType = (int) attach.get("type");
+			if (FlowAttach.TYPE_ATTACHMENT == attachType) {
+				itemType = "attach";
+				item.put("iconClass", "ui-icon-link");// 左侧显示的小图标
+				item.put("subject", attach.get("subject"));// 附件名称
+				item.put("size", attach.get("size"));// 附件大小
+				item.put("sizeInfo", cn.bc.core.util.StringUtils.formatSize((int) attach.get("size")));// 附件大小的描述
+				item.put("path", attach.get("path"));// 附件相对路径
+			} else if (FlowAttach.TYPE_COMMENT == attachType) {
+				itemType = "comment";
+				item.put("iconClass", "ui-icon-comment");// 左侧显示的小图标
+				item.put("subject", attach.get("subject"));// 意见标题
+				item.put("desc", attach.get("description"));// 意见内容
+			} else {
+				logger.warn("不支持的 FlowAttach 类型:id={}, type={}", attach.get("id"), attachType);
+				itemType = "none";
+				item.put("iconClass", "ui-icon-lock");// 左侧显示的小图标
+				item.put("subject", "(未知类型)");
+			}
+			item.put("type", itemType);// 信息类型
+			item.put("link", true);// 链接标题
+			item.put("buttons", this.buildItemDefaultButtons(flowStatus, itemType));// 操作按钮列表
+			item.put("hasButtons", item.get("buttons") != null);// 有否操作按钮
+
+			// 详细信息
+			detail = new ArrayList<>();
+			item.put("detail", detail);
+			detail.add(((Map<String, Object>) attach.get("author")).get("name") + " " + ((String) attach.get("file_date")).substring(0, 16)); // 创建信息
+		}
+		return attachItems;
 	}
 }

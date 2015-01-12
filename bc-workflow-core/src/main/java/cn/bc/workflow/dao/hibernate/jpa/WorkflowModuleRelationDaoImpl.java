@@ -18,7 +18,7 @@ import cn.bc.orm.hibernate.jpa.HibernateCrudJpaDao;
 import cn.bc.orm.hibernate.jpa.HibernateJpaNativeQuery;
 import cn.bc.workflow.dao.WorkflowModuleRelationDao;
 import cn.bc.workflow.domain.WorkflowModuleRelation;
-import cn.bc.workflow.service.WorkspaceServiceImpl;
+import cn.bc.workflow.service.WorkspaceServiceImpl_old;
 
 /**
  * 流程关系Dao接口的实现
@@ -97,7 +97,7 @@ public class WorkflowModuleRelationDaoImpl extends
 						o.put("key", rs[i++]);
 						Object suspensionState = rs[i++];
 						if (o.get("endTime") != null) {// 已结束
-							o.put("status", WorkspaceServiceImpl.COMPLETE);
+							o.put("status", WorkspaceServiceImpl_old.COMPLETE);
 						} else {
 							if (suspensionState.toString().equals(
 									String.valueOf(SuspensionState.ACTIVE
@@ -247,7 +247,7 @@ public class WorkflowModuleRelationDaoImpl extends
 						o.put("key", rs[i++]);
 						Object suspensionState = rs[i++];
 						if (o.get("endTime") != null) {// 已结束
-							o.put("status", WorkspaceServiceImpl.COMPLETE);
+							o.put("status", WorkspaceServiceImpl_old.COMPLETE);
 						} else {
 							if (suspensionState.toString().equals(
 									String.valueOf(SuspensionState.ACTIVE

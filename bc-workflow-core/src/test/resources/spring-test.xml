@@ -21,26 +21,19 @@
 	<!-- 平台相关模块的配置 -->
 	<import resource="classpath:cn/bc/identity/spring.xml"/>
 	<import resource="classpath:cn/bc/template/spring.xml"/>
+	<import resource="classpath:cn/bc/docs/spring.xml"/>
+	<import resource="classpath:cn/bc/log/spring.xml"/>
 
 	<!-- 本模块的配置 -->
 	<import resource="classpath:cn/bc/workflow/spring.xml"/>
 	<import resource="classpath:cn/bc/workflow/todo/spring.xml"/>
-	
+	<import resource="classpath:cn/bc/workflow/deploy/spring.xml"/>
+	<import resource="classpath:cn/bc/workflow/flowattach/spring.xml"/>
+	<import resource="classpath:cn/bc/workflow/historictaskinstance/spring.xml"/>
+
 	<!-- activiti的配置 -->
 	<import resource="classpath:spring-test-activiti.xml"/>
 
-	<!-- ehcache的配置 -->
-	<bean id="cacheManager"
-		class="org.springframework.cache.ehcache.EhCacheManagerFactoryBean">
-		<property name="configLocation">
-			<value>classpath:ehcache.xml</value>
-		</property>
-		<property name="cacheManagerName">
-			<value>cn.bc.cache.framework</value>
-		</property>
-	</bean>
-	<bean id="bcCache" class="cn.bc.core.cache.EhcacheImpl">
-		<constructor-arg value="cn.bc.cache.framework" />
-		<constructor-arg ref="cacheManager" />
-	</bean>
+	<!-- spring cache -->
+	<import resource="classpath:spring-test-cache.xml"/>
 </beans>

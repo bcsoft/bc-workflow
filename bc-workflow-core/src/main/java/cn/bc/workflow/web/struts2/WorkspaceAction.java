@@ -4,13 +4,17 @@ import cn.bc.acl.domain.AccessActor;
 import cn.bc.acl.domain.AccessHistory;
 import cn.bc.acl.service.AccessHistoryService;
 import cn.bc.acl.service.AccessService;
+import cn.bc.core.util.DateUtils;
 import cn.bc.core.util.JsonUtils;
 import cn.bc.identity.domain.Actor;
 import cn.bc.identity.web.SystemContext;
 import cn.bc.web.ui.html.page.PageOption;
 import cn.bc.workflow.deploy.domain.Deploy;
 import cn.bc.workflow.service.WorkspaceService;
+import cn.bc.workflow.service.WorkspaceService_old;
 import org.commontemplate.util.Assert;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
@@ -19,6 +23,7 @@ import org.springframework.stereotype.Controller;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -31,7 +36,12 @@ import java.util.Map;
 @Scope(BeanDefinition.SCOPE_PROTOTYPE)
 @Controller
 public class WorkspaceAction extends AbstractBaseAction {
+	private static final Logger logger = LoggerFactory.getLogger(WorkspaceAction.class);
 	private static final long serialVersionUID = 1L;
+
+	@Autowired
+	private WorkspaceService workspaceService;
+
 	public PageOption pageOption;// 对话框参数配置
 	public String title;// 对话框标题
 	public String error;// 异常的简要描述信息
@@ -39,14 +49,6 @@ public class WorkspaceAction extends AbstractBaseAction {
 	public Map<String, Object> ws;// 包含工作空间所要显示的所有数据
 	public Boolean isAccess=false;//通过的我的监控打开的工作控制 默认false
 	public String accessJson;//访问历史详细信息
-	
-	
-	private WorkspaceService workspaceService;
-
-	@Autowired
-	public void setWorkspaceService(WorkspaceService workspaceService) {
-		this.workspaceService = workspaceService;
-	}
 
 	/**
 	 * 打开边栏设计页面
@@ -85,6 +87,8 @@ public class WorkspaceAction extends AbstractBaseAction {
 	 * @throws Exception
 	 */
 	public String open() throws Exception {
+		Date start = new Date();
+		//logger.
 		// 初始化页面参数
 		this.initPageOption();
 
@@ -95,7 +99,9 @@ public class WorkspaceAction extends AbstractBaseAction {
 			Assert.assertNotEmpty(id);
 
 			// 获取工作空间信息
-			this.ws = workspaceService.findWorkspaceInfo(id);
+			this.ws = workspaceService.getWorkspaceData(id);
+			logger.debug("ws={}", ws);
+			logger.info("获取工作空间信息总耗时 {}", DateUtils.getWasteTime(start));
 
 			// 对话框标题
 			this.title = (String) this.ws.get("subject");
