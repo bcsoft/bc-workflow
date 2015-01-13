@@ -18,6 +18,18 @@ import org.apache.commons.logging.LogFactory;
 
 /**
  * 自动分配多实例任务办理人或办理岗位
+ * <p>使用该监听器需配置 Multi Instance -> Collection 和 Element variable</p>
+ * <ul>
+ *     <li><b>Collection：</b> List<Map>集合，map 数据结构 {id: 111, "groupOrAssiness": "group","group":"岗位Code", "assignee":"用户Code", "subject":"标题的本地key"...}
+ *     	<ul>
+ * 			<li>key=groupOrAssiness，value="group" 可选,值为“group”时送岗位；为null时Map中必须有key=assignee，value=用户Code</li>
+ * 			<li>key=group，value=岗位Code 可选</li>
+ * 			<li>key=assignee，value=用户Code 可选</li>
+ * 			<li>key=subject 可选，任务标题</li>
+ * 	   	</ul>
+ *     </li>
+ *     <li><b>Element variable：</b> 配置为：multiInstanceCollentionKey，activiti会迭代list集合，通过配置“Element variable”作为key获取当前的map对象</li>
+ * </ul>
  * <p>
  * 监听器在流程图中需要配置为"java class"类型，Fields参数中有两种配置方式：
  * <ul>
