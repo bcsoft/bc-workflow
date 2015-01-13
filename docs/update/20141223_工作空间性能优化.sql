@@ -324,9 +324,9 @@ BEGIN
 				select v.name, v.type, v.value from variable v where v.task_id = t.id_ order by v.type, v.name) v1
 			) as variables
 		-- 岗位任务的签领时间
-		, (select time from task_log l where l.task_id = t.id_ and l.type = 'task_claim') as claim_time
+		, (select time from task_log l where l.task_id = t.id_ and l.type = 'task_claim' limit 1) as claim_time
 		-- 执行委托操作的用户
-		, (select author from task_log l where l.task_id = t.id_ and l.type = 'task_delegate') as master
+		, (select author from task_log l where l.task_id = t.id_ and l.type = 'task_delegate' limit 1) as master
 		-- 执行委托前的原始用户
 		, (select actor from task_log l
 				where l.task_id = t.id_ and l.type in ('task_claim', 'task_create')
@@ -374,7 +374,7 @@ $BODY$ LANGUAGE plpgsql;
 -- 流转中-done9-todo2： 3349285 司机新入职、留用审批流程 - 司机留用审批（崔土新2014-10-14) - IP7 13.20s
 -- 已结束-done8： 3326570 宝城公司公文处理流程 - 关于粤A.G4P40车辆公共替班钟继昌终止合同申请 - IP7 11.52s
 with wf(j) as (
-	select wf__find_process_instance_detail('3313570')
+	select wf__find_process_instance_detail('3829127')
 )
 -- 展开第一层的key
 select * from json_each((select wf.j from wf))
