@@ -23,7 +23,7 @@ import cn.bc.core.exception.CoreException;
 import cn.bc.identity.web.SystemContext;
 import cn.bc.identity.web.SystemContextHolder;
 import cn.bc.mail.Mail;
-import cn.bc.template.util.FreeMarkerUtils;
+import cn.bc.core.util.FreeMarkerUtils;
 
 /**
  * 发送任务邮件提醒的的监听器：create创建、assignment分配、complete完成

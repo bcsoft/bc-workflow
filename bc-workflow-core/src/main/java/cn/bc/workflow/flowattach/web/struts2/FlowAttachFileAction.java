@@ -36,7 +36,7 @@ import cn.bc.template.domain.TemplateParam;
 import cn.bc.template.service.TemplateParamService;
 import cn.bc.template.service.TemplateTypeService;
 import cn.bc.template.util.DocxUtils;
-import cn.bc.template.util.FreeMarkerUtils;
+import cn.bc.core.util.FreeMarkerUtils;
 import cn.bc.template.util.XlsUtils;
 import cn.bc.template.util.XlsxUtils;
 import cn.bc.web.util.WebUtils;

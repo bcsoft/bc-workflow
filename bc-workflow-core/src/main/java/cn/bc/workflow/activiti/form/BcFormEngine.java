@@ -30,7 +30,7 @@ import cn.bc.core.util.TemplateUtils;
 import cn.bc.docs.domain.Attach;
 import cn.bc.template.domain.Template;
 import cn.bc.template.service.TemplateService;
-import cn.bc.template.util.FreeMarkerUtils;
+import cn.bc.core.util.FreeMarkerUtils;
 import cn.bc.web.util.WebUtils;
 
 public class BcFormEngine implements FormEngine {
