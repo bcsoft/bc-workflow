@@ -14,6 +14,7 @@ import cn.bc.template.util.FreeMarkerUtils;
 import cn.bc.web.util.WebUtils;
 import cn.bc.workflow.deploy.domain.DeployResource;
 import cn.bc.workflow.deploy.service.DeployService;
+import cn.bc.workflow.flowattach.domain.FlowAttach;
 import org.activiti.engine.HistoryService;
 import org.activiti.engine.RepositoryService;
 import org.activiti.engine.history.HistoricTaskInstance;
@@ -120,6 +121,16 @@ public class WorkflowFormServiceImpl implements WorkflowFormService {
 		// 获取任务的流程变量
 		Map<String, Object> global_variables = (Map<String, Object>) process_instance.get("variables");
 		Map<String, Object> local_variables = (Map<String, Object>) task.get("variables");
+
+		// 获取子流程任务附件参数
+		List<Map<String, Object>> formAttachs = new ArrayList<>();
+		Object[] attachs = (Object[])task.get("attachs");
+		for (int i = 0; attachs != null && i < attachs.length; i++) {
+			Map<String, Object> attach = (Map<String, Object>) attachs[i];
+			if (FlowAttach.TYPE_TEMP_ATTACHMENT == (int)attach.get("type")) formAttachs.add(attach);
+		}
+		local_variables.put("attachs", formAttachs);
+
 		params.putAll(global_variables);// 先放全局变量
 		params.putAll(local_variables);// 再放本地变量(本地变量优先使用)
 		params.put("global", global_variables);// 使用特殊key记录全局变量
