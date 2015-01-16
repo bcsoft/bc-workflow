@@ -35,6 +35,9 @@
 		<class>cn.bc.workflow.flowattach.domain.FlowAttach</class>
 		<class>cn.bc.workflow.deploy.domain.Deploy</class>
 		<class>cn.bc.workflow.deploy.domain.DeployResource</class>
+		
+		<!-- 分类模块 -->
+		<class>cn.bc.category.domain.Category</class>
 
 		<!-- 排除没有在这里声明的注解类:否则报错“nested exception is org.hibernate.DuplicateMappingException: 
 			Duplicate class/entity mapping cn.bc.orm.hibernate.TestDomain” -->
