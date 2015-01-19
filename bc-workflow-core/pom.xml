@@ -58,6 +58,12 @@
 			<version>${framework.version}</version>
 			<scope>test</scope>
 		</dependency>
+		<dependency>
+			<groupId>cn.bc</groupId>
+			<artifactId>bc-spider</artifactId>
+			<version>${framework.version}</version>
+			<scope>compile</scope>
+		</dependency>
 
 		<!-- log -->
 		<dependency>
