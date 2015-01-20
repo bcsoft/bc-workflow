@@ -17,6 +17,7 @@ import org.activiti.engine.impl.el.Expression;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -56,99 +57,115 @@ public class IsAssigneeInAnyGroupsListener implements TaskListener {
         String assignee = delegateTask.getAssignee();
         if (assignee == null) return;
 
-        // 岗位名称没有配置，不进操作
+        // 岗位名称没有配置，输出错误信息
         String[] groupNames = anyGroupNames.getExpressionText().split(",");
-        if ((groupNames == null) || (groupNames != null && groupNames.length == 0)) return;
-
-        // 根据所属部门Id，获得岗位集合
-        Actor belongDepartment = this.getBelongDepartment(assignee);
-        List<Actor> groups = (belongDepartment != null) ? this.findGroups(belongDepartment.getId(), groupNames) : null;
-
-        // 设置错误提示信息
-        if (groups == null || (groups != null && groups.size() == 0)) {
-            throw new CoreException("办理人所在部门中的岗位没有跟配置的岗位匹配");
+        if ((groupNames == null) || (groupNames != null && groupNames.length == 0)) {
+            throw new CoreException("没有配置岗位名称！");
         }
 
-        // 拼装岗位Id
-        Long[] groupsId = new Long[groups.size()];
-        int i = 0;
-        for (Actor a : groups) {
-            groupsId[i] = a.getId();
-            i++;
-        }
+        // 办理人的岗位
+        Actor a = this.actorService.loadByCode(assignee);
+        List<Actor> assigneeGroups = findAssigneeGroups(a.getId());
 
-        // 获得岗位下的用户集合
-        List<Actor> users = this.findUsers(groupsId);
-        // 定义拥有岗位的布尔值
+        // 获得配置的岗位集合
+        List<Actor> masters = this.getMaster(a.getId());
+        Long[] masterIds = this.getIds(masters);
+        List<Actor> configGroups = this.findConfigGroupsByBelongDepartment(groupNames, masterIds);
+
+        // 判断办理人的岗位是否在配置的岗位集合中存在
         boolean haveGroup = false;
-        if (users != null)
-            // 判断办理人是否在岗位上
-            haveGroup = isUserHaveGroup(assignee, users);
+        if (configGroups == null || (configGroups != null && configGroups.size() == 0)) {
+            haveGroup = false;
+        } else {
+            haveGroup = this.isUserHaveGroup(assigneeGroups, configGroups);
+        }
 
         // 设置是否拥有岗位的全局变量
         delegateTask.setVariableLocal(customHaveGroupKey.getExpressionText(), haveGroup);
     }
 
     /**
-     * 获得所属部门
+     * 获得id
      *
-     * @param assignee 办理人
-     * @return 所属部门
+     * @param list Actor集合
+     * @return actor的Id
      */
-    private Actor getBelongDepartment(String assignee) {
-        Actor belongDepartment = null;
-        Actor actor = this.actorService.loadByCode(assignee);
-        List<ActorRelation> ars = this.actorRelationService.findByFollower(ActorRelation.TYPE_BELONG, actor.getId());
-
-        for (ActorRelation ar : ars) {
-            Actor a = ar.getMaster();
-            if (a.getType() == Actor.TYPE_DEPARTMENT)
-                belongDepartment = this.actorService.loadByCode(a.getCode());
+    private Long[] getIds(List<Actor> list) {
+        Long[] ids = new Long[list.size()];
+        for (int i = 0; i < list.size(); i++) {
+            ids[i] = list.get(i).getId();
         }
+        return ids;
+    }
+
+    /**
+     * 在办理人所属部门下，获得配置的岗位
+     *
+     * @param groupNames 岗位名称
+     * @param masterIds 部门Id或单位Id
+     * @return 岗位集合
+     */
+    private List<Actor> findConfigGroupsByBelongDepartment(String[] groupNames, Long[] masterIds) {
+        return this.groupService.findByNames(masterIds, groupNames,
+                new Integer[] {ActorRelation.TYPE_BELONG},
+                new Integer[] {Actor.TYPE_GROUP},
+                new Integer[] {BCConstants.STATUS_ENABLED}
+        );
+    }
+
+    /**
+     * 获得办理人所属部门，或单位
+     *
+     * @param assigneeId 办理人Id
+     * @return 办理人所属部门
+     */
+    private List<Actor> getMaster(Long assigneeId) {
+        List<Actor> belongDepartment = new ArrayList<>();
+        List<ActorRelation> ars = this.actorRelationService.findByFollower(ActorRelation.TYPE_BELONG, assigneeId);
+        for (ActorRelation ar : ars) {
+            Actor master = ar.getMaster();
+            if (master.getType() == Actor.TYPE_DEPARTMENT || master.getType() == Actor.TYPE_UNIT)
+                belongDepartment.add(master);
+        }
+
         return belongDepartment;
     }
 
     /**
-     * 判断用户是否在岗位中
+     * 获得办理人的岗位
+     *
+     * @param id 办理人id
+     * @return 办理人的岗位
      */
-    private boolean isUserHaveGroup(String assignee, List<Actor> users) {
-        if (assignee == null || assignee == "" || users == null
-                || users.size() == 0)
-            return false;
-
-        for (Actor a : users) {
-            if (a.getCode().equals(assignee))
-                return true;
+    private List<Actor> findAssigneeGroups(Long id) {
+        List<Actor> groups = new ArrayList<>();
+        List<ActorRelation> ars = this.actorRelationService.findByFollower(ActorRelation.TYPE_BELONG, id);
+        for (ActorRelation ar : ars) {
+            Actor master = ar.getMaster();
+            if (master.getType() == Actor.TYPE_GROUP)
+                groups.add(master);
         }
-        return false;
+        return groups;
     }
 
     /**
-     * 获得岗位下的用户集合
+     * 判断办理人的岗位是否在配置的岗位集合中存在
      *
-     * @param groupsId 岗位Id
-     * @return 用户集合
+     * @param assigneeGroups 办理人的岗位集合
+     * @param configGroups 配置的岗位集合
+     * @return true：办理人的岗位在配置的岗位中存在； false：办理人的岗位在配置的岗位中不存在
      */
-    private List<Actor> findUsers(Long[] groupsId) {
-        // 获取岗位下的用户
-        return SpringUtils.getBean("actorService", ActorService.class)
-                .findFollwerWithIds(groupsId,
-                        new Integer[]{ActorRelation.TYPE_BELONG},
-                        new Integer[]{Actor.TYPE_USER});
-    }
+    private boolean isUserHaveGroup(List<Actor> assigneeGroups, List<Actor> configGroups) {
+        boolean isExist = false;
 
-    /**
-     * 根据所属部门Id，获得与配置的岗位匹配的岗位集合
-     *
-     * @param belongId 岗位隶属的部门Id
-     * @param groupNames 岗位名称
-     * @return 岗位集合
-     */
-    private List<Actor> findGroups(Long belongId, String[] groupNames) {
-        // 根据岗位名称获取岗位集合
-        return groupService.findByNames((belongId != null) ? new Long[]{belongId} : null, groupNames,
-                new Integer[]{ActorRelation.TYPE_BELONG},
-                new Integer[]{Actor.TYPE_GROUP},
-                new Integer[]{BCConstants.STATUS_ENABLED});
+        // 判断办理人的岗位Id是否在配置的岗位id中存在
+        for (Actor assigneeGroup : assigneeGroups) {
+            for (Actor configGroup : configGroups) {
+                if (assigneeGroup.getId().equals(configGroup.getId()))
+                    isExist = true;
+            }
+        }
+
+        return isExist;
     }
 }
