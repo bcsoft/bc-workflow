@@ -129,7 +129,7 @@ public class WorkflowFormServiceImpl implements WorkflowFormService {
 			Map<String, Object> attach = (Map<String, Object>) attachs[i];
 			if (FlowAttach.TYPE_TEMP_ATTACHMENT == (int)attach.get("type")) formAttachs.add(attach);
 		}
-		local_variables.put("attachs", formAttachs);
+		if (!formAttachs.isEmpty()) local_variables.put("attachs", formAttachs);
 
 		params.putAll(global_variables);// 先放全局变量
 		params.putAll(local_variables);// 再放本地变量(本地变量优先使用)

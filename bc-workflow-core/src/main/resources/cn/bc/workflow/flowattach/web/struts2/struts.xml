@@ -23,6 +23,7 @@
 			method="loadOneAttach4id" />
 		<action name="createAndSave" class="flowAttachAction" method="createAndSave" />
 		<action name="copy2Task" class="flowAttachAction" method="copy2Task" />
+		<action name="copyMainProcessAttachAsTempAttachs" class="flowAttachAction" method="copyMainProcessAttachAsTempAttachs" />
 	</package>
 	<!-- 格式化流程附件 -->
 	<package name="flowattachfile" extends="bc-default"
