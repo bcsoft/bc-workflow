@@ -94,7 +94,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 			// ==== 流程标题
 			String subject = (String) newVars.get("subject");
 			if (subject != null && !subject.isEmpty()) instanceDetail.put("subject", subject);
-			else instanceDetail.put("subject", ((Map<String, Object>) instanceDetail.get("definition")).get("key"));
+			else instanceDetail.put("subject", ((Map<String, Object>) instanceDetail.get("definition")).get("name"));
 			// ==== 流程流水号
 			String code = (String) newVars.get("wf_code");
 			if (code != null && !code.isEmpty()) instanceDetail.put("code", code);
