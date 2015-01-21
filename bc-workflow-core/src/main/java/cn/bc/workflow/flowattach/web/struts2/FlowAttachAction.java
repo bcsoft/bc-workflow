@@ -574,27 +574,33 @@ public class FlowAttachAction extends FileEntityAction<Long, FlowAttach> {
 	}
 
 	/**
-	 * <p>复制主流程附件作为临时的子流程附件，附件type=3</p>
-	 * <p>必须要有 pid，tid变量</p>
+	 * <p>将某流程的附件复制到一个任务中</p>
+	 * <p>必须要有 pid，tid，type变量</p>
 	 * <ul>
-	 *     <li>pid 流程实例Id</li>
+	 *     <li>pid 流程实例Id，格式为：欲查找的流程实例Id + , +任务的流程实例Id。</li>
 	 *     <li>tid 子流程所在的任务Id</li>
+	 *     <li>type 附件的类型</li>
 	 * </ul>
 	 *
-	 * @return
+	 * @return json
 	 */
-	public String copyMainProcessAttachAsTempAttachs() throws JSONException, IOException {
+	public String copyProcessAttachsToTask() throws JSONException, IOException {
 		JSONObject json = new JSONObject();
 		//声明变量
 		List<FlowAttach> attachs = null;
 
 		//验证
-		if((this.pid == null || this.tid == null) || ("".equals(this.tid.trim()) || "".equals(this.pid.trim()))){
-			throw new CoreException("必须设置流程实例Id!");
+		if((this.pid == null || this.tid == null || this.type == 0) || ("".equals(this.tid.trim()) || "".equals(this.pid.trim()))){
+			throw new CoreException("必须设置流程实例Id!，任务Id，附件类型！");
 		}
 
-		attachs =this.flowAttachService.findAttachsByProcess(pid, true);
-		attachs = filterAttaches(attachs);
+		// 获得欲查找的流程实例Id，任务所在的流程实例Id
+		String[] pids = this.pid.split(",");
+		String findPid = pids[0];
+		String taskPid = (pids.length > 1) ? pids[1] : null;
+
+		attachs =this.flowAttachService.findAttachsByProcess(findPid, true);
+		attachs = filterAttaches(attachs);// 过滤附件类型
 
 		//没找到附件
 		if(attachs == null || (attachs != null && attachs.size() == 0)){
@@ -621,6 +627,7 @@ public class FlowAttachAction extends FileEntityAction<Long, FlowAttach> {
 		ActorHistory h = sc.getUserHistory();
 
 		//已经保存的新任务附件
+		List<FlowAttach> tofaList = new ArrayList<>();
 		FlowAttach tofa;
 
 		Set<TemplateParam> paramSet;
@@ -657,10 +664,10 @@ public class FlowAttachAction extends FileEntityAction<Long, FlowAttach> {
 			tofa.setDesc(fa.getDesc());
 			tofa.setExt(fa.getExt());
 			tofa.setFormatted(fa.getFormatted());
-			tofa.setPid(this.pid);
+			tofa.setPid((taskPid != null) ? taskPid : findPid);// 设置附件所属的流程实例
 			tofa.setSize(fa.getSize());
 			tofa.setSubject(fa.getSubject());
-			tofa.setType(FlowAttach.TYPE_TEMP_ATTACHMENT);
+			tofa.setType(this.type);
 			tofa.setUid(this.getIdGeneratorService().next(FlowAttach.ATTACH_TYPE));
 			tofa.setTid(this.tid);
 			tofa.setFileDate(now);
@@ -680,6 +687,7 @@ public class FlowAttachAction extends FileEntityAction<Long, FlowAttach> {
 			}
 
 			this.flowAttachService.save(tofa);
+			tofaList.add(tofa);
 		}
 
 		//生成日志
@@ -693,18 +701,23 @@ public class FlowAttachAction extends FileEntityAction<Long, FlowAttach> {
 //		this.excutionLogService.save(log);
 
 		// 返回前台数据
-		List<FlowAttach> newFlowAttachs = this.flowAttachService.findByTask(tid, FlowAttach.TYPE_TEMP_ATTACHMENT);
 		JSONArray flowAttachs = new JSONArray();
-		for (FlowAttach f : newFlowAttachs) {
+		for (FlowAttach f : tofaList) {
 			JSONObject flowAttach = new JSONObject();
 			flowAttach.put("id", f.getId());
+			flowAttach.put("uid", f.getUid());
 			flowAttach.put("subject", f.getSubject());
+			flowAttach.put("size", f.getSize());
+			flowAttach.put("path", f.getPath());
+			flowAttach.put("formatted", f.getFormatted());
+			flowAttach.put("author", f.getAuthor().getName());
+			flowAttach.put("fileDate", DateUtils.formatCalendar2Second(f.getFileDate()));
 			flowAttachs.put(flowAttach);
 		}
 
 		json.put("success", true);
 		json.put("msg", "复制成功");
-		json.put("flowAttachs", flowAttachs);
+		json.put("flowAttachs", flowAttachs.toString());
 
 		this.json=json.toString();
 		return "json";
