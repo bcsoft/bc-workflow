@@ -85,12 +85,12 @@ public interface FlowAttachService extends CrudService<FlowAttach> {
 
 	/**
 	 * 获取任务附加信息列表
-	 * 
+	 *
 	 * @param taskId
 	 *            任务ID
 	 * @return
 	 */
-	List<FlowAttach> findByTask(String taskId);
+	List<FlowAttach> findByTask(String taskId, int type);
 	
 	/**
 	 * 获取流程实例名称
@@ -98,4 +98,12 @@ public interface FlowAttachService extends CrudService<FlowAttach> {
 	 * @return
 	 */
 	public String getProcInstName(String pid);
+
+	/**
+	 * 将流程附件更新为子流程附件
+	 *  @param ids 附件Id
+	 * @param subProcessInstanceId 子流程实例Id
+	 * @param subProcessTaskId 子流程任务Id
+	 */
+	void updateAttachToSubProcess(Long[] ids, String subProcessInstanceId, String subProcessTaskId);
 }
