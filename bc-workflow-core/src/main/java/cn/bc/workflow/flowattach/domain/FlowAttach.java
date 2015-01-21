@@ -38,8 +38,10 @@ public class FlowAttach extends FileEntityImpl {
 	public static final int TYPE_ATTACHMENT=1;
 	/**意见**/
 	public static final int TYPE_COMMENT=2;
+	/**临时附件，将作为子流程的附件**/
+	public static final int TYPE_TEMP_ATTACHMENT=3;
 
-	private int type;//类型：1-附件，2-意见
+	private int type;//类型：1-附件，2-意见，3-临时附件，将作为子流程的附件
 	private String pid;
 	private String tid;//任务id
 	private String path;////附件路径，物理文件保存的相对路径（相对于全局配置的app.data.realPath或app.data.subPath目录下的子路径，如"workflow/attachment/201207/xxxx.doc"）

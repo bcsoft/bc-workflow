@@ -40,5 +40,25 @@ public class FlowAttachDaoImpl extends HibernateCrudJpaDao<FlowAttach> implement
 		List<Map<String, Object>> list = jdbcTemplate.queryForList(sql);
 		return list.get(0).get("name").toString();
 	}
-	
+
+	@Override
+	public void updateAttachToSubProcess(Long[] ids, String subProcessInstanceId, String subProcessTaskId) {
+		String sql = "with attach(id, pid, tid, type_) as (";
+		sql += " select id, pid, tid, type_";
+		sql += " from bc_wf_attach";
+		sql += " where id in (";
+		for (int i = 0; i < ids.length; i++) {
+			sql += ids[i];
+			if (i < ids.length - 1)
+				sql += ",";
+		}
+		sql += "))";
+		sql += " update bc_wf_attach as a";
+		sql += " set pid = ?, tid = ?, type_ = " + FlowAttach.TYPE_ATTACHMENT;
+		sql += " from attach att";
+		sql += " where att.id = a.id";
+
+		this.jdbcTemplate.update(sql, subProcessInstanceId, subProcessTaskId);
+	}
+
 }

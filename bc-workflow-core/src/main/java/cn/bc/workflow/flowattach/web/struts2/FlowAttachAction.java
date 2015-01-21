@@ -1,18 +1,14 @@
 package cn.bc.workflow.flowattach.web.struts2;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
+import java.io.*;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import org.activiti.engine.HistoryService;
 import org.activiti.engine.history.HistoricTaskInstance;
 import org.apache.struts2.ServletActionContext;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
@@ -57,9 +53,8 @@ public class FlowAttachAction extends FileEntityAction<Long, FlowAttach> {
 	public String pid;// 流程实例id
 	public String tid;// 任务id
 	public boolean common;// 是否公共信息
-	public int type;// 类型：1-附件，2-意见
+	public int type;// 类型：1-附件，2-意见，3-临时子流程附件
 	public String params;
-	// public String
 
 	private FlowAttachService flowAttachService;
 	private ActorHistoryService actorHistroyService;
@@ -149,7 +144,7 @@ public class FlowAttachAction extends FileEntityAction<Long, FlowAttach> {
 	protected void beforeSave(FlowAttach entity) {
 		super.beforeSave(entity);
 		// 设置附件大小,附件扩展名
-		if (entity.getType() == FlowAttach.TYPE_ATTACHMENT) {
+		if (entity.getType() == FlowAttach.TYPE_ATTACHMENT || entity.getType() == FlowAttach.TYPE_TEMP_ATTACHMENT) {
 			entity.setSize(entity.getSizeEx());
 			entity.setExt(StringUtils.getFilenameExtension(entity.getPath()));
 		}
@@ -205,7 +200,7 @@ public class FlowAttachAction extends FileEntityAction<Long, FlowAttach> {
 		e.setModifier(context.getUserHistory());
 		e.setModifiedDate(Calendar.getInstance());
 		// 设置附件大小,附件扩展名
-		if (type == FlowAttach.TYPE_ATTACHMENT) {
+		if (type == FlowAttach.TYPE_ATTACHMENT || type == FlowAttach.TYPE_TEMP_ATTACHMENT) {
 			e.setSize(size);
 			e.setExt(StringUtils.getFilenameExtension(path));
 		}
@@ -576,5 +571,173 @@ public class FlowAttachAction extends FileEntityAction<Long, FlowAttach> {
 		
 		this.json=json.toString();
 		return "json";
+	}
+
+	/**
+	 * <p>将某流程的附件复制到一个任务中</p>
+	 * <p>必须要有 pid，tid，type变量</p>
+	 * <ul>
+	 *     <li>pid 流程实例Id，格式为：欲查找的流程实例Id + , +任务的流程实例Id。</li>
+	 *     <li>tid 子流程所在的任务Id</li>
+	 *     <li>type 附件的类型</li>
+	 * </ul>
+	 *
+	 * @return json
+	 */
+	public String copyProcessAttachsToTask() throws JSONException, IOException {
+		JSONObject json = new JSONObject();
+		//声明变量
+		List<FlowAttach> attachs = null;
+
+		//验证
+		if((this.pid == null || this.tid == null || this.type == 0) || ("".equals(this.tid.trim()) || "".equals(this.pid.trim()))){
+			throw new CoreException("必须设置流程实例Id!，任务Id，附件类型！");
+		}
+
+		// 获得欲查找的流程实例Id，任务所在的流程实例Id
+		String[] pids = this.pid.split(",");
+		String findPid = pids[0];
+		String taskPid = (pids.length > 1) ? pids[1] : null;
+
+		attachs =this.flowAttachService.findAttachsByProcess(findPid, true);
+		attachs = filterAttaches(attachs);// 过滤附件类型
+
+		//没找到附件
+		if(attachs == null || (attachs != null && attachs.size() == 0)){
+			json.put("success", false);
+			json.put("msg", "没有找到附件");
+			this.json = json.toString();
+			return "json";
+		}
+
+		Calendar now = Calendar.getInstance();
+		// 所保存文件存储的相对路径（年月），避免超出目录内文件数的限制
+		String subFolder = new SimpleDateFormat("yyyyMM").format(now.getTime());
+		// 所保存文件存储的绝对路径
+		String appRealDir = Attach.DATA_REAL_PATH + File.separator + FlowAttach.DATA_SUB_PATH;
+		// 所保存文件所在的目录的绝对路径名
+		String realFileDir = appRealDir + File.separator + subFolder;
+
+		// 不含路径的文件名
+		String fileName;
+		// 所保存文件的绝对路径名
+		String realFilePath;
+		// 上下文
+		SystemContext sc = (SystemContext) this.getContext();
+		ActorHistory h = sc.getUserHistory();
+
+		//已经保存的新任务附件
+		List<FlowAttach> tofaList = new ArrayList<>();
+		FlowAttach tofa;
+
+		Set<TemplateParam> paramSet;
+
+		int index=0;
+
+		//复制附件
+		for(FlowAttach fa:attachs) {
+			//再次加载当前时间
+			now = Calendar.getInstance();
+
+			// 构建文件要保存到的目录
+			File _fileDir = new File(realFileDir);
+			if (!_fileDir.exists()) {
+				if (logger.isFatalEnabled())
+					logger.fatal("mkdir=" + realFileDir);
+				_fileDir.mkdirs();
+			}
+			// 不含路径的文件名
+			fileName = new SimpleDateFormat("yyyyMMddHHmmssSSSS")
+					.format(now.getTime())+(index++) + "." + fa.getExt();
+			// 所保存文件的绝对路径名
+			realFilePath = realFileDir + File.separator + fileName;
+
+			// 直接复制附件
+			if (logger.isInfoEnabled())
+				logger.info("pure copy file");
+			FileCopyUtils.copy(new FileInputStream(
+					appRealDir + File.separator + fa.getPath())
+					, new FileOutputStream(realFilePath));
+
+			tofa = new FlowAttach();
+			tofa.setCommon(fa.isCommon());
+			tofa.setDesc(fa.getDesc());
+			tofa.setExt(fa.getExt());
+			tofa.setFormatted(fa.getFormatted());
+			tofa.setPid((taskPid != null) ? taskPid : findPid);// 设置附件所属的流程实例
+			tofa.setSize(fa.getSize());
+			tofa.setSubject(fa.getSubject());
+			tofa.setType(this.type);
+			tofa.setUid(this.getIdGeneratorService().next(FlowAttach.ATTACH_TYPE));
+			tofa.setTid(this.tid);
+			tofa.setFileDate(now);
+			tofa.setAuthor(h);
+			tofa.setModifiedDate(now);
+			tofa.setModifier(h);
+			tofa.setPath(subFolder+ File.separator +fileName);
+
+			if(fa.getParams()==null||fa.getParams().size()==0){
+				tofa.setParams(null);
+			}else{
+				paramSet = new LinkedHashSet();
+				for(TemplateParam p : fa.getParams()){
+					paramSet.add(p);
+				}
+				tofa.setParams(paramSet);
+			}
+
+			this.flowAttachService.save(tofa);
+			tofaList.add(tofa);
+		}
+
+		//生成日志
+//		ExcutionLog log=new ExcutionLog();
+//		log.setFileDate(Calendar.getInstance());
+//		log.setAuthorId(h.getId());
+//		log.setAuthorCode(h.getCode());
+//		log.setAuthorName(h.getName());
+//		log.setListener(FlowAttachAction.class.getName());
+//		log.setType(ExcutionLog.TYPE_PROCESS_SYNC_INFO);
+//		this.excutionLogService.save(log);
+
+		// 返回前台数据
+		JSONArray flowAttachs = new JSONArray();
+		for (FlowAttach f : tofaList) {
+			JSONObject flowAttach = new JSONObject();
+			flowAttach.put("id", f.getId());
+			flowAttach.put("uid", f.getUid());
+			flowAttach.put("subject", f.getSubject());
+			flowAttach.put("size", f.getSize());
+			flowAttach.put("path", f.getPath());
+			flowAttach.put("formatted", f.getFormatted());
+			flowAttach.put("author", f.getAuthor().getName());
+			flowAttach.put("fileDate", DateUtils.formatCalendar2Second(f.getFileDate()));
+			flowAttachs.put(flowAttach);
+		}
+
+		json.put("success", true);
+		json.put("msg", "复制成功");
+		json.put("flowAttachs", flowAttachs.toString());
+
+		this.json=json.toString();
+		return "json";
+	}
+
+	/**
+	 * 过滤附件信息，去除公共附件，和类型为意见
+	 *
+	 * @param attachs 附件集合
+	 * @return 过滤公共附件，和类型为意见后的附件集合
+	 */
+	private List<FlowAttach> filterAttaches(List<FlowAttach> attachs) {
+		List<FlowAttach> tempAttachs = new ArrayList<>();
+		// 过滤附件集合包含的全局附件与子流程自身的附件
+		for (FlowAttach attach : attachs) {
+			if (!attach.isCommon() && attach.getType() == FlowAttach.TYPE_ATTACHMENT) {
+				tempAttachs.add(attach);
+			}
+		}
+		attachs = tempAttachs;
+		return attachs;
 	}
 }

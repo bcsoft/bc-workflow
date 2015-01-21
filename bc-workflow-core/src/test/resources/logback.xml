@@ -95,6 +95,7 @@
 	<logger name="cn.bc.workflow.service.WorkspaceServiceImplTest" level="INFO"/>
 	<logger name="cn.bc.workflow.service.WorkspaceServiceImpl" level="INFO"/>
 	<logger name="cn.bc.workflow.cache.SpringCache" level="DEBUG"/>
+	<logger name="cn.bc.workflow.copy.CopyProcessTest" level="DEBUG"/>
 
 	<!-- 设置默认的日志级别: TRACE < DEBUG < INFO < WARN < ERROR -->
 	<root level="ERROR">

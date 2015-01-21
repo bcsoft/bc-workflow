@@ -94,7 +94,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 			// ==== 流程标题
 			String subject = (String) newVars.get("subject");
 			if (subject != null && !subject.isEmpty()) instanceDetail.put("subject", subject);
-			else instanceDetail.put("subject", ((Map<String, Object>) instanceDetail.get("definition")).get("key"));
+			else instanceDetail.put("subject", ((Map<String, Object>) instanceDetail.get("definition")).get("name"));
 			// ==== 流程流水号
 			String code = (String) newVars.get("wf_code");
 			if (code != null && !code.isEmpty()) instanceDetail.put("code", code);
@@ -832,7 +832,6 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 		for (Object a : attachs) {
 			attach = (Map<String, Object>) a;
 			item = new HashMap<>();
-			attachItems.add(item);
 			item.put("id", attach.get("id"));
 			item.put("pid", attach.get("pid"));// 流程实例id
 			item.put("tid", attach.get("tid"));// 任务id
@@ -849,6 +848,8 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 				item.put("iconClass", "ui-icon-comment");// 左侧显示的小图标
 				item.put("subject", attach.get("subject"));// 意见标题
 				item.put("desc", attach.get("description"));// 意见内容
+			} else if (FlowAttach.TYPE_TEMP_ATTACHMENT == attachType) {
+				continue;// 临时附件，将作为子流程的附件，不渲染
 			} else {
 				logger.warn("不支持的 FlowAttach 类型:id={}, type={}", attach.get("id"), attachType);
 				itemType = "none";
@@ -864,6 +865,8 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 			detail = new ArrayList<>();
 			item.put("detail", detail);
 			detail.add(((Map<String, Object>) attach.get("author")).get("name") + " " + ((String) attach.get("file_date")).substring(0, 16)); // 创建信息
+
+			attachItems.add(item);
 		}
 		return attachItems;
 	}

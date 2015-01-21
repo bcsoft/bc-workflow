@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package cn.bc.workflow.flowattach.service;
 
@@ -24,7 +24,7 @@ import cn.bc.workflow.flowattach.domain.FlowAttach;
 
 /**
  * 流程附加信息Service的实现
- * 
+ *
  * @author lbj
  */
 public class FlowAttachServiceImpl extends DefaultCrudService<FlowAttach>
@@ -53,11 +53,11 @@ public class FlowAttachServiceImpl extends DefaultCrudService<FlowAttach>
 		return findByProcess(processInstanceId,
 				new Integer[] { FlowAttach.TYPE_COMMENT }, includeTask);
 	}
-	
+
 	public List<FlowAttach> findAttachsByProcess(String processInstanceId,
 			boolean includeTask) {
 		return findByProcess(processInstanceId,
-				new Integer[] { FlowAttach.TYPE_ATTACHMENT }, includeTask);
+				new Integer[]{FlowAttach.TYPE_ATTACHMENT}, includeTask);
 	}
 
 	public List<FlowAttach> findByProcess(String processInstanceId,
@@ -86,7 +86,7 @@ public class FlowAttachServiceImpl extends DefaultCrudService<FlowAttach>
 	}
 
 	public List<FlowAttach> findCommentsByTask(String[] taskIds) {
-		return findByTask(taskIds, new Integer[] { FlowAttach.TYPE_COMMENT });
+		return findByTask(taskIds, new Integer[]{FlowAttach.TYPE_COMMENT});
 	}
 
 	public List<FlowAttach> findByTask(String[] taskIds, Integer[] types) {
@@ -111,15 +111,18 @@ public class FlowAttachServiceImpl extends DefaultCrudService<FlowAttach>
 		return this.createQuery().condition(and).list();
 	}
 
-	public List<FlowAttach> findByTask(String taskId) {
-		if (taskId == null || taskId.length() == 0)
-			return new ArrayList<FlowAttach>();
-
-		return findByTask(new String[] { taskId });
+	@Override
+	public List<FlowAttach> findByTask(String taskId, int type) {
+		return this.findByTask(new String[]{taskId}, new Integer[]{type});
 	}
 
 	public String getProcInstName(String pid) {
 		return flowAttachDao.getProcInstName(pid);
+	}
+
+	@Override
+	public void updateAttachToSubProcess(Long[] ids, String subProcessInstanceId, String subProcessTaskId) {
+		this.flowAttachDao.updateAttachToSubProcess(ids, subProcessInstanceId, subProcessTaskId);
 	}
 
 	public List<FlowAttach> findAttachsByTask(String[] taskIds) {
