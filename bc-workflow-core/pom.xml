@@ -46,7 +46,11 @@
 			<artifactId>bc-message</artifactId>
 			<version>${framework.version}</version>
 		</dependency>
-
+		<dependency>
+			<groupId>cn.bc</groupId>
+			<artifactId>bc-workday</artifactId>
+			<version>${framework.version}</version>
+		</dependency>
 		<!-- for test -->
 		<dependency>
 			<groupId>cn.bc</groupId>

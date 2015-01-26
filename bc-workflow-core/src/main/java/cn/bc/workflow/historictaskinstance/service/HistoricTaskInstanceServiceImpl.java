@@ -3,6 +3,7 @@
  */
 package cn.bc.workflow.historictaskinstance.service;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -84,4 +85,20 @@ public class HistoricTaskInstanceServiceImpl implements HistoricTaskInstanceServ
 		return this.historicTaskInstanceDao.findHisProcessTaskVarValue(processInstanceId, taskKey, varName);
 	}
 
+	@Override
+	public Date findProcessInstanceStartTime(String processInstanceId) {
+		return this.historicTaskInstanceDao.findProcessInstanceStartTime(processInstanceId);
+	}
+
+	@Override
+	public Date findProcessInstanceTaskStartTime(String processInstanceId,
+			String taskCode) {
+		return this.historicTaskInstanceDao.findProcessInstanceTaskStartTime(processInstanceId, taskCode);
+	}
+
+	@Override
+	public Date findProcessInstanceTaskEndTime(String processInstanceId,
+			List<String> taskCodes) {
+		return this.historicTaskInstanceDao.findProcessInstanceTaskEndTime(processInstanceId, taskCodes);
+	}
 }

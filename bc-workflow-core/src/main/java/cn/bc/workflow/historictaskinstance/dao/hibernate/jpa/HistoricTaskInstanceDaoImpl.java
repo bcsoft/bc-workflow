@@ -3,6 +3,9 @@
  */
 package cn.bc.workflow.historictaskinstance.dao.hibernate.jpa;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -10,6 +13,7 @@ import javax.sql.DataSource;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
 
 import cn.bc.workflow.historictaskinstance.dao.HistoricTaskInstanceDao;
 
@@ -125,5 +129,89 @@ public class HistoricTaskInstanceDaoImpl implements HistoricTaskInstanceDao {
 		sql += " and d.name_ in (" + name + ")";
 
 		return this.jdbcTemplate.queryForList(sql, processInstanceId);
+	}
+	
+	@Override
+	public Date findProcessInstanceStartTime(String processInstanceId) {
+		String sql = "select p.start_time_ :: date FROM act_hi_procinst p  where p.proc_inst_id_ = ? ";		
+		Date startDate = this.jdbcTemplate.queryForObject(sql, new Object[]{processInstanceId}, new RowMapper<Date>(){
+			@Override
+			public Date mapRow(ResultSet rs, int rowNum) throws SQLException {
+				return rs.getDate("start_time_");
+			}
+		});
+		return startDate;
+	}
+
+	@Override
+	public Date findProcessInstanceTaskStartTime(String processInstanceId,
+			String taskCode) {
+
+		String sql = "SELECT t.end_time_ :: date "
+				+ " FROM act_hi_taskinst t "
+				+ " where t.proc_inst_id_ = ? "
+				+ " and t.task_def_key_ = ? "
+				+ " and not exists( " 
+					+ " select 0 "
+					+ " FROM act_hi_taskinst t1 "
+					+ " where t1.proc_inst_id_ = ? "
+					+ " and t1.task_def_key_ = ? "
+					+ " and t.start_time_ < t1.start_time_ "
+				+ " ) "
+				+ " order by t.start_time_ desc ";	
+		Date startDate = this.jdbcTemplate.queryForObject(sql
+			, new Object[]{processInstanceId ,taskCode, taskCode, processInstanceId}
+			, new RowMapper<Date>(){
+				@Override
+				public Date mapRow(ResultSet rs, int rowNum) throws SQLException {
+					return rs.getDate("end_time_");
+				}
+		});
+			
+		return startDate;
+	}
+
+	@Override
+	public Date findProcessInstanceTaskEndTime(String processInstanceId,
+			List<String> taskCodes) {
+		
+		String variable = "";  //构建"?"的表达式并进行赋值
+		
+		for(int i = 0 ; i < taskCodes.size() ; i++){
+			variable += i == taskCodes.size()-1 ? " ? " : " ? ,";
+		}
+		Object[] args = new Object[taskCodes.size()*2 + 2];
+		for(int i = 0 ; i < taskCodes.size()*2 + 2 ; i++){
+			if(i == 0 || i == taskCodes.size()+1)
+				args[i] = processInstanceId;
+			else{
+				if(i < taskCodes.size()+ 1 ){
+					args[i] = taskCodes.get(i-1);
+				}else{
+					args[i] = taskCodes.get((i-2)%taskCodes.size());
+				}				
+			}
+		}
+		String sql = "SELECT t.end_time_ :: date "
+				+ " FROM act_hi_taskinst t "
+				+ " where t.proc_inst_id_ = ? "
+				+ " and t.task_def_key_ in ( " + variable + " ) "
+				+ " and not exists( " 
+					+ " select 0 "
+					+ " FROM act_hi_taskinst t1 "
+					+ " where t1.proc_inst_id_ = ? "
+					+ " and t1.task_def_key_ in (" + variable + ") "
+					+ " and t.start_time_ < t1.start_time_ "
+				+ " ) "
+				+ " order by t.start_time_ desc ";	
+		Date endDate = this.jdbcTemplate.queryForObject(sql
+			, args
+			, new RowMapper<Date>(){
+				@Override
+				public Date mapRow(ResultSet rs, int rowNum) throws SQLException {
+					return rs.getDate("end_time_");
+				}	
+		});
+		return endDate;
 	}
 }
