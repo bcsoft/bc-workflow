@@ -5,14 +5,13 @@ package cn.bc.workflow.service;
 
 import cn.bc.core.exception.CoreException;
 import cn.bc.core.util.DateUtils;
+import cn.bc.core.util.FreeMarkerUtils;
 import cn.bc.core.util.TemplateUtils;
 import cn.bc.docs.domain.Attach;
 import cn.bc.identity.web.SystemContextHolder;
 import cn.bc.template.domain.Template;
 import cn.bc.template.service.TemplateService;
-import cn.bc.template.util.FreeMarkerUtils;
 import cn.bc.web.util.WebUtils;
-import cn.bc.workflow.deploy.domain.DeployResource;
 import cn.bc.workflow.deploy.service.DeployService;
 import cn.bc.workflow.flowattach.domain.FlowAttach;
 import org.activiti.engine.HistoryService;
