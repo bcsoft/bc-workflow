@@ -30,6 +30,11 @@ public class WorkflowModuleRelationServiceImpl extends
 		this.setCrudDao(workflowModuleRelationDao);
 	}
 
+	@Override
+	public List<Map<String, Object>> findList(Long[] mid, String mtype) {
+		return this.workflowModuleRelationDao.findList(mid, mtype, null, null);
+	}
+
 	public List<Map<String, Object>> findList(Long mid, String mtype,
 			String[] globalKeys) {
 		return this.workflowModuleRelationDao.findList(mid, mtype, null,
