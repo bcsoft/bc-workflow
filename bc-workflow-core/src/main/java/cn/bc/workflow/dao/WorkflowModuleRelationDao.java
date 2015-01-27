@@ -28,6 +28,18 @@ public interface WorkflowModuleRelationDao extends
 			String[] globalKeys);
 
 	/**
+	 * 查找流程关系集合
+	 *
+	 * @param mid
+	 * @param mtype
+	 * @param key
+	 * @param globalKeys
+	 * @return
+	 */
+	List<Map<String, Object>> findList(Long[] mid, String mtype, String key,
+									   String[] globalKeys);
+
+	/**
 	 * 通过mid mtype key 返回是否存在流程关系
 	 * 
 	 * @param mid
