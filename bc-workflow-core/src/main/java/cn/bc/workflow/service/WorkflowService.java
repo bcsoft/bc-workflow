@@ -3,6 +3,7 @@
  */
 package cn.bc.workflow.service;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
@@ -311,4 +312,24 @@ public interface WorkflowService {
 	 * @return
 	 */
 	List<Map<String, Object>> findSubProcessInstanceInfoById(String processInstanceId);
+
+    /**
+     * 强制更新 Activiti 流程部署资源的数据
+     *
+     * @param deploymentId Activiti的流程部署ID
+     * @param resourceName Activiti的资源名称
+     * @param in 新数据
+     * @return 更新成功返回 true 否则返回 false
+     */
+    boolean updateDeploymentResource(String deploymentId, String resourceName, InputStream in) throws IOException;
+
+    /**
+     * 强制更新 Activiti 流程部署资源的数据
+     *
+     * @param deploymentId Activiti的流程部署ID
+     * @param resourceName Activiti的资源名称
+     * @param in 新数据
+     * @return 更新成功返回 true 否则返回 false
+     */
+    boolean updateDeploymentResource(String deploymentId, String resourceName, byte[] in);
 }

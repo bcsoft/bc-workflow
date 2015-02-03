@@ -140,4 +140,13 @@ public class WorkflowDaoImpl implements WorkflowDao {
 
 		return this.jdbcTemplate.queryForList(sql, processInstanceId);
 	}
+
+    @Override
+    public boolean updateDeploymentResource(String deploymentId, String resourceName, byte[] in) {
+        String sql = "update act_ge_bytearray set bytes_ = ?";
+        sql += " where deployment_id_ = ? and name_ = ?";
+
+        Integer rows = this.jdbcTemplate.update(sql, in, deploymentId, resourceName);
+        return (rows != null) && (rows > 0);
+    }
 }
