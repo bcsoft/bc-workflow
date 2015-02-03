@@ -36,11 +36,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.util.Assert;
+import org.springframework.util.FileCopyUtils;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.InputStream;
+import java.io.*;
 import java.util.*;
 import java.util.zip.ZipInputStream;
 
@@ -1084,4 +1082,15 @@ public class WorkflowServiceImpl implements WorkflowService {
 	public List<Map<String, Object>> findSubProcessInstanceInfoById(String processInstanceId) {
 		return this.workflowDao.findSubProcessInstanceInfoById(processInstanceId);
 	}
+
+    @Override
+    public boolean updateDeploymentResource(String deploymentId, String resourceName, InputStream in) throws IOException {
+        byte[] bytes = FileCopyUtils.copyToByteArray(in);
+        return this.updateDeploymentResource(deploymentId, resourceName, bytes);
+    }
+
+    @Override
+    public boolean updateDeploymentResource(String deploymentId, String resourceName, byte[] in) {
+        return this.workflowDao.updateDeploymentResource(deploymentId, resourceName, in);
+    }
 }
