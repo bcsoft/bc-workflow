@@ -422,7 +422,7 @@ public class DeployServiceImpl extends DefaultCrudService<Deploy> implements Dep
 	}
 
 	@Override
-	@Cacheable(value = "wfDeployResource")
+	@Cacheable(value = "wfDeployResource", key="\"deploymentId=\" + #deploymentId + \" resourceCode=\" + #resourceCode")
 	public String getResourceContent(String deploymentId, String resourceCode) {
 		// TODO load all resource to cache
 		logger.info("load deploy resource from db/IO. deploymentId={}, resourceCode={}", deploymentId, resourceCode);
