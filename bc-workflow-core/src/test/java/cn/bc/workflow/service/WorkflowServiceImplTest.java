@@ -7,6 +7,7 @@ import cn.bc.identity.service.UserService;
 import cn.bc.identity.web.SystemContext;
 import cn.bc.identity.web.SystemContextHolder;
 import cn.bc.identity.web.SystemContextImpl;
+import org.commontemplate.util.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
@@ -20,6 +21,7 @@ import org.springframework.util.FileCopyUtils;
 
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Date;
 import java.util.Map;
@@ -80,4 +82,16 @@ public class WorkflowServiceImplTest {
 		ActorHistory userHistory = this.actorHistoryService.loadByCode("admin");
 		context.setAttr(SystemContext.KEY_USER_HISTORY, userHistory);
 	}
+
+    @Test
+    public void updateDeploymentResource() throws IOException {
+        // 文件输入流
+        InputStream in = WorkflowServiceImplTest.class.getClassLoader().getResourceAsStream("cn/bc/workflow/examples/ApprovalItem.bpmn20.xml");
+        // ApprovalItem.bar的id
+        String deployment_id = "3858400";
+        // 资源文件名
+        String resourceName = "ApprovalItem.bpmn20.xml";
+
+        Assert.assertTrue(this.workflowService.updateDeploymentResource(deployment_id, resourceName, in));
+    }
 }

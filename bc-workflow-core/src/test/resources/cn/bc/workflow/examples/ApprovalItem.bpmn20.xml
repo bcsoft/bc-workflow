@@ -1,0 +1,460 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:activiti="http://activiti.org/bpmn" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:omgdc="http://www.omg.org/spec/DD/20100524/DC" xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI" typeLanguage="http://www.w3.org/2001/XMLSchema" expressionLanguage="http://www.w3.org/1999/XPath" targetNamespace="http://www.bctaxi.com.cn/workflow">
+  <process id="ApprovalItem" name="审批事项处理流程">
+    <extensionElements>
+      <activiti:executionListener event="start" class="cn.bc.workflow.activiti.delegate.ProcessLogListener"></activiti:executionListener>
+      <activiti:executionListener event="end" class="cn.bc.workflow.activiti.delegate.ProcessLogListener"></activiti:executionListener>
+      <activiti:executionListener event="start" class="cn.bc.workflow.activiti.delegate.IdGeneratorProcessListener">
+        <activiti:field name="type4Date">
+          <activiti:string>yyyyMM</activiti:string>
+        </activiti:field>
+        <activiti:field name="formatNumber">
+          <activiti:string>0000</activiti:string>
+        </activiti:field>
+        <activiti:field name="pattern">
+          <activiti:expression>SP${yyyy}${MM}${formatNumber}</activiti:expression>
+        </activiti:field>
+        <activiti:field name="type4Code">
+          <activiti:string>ApprovalItem</activiti:string>
+        </activiti:field>
+      </activiti:executionListener>
+      <activiti:executionListener event="start" class="cn.bc.workflow.activiti.delegate.Attach4ProcessListener">
+        <activiti:field name="resourceCode">
+          <activiti:string>spb,approvalItemRequirements,approvalItemJurisdiction</activiti:string>
+        </activiti:field>
+      </activiti:executionListener>
+    </extensionElements>
+    <startEvent id="startevent1" name="Start" activiti:initiator="initiator"></startEvent>
+    <userTask id="t010ApplyMatter" name="提出申请" activiti:assignee="${initiator}" activiti:formKey="fm:wf:ApprovalItem/t010ApplyMatter">
+      <documentation>&lt;p&gt;申请部门填写申请事由，简述申请事项的基本情况、分析及建议、请示的具体事项。&lt;/p&gt;&lt;p&gt;提出的申请将根据事项类别由系统自动提交相关部门会签，会签部门一致通过的提交相应分管领导审批；任一会签部门不通过的，则返回申请部门确认。&lt;/p&gt;
+</documentation>
+      <extensionElements>
+        <activiti:taskListener event="create" class="cn.bc.workflow.activiti.delegate.TaskLogListener"></activiti:taskListener>
+        <activiti:taskListener event="complete" class="cn.bc.workflow.activiti.delegate.TaskLogListener"></activiti:taskListener>
+        <activiti:taskListener event="create" class="cn.bc.workflow.activiti.delegate.AutoLoadAssignUpperListener">
+          <activiti:field name="add_global">
+            <activiti:string>true</activiti:string>
+          </activiti:field>
+        </activiti:taskListener>
+        <activiti:taskListener event="create" class="cn.bc.workflow.activiti.delegate.InitHiddenButtons4TaskListener">
+          <activiti:field name="hiddenButtonCodes">
+            <activiti:string>BUTTON_ADDCOMMENT</activiti:string>
+          </activiti:field>
+        </activiti:taskListener>
+        <activiti:taskListener event="complete" class="cn.bc.business.workflow.approvalitem.delegate.BuildCheckCooperationListener">
+          <activiti:field name="departmentIdName">
+            <activiti:string>upperId</activiti:string>
+          </activiti:field>
+          <activiti:field name="eventCategory">
+            <activiti:string>itemCategory_lc</activiti:string>
+          </activiti:field>
+          <activiti:field name="manageNames">
+            <activiti:string>分公司经理,部门经理,财务部经理,办公室主任,修理厂厂长</activiti:string>
+          </activiti:field>
+        </activiti:taskListener>
+      </extensionElements>
+    </userTask>
+    <userTask id="t020DepartmentCooperation" name="相关部门会签" activiti:formKey="fm:wf:ApprovalItem/t020DepartmentCooperation">
+      <documentation>&lt;p&gt;1、会签部门应根据自身部门职责进行审核，并加具审核意见。对申请依据及材料明显不足的，应判断为&amp;ldquo;不通过&amp;rdquo;。&lt;/p&gt;&lt;p&gt;2、如会签部门一致通过，系统直接呈公司分管领导审批。&lt;/p&gt;&lt;p&gt;3、如任一部门不通过的，按以下方式操作：&lt;/p&gt;&lt;p&gt;（1）退回：申请事项不符合公司规定，依据及材料明显不足、处理意见不合理的，会签部门加具意见后退回，由申请部门调整处理申请或补充证明资料后呈公司分管领导审批。&lt;/p&gt;&lt;p&gt;（2）协商：&lt;/p&gt;&lt;p&gt;A、会签部门对申请事项存有异议的，应通过电话、跨部门会议等方式与申请部门进行协商，协商后达成一致的，呈公司分管领导审批。&lt;/p&gt;&lt;p&gt;B、若经协商后未能达成统一意见，但申请部门坚持己方意见的，可在申请中予以说明并报上一级领导审批。&lt;/p&gt;</documentation>
+      <extensionElements>
+        <activiti:taskListener event="create" class="cn.bc.workflow.activiti.delegate.MultiInstanceAssigneeListener">
+          <activiti:field name="onlyOneUser">
+            <activiti:string>true</activiti:string>
+          </activiti:field>
+        </activiti:taskListener>
+        <activiti:taskListener event="create" class="cn.bc.workflow.activiti.delegate.TaskLogListener"></activiti:taskListener>
+        <activiti:taskListener event="complete" class="cn.bc.workflow.activiti.delegate.TaskLogListener"></activiti:taskListener>
+        <activiti:taskListener event="create" class="cn.bc.workflow.activiti.delegate.InitHiddenButtons4TaskListener">
+          <activiti:field name="hiddenButtonCodes">
+            <activiti:string>BUTTON_ADDCOMMENT</activiti:string>
+          </activiti:field>
+        </activiti:taskListener>
+        <activiti:taskListener event="create" class="cn.bc.workflow.activiti.delegate.TaskMailListener">
+          <activiti:field name="detail">
+            <activiti:string>applyMatterDesc</activiti:string>
+          </activiti:field>
+        </activiti:taskListener>
+        <activiti:taskListener event="complete" class="cn.bc.workflow.activiti.delegate.ResultAndOrOperationListener">
+          <activiti:field name="varNamelocal">
+            <activiti:string>checkResult_lc</activiti:string>
+          </activiti:field>
+          <activiti:field name="operation">
+            <activiti:string>and</activiti:string>
+          </activiti:field>
+        </activiti:taskListener>
+      </extensionElements>
+      <multiInstanceLoopCharacteristics isSequential="false" activiti:collection="list_co4departmentAndAssignee" activiti:elementVariable="multiInstanceCollentionKey"></multiInstanceLoopCharacteristics>
+    </userTask>
+    <endEvent id="endevent1" name="End"></endEvent>
+    <exclusiveGateway id="exclusivegateway7" name="Exclusive Gateway" default="flow79"></exclusiveGateway>
+    <userTask id="t040AccordingCheckTreatment" name="根据批示处理" activiti:formKey="fm:wf:ApprovalItem/t040AccordingCheckTreatment">
+      <documentation>如会签部门、申请部门对审批有异议（如发现存在越权审批等情况的），可进行反馈，由流程监控员介入处理</documentation>
+      <extensionElements>
+        <activiti:taskListener event="complete" class="cn.bc.business.workflow.approvalitem.delegate.FindExecutorsListener">
+          <activiti:field name="departmentIdName">
+            <activiti:string>upperId</activiti:string>
+          </activiti:field>
+          <activiti:field name="eventCategory">
+            <activiti:string>itemCategory</activiti:string>
+          </activiti:field>
+          <activiti:field name="listExecuteDepartments">
+            <activiti:string>listExecuteDepartments</activiti:string>
+          </activiti:field>
+          <activiti:field name="listExecuteGroups">
+            <activiti:string>listExecuteGroups</activiti:string>
+          </activiti:field>
+          <activiti:field name="manageNames">
+            <activiti:string>分公司经理,部门经理,财务部经理,办公室主任,修理厂厂长</activiti:string>
+          </activiti:field>
+        </activiti:taskListener>
+        <activiti:taskListener event="create" class="cn.bc.workflow.activiti.delegate.MultiInstanceAssigneeListener"></activiti:taskListener>
+        <activiti:taskListener event="create" class="cn.bc.workflow.activiti.delegate.TaskLogListener"></activiti:taskListener>
+        <activiti:taskListener event="complete" class="cn.bc.workflow.activiti.delegate.TaskLogListener"></activiti:taskListener>
+        <activiti:taskListener event="create" class="cn.bc.workflow.activiti.delegate.InitHiddenButtons4TaskListener">
+          <activiti:field name="hiddenButtonCodes">
+            <activiti:string>BUTTON_ADDCOMMENT</activiti:string>
+          </activiti:field>
+        </activiti:taskListener>
+        <activiti:taskListener event="create" class="cn.bc.workflow.activiti.delegate.TaskMailListener">
+          <activiti:field name="detail">
+            <activiti:string>applyMatterDesc</activiti:string>
+          </activiti:field>
+        </activiti:taskListener>
+        <activiti:taskListener event="complete" class="cn.bc.workflow.activiti.delegate.ResultAndOrOperationListener">
+          <activiti:field name="varNamelocal">
+            <activiti:string>isDiffering_lc</activiti:string>
+          </activiti:field>
+          <activiti:field name="operation">
+            <activiti:string>or</activiti:string>
+          </activiti:field>
+        </activiti:taskListener>
+      </extensionElements>
+      <multiInstanceLoopCharacteristics isSequential="false" activiti:collection="listExecuteGroups" activiti:elementVariable="multiInstanceCollentionKey"></multiInstanceLoopCharacteristics>
+    </userTask>
+    <userTask id="t030LeaderCheck" name="领导审批" activiti:formKey="fm:wf:ApprovalItem/t030LeaderCheck">
+      <documentation>&lt;p&gt;1、会签部门一致同意的：由公司领导根据自身权限，结合公司实际情况作出批示。&lt;br /&gt;2、会签部门意见不一的：&lt;br /&gt;（1）根据申请及会签意见可作出判断的，直接给予批示。&lt;br /&gt;（2）存有疑问，不能直接作出判断的，召集相关部门召开联席会议进行协商。如协商一致的，可直接给予批示。若会议协商后仍未能统一意见的：A、根据会议相关情况，直接作出批示；B、提交上一级领导审批。&lt;/p&gt;</documentation>
+      <extensionElements>
+        <activiti:taskListener event="create" class="cn.bc.business.workflow.approvalitem.delegate.FindLeadersListener">
+          <activiti:field name="checkLevel">
+            <activiti:string>level</activiti:string>
+          </activiti:field>
+          <activiti:field name="departmentIdName">
+            <activiti:string>upperId</activiti:string>
+          </activiti:field>
+          <activiti:field name="eventCategory">
+            <activiti:string>itemCategory</activiti:string>
+          </activiti:field>
+        </activiti:taskListener>
+        <activiti:taskListener event="create" class="cn.bc.workflow.activiti.delegate.Assign2GroupUserListener">
+          <activiti:field name="groupName">
+            <activiti:string>dealLeaderName</activiti:string>
+          </activiti:field>
+          <activiti:field name="isGroupNameValue">
+            <activiti:string>true</activiti:string>
+          </activiti:field>
+          <activiti:field name="onlyOneUser">
+            <activiti:string>true</activiti:string>
+          </activiti:field>
+        </activiti:taskListener>
+        <activiti:taskListener event="create" class="cn.bc.workflow.activiti.delegate.TaskLogListener"></activiti:taskListener>
+        <activiti:taskListener event="complete" class="cn.bc.workflow.activiti.delegate.TaskLogListener"></activiti:taskListener>
+        <activiti:taskListener event="create" class="cn.bc.workflow.activiti.delegate.InitHiddenButtons4TaskListener">
+          <activiti:field name="hiddenButtonCodes">
+            <activiti:string>BUTTON_ADDCOMMENT</activiti:string>
+          </activiti:field>
+        </activiti:taskListener>
+        <activiti:taskListener event="create" class="cn.bc.workflow.activiti.delegate.TaskMailListener">
+          <activiti:field name="detail">
+            <activiti:string>applyMatterDesc</activiti:string>
+          </activiti:field>
+        </activiti:taskListener>
+      </extensionElements>
+    </userTask>
+    <exclusiveGateway id="exclusivegateway10" name="Exclusive Gateway" default="flow96"></exclusiveGateway>
+    <exclusiveGateway id="exclusivegateway11" name="Exclusive Gateway" default="flow103"></exclusiveGateway>
+    <userTask id="t050ApplyMatterCheck" name="申请部门确认" activiti:assignee="${initiator}" activiti:formKey="fm:wf:ApprovalItem/t050ApplyMatterCheck">
+      <documentation>&lt;p&gt;1、申请部门一般情况下应根据会签部门意见进行调整或补充材料后再呈公司领导审批。&lt;/p&gt;&lt;p&gt;2、如申请部门与会签部门意见不一致的，应进行协商。协商后仍不能达成共识的，申请部门有权继续呈公司领导审批。但申请依据及材料明显不足的情况下，不得继续呈批。&lt;/p&gt;</documentation>
+      <extensionElements>
+        <activiti:taskListener event="create" class="cn.bc.workflow.activiti.delegate.TaskLogListener"></activiti:taskListener>
+        <activiti:taskListener event="complete" class="cn.bc.workflow.activiti.delegate.TaskLogListener"></activiti:taskListener>
+        <activiti:taskListener event="create" class="cn.bc.workflow.activiti.delegate.TaskMailListener">
+          <activiti:field name="detail">
+            <activiti:string>applyMatterDesc</activiti:string>
+          </activiti:field>
+        </activiti:taskListener>
+        <activiti:taskListener event="create" class="cn.bc.workflow.activiti.delegate.InitHiddenButtons4TaskListener">
+          <activiti:field name="hiddenButtonCodes">
+            <activiti:string>BUTTON_ADDCOMMENT</activiti:string>
+          </activiti:field>
+        </activiti:taskListener>
+      </extensionElements>
+    </userTask>
+    <exclusiveGateway id="exclusivegateway12" name="Exclusive Gateway"></exclusiveGateway>
+    <userTask id="t060FlowMonitorCheck" name="流程监控员核实" activiti:formKey="fm:wf:ApprovalItem/t060FlowMonitorCheck">
+      <extensionElements>
+        <activiti:taskListener event="create" class="cn.bc.workflow.activiti.delegate.Assign2GroupUserListener">
+          <activiti:field name="groupName">
+            <activiti:string>审批流程核实监控员</activiti:string>
+          </activiti:field>
+          <activiti:field name="onlyOneUser">
+            <activiti:string>true</activiti:string>
+          </activiti:field>
+        </activiti:taskListener>
+        <activiti:taskListener event="create" class="cn.bc.workflow.activiti.delegate.TaskMailListener">
+          <activiti:field name="detail">
+            <activiti:string>applyMatterDesc</activiti:string>
+          </activiti:field>
+        </activiti:taskListener>
+        <activiti:taskListener event="create" class="cn.bc.workflow.activiti.delegate.InitHiddenButtons4TaskListener"></activiti:taskListener>
+        <activiti:taskListener event="create" class="cn.bc.workflow.activiti.delegate.TaskLogListener"></activiti:taskListener>
+        <activiti:taskListener event="complete" class="cn.bc.workflow.activiti.delegate.TaskLogListener"></activiti:taskListener>
+      </extensionElements>
+    </userTask>
+    <exclusiveGateway id="exclusivegateway13" name="Exclusive Gateway" default="flow109"></exclusiveGateway>
+    <exclusiveGateway id="exclusivegateway14" name="Exclusive Gateway" default="flow107"></exclusiveGateway>
+    <exclusiveGateway id="exclusivegateway15" name="Exclusive Gateway"></exclusiveGateway>
+    <sequenceFlow id="flow46" name="审批事项处理流程" sourceRef="startevent1" targetRef="t010ApplyMatter"></sequenceFlow>
+    <sequenceFlow id="flow78" name="" sourceRef="t020DepartmentCooperation" targetRef="exclusivegateway7"></sequenceFlow>
+    <sequenceFlow id="flow79" name="不通过（任一部门）" sourceRef="exclusivegateway7" targetRef="t050ApplyMatterCheck">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${checkResult == false}]]></conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="flow80" name="一致通过" sourceRef="exclusivegateway7" targetRef="t030LeaderCheck">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${checkResult == true}]]></conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="flow94" name="" sourceRef="t010ApplyMatter" targetRef="exclusivegateway15"></sequenceFlow>
+    <sequenceFlow id="flow95" name="" sourceRef="t030LeaderCheck" targetRef="exclusivegateway10"></sequenceFlow>
+    <sequenceFlow id="flow96" name="呈批" sourceRef="exclusivegateway10" targetRef="t030LeaderCheck"></sequenceFlow>
+    <sequenceFlow id="flow97" name="获得办理岗位" sourceRef="exclusivegateway10" targetRef="t040AccordingCheckTreatment">
+      <extensionElements>
+        <activiti:executionListener event="complete" class="cn.bc.business.workflow.approvalitem.delegate.FindExecutorsForConfigListener">
+          <activiti:field name="departmentIdName">
+            <activiti:string>upperId</activiti:string>
+          </activiti:field>
+          <activiti:field name="eventCategory">
+            <activiti:string>itemCategory</activiti:string>
+          </activiti:field>
+          <activiti:field name="listExecuteDepartments">
+            <activiti:string>listExecuteDepartments</activiti:string>
+          </activiti:field>
+          <activiti:field name="listExecuteGroups">
+            <activiti:string>listExecuteGroups</activiti:string>
+          </activiti:field>
+          <activiti:field name="manageNames">
+            <activiti:string>分公司经理,部门经理,财务部经理,办公室主任,修理厂厂长</activiti:string>
+          </activiti:field>
+        </activiti:executionListener>
+      </extensionElements>
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${handling=="complete" && leaderCheckResult==true}]]></conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="flow98" name="" sourceRef="t040AccordingCheckTreatment" targetRef="exclusivegateway11"></sequenceFlow>
+    <sequenceFlow id="flow99" name="" sourceRef="exclusivegateway11" targetRef="t040AccordingCheckTreatment">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${isNext}]]></conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="flow100" name="" sourceRef="t050ApplyMatterCheck" targetRef="exclusivegateway12"></sequenceFlow>
+    <sequenceFlow id="flow101" name="撤销" sourceRef="exclusivegateway12" targetRef="endevent1">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${applyCheck == false}]]></conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="flow102" name="呈批" sourceRef="exclusivegateway12" targetRef="t030LeaderCheck">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${applyCheck == true}]]></conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="flow103" name="" sourceRef="exclusivegateway11" targetRef="exclusivegateway13"></sequenceFlow>
+    <sequenceFlow id="flow104" name="" sourceRef="exclusivegateway10" targetRef="endevent1">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${leaderCheckResult==false}]]></conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="flow105" name="发现异常" sourceRef="exclusivegateway13" targetRef="t060FlowMonitorCheck">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${isDiffering}]]></conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="flow106" name="" sourceRef="t060FlowMonitorCheck" targetRef="exclusivegateway14"></sequenceFlow>
+    <sequenceFlow id="flow107" name="异常不属实" sourceRef="exclusivegateway14" targetRef="endevent1">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${!isTrue}]]></conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="flow108" name="发回重批" sourceRef="exclusivegateway14" targetRef="t030LeaderCheck">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${isTrue}]]></conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="flow109" name="" sourceRef="exclusivegateway13" targetRef="endevent1">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${!isDiffering}]]></conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="flow110" name="会签部门有且只有申请部门一个，不会签" sourceRef="exclusivegateway15" targetRef="exclusivegateway7">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${isOnlyOne}]]></conditionExpression>
+    </sequenceFlow>
+    <sequenceFlow id="flow111" name="" sourceRef="exclusivegateway15" targetRef="t020DepartmentCooperation">
+      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${!isOnlyOne}]]></conditionExpression>
+    </sequenceFlow>
+  </process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_ApprovalItem">
+    <bpmndi:BPMNPlane bpmnElement="ApprovalItem" id="BPMNPlane_ApprovalItem">
+      <bpmndi:BPMNShape bpmnElement="startevent1" id="BPMNShape_startevent1">
+        <omgdc:Bounds height="35" width="35" x="65" y="9"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="t010ApplyMatter" id="BPMNShape_t010ApplyMatter">
+        <omgdc:Bounds height="55" width="105" x="30" y="62"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="t020DepartmentCooperation" id="BPMNShape_t020DepartmentCooperation">
+        <omgdc:Bounds height="55" width="105" x="30" y="169"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="endevent1" id="BPMNShape_endevent1">
+        <omgdc:Bounds height="35" width="35" x="395" y="337"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="exclusivegateway7" id="BPMNShape_exclusivegateway7">
+        <omgdc:Bounds height="40" width="40" x="236" y="176"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="t040AccordingCheckTreatment" id="BPMNShape_t040AccordingCheckTreatment">
+        <omgdc:Bounds height="55" width="105" x="204" y="419"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="t030LeaderCheck" id="BPMNShape_t030LeaderCheck">
+        <omgdc:Bounds height="55" width="105" x="204" y="256"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="exclusivegateway10" id="BPMNShape_exclusivegateway10">
+        <omgdc:Bounds height="40" width="40" x="236" y="334"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="exclusivegateway11" id="BPMNShape_exclusivegateway11">
+        <omgdc:Bounds height="40" width="40" x="236" y="486"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="t050ApplyMatterCheck" id="BPMNShape_t050ApplyMatterCheck">
+        <omgdc:Bounds height="55" width="105" x="360" y="169"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="exclusivegateway12" id="BPMNShape_exclusivegateway12">
+        <omgdc:Bounds height="40" width="40" x="392" y="263"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="t060FlowMonitorCheck" id="BPMNShape_t060FlowMonitorCheck">
+        <omgdc:Bounds height="55" width="105" x="551" y="479"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="exclusivegateway13" id="BPMNShape_exclusivegateway13">
+        <omgdc:Bounds height="40" width="40" x="392" y="486"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="exclusivegateway14" id="BPMNShape_exclusivegateway14">
+        <omgdc:Bounds height="40" width="40" x="583" y="409"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape bpmnElement="exclusivegateway15" id="BPMNShape_exclusivegateway15">
+        <omgdc:Bounds height="40" width="40" x="236" y="69"></omgdc:Bounds>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge bpmnElement="flow46" id="BPMNEdge_flow46">
+        <omgdi:waypoint x="82" y="44"></omgdi:waypoint>
+        <omgdi:waypoint x="82" y="62"></omgdi:waypoint>
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds height="42" width="100" x="370" y="52"></omgdc:Bounds>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow78" id="BPMNEdge_flow78">
+        <omgdi:waypoint x="135" y="196"></omgdi:waypoint>
+        <omgdi:waypoint x="236" y="196"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow79" id="BPMNEdge_flow79">
+        <omgdi:waypoint x="276" y="196"></omgdi:waypoint>
+        <omgdi:waypoint x="360" y="196"></omgdi:waypoint>
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds height="42" width="100" x="-42" y="-27"></omgdc:Bounds>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow80" id="BPMNEdge_flow80">
+        <omgdi:waypoint x="256" y="216"></omgdi:waypoint>
+        <omgdi:waypoint x="256" y="256"></omgdi:waypoint>
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds height="14" width="100" x="-30" y="-20"></omgdc:Bounds>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow94" id="BPMNEdge_flow94">
+        <omgdi:waypoint x="135" y="89"></omgdi:waypoint>
+        <omgdi:waypoint x="236" y="89"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow95" id="BPMNEdge_flow95">
+        <omgdi:waypoint x="256" y="311"></omgdi:waypoint>
+        <omgdi:waypoint x="256" y="334"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow96" id="BPMNEdge_flow96">
+        <omgdi:waypoint x="236" y="354"></omgdi:waypoint>
+        <omgdi:waypoint x="167" y="353"></omgdi:waypoint>
+        <omgdi:waypoint x="167" y="282"></omgdi:waypoint>
+        <omgdi:waypoint x="204" y="283"></omgdi:waypoint>
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds height="14" width="100" x="10" y="0"></omgdc:Bounds>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow97" id="BPMNEdge_flow97">
+        <omgdi:waypoint x="256" y="374"></omgdi:waypoint>
+        <omgdi:waypoint x="256" y="419"></omgdi:waypoint>
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds height="14" width="100" x="-39" y="-6"></omgdc:Bounds>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow98" id="BPMNEdge_flow98">
+        <omgdi:waypoint x="256" y="474"></omgdi:waypoint>
+        <omgdi:waypoint x="256" y="486"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow99" id="BPMNEdge_flow99">
+        <omgdi:waypoint x="236" y="506"></omgdi:waypoint>
+        <omgdi:waypoint x="173" y="505"></omgdi:waypoint>
+        <omgdi:waypoint x="173" y="446"></omgdi:waypoint>
+        <omgdi:waypoint x="204" y="446"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow100" id="BPMNEdge_flow100">
+        <omgdi:waypoint x="412" y="224"></omgdi:waypoint>
+        <omgdi:waypoint x="412" y="263"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow101" id="BPMNEdge_flow101">
+        <omgdi:waypoint x="412" y="303"></omgdi:waypoint>
+        <omgdi:waypoint x="412" y="337"></omgdi:waypoint>
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds height="14" width="100" x="10" y="0"></omgdc:Bounds>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow102" id="BPMNEdge_flow102">
+        <omgdi:waypoint x="392" y="283"></omgdi:waypoint>
+        <omgdi:waypoint x="309" y="283"></omgdi:waypoint>
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds height="14" width="100" x="10" y="0"></omgdc:Bounds>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow103" id="BPMNEdge_flow103">
+        <omgdi:waypoint x="276" y="506"></omgdi:waypoint>
+        <omgdi:waypoint x="392" y="506"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow104" id="BPMNEdge_flow104">
+        <omgdi:waypoint x="276" y="354"></omgdi:waypoint>
+        <omgdi:waypoint x="395" y="354"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow105" id="BPMNEdge_flow105">
+        <omgdi:waypoint x="432" y="506"></omgdi:waypoint>
+        <omgdi:waypoint x="551" y="506"></omgdi:waypoint>
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds height="14" width="100" x="-35" y="-14"></omgdc:Bounds>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow106" id="BPMNEdge_flow106">
+        <omgdi:waypoint x="603" y="479"></omgdi:waypoint>
+        <omgdi:waypoint x="603" y="449"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow107" id="BPMNEdge_flow107">
+        <omgdi:waypoint x="603" y="409"></omgdi:waypoint>
+        <omgdi:waypoint x="602" y="354"></omgdi:waypoint>
+        <omgdi:waypoint x="430" y="354"></omgdi:waypoint>
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds height="14" width="100" x="10" y="0"></omgdc:Bounds>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow108" id="BPMNEdge_flow108">
+        <omgdi:waypoint x="583" y="429"></omgdi:waypoint>
+        <omgdi:waypoint x="338" y="428"></omgdi:waypoint>
+        <omgdi:waypoint x="256" y="311"></omgdi:waypoint>
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds height="14" width="100" x="10" y="0"></omgdc:Bounds>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow109" id="BPMNEdge_flow109">
+        <omgdi:waypoint x="412" y="486"></omgdi:waypoint>
+        <omgdi:waypoint x="412" y="372"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow110" id="BPMNEdge_flow110">
+        <omgdi:waypoint x="256" y="109"></omgdi:waypoint>
+        <omgdi:waypoint x="256" y="176"></omgdi:waypoint>
+        <bpmndi:BPMNLabel>
+          <omgdc:Bounds height="56" width="100" x="-20" y="-33"></omgdc:Bounds>
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge bpmnElement="flow111" id="BPMNEdge_flow111">
+        <omgdi:waypoint x="256" y="109"></omgdi:waypoint>
+        <omgdi:waypoint x="82" y="169"></omgdi:waypoint>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</definitions>
