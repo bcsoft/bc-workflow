@@ -3,6 +3,7 @@
  */
 package cn.bc.workflow.historictaskinstance.service;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -101,4 +102,27 @@ public interface HistoricTaskInstanceService {
 	 * @return
 	 */
 	List<Map<String, Object>> findHisProcessTaskVarValue(String processInstanceId, String[] taskKey, String[] varName);
+	
+	/**
+	 * 根据流程定义id找到该流程发起的时间
+	 * @param processInstanceId 流程定义id
+	 * @return
+	 */
+	Date findProcessInstanceStartTime(String processInstanceId);
+	
+	/**
+	 * 根据流程定义id和任务的code找到该流程里包含的code对应任务最开始记录的开始时间
+	 * @param processInstanceId 流程定义id
+	 * @param taskCodes  任务的code
+	 * @return
+	 */
+	Date findProcessInstanceTaskStartTime(String processInstanceId, String taskCode );
+	
+	/**
+	 * 根据流程定义id和任务的codes找到该流程里包含的codes中最后一个任务的开始时间
+	 * @param processInstanceId 流程定义id
+	 * @param taskCodes  任务的code，可以有多个
+	 * @return
+	 */
+	Date findProcessInstanceTaskEndTime(String processInstanceId, List<String> taskCodes );
 }
