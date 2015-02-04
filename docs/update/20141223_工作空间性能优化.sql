@@ -62,13 +62,14 @@ $BODY$
  *		attachs: [
  *		  {
  *		    id: 【integer】,
- *		    type: 【integer 类型：1-附件，2-意见】,
+ *		    type: 【integer 类型：1-附件，2-意见，3-临时附件(将作为子流程的附件)】,
  *		    pid: 【varchar 流程实例ID】,
  *		    tid: 【varchar 任务实例ID】,
  *		    subject: 【varchar 标题】,
+ *		    ext: 【varchar 附件扩展名】,
  *		    size: 【integer 附件大小】,
  *		    path: 【varchar 附件相对路径】,
- *		    desc: 【varchar 意见内容】,
+ *		    description: 【varchar 意见内容】,
  *		    file_date: 【varchar 创建时间】,
  *		    author: {id|code|name}
  *		  },
@@ -126,13 +127,14 @@ $BODY$
  *		    attachs: [
  *		      {
  *		        id: 【integer】,
- *		        type: 【integer 类型：1-附件，2-意见】,
+ *		        type: 【integer 类型：1-附件，2-意见，3-临时附件(将作为子流程的附件)】,
  *		        pid: 【varchar 流程实例ID】,
  *		        tid: 【varchar 任务实例ID】,
  *		        subject: 【varchar 标题】,
+ *		        ext: 【varchar 附件扩展名】,
  *		        size: 【integer 附件大小】,
  *		        path: 【varchar 附件相对路径】,
- *		        desc: 【varchar 意见内容】,
+ *		        description: 【varchar 意见内容】,
  *		        file_date: 【varchar 创建时间】,
  *		        author: {id|code|name}
  *		      },
@@ -188,13 +190,14 @@ $BODY$
  *		    attachs: [
  *		      {
  *		        id: 【integer】,
- *		        type: 【integer 类型：1-附件，2-意见】,
+ *		        type: 【integer 类型：1-附件，2-意见，3-临时附件(将作为子流程的附件)】,
  *		        pid: 【varchar 流程实例ID】,
  *		        tid: 【varchar 任务实例ID】,
  *		        subject: 【varchar 标题】,
+ *		        ext: 【varchar 附件扩展名】,
  *		        size: 【integer 附件大小】,
  *		        path: 【varchar 附件相对路径】,
- *		        desc: 【varchar 意见内容】,
+ *		        description: 【varchar 意见内容】,
  *		        file_date: 【varchar 创建时间】,
  *		        author: {id|code|name}
  *		      },
