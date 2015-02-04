@@ -122,13 +122,7 @@ public class WorkflowFormServiceImpl implements WorkflowFormService {
 		Map<String, Object> local_variables = (Map<String, Object>) task.get("variables");
 
 		// 获取子流程任务附件参数
-		List<Map<String, Object>> formAttachs = new ArrayList<>();
-		Object[] attachs = (Object[])task.get("attachs");
-		for (int i = 0; attachs != null && i < attachs.length; i++) {
-			Map<String, Object> attach = (Map<String, Object>) attachs[i];
-			if (FlowAttach.TYPE_TEMP_ATTACHMENT == (int)attach.get("type")) formAttachs.add(attach);
-		}
-		if (!formAttachs.isEmpty()) local_variables.put("attachs", formAttachs);
+		local_variables.put("attachs", task.get("attachs"));
 
 		params.putAll(global_variables);// 先放全局变量
 		params.putAll(local_variables);// 再放本地变量(本地变量优先使用)
