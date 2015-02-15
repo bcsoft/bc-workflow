@@ -160,6 +160,9 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>> {
 	protected Toolbar getHtmlPageToolbar() {
 		Toolbar tb = new Toolbar();
 
+		// 查看按钮
+		tb.addButton(Toolbar.getDefaultOpenToolbarButton(getText("label.read")).setClick("bc.myTodoView.open").setAction(null));
+
 		if (this.isStart()) {
 			// 发起流程
 			tb.addButton(new ToolbarButton().setIcon("ui-icon-play")
