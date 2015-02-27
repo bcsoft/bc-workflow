@@ -17,7 +17,7 @@ public class ResultAndOrOperationListener implements TaskListener {
 	 * 本地变量名  [必要]<br/>
 	 * 注：变量名必须以"_lc"结尾，必须可以转换为Boolean型。
 	 */
-	private Expression varNamelocal;
+	private Expression varNameLocal;
 
 	/**
 	 * 运算的名称：有 or和and [必要]
@@ -25,10 +25,10 @@ public class ResultAndOrOperationListener implements TaskListener {
 	private Expression operation;
 
 	public void notify(DelegateTask delegateTask) {
-		if (varNamelocal == null || operation == null)
+		if (varNameLocal == null || operation == null)
 			return;
 
-		String varName_lc = varNamelocal.getExpressionText();					// 本地变量名
+		String varName_lc = varNameLocal.getExpressionText();					// 本地变量名
 		String varName = varName_lc.substring(0, varName_lc.indexOf("_lc"));	// 全局变量名
 
 		Boolean varLc = (Boolean) delegateTask.getVariableLocal(varName_lc);	// 本地变量

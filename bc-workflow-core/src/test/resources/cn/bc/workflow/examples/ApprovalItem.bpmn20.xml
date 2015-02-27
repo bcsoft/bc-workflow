@@ -75,7 +75,7 @@
           </activiti:field>
         </activiti:taskListener>
         <activiti:taskListener event="complete" class="cn.bc.workflow.activiti.delegate.ResultAndOrOperationListener">
-          <activiti:field name="varNamelocal">
+          <activiti:field name="varNameLocal">
             <activiti:string>checkResult_lc</activiti:string>
           </activiti:field>
           <activiti:field name="operation">
@@ -121,7 +121,7 @@
           </activiti:field>
         </activiti:taskListener>
         <activiti:taskListener event="complete" class="cn.bc.workflow.activiti.delegate.ResultAndOrOperationListener">
-          <activiti:field name="varNamelocal">
+          <activiti:field name="varNameLocal">
             <activiti:string>isDiffering_lc</activiti:string>
           </activiti:field>
           <activiti:field name="operation">
