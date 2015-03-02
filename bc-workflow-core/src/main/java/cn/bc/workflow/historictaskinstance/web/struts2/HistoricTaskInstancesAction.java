@@ -237,6 +237,10 @@ public class HistoricTaskInstancesAction extends
 		columns.add(new TextColumn4MapKey("", "pstatus",
 				getText("flow.task.pstatus"), 80).setSortable(true)
 				.setValueFormater(new EntityStatusFormater(getPStatus())));
+        // 流水号
+        columns.add(new TextColumn4MapKey("w.wf_code", "wf_code",
+                getText("flow.workFlowCode"), 120).setSortable(true)
+                .setUseTitleFromLabel(true));
 
 		columns.add(new TextColumn4MapKey("a.task_def_key_", "taskDefKey",
 				"任务key值", 80).setSortable(true)

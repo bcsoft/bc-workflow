@@ -300,6 +300,10 @@ public class TodoManagesAction extends ViewAction<Map<String, Object>>{
 		columns.add(new TextColumn4MapKey("d.name_", "processName",
 				getText("todo.personal.arpName"),180)
 				.setSortable(true).setUseTitleFromLabel(true));
+        // 流水号
+        columns.add(new TextColumn4MapKey("w.wf_code", "wf_code",
+                getText("flow.workFlowCode"), 120).setSortable(true)
+                .setUseTitleFromLabel(true));
 		
 		columns.add(new HiddenColumn4MapKey("procinstId", "procinstId"));
 		columns.add(new HiddenColumn4MapKey("type", "type"));

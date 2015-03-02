@@ -281,6 +281,10 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>> {
 		columns.add(new TextColumn4MapKey("processName", "processName",
 				getText("flow.task.category"), 180).setSortable(true)
 				.setUseTitleFromLabel(true));
+        // 流水号
+        columns.add(new TextColumn4MapKey("w.wf_code", "wf_code",
+                getText("flow.workFlowCode"), 120).setSortable(true)
+                .setUseTitleFromLabel(true));
 
 		columns.add(new HiddenColumn4MapKey("assignee", "assignee"));
 		columns.add(new HiddenColumn4MapKey("type", "type"));////任务的类型：1-个人任务，2-候选任务(包括岗位任务和候选人任务)

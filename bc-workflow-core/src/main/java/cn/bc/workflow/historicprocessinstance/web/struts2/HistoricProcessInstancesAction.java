@@ -270,6 +270,11 @@ public class HistoricProcessInstancesAction extends
 					.setSortable(true).setUseTitleFromLabel(true));
 		}
 
+        // 流水号
+        columns.add(new TextColumn4MapKey("w.wf_code", "wf_code",
+                getText("flow.workFlowCode"), 120).setSortable(true)
+                .setUseTitleFromLabel(true));
+        // 键值
 		columns.add(new TextColumn4MapKey("b.key_", "key",
 				getText("flow.instance.key"), 180).setSortable(true)
 				.setUseTitleFromLabel(true));
