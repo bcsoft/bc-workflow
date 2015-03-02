@@ -100,7 +100,7 @@ public class MyHistoricTaskInstancesAction extends
 
 	@Override
 	protected String[] getGridSearchFields() {
-		return new String[] { "a.name_", "c.name_",
+		return new String[] { "a.name_", "c.name_", "w.text_",
 				"getProcessInstanceSubject(a.proc_inst_id_)"};
 	}
 

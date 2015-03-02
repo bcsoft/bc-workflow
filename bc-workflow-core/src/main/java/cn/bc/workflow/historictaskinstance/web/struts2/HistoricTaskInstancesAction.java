@@ -102,12 +102,17 @@ public class HistoricTaskInstancesAction extends
 		fromSql.append(" from (select a.id_,c.name_ as procinstname,a.name_ as name,a.start_time_,a.end_time_,a.duration_,a.proc_inst_id_");
 		fromSql.append(",a.task_def_key_,b.end_time_ as p_end_time,a.due_date_ as due_date,d.name as receiver");
 		fromSql.append(",h.suspension_state_ pstatus,c.key_ procinstkey");
-		fromSql.append(",(select id from bc_wf_deploy deploy where deploy.deployment_id=c.deployment_id_) as deploy_id");
+		fromSql.append(",(select id from bc_wf_deploy deploy where deploy.deployment_id=c.deployment_id_) as deploy_id, w.text_ as wf_code");
 		fromSql.append(" from act_hi_taskinst a");
 		fromSql.append(" inner join act_hi_procinst b on b.proc_inst_id_=a.proc_inst_id_");
 		fromSql.append(" inner join act_re_procdef c on c.id_=a.proc_def_id_");
 		fromSql.append(" left join act_ru_execution h on h.proc_inst_id_ = a.proc_inst_id_");
 		fromSql.append(" left join bc_identity_actor d on d.code=a.assignee_");
+        fromSql.append(" left join (");
+        fromSql.append(" select d.proc_inst_id_, d.text_");
+        fromSql.append(" from act_hi_detail d");
+        fromSql.append(" where d.name_ = 'wf_code'");
+        fromSql.append(" ) w on w.proc_inst_id_ = a.proc_inst_id_");
 		fromSql.append(" ${condition} ) t");
 
 		sqlObject.setSelect(selectSql.toString());
@@ -134,6 +139,7 @@ public class HistoricTaskInstancesAction extends
 				map.put("pstatus", rs[i++]);
 				map.put("procinstKey", rs[i++]);
 				map.put("deployId", rs[i++]);
+				map.put("wf_code", rs[i++]);
 				map.put("subject", rs[i++]);
 				map.put("accessControlDocType","ProcessInstance");
 
@@ -257,8 +263,9 @@ public class HistoricTaskInstancesAction extends
 		return new String[] { 
 				"d.name"
 				, "a.name_"
-				, "c.name_",
-				"getProcessInstanceSubject(a.proc_inst_id_)" };
+				, "c.name_"
+				, "w.text_"
+                ,"getProcessInstanceSubject(a.proc_inst_id_)" };
 	}
 
 	@Override

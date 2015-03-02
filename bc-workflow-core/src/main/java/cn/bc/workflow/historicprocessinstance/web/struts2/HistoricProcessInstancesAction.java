@@ -115,7 +115,7 @@ public class HistoricProcessInstancesAction extends
 
 		StringBuffer fromSql = new StringBuffer();
 		fromSql.append(" from (select a.id_,b.name_ as procinstname,a.start_time_,a.end_time_,a.duration_,f.suspension_state_ status,a.proc_inst_id_");
-		fromSql.append(",e.version_ as version,b.version_ as aVersion,b.key_ as key,c.name,e.id as deploy_id");
+		fromSql.append(",e.version_ as version,b.version_ as aVersion,b.key_ as key,c.name,e.id as deploy_id,w.text_ as wf_code");
 		fromSql.append(",getprocesstodotasknames(a.proc_inst_id_) as  todo_names");
 		fromSql.append(",getaccessactors4docidtype4docidcharacter(a.id_,'ProcessInstance')");
 		fromSql.append(" from act_hi_procinst a");
@@ -124,6 +124,11 @@ public class HistoricProcessInstancesAction extends
 		fromSql.append(" inner join bc_wf_deploy e on e.deployment_id=d.id_");
 		fromSql.append(" left join bc_identity_actor c on c.code=a.start_user_id_");
 		fromSql.append(" left join act_ru_execution f on a.id_ = f.proc_inst_id_");
+        fromSql.append(" left join (");
+        fromSql.append(" select d.proc_inst_id_, d.text_");
+        fromSql.append(" from act_hi_detail d");
+        fromSql.append(" where d.name_ = 'wf_code'");
+        fromSql.append(" ) w on w.proc_inst_id_ = a.id_");
 		fromSql.append(" ${condition} ) p");
 
 		sqlObject.setSelect(selectSql.toString());
@@ -148,6 +153,7 @@ public class HistoricProcessInstancesAction extends
 				map.put("key", rs[i++]);
 				map.put("start_name", rs[i++]);// 发起人
 				map.put("deployId", rs[i++]);
+				map.put("wf_code", rs[i++]);
 				map.put("todo_names", rs[i++]);
 				map.put("accessactors", rs[i++]);
 				map.put("subject", rs[i++]);
@@ -300,7 +306,7 @@ public class HistoricProcessInstancesAction extends
 
 	@Override
 	protected String[] getGridSearchFields() {
-		return new String[] { "b.name_", "b.key_", "c.name",
+		return new String[] { "b.name_", "b.key_", "c.name","w.text_",
 				"getProcessInstanceSubject(a.id_)",
 				"getprocesstodotasknames(a.id_)" };
 	}
