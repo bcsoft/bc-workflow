@@ -49,10 +49,14 @@ public class MyHistoricProcessInstancesAction extends HistoricProcessInstancesAc
 		columns.add(new TextColumn4MapKey("", "status",
 				getText("flow.instance.status"), 50).setSortable(true)
 				.setValueFormater(new EntityStatusFormater(getStatus())));
+        // 流水号
+        columns.add(new TextColumn4MapKey("w.wf_code", "wf_code",
+                getText("flow.workFlowCode"), 120).setSortable(true)
+                .setUseTitleFromLabel(true));
 		// 主题
 		columns.add(new TextColumn4MapKey(
 				"getProcessInstanceSubject(a.proc_inst_id_)", "subject",
-				getText("flow.instance.subject"), 200).setSortable(true)
+				getText("flow.instance.subject"), 300).setSortable(true)
 				.setUseTitleFromLabel(true));
 		// 流程
 		columns.add(new TextColumn4MapKey("b.name_", "procinst_name",
@@ -90,6 +94,8 @@ public class MyHistoricProcessInstancesAction extends HistoricProcessInstancesAc
 		columns.add(new TextColumn4MapKey("b.key_", "key",
 				getText("flow.instance.key"), 180).setSortable(true)
 				.setUseTitleFromLabel(true));
+        //空列
+        columns.add(new TextColumn4MapKey("", "",""));
 		columns.add(new HiddenColumn4MapKey("procinstid", "procinstid"));
 		columns.add(new HiddenColumn4MapKey("status", "status"));
 		return columns;
@@ -99,7 +105,7 @@ public class MyHistoricProcessInstancesAction extends HistoricProcessInstancesAc
 
 	@Override
 	protected String[] getGridSearchFields() {
-		return new String[] { "b.name_", "b.key_", "c.name",
+		return new String[] { "b.name_", "b.key_", "c.name", "w.text_",
 				"getProcessInstanceSubject(a.id_)" };
 	}
 

@@ -45,10 +45,14 @@ public class MyHistoricTaskInstancesAction extends
 	protected List<Column> getGridColumns() {
 		List<Column> columns = new ArrayList<Column>();
 		columns.add(new IdColumn4MapKey("a.id_", "id"));
+        // 流水号
+        columns.add(new TextColumn4MapKey("w.wf_code", "wf_code",
+                getText("flow.workFlowCode"), 120).setSortable(true)
+                .setUseTitleFromLabel(true));
 		// 主题
 		columns.add(new TextColumn4MapKey(
 				"", "subject",
-				getText("flow.task.subject"), 200).setSortable(true)
+				getText("flow.task.subject"), 300).setSortable(true)
 				.setUseTitleFromLabel(true));
 		// 名称
 		columns.add(new TextColumn4MapKey("a.name_", "name",
@@ -100,7 +104,7 @@ public class MyHistoricTaskInstancesAction extends
 
 	@Override
 	protected String[] getGridSearchFields() {
-		return new String[] { "a.name_", "c.name_",
+		return new String[] { "a.name_", "c.name_", "w.text_",
 				"getProcessInstanceSubject(a.proc_inst_id_)"};
 	}
 

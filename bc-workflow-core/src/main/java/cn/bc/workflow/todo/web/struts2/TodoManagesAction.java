@@ -81,7 +81,7 @@ public class TodoManagesAction extends ViewAction<Map<String, Object>>{
 		SqlObject<Map<String, Object>> sqlObject = new SqlObject<Map<String, Object>>();
 		// 构建查询语句,where和order by不要包含在sql中(要统一放到condition中)
 		StringBuffer sql = new StringBuffer();
-		sql.append("select a.id_,b.suspension_state_ as status,a.proc_inst_id_ as procinstid,a.name_ as taskname,a.due_date_ as duedate,a.create_time_ as createtime");
+		sql.append("!!select a.id_,b.suspension_state_ as status,a.proc_inst_id_ as procinstid,a.name_ as taskname,a.due_date_ as duedate,a.create_time_ as createtime");
 		sql.append(",d.name_ as processname,a.description_ as desc_,a.assignee_ as assignee,c.name as aname");
 		sql.append(",case when a.assignee_ is not null then 1 else 2 end as type_");
 		sql.append(",getprocessinstancesubject(a.proc_inst_id_) as subject");
@@ -89,11 +89,16 @@ public class TodoManagesAction extends ViewAction<Map<String, Object>>{
 		sql.append(",(select string_agg(g2.name,',') from act_ru_identitylink t2 inner join bc_identity_actor g2 on g2.code=t2.user_id_ where t2.task_id_= a.id_) as users");
 					//候选岗位
 		sql.append(",(select string_agg(g1.name,',') from act_ru_identitylink t1 inner join bc_identity_actor g1 on g1.code=t1.group_id_ where t1.task_id_= a.id_) as groups");
-		sql.append(",(select id from bc_wf_deploy deploy where deploy.deployment_id=d.deployment_id_) as deploy_id");
-		sql.append(" from act_ru_task a");
+		sql.append(",(select id from bc_wf_deploy deploy where deploy.deployment_id=d.deployment_id_) as deploy_id, w.text_ as wf_code");
+		sql.append(" !!from act_ru_task a");
 		sql.append(" inner join act_ru_execution b on b.proc_inst_id_ = a.proc_inst_id_");
 		sql.append(" inner join act_re_procdef d on d.id_ = a.proc_def_id_");
 		sql.append(" left join bc_identity_actor c on c.code=a.assignee_");
+        sql.append(" left join (");
+        sql.append(" select d.proc_inst_id_, d.text_");
+        sql.append(" from act_hi_detail d");
+        sql.append(" where d.name_ = 'wf_code'");
+        sql.append(" ) w on w.proc_inst_id_ = a.proc_inst_id_");
 		
 		sqlObject.setSql(sql.toString());
 		
@@ -120,7 +125,8 @@ public class TodoManagesAction extends ViewAction<Map<String, Object>>{
 				map.put("users", rs[i++]); //  候选人员列表
 				map.put("groups", rs[i++]); //  候选岗位列表
 				map.put("deployId", rs[i++]);
-				
+				map.put("wf_code", rs[i++]);
+
 				map.put("accessControlDocType","ProcessInstance");
 				if(map.get("subject")!=null&&!map.get("subject").toString().equals("")){
 					map.put("accessControlDocName", map.get("subject").toString());
@@ -184,7 +190,7 @@ public class TodoManagesAction extends ViewAction<Map<String, Object>>{
 	
 	@Override
 	protected PageOption getHtmlPageOption() {
-		return super.getHtmlPageOption().setWidth(800).setMinWidth(200)
+		return super.getHtmlPageOption().setWidth(850).setMinWidth(200)
 				.setHeight(400).setMinHeight(200);
 	}
 	
@@ -224,16 +230,20 @@ public class TodoManagesAction extends ViewAction<Map<String, Object>>{
 		
 		//流程状态
 		columns.add(new TextColumn4MapKey("b.suspension_state_", "status",
-				getText("flow.task.pstatus"), 80).setSortable(true)
+				getText("flow.task.pstatus"), 60).setSortable(true)
 				.setValueFormater(new EntityStatusFormater(getProcessStatus())));
+        // 流水号
+        columns.add(new TextColumn4MapKey("w.wf_code", "wf_code",
+                getText("flow.workFlowCode"), 120).setSortable(true)
+                .setUseTitleFromLabel(true));
 		// 主题
 		columns.add(new TextColumn4MapKey(
 				"getProcessInstanceSubject(a.proc_inst_id_)", "subject",
-				getText("flow.task.subject"), 200).setSortable(true)
+				getText("flow.task.subject"), 300).setSortable(true)
 				.setUseTitleFromLabel(true));
-
+        // 待办任务
 		columns.add(new TextColumn4MapKey("a.name_", "taskName",
-				getText("todo.personal.artName"), 250).setSortable(true)
+				getText("todo.personal.artName"), 200).setSortable(true)
 				.setUseTitleFromLabel(false)
 				.setValueFormater(new AbstractFormater<String>() {
 
@@ -270,7 +280,7 @@ public class TodoManagesAction extends ViewAction<Map<String, Object>>{
 				}));
 		// 办理人
 		columns.add(new TextColumn4MapKey("c.name", "aname",
-				getText("todo.personal.assignee"), 60).setSortable(true)
+				getText("todo.personal.assignee"), 120).setSortable(true)
 				.setUseTitleFromLabel(true));
 		// 候选岗位
 		columns.add(new TextColumn4MapKey("groups", "groups",
@@ -327,7 +337,8 @@ public class TodoManagesAction extends ViewAction<Map<String, Object>>{
 	@Override
 	protected String[] getGridSearchFields() {
 		return new String [] {"d.name_","a.name_","a.description_","a.assignee_"
-				,"c.name","getProcessInstanceSubject(a.proc_inst_id_)"
+				,"c.name", "w.text_"
+                ,"getProcessInstanceSubject(a.proc_inst_id_)"
 				,"(select string_agg(g1.name,',') from act_ru_identitylink t1 inner join bc_identity_actor g1 on g1.code=t1.group_id_ where t1.task_id_= a.id_)"};
 	}
 	
