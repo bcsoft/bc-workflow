@@ -109,10 +109,14 @@ public class GroupHistoricProcessInstancesAction extends HistoricProcessInstance
 		columns.add(new TextColumn4MapKey("", "status",
 				getText("flow.instance.status"), 50).setSortable(true)
 				.setValueFormater(new EntityStatusFormater(getStatus())));
+        // 流水号
+        columns.add(new TextColumn4MapKey("w.wf_code", "wf_code",
+                getText("flow.workFlowCode"), 120).setSortable(true)
+                .setUseTitleFromLabel(true));
 		// 主题
 		columns.add(new TextColumn4MapKey(
 				"getProcessInstanceSubject(a.proc_inst_id_)", "subject",
-				getText("flow.instance.subject"), 200).setSortable(true)
+				getText("flow.instance.subject"), 300).setSortable(true)
 				.setUseTitleFromLabel(true));
 		// 流程
 		columns.add(new TextColumn4MapKey("b.name_", "procinst_name",
@@ -148,18 +152,14 @@ public class GroupHistoricProcessInstancesAction extends HistoricProcessInstance
 		columns.add(new TextColumn4MapKey("a.duration_", "duration",
 				getText("flow.instance.duration"), 80).setSortable(true)
 				.setValueFormater(new AbstractFormater<String>() {
-					@SuppressWarnings("unchecked")
-					@Override
-					public String format(Object context, Object value) {
-						Object duration_obj=((Map<String, Object>)context).get("duration");
-						if(duration_obj==null)return null;
-						return DateUtils.getWasteTime(Long.parseLong(duration_obj.toString()));
-					}	
-				}));
-        // 流水号
-        columns.add(new TextColumn4MapKey("w.wf_code", "wf_code",
-                getText("flow.workFlowCode"), 120).setSortable(true)
-                .setUseTitleFromLabel(true));
+                    @SuppressWarnings("unchecked")
+                    @Override
+                    public String format(Object context, Object value) {
+                        Object duration_obj = ((Map<String, Object>) context).get("duration");
+                        if (duration_obj == null) return null;
+                        return DateUtils.getWasteTime(Long.parseLong(duration_obj.toString()));
+                    }
+                }));
         // 键值
 		columns.add(new TextColumn4MapKey("b.key_", "key",
 				getText("flow.instance.key"), 180).setSortable(true)
