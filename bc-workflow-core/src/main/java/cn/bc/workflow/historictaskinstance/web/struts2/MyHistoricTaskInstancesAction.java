@@ -52,7 +52,7 @@ public class MyHistoricTaskInstancesAction extends
 		// 主题
 		columns.add(new TextColumn4MapKey(
 				"", "subject",
-				getText("flow.task.subject"), 200).setSortable(true)
+				getText("flow.task.subject"), 300).setSortable(true)
 				.setUseTitleFromLabel(true));
 		// 名称
 		columns.add(new TextColumn4MapKey("a.name_", "name",
