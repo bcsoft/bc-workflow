@@ -45,6 +45,10 @@ public class MyHistoricTaskInstancesAction extends
 	protected List<Column> getGridColumns() {
 		List<Column> columns = new ArrayList<Column>();
 		columns.add(new IdColumn4MapKey("a.id_", "id"));
+        // 流水号
+        columns.add(new TextColumn4MapKey("w.wf_code", "wf_code",
+                getText("flow.workFlowCode"), 120).setSortable(true)
+                .setUseTitleFromLabel(true));
 		// 主题
 		columns.add(new TextColumn4MapKey(
 				"", "subject",
@@ -87,10 +91,6 @@ public class MyHistoricTaskInstancesAction extends
 		columns.add(new TextColumn4MapKey("", "pstatus",
 				getText("flow.task.pstatus"), 80).setSortable(true)
 				.setValueFormater(new EntityStatusFormater(getPStatus())));
-        // 流水号
-        columns.add(new TextColumn4MapKey("w.wf_code", "wf_code",
-                getText("flow.workFlowCode"), 120).setSortable(true)
-                .setUseTitleFromLabel(true));
 
 		columns.add(new HiddenColumn4MapKey("assignee", "assignee"));
 		columns.add(new HiddenColumn4MapKey("procinstId", "procinstId"));

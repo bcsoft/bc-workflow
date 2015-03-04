@@ -202,7 +202,7 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>> {
 
 	@Override
 	protected PageOption getHtmlPageOption() {
-		return super.getHtmlPageOption().setWidth(800).setMinWidth(200)
+		return super.getHtmlPageOption().setWidth(850).setMinWidth(200)
 				.setHeight(400).setMinHeight(200);
 	}
 
@@ -218,12 +218,16 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>> {
 
 		// 发送时间
 		columns.add(new TextColumn4MapKey("a.create_time_", "createTime",
-				getText("todo.personal.createTime"), 120).setSortable(true)
+				getText("todo.personal.createTime"), 135).setSortable(true)
 				.setValueFormater(new CalendarFormater("yyyy-MM-dd HH:mm")));
+        // 流水号
+        columns.add(new TextColumn4MapKey("w.wf_code", "wf_code",
+                getText("flow.workFlowCode"), 120).setSortable(true)
+                .setUseTitleFromLabel(true));
 		// 主题
 		columns.add(new TextColumn4MapKey(
 				"getProcessInstanceSubject(a.proc_inst_id_)", "subject",
-				getText("flow.task.subject"), 200).setSortable(true)
+				getText("flow.task.subject"), 300).setSortable(true)
 				.setUseTitleFromLabel(true));
 		// 名称
 		columns.add(new TextColumn4MapKey("a.name_", "taskName",
@@ -281,10 +285,8 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>> {
 		columns.add(new TextColumn4MapKey("processName", "processName",
 				getText("flow.task.category"), 180).setSortable(true)
 				.setUseTitleFromLabel(true));
-        // 流水号
-        columns.add(new TextColumn4MapKey("w.wf_code", "wf_code",
-                getText("flow.workFlowCode"), 120).setSortable(true)
-                .setUseTitleFromLabel(true));
+        //空列
+        columns.add(new TextColumn4MapKey("", "",""));
 
 		columns.add(new HiddenColumn4MapKey("assignee", "assignee"));
 		columns.add(new HiddenColumn4MapKey("type", "type"));////任务的类型：1-个人任务，2-候选任务(包括岗位任务和候选人任务)

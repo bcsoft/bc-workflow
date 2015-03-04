@@ -184,10 +184,14 @@ public class HistoricTaskInstancesAction extends
 		columns.add(new TextColumn4MapKey("", "status",
 				getText("flow.task.status"), 50).setSortable(true)
 				.setValueFormater(new EntityStatusFormater(getStatus())));
+        // 流水号
+        columns.add(new TextColumn4MapKey("w.wf_code", "wf_code",
+                getText("flow.workFlowCode"), 120).setSortable(true)
+                .setUseTitleFromLabel(true));
 		// 主题
 		columns.add(new TextColumn4MapKey(
 				"", "subject",
-				getText("flow.task.subject"), 200).setSortable(true)
+				getText("flow.task.subject"), 300).setSortable(true)
 				.setUseTitleFromLabel(true));
 		// 名称
 		columns.add(new TextColumn4MapKey("a.name_", "name",
@@ -237,10 +241,6 @@ public class HistoricTaskInstancesAction extends
 		columns.add(new TextColumn4MapKey("", "pstatus",
 				getText("flow.task.pstatus"), 80).setSortable(true)
 				.setValueFormater(new EntityStatusFormater(getPStatus())));
-        // 流水号
-        columns.add(new TextColumn4MapKey("w.wf_code", "wf_code",
-                getText("flow.workFlowCode"), 120).setSortable(true)
-                .setUseTitleFromLabel(true));
 
 		columns.add(new TextColumn4MapKey("a.task_def_key_", "taskDefKey",
 				"任务key值", 80).setSortable(true)
@@ -279,7 +279,7 @@ public class HistoricTaskInstancesAction extends
 
 	@Override
 	protected PageOption getHtmlPageOption() {
-		return super.getHtmlPageOption().setWidth(800).setMinWidth(400)
+		return super.getHtmlPageOption().setWidth(850).setMinWidth(400)
 				.setHeight(400).setMinHeight(300);
 	}
 

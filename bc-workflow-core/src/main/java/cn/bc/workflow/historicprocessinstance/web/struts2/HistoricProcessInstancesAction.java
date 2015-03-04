@@ -200,15 +200,16 @@ public class HistoricProcessInstancesAction extends
 		columns.add(new TextColumn4MapKey("", "status",
 				getText("flow.instance.status"), 50).setSortable(true)
 				.setValueFormater(new EntityStatusFormater(getStatus())));
+        // 流水号
+        columns.add(new TextColumn4MapKey("w.wf_code", "wf_code",
+                getText("flow.workFlowCode"), 120).setSortable(true)
+                .setUseTitleFromLabel(true));
 		// 主题
 		columns.add(new TextColumn4MapKey(
 				"getProcessInstanceSubject(a.proc_inst_id_)", "subject",
-				getText("flow.instance.subject"), 200).setSortable(true)
+				getText("flow.instance.subject"), 300).setSortable(true)
 				.setUseTitleFromLabel(true));
-		// 流程
-		columns.add(new TextColumn4MapKey("b.name_", "procinst_name",
-				getText("flow.instance.name"), 200).setSortable(true)
-				.setUseTitleFromLabel(true));
+        // 待办任务
 		columns.add(new TextColumn4MapKey("", "todo_names",
 				getText("flow.instance.todoTask"), 200).setSortable(true)
 				.setUseTitleFromLabel(true)
@@ -224,60 +225,61 @@ public class HistoricProcessInstancesAction extends
 						return value_;
 					}
 				}));
+        // 流程名称
+        columns.add(new TextColumn4MapKey("b.name_", "procinst_name",
+                getText("flow.instance.name"), 180).setSortable(true)
+                .setUseTitleFromLabel(true));
+        // 发起时间
+        columns.add(new TextColumn4MapKey("a.start_time_", "start_time",
+                getText("flow.instance.startTime"), 150).setSortable(true)
+                .setUseTitleFromLabel(true)
+                .setValueFormater(new CalendarFormater("yyyy-MM-dd HH:mm:ss")));
+        // 结束时间
+        columns.add(new TextColumn4MapKey("a.end_time_", "end_time",
+                getText("flow.instance.endTime"), 150).setSortable(true)
+                .setUseTitleFromLabel(true)
+                .setValueFormater(new CalendarFormater("yyyy-MM-dd HH:mm:ss")));
+        // 总耗时
+        columns.add(new TextColumn4MapKey("a.duration_", "duration",
+                getText("flow.instance.duration"), 80).setSortable(true)
+                .setValueFormater(new AbstractFormater<String>() {
+                    @SuppressWarnings("unchecked")
+                    @Override
+                    public String format(Object context, Object value) {
+                        Object duration_obj = ((Map<String, Object>) context)
+                                .get("duration");
+                        if (duration_obj == null)
+                            return null;
+                        return DateUtils.getWasteTime(Long
+                                .parseLong(duration_obj.toString()));
+                    }
+                }));
+        // 发起人
+        columns.add(new TextColumn4MapKey("a.first_", "start_name",
+                getText("flow.instance.startName"), 80).setSortable(true)
+                .setUseTitleFromLabel(true));
+        // 访问者及其权限
+        if (this.isAccessControl()) {
+            columns.add(new TextColumn4MapKey("", "accessactors",
+                    getText("flow.accessControl.accessActorAndRole"), 125)
+                    .setSortable(true).setUseTitleFromLabel(true));
+        }
 		// 版本号
 		columns.add(new TextColumn4MapKey("e.version_", "version",
 				getText("flow.instance.version"), 50).setSortable(true)
 				.setUseTitleFromLabel(true)
 				.setValueFormater(new AbstractFormater<String>() {
-					@SuppressWarnings("unchecked")
-					@Override
-					public String format(Object context, Object value) {
-						Map<String, Object> version = (Map<String, Object>) context;
-						return version.get("version") + "  ("
-								+ version.get("aVersion") + ")";
-					}
+                    @SuppressWarnings("unchecked")
+                    @Override
+                    public String format(Object context, Object value) {
+                        Map<String, Object> version = (Map<String, Object>) context;
+                        return version.get("version") + "  ("
+                                + version.get("aVersion") + ")";
+                    }
 
-				}));
-		// 发起人
-		columns.add(new TextColumn4MapKey("a.first_", "start_name",
-				getText("flow.instance.startName"), 80).setSortable(true)
-				.setUseTitleFromLabel(true));
-		columns.add(new TextColumn4MapKey("a.start_time_", "start_time",
-				getText("flow.instance.startTime"), 150).setSortable(true)
-				.setUseTitleFromLabel(true)
-				.setValueFormater(new CalendarFormater("yyyy-MM-dd HH:mm:ss")));
-		columns.add(new TextColumn4MapKey("a.end_time_", "end_time",
-				getText("flow.instance.endTime"), 150).setSortable(true)
-				.setUseTitleFromLabel(true)
-				.setValueFormater(new CalendarFormater("yyyy-MM-dd HH:mm:ss")));
-		columns.add(new TextColumn4MapKey("a.duration_", "duration",
-				getText("flow.instance.duration"), 80).setSortable(true)
-				.setValueFormater(new AbstractFormater<String>() {
-					@SuppressWarnings("unchecked")
-					@Override
-					public String format(Object context, Object value) {
-						Object duration_obj = ((Map<String, Object>) context)
-								.get("duration");
-						if (duration_obj == null)
-							return null;
-						return DateUtils.getWasteTime(Long
-								.parseLong(duration_obj.toString()));
-					}
-				}));
-		if (this.isAccessControl()) {
-			columns.add(new TextColumn4MapKey("", "accessactors",
-					getText("flow.accessControl.accessActorAndRole"))
-					.setSortable(true).setUseTitleFromLabel(true));
-		}
-
-        // 流水号
-        columns.add(new TextColumn4MapKey("w.wf_code", "wf_code",
-                getText("flow.workFlowCode"), 120).setSortable(true)
-                .setUseTitleFromLabel(true));
-        // 键值
-		columns.add(new TextColumn4MapKey("b.key_", "key",
-				getText("flow.instance.key"), 180).setSortable(true)
-				.setUseTitleFromLabel(true));
+                }));
+        //空列
+        columns.add(new TextColumn4MapKey("", "",""));
 		columns.add(new HiddenColumn4MapKey("procinstid", "procinstid"));
 		columns.add(new HiddenColumn4MapKey("status", "status"));
 		columns.add(new HiddenColumn4MapKey("accessControlDocType",

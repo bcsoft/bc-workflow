@@ -190,7 +190,7 @@ public class TodoManagesAction extends ViewAction<Map<String, Object>>{
 	
 	@Override
 	protected PageOption getHtmlPageOption() {
-		return super.getHtmlPageOption().setWidth(800).setMinWidth(200)
+		return super.getHtmlPageOption().setWidth(850).setMinWidth(200)
 				.setHeight(400).setMinHeight(200);
 	}
 	
@@ -230,16 +230,20 @@ public class TodoManagesAction extends ViewAction<Map<String, Object>>{
 		
 		//流程状态
 		columns.add(new TextColumn4MapKey("b.suspension_state_", "status",
-				getText("flow.task.pstatus"), 80).setSortable(true)
+				getText("flow.task.pstatus"), 60).setSortable(true)
 				.setValueFormater(new EntityStatusFormater(getProcessStatus())));
+        // 流水号
+        columns.add(new TextColumn4MapKey("w.wf_code", "wf_code",
+                getText("flow.workFlowCode"), 120).setSortable(true)
+                .setUseTitleFromLabel(true));
 		// 主题
 		columns.add(new TextColumn4MapKey(
 				"getProcessInstanceSubject(a.proc_inst_id_)", "subject",
-				getText("flow.task.subject"), 200).setSortable(true)
+				getText("flow.task.subject"), 300).setSortable(true)
 				.setUseTitleFromLabel(true));
-
+        // 待办任务
 		columns.add(new TextColumn4MapKey("a.name_", "taskName",
-				getText("todo.personal.artName"), 250).setSortable(true)
+				getText("todo.personal.artName"), 200).setSortable(true)
 				.setUseTitleFromLabel(false)
 				.setValueFormater(new AbstractFormater<String>() {
 
@@ -276,7 +280,7 @@ public class TodoManagesAction extends ViewAction<Map<String, Object>>{
 				}));
 		// 办理人
 		columns.add(new TextColumn4MapKey("c.name", "aname",
-				getText("todo.personal.assignee"), 60).setSortable(true)
+				getText("todo.personal.assignee"), 120).setSortable(true)
 				.setUseTitleFromLabel(true));
 		// 候选岗位
 		columns.add(new TextColumn4MapKey("groups", "groups",
@@ -300,10 +304,6 @@ public class TodoManagesAction extends ViewAction<Map<String, Object>>{
 		columns.add(new TextColumn4MapKey("d.name_", "processName",
 				getText("todo.personal.arpName"),180)
 				.setSortable(true).setUseTitleFromLabel(true));
-        // 流水号
-        columns.add(new TextColumn4MapKey("w.wf_code", "wf_code",
-                getText("flow.workFlowCode"), 120).setSortable(true)
-                .setUseTitleFromLabel(true));
 		
 		columns.add(new HiddenColumn4MapKey("procinstId", "procinstId"));
 		columns.add(new HiddenColumn4MapKey("type", "type"));
