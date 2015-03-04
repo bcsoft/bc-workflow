@@ -616,7 +616,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 			taskItem.put("items", items);
 
 			// -- 表单信息
-			if(isMyTask) {// 我的个人待办或岗位待办时方渲染表单
+			if(isMyTask && isUserTask) {// 我的个人待办时方渲染表单
 				formItem = buildTaskFormInfo(task, !(isUserTask && isMyTask));
 				if (formItem != null) items.add(formItem);
 			}
