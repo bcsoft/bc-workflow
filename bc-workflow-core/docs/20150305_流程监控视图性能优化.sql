@@ -9,6 +9,7 @@ CREATE TABLE bc_wf_procinst_info (
   CONSTRAINT bcfk_wf_procinst_info_id FOREIGN KEY (id)
       REFERENCES act_hi_procinst (id_) ON DELETE cascade
 );
+--CREATE INDEX bcidx_wf_procinst_info_info ON bc_wf_procinst_info (info);
 insert into bc_wf_procinst_info(id, info)
 	select i.id_
 	, (select row_to_json(t) from (
