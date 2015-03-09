@@ -26,7 +26,26 @@ CREATE OR REPLACE FUNCTION wf_procinst_info__auto_insert_or_update()
 	/** 自动插入或更新 bc_wf_procinst_info 表的信息
 	 */
 	BEGIN
-		-- TODO
+		if (NEW.name_ = 'subject' or NEW.name_ = 'wf_code') and NEW.task_id_ is null then
+			-- 新数据
+			if (select 0 from bc_wf_procinst_info w where w.id = NEW.proc_inst_id_) is null then
+				if NEW.name_ = 'subject' then -- 当前行为“主题”行的数据
+					insert into bc_wf_procinst_info(id, info)
+						select NEW.proc_inst_id_, (select row_to_json(t) from (select NEW.text_ as subject)t);
+				elsif NEW.name_ = 'wf_code' then -- 当前行为“流水号”行的数据
+					insert into bc_wf_procinst_info(id, info)
+						select NEW.proc_inst_id_, (select row_to_json(t) from (select NEW.text_ as wf_code)t);
+				else 
+					insert into bc_wf_procinst_info(id, info)
+						select NEW.proc_inst_id_, '{"subject":null,"wf_code":null}'::json;
+				end if;
+			-- 已存在的数据直接更新为新数据
+			else
+				update bc_wf_procinst_info set info = json_update(info, NEW.name_, NEW.text_)
+					where id = NEW.proc_inst_id_;
+			end if;
+		end if;
+		return null;
 	END;
 	$BODY$ LANGUAGE plpgsql;
 DROP TRIGGER IF EXISTS wf_procinst_info__auto_insert_or_update ON ACT_HI_DETAIL;
@@ -77,3 +96,19 @@ from (
 	order by a.start_time_ desc 
 ) p 
 limit 10;
+
+-- 更新 json 对象的值，传入的 key 不存在，则直接添加到 json 对象中
+-- 参考：http://stackoverflow.com/questions/18209625/how-do-i-modify-fields-inside-the-new-postgresql-json-datatype
+CREATE OR REPLACE FUNCTION json_update(j json, k text, v anyelement) RETURNS json AS $$
+    /** 更新 json 对象
+     * @param j     原 json 对象
+     * @param k     json 对象的 key
+     * @param v     json 对象的 value。任意类型
+     */
+	SELECT concat('{', string_agg(to_json(key) || ':' || value, ','), '}')::json
+	FROM (
+		SELECT * FROM json_each($1) WHERE key != $2
+		UNION ALL
+		SELECT $2, to_json($3)
+	) t;
+$$ LANGUAGE sql;
