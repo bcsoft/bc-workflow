@@ -19,38 +19,42 @@ insert into bc_wf_procinst_info(id, info)
 	from act_hi_procinst i;
 --select i.*, i.info->>'subject', i.info->>'wf_code' wf_code from bc_wf_procinst_info i where i.info->>'subject' like '%客管%' or i.info->>'wf_code' like '%客管%';
 
--- DROP FUNCTION IF EXISTS wf_procinst_info__auto_insert_or_update();
-CREATE OR REPLACE FUNCTION wf_procinst_info__auto_insert_or_update()
-	RETURNS trigger AS 
+-- DROP FUNCTION IF EXISTS wf_procinst_info__auto_insert();
+CREATE OR REPLACE FUNCTION wf_procinst_info__auto_insert()
+	RETURNS trigger AS
 	$BODY$
-	/** 自动插入或更新 bc_wf_procinst_info 表的信息
+	/** 发起流程，自动插入 bc_wf_procinst_info 表的标题和流水号信息
+	 */
+	BEGIN
+		insert into bc_wf_procinst_info(id, info)
+			select NEW.id_, '{"subject":null,"wf_code":null}'::json;
+		return null;
+	END;
+	$BODY$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS wf_procinst_info__auto_insert ON ACT_HI_DETAIL;
+CREATE TRIGGER wf_procinst_info__auto_insert after INSERT ON ACT_HI_PROCINST
+	FOR EACH ROW EXECUTE PROCEDURE wf_procinst_info__auto_insert();
+
+
+-- DROP FUNCTION IF EXISTS wf_procinst_info__auto_update();
+CREATE OR REPLACE FUNCTION wf_procinst_info__auto_update()
+	RETURNS trigger AS
+	$BODY$
+	/** 自动更新 bc_wf_procinst_info 表的信息
 	 */
 	BEGIN
 		if (NEW.name_ = 'subject' or NEW.name_ = 'wf_code') and NEW.task_id_ is null then
-			-- 新数据
-			if (select 0 from bc_wf_procinst_info w where w.id = NEW.proc_inst_id_) is null then
-				if NEW.name_ = 'subject' then -- 当前行为“主题”行的数据
-					insert into bc_wf_procinst_info(id, info)
-						select NEW.proc_inst_id_, (select row_to_json(t) from (select NEW.text_ as subject)t);
-				elsif NEW.name_ = 'wf_code' then -- 当前行为“流水号”行的数据
-					insert into bc_wf_procinst_info(id, info)
-						select NEW.proc_inst_id_, (select row_to_json(t) from (select NEW.text_ as wf_code)t);
-				else 
-					insert into bc_wf_procinst_info(id, info)
-						select NEW.proc_inst_id_, '{"subject":null,"wf_code":null}'::json;
-				end if;
-			-- 已存在的数据直接更新为新数据
-			else
-				update bc_wf_procinst_info set info = json_update(info, NEW.name_, NEW.text_)
-					where id = NEW.proc_inst_id_;
-			end if;
+			update bc_wf_procinst_info set info = json_update(info, NEW.name_, NEW.text_)
+				where id = NEW.proc_inst_id_;
 		end if;
 		return null;
 	END;
 	$BODY$ LANGUAGE plpgsql;
-DROP TRIGGER IF EXISTS wf_procinst_info__auto_insert_or_update ON ACT_HI_DETAIL;
-CREATE TRIGGER wf_procinst_info__auto_insert_or_update after INSERT OR UPDATE ON ACT_HI_DETAIL
-	FOR EACH ROW EXECUTE PROCEDURE wf_procinst_info__auto_insert_or_update();
+
+DROP TRIGGER IF EXISTS wf_procinst_info__auto_update ON ACT_HI_DETAIL;
+CREATE TRIGGER wf_procinst_info__auto_update after INSERT OR UPDATE ON ACT_HI_DETAIL
+	FOR EACH ROW EXECUTE PROCEDURE wf_procinst_info__auto_update();
 
 
 -- 流程监控视图 sql
