@@ -37,75 +37,60 @@ import cn.bc.web.ui.html.toolbar.ToolbarButton;
 
 @Scope(BeanDefinition.SCOPE_PROTOTYPE)
 @Controller
-public class MyHistoricTaskInstancesAction extends
-			HistoricTaskInstancesAction {
+public class MyHistoricTaskInstancesAction extends HistoricTaskInstancesAction {
 	private static final long serialVersionUID = 1L;
 
 	@Override
 	protected List<Column> getGridColumns() {
-		List<Column> columns = new ArrayList<Column>();
-		columns.add(new IdColumn4MapKey("a.id_", "id"));
+		List<Column> columns = new ArrayList<>();
+		columns.add(new IdColumn4MapKey("t.id_", "task_id"));
         // 流水号
-        columns.add(new TextColumn4MapKey("w.wf_code", "wf_code",
-                getText("flow.workFlowCode"), 120).setSortable(true)
-                .setUseTitleFromLabel(true));
-		// 主题
-		columns.add(new TextColumn4MapKey(
-				"", "subject",
-				getText("flow.task.subject"), 300).setSortable(true)
-				.setUseTitleFromLabel(true));
-		// 名称
-		columns.add(new TextColumn4MapKey("a.name_", "name",
-				getText("flow.task.name"), 200).setUseTitleFromLabel(true));
-		//办理期限
-		columns.add(new TextColumn4MapKey("a.due_date_", "due_date",
-				getText("done.dueDate"), 130).setSortable(true)
-				.setUseTitleFromLabel(true)
-				.setValueFormater(new CalendarFormater("yyyy-MM-dd HH:mm")));
-
-		columns.add(new TextColumn4MapKey("a.start_time_", "start_time",
-				getText("flow.task.startTime"), 130).setSortable(true)
-				.setUseTitleFromLabel(true)
-				.setValueFormater(new CalendarFormater("yyyy-MM-dd HH:mm")));
-		columns.add(new TextColumn4MapKey("a.end_time_", "end_time",
-				getText("flow.task.endTime"), 130).setSortable(true)
-				.setUseTitleFromLabel(true)
-				.setValueFormater(new CalendarFormater("yyyy-MM-dd HH:mm")));
-	
-		columns.add(new TextColumn4MapKey("a.duration_", "frmDuration",
-				getText("flow.task.duration"), 80).setSortable(true)
-				.setValueFormater(new AbstractFormater<String>() {
-					@SuppressWarnings("unchecked")
-					@Override
-					public String format(Object context, Object value) {
-						Object duration_obj=((Map<String, Object>)context).get("duration");
-						if(duration_obj==null)return null;
-						return DateUtils.getWasteTime(Long.parseLong(duration_obj.toString()));
-					}	
-				}));
-		// 流程
-		columns.add(new TextColumn4MapKey("c.name_", "procinstName",
-				getText("flow.task.category")).setSortable(true)
-				.setUseTitleFromLabel(true));
-		//流程状态
-		columns.add(new TextColumn4MapKey("", "pstatus",
-				getText("flow.task.pstatus"), 80).setSortable(true)
-				.setValueFormater(new EntityStatusFormater(getPStatus())));
+        columns.add(new TextColumn4MapKey("wf_code", "wf_code", getText("flow.workFlowCode"), 120)
+                .setSortable(true).setUseTitleFromLabel(true));
+        // 主题
+        columns.add(new TextColumn4MapKey("wf_subject", "wf_subject", getText("flow.task.subject"), 300)
+                .setSortable(true).setUseTitleFromLabel(true));
+        // 任务名称
+        columns.add(new TextColumn4MapKey("t.name_", "task_name", getText("flow.task.name"), 200)
+                .setSortable(true).setUseTitleFromLabel(true));
+        //办理期限
+        columns.add(new TextColumn4MapKey("t.due_date_", "due_date", getText("done.dueDate"), 130)
+                .setSortable(true).setUseTitleFromLabel(true)
+                .setValueFormater(new CalendarFormater("yyyy-MM-dd HH:mm")));
+        // 发起时间
+        columns.add(new TextColumn4MapKey("t.start_time_", "start_time", getText("flow.task.startTime"), 150)
+                .setSortable(true).setUseTitleFromLabel(true)
+                .setValueFormater(new CalendarFormater("yyyy-MM-dd HH:mm:ss")));
+        // 完成时间
+        columns.add(new TextColumn4MapKey("t.end_time_", "end_time", getText("flow.task.endTime"), 150)
+                .setSortable(true).setUseTitleFromLabel(true)
+                .setValueFormater(new CalendarFormater("yyyy-MM-dd HH:mm:ss")));
+        // 耗时
+        columns.add(new TextColumn4MapKey("t.duration_", "duration", getText("flow.task.duration"), 80)
+                .setSortable(true).setValueFormater(new AbstractFormater<String>() {
+                    @SuppressWarnings("unchecked")
+                    @Override
+                    public String format(Object context, Object value) {
+                        Object duration_obj = ((Map<String, Object>) context).get("duration");
+                        if (duration_obj == null) return null;
+                        return DateUtils.getWasteTime(Long.parseLong(duration_obj.toString()));
+                    }
+                }));
+        // 所属流程
+        columns.add(new TextColumn4MapKey("pd.name_", "process_name", getText("flow.task.category"), 180)
+                .setSortable(true).setUseTitleFromLabel(true));
+        // 流程状态
+        columns.add(new TextColumn4MapKey("", "pstatus", getText("flow.task.pstatus"), 80)
+                .setSortable(true).setValueFormater(new EntityStatusFormater(getPStatus())));
 
 		columns.add(new HiddenColumn4MapKey("assignee", "assignee"));
-		columns.add(new HiddenColumn4MapKey("procinstId", "procinstId"));
-		columns.add(new HiddenColumn4MapKey("procinstName", "procinstName"));
-		columns.add(new HiddenColumn4MapKey("procinstKey", "procinstKey"));
-		columns.add(new HiddenColumn4MapKey("procinstTaskName", "name"));
-		columns.add(new HiddenColumn4MapKey("procinstTaskKey", "taskDefKey"));
-		columns.add(new HiddenColumn4MapKey("subject", "subject"));
+		columns.add(new HiddenColumn4MapKey("procinstId", "process_id"));
+		columns.add(new HiddenColumn4MapKey("procinstName", "process_name"));
+		columns.add(new HiddenColumn4MapKey("procinstKey", "process_key"));
+		columns.add(new HiddenColumn4MapKey("procinstTaskName", "task_name"));
+		columns.add(new HiddenColumn4MapKey("procinstTaskKey", "task_def_key"));
+		columns.add(new HiddenColumn4MapKey("subject", "wf_subject"));
 		return columns;
-	}
-
-	@Override
-	protected String[] getGridSearchFields() {
-		return new String[] { "a.name_", "c.name_", "w.text_",
-				"getProcessInstanceSubject(a.proc_inst_id_)"};
 	}
 
 	@Override
@@ -143,11 +128,11 @@ public class MyHistoricTaskInstancesAction extends
 		AndCondition ac = new AndCondition();
 
 		SystemContext context = (SystemContext) this.getContext();
-		ac.add(new EqualsCondition("a.assignee_", context.getUser()
+		ac.add(new EqualsCondition("a.name", context.getUser()
 				.getCode()));
 		// 结束时间不能为空
-		ac.add(new IsNotNullCondition("a.end_time_"));
-		ac.add(new IsNullCondition("h.parent_id_"));
+		ac.add(new IsNotNullCondition("t.end_time_"));
+		ac.add(new IsNullCondition("e.parent_id_"));
 		
 		return ac.isEmpty() ? null : ac;
 	}
@@ -175,10 +160,10 @@ public class MyHistoricTaskInstancesAction extends
 		SystemContext context = (SystemContext) this.getContext();
 		String account=context.getUserHistory().getCode();
 		List<String> values=this.historicTaskInstanceService.findProcessNames(account, true);
-		List<Map<String,String>> list = new ArrayList<Map<String,String>>();
+		List<Map<String,String>> list = new ArrayList<>();
 		Map<String,String> map;
 		for(String value : values){
-			map = new HashMap<String, String>();
+			map = new HashMap<>();
 			map.put("key", value);
 			map.put("value", value);
 			list.add(map);
@@ -186,9 +171,9 @@ public class MyHistoricTaskInstancesAction extends
 		this.processList = OptionItem.toLabelValues(list);
 		
 		values=this.historicTaskInstanceService.findTaskNames(account, true);
-		list = new ArrayList<Map<String,String>>();
+		list = new ArrayList<>();
 		for(String value : values){
-			map = new HashMap<String, String>();
+			map = new HashMap<>();
 			map.put("key", value);
 			map.put("value", value);
 			list.add(map);

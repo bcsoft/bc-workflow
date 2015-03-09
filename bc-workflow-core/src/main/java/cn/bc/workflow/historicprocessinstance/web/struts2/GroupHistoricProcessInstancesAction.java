@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import cn.bc.core.util.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
@@ -54,13 +55,6 @@ public class GroupHistoricProcessInstancesAction extends HistoricProcessInstance
 	public void setActorService(ActorService actorService) {
 		this.actorService = actorService;
 	}
-	
-	@Override
-	protected String[] getGridSearchFields() {
-		return new String[] { "b.name_", "b.key_", "c.name", "w.text_",
-				"getProcessInstanceSubject(a.id_)" };
-	}
-
 
 	@Override
 	protected String getFormActionName() {
@@ -103,68 +97,67 @@ public class GroupHistoricProcessInstancesAction extends HistoricProcessInstance
 
 	@Override
 	protected List<Column> getGridColumns() {
-		List<Column> columns = new ArrayList<Column>();
+		List<Column> columns = new ArrayList<>();
 		columns.add(new IdColumn4MapKey("a.id_", "id"));
-		// 状态
-		columns.add(new TextColumn4MapKey("", "status",
-				getText("flow.instance.status"), 50).setSortable(true)
-				.setValueFormater(new EntityStatusFormater(getStatus())));
+        // 状态
+        columns.add(new TextColumn4MapKey("", "status", getText("flow.instance.status"), 50)
+                .setSortable(true).setValueFormater(new EntityStatusFormater(getStatus())));
         // 流水号
-        columns.add(new TextColumn4MapKey("w.wf_code", "wf_code",
-                getText("flow.workFlowCode"), 120).setSortable(true)
-                .setUseTitleFromLabel(true));
-		// 主题
-		columns.add(new TextColumn4MapKey(
-				"getProcessInstanceSubject(a.proc_inst_id_)", "subject",
-				getText("flow.instance.subject"), 300).setSortable(true)
-				.setUseTitleFromLabel(true));
-		// 流程
-		columns.add(new TextColumn4MapKey("b.name_", "procinst_name",
-				getText("flow.instance.name"), 200).setSortable(true)
-				.setUseTitleFromLabel(true));
-		columns.add(new TextColumn4MapKey("", "todo_names",
-				getText("flow.instance.todoTask"), 200).setSortable(true)
-				.setUseTitleFromLabel(true));
-		// 版本号
-		columns.add(new TextColumn4MapKey("e.version_", "version",
-				getText("flow.instance.version"), 50).setSortable(true)
-				.setUseTitleFromLabel(true).setValueFormater(new AbstractFormater<String>() {
-					@SuppressWarnings("unchecked")
-					@Override
-					public String format(Object context, Object value) {
-						Map<String, Object> version = (Map<String, Object>) context;
-						return version.get("version")+"  ("+version.get("aVersion")+")";
-					}
-					
-				}));
-		// 发起人
-		columns.add(new TextColumn4MapKey("a.first_", "start_name",
-				getText("flow.instance.startName"), 80).setSortable(true)
-				.setUseTitleFromLabel(true));
-		columns.add(new TextColumn4MapKey("a.start_time_", "start_time",
-				getText("flow.instance.startTime"), 150).setSortable(true)
-				.setUseTitleFromLabel(true)
-				.setValueFormater(new CalendarFormater("yyyy-MM-dd HH:mm:ss")));
-		columns.add(new TextColumn4MapKey("a.end_time_", "end_time",
-				getText("flow.instance.endTime"), 150).setSortable(true)
-				.setUseTitleFromLabel(true)
-				.setValueFormater(new CalendarFormater("yyyy-MM-dd HH:mm:ss")));
-		columns.add(new TextColumn4MapKey("a.duration_", "duration",
-				getText("flow.instance.duration"), 80).setSortable(true)
-				.setValueFormater(new AbstractFormater<String>() {
+        columns.add(new TextColumn4MapKey("wf_code", "wf_code", getText("flow.workFlowCode"), 120)
+                .setSortable(true).setUseTitleFromLabel(true));
+        // 主题
+        columns.add(new TextColumn4MapKey("subject", "subject", getText("flow.instance.subject"), 300)
+                .setSortable(true).setUseTitleFromLabel(true));
+        // 流程名称
+        columns.add(new TextColumn4MapKey("b.name_", "procinst_name", getText("flow.instance.name"), 180)
+                .setSortable(true).setUseTitleFromLabel(true));
+        // 待办任务
+        columns.add(new TextColumn4MapKey("", "todo_names", getText("flow.instance.todoTask"), 200)
+                .setSortable(true).setUseTitleFromLabel(true).setValueFormater(new AbstractFormater<String>() {
                     @SuppressWarnings("unchecked")
                     @Override
                     public String format(Object context, Object value) {
-                        Object duration_obj = ((Map<String, Object>) context).get("duration");
-                        if (duration_obj == null) return null;
-                        return DateUtils.getWasteTime(Long.parseLong(duration_obj.toString()));
+                        String value_ = StringUtils
+                                .toString(((Map<String, Object>) context)
+                                        .get("todo_names"));
+                        if (value_ != null)
+                            return value_.replaceAll(";", ",");
+                        return null;
+                    }
+                }));
+        // 版本号
+        columns.add(new TextColumn4MapKey("e.version_", "version", getText("flow.instance.version"), 50)
+                .setSortable(true).setUseTitleFromLabel(true));
+        // 发起人
+        columns.add(new TextColumn4MapKey("a.first_", "start_name", getText("flow.instance.startName"), 80)
+                .setSortable(true).setUseTitleFromLabel(true));
+        // 发起时间
+        columns.add(new TextColumn4MapKey("a.start_time_", "start_time", getText("flow.instance.startTime"), 150)
+                .setSortable(true).setUseTitleFromLabel(true)
+                .setValueFormater(new CalendarFormater("yyyy-MM-dd HH:mm:ss")));
+        // 结束时间
+        columns.add(new TextColumn4MapKey("a.end_time_", "end_time", getText("flow.instance.endTime"), 150)
+                .setSortable(true).setUseTitleFromLabel(true)
+                .setValueFormater(new CalendarFormater("yyyy-MM-dd HH:mm:ss")));
+        // 总耗时
+        columns.add(new TextColumn4MapKey("a.duration_", "duration", getText("flow.instance.duration"), 80)
+                .setSortable(true).setValueFormater(new AbstractFormater<String>() {
+                    @SuppressWarnings("unchecked")
+                    @Override
+                    public String format(Object context, Object value) {
+                        Object duration_obj = ((Map<String, Object>) context)
+                                .get("duration");
+                        if (duration_obj == null)
+                            return null;
+                        return DateUtils.getWasteTime(Long
+                                .parseLong(duration_obj.toString()));
                     }
                 }));
         // 键值
-		columns.add(new TextColumn4MapKey("b.key_", "key",
-				getText("flow.instance.key"), 180).setSortable(true)
-				.setUseTitleFromLabel(true));
-		columns.add(new HiddenColumn4MapKey("procinstid", "procinstid"));
+        columns.add(new TextColumn4MapKey("b.key_", "key",getText("flow.instance.key"), 180)
+                .setSortable(true).setUseTitleFromLabel(true));
+
+		columns.add(new HiddenColumn4MapKey("procinstid", "id"));
 		columns.add(new HiddenColumn4MapKey("status", "status"));
 		columns.add(new HiddenColumn4MapKey("accessControlDocType", "accessControlDocType"));
 		columns.add(new HiddenColumn4MapKey("accessControlDocName", "accessControlDocName"));
@@ -212,7 +205,7 @@ public class GroupHistoricProcessInstancesAction extends HistoricProcessInstance
 		//判断用户拥有的岗位名称是否为指定的部门领导岗位名称
 		for(Actor a:ownedGroups){
 			if(this.getText("flow.group.leaderDepartmentGroupNames").indexOf(a.getName())!=-1){
-				if(leaderGroups==null)leaderGroups=new ArrayList<Actor>();
+				if(leaderGroups==null)leaderGroups=new ArrayList<>();
 				
 				leaderGroups.add(a);
 			}
@@ -226,7 +219,7 @@ public class GroupHistoricProcessInstancesAction extends HistoricProcessInstance
 			leaderUpper=this.actorService.loadBelong(a.getId(), 
 					new Integer[] { Actor.TYPE_DEPARTMENT,Actor.TYPE_UNIT });
 			if(!leaderUpper.getCode().equals("baochengzongbu")){
-				if(leaderUppers==null)leaderUppers=new ArrayList<Actor>();
+				if(leaderUppers==null)leaderUppers=new ArrayList<>();
 				
 				leaderUppers.add(leaderUpper);
 			}	
@@ -234,7 +227,7 @@ public class GroupHistoricProcessInstancesAction extends HistoricProcessInstance
 		if(leaderUppers==null)return null;
 
 		//上级组织拥有的用户
-		List<Actor> ownActors=new ArrayList<Actor>();
+		List<Actor> ownActors=new ArrayList<>();
 		List<Actor> _ownActors;
 		for(Actor a:leaderUppers){
 			_ownActors=this.actorService.findFollower(a.getId(), 
@@ -276,7 +269,7 @@ public class GroupHistoricProcessInstancesAction extends HistoricProcessInstance
 		if(aa4list==null||aa4list.size()==0)return null;
 		
 		//流程部署的id
-		List<String> deployIds=new ArrayList<String>();
+		List<String> deployIds=new ArrayList<>();
 		
 		for(AccessActor aa :aa4list){
 			//先进性权限的判断
@@ -321,7 +314,7 @@ public class GroupHistoricProcessInstancesAction extends HistoricProcessInstance
 		if(aa4list==null||aa4list.size()==0)return null;
 		
 		//流程实例的id
-		List<String> pIds=new ArrayList<String>();
+		List<String> pIds=new ArrayList<>();
 		
 		for(AccessActor aa :aa4list){
 			//先进性权限的判断

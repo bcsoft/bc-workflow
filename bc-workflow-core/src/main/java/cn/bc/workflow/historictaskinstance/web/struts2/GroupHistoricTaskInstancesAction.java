@@ -34,8 +34,7 @@ import cn.bc.workflow.deploy.domain.Deploy;
 
 @Scope(BeanDefinition.SCOPE_PROTOTYPE)
 @Controller
-public class GroupHistoricTaskInstancesAction extends
-	HistoricTaskInstancesAction {
+public class GroupHistoricTaskInstancesAction extends HistoricTaskInstancesAction {
 	private static final long serialVersionUID = 1L;
 	private ActorService actorService;
 	private AccessService accessService;
@@ -111,8 +110,8 @@ public class GroupHistoricTaskInstancesAction extends
 		}
 		
 		// 结束时间不能为空
-		ac.add(new IsNotNullCondition("a.end_time_"));
-		ac.add(new IsNullCondition("h.parent_id_"));
+		ac.add(new IsNotNullCondition("t.end_time_"));
+		ac.add(new IsNullCondition("e.parent_id_"));
 		
 		return ac;
 	}
@@ -136,7 +135,7 @@ public class GroupHistoricTaskInstancesAction extends
 		//判断用户拥有的岗位名称是否为指定的部门领导岗位名称
 		for(Actor a:ownedGroups){
 			if(this.getText("flow.group.leaderDepartmentGroupNames").indexOf(a.getName())!=-1){
-				if(leaderGroups==null)leaderGroups=new ArrayList<Actor>();
+				if(leaderGroups==null)leaderGroups=new ArrayList<>();
 				
 				leaderGroups.add(a);
 			}
@@ -158,7 +157,7 @@ public class GroupHistoricTaskInstancesAction extends
 		if(leaderUppers==null)return null;
 
 		//上级组织拥有的用户
-		List<Actor> ownActors=new ArrayList<Actor>();
+		List<Actor> ownActors=new ArrayList<>();
 		List<Actor> _ownActors;
 		for(Actor a:leaderUppers){
 			_ownActors=this.actorService.findFollower(a.getId(), 
@@ -175,13 +174,13 @@ public class GroupHistoricTaskInstancesAction extends
 		
 		if(ownActors==null||ownActors.size()==0)return null;
 		
-		List<String> ownActorCodes=new ArrayList<String>();
+		List<String> ownActorCodes=new ArrayList<>();
 
 		for(Actor a:ownActors){
 			ownActorCodes.add(a.getCode());
 		}
 		
-		return new InCondition("a.assignee_",ownActorCodes);
+		return new InCondition("t.assignee_",ownActorCodes);
 	}
 
 	//获取可访问属于流程部署的任务的条件
@@ -195,7 +194,7 @@ public class GroupHistoricTaskInstancesAction extends
 		if(aa4list==null||aa4list.size()==0)return null;
 		
 		//流程部署的id
-		List<String> deployIds=new ArrayList<String>();
+		List<String> deployIds=new ArrayList<>();
 		
 		for(AccessActor aa :aa4list){
 			//先进性权限的判断
@@ -214,10 +213,10 @@ public class GroupHistoricTaskInstancesAction extends
 		
 		if(deployIds.size()==0)return null;
 		
-		String sql="exists(select 1 from act_hi_taskinst dc_a";
-		sql+=" inner join act_re_procdef dc_b on dc_b.id_=dc_a.proc_def_id_";
-		sql+=" inner join bc_wf_deploy dc_c on dc_c.deployment_id=dc_b.deployment_id_";
-		sql+=" where dc_a.id_=a.id_ and dc_c.id in(";
+		String sql="exists(select 1 from act_hi_taskinst dc_t";
+		sql+=" inner join act_re_procdef dc_r on dc_r.id_=dc_t.proc_def_id_";
+		sql+=" inner join bc_wf_deploy dc_d on dc_d.deployment_id=dc_r.deployment_id_";
+		sql+=" where dc_t.id_=t.id_ and dc_d.id in(";
 		
 		for(int i=0;i<deployIds.size();i++){
 			if(i>0)sql+=",";
@@ -240,7 +239,7 @@ public class GroupHistoricTaskInstancesAction extends
 		if(aa4list==null||aa4list.size()==0)return null;
 		
 		//流程实例的id
-		List<String> pIds=new ArrayList<String>();
+		List<String> pIds=new ArrayList<>();
 		
 		for(AccessActor aa :aa4list){
 			//先进性权限的判断
@@ -260,7 +259,7 @@ public class GroupHistoricTaskInstancesAction extends
 		if(pIds.size()==0)return null;
 		
 		String sql="exists(select 1 from act_hi_taskinst pi_a";
-		sql+=" where pi_a.id_=a.id_ and pi_a.proc_inst_id_ in(";
+		sql+=" where pi_a.id_=t.id_ and pi_a.proc_inst_id_ in(";
 		
 		for(int i=0;i<pIds.size();i++){
 			if(i>0)sql+=",";

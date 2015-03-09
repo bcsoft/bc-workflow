@@ -110,25 +110,19 @@ public class HistoricProcessInstancesAction extends
 
 		// 构建查询语句,where和order by不要包含在sql中(要统一放到condition中)
 		StringBuffer selectSql = new StringBuffer();
-		selectSql
-				.append("select p.*,getProcessInstanceSubject(p.id_) as subject");
+		selectSql.append("select p.*,getprocesstodotasknames(p.id_) as todo_names,getaccessactors4docidtype4docidcharacter(p.id_,'ProcessInstance')");
 
 		StringBuffer fromSql = new StringBuffer();
-		fromSql.append(" from (select a.id_,b.name_ as procinstname,a.start_time_,a.end_time_,a.duration_,f.suspension_state_ status,a.proc_inst_id_");
-		fromSql.append(",e.version_ as version,b.version_ as aVersion,b.key_ as key,c.name,e.id as deploy_id,w.text_ as wf_code");
-		fromSql.append(",getprocesstodotasknames(a.proc_inst_id_) as  todo_names");
-		fromSql.append(",getaccessactors4docidtype4docidcharacter(a.id_,'ProcessInstance')");
+		fromSql.append(" from (select a.id_,b.name_ as procinstname,a.start_time_,a.end_time_,a.duration_,f.suspension_state_ status");
+		fromSql.append(",e.version_ as version,b.key_ as key,c.name,e.id as deploy_id");
+		fromSql.append(",i.info->>'wf_code' as wf_code,i.info->>'subject' as subject");
 		fromSql.append(" from act_hi_procinst a");
 		fromSql.append(" inner join act_re_procdef b on b.id_=a.proc_def_id_");
 		fromSql.append(" inner join act_re_deployment d on d.id_=b.deployment_id_");
 		fromSql.append(" inner join bc_wf_deploy e on e.deployment_id=d.id_");
+		fromSql.append(" inner join bc_wf_procinst_info i on i.id = a.id_");
 		fromSql.append(" left join bc_identity_actor c on c.code=a.start_user_id_");
 		fromSql.append(" left join act_ru_execution f on a.id_ = f.proc_inst_id_");
-        fromSql.append(" left join (");
-        fromSql.append(" select d.proc_inst_id_, d.text_");
-        fromSql.append(" from act_hi_detail d");
-        fromSql.append(" where d.name_ = 'wf_code'");
-        fromSql.append(" ) w on w.proc_inst_id_ = a.id_");
 		fromSql.append(" ${condition} ) p");
 
 		sqlObject.setSelect(selectSql.toString());
@@ -139,7 +133,7 @@ public class HistoricProcessInstancesAction extends
 		// 数据映射器
 		sqlObject.setRowMapper(new RowMapper<Map<String, Object>>() {
 			public Map<String, Object> mapRow(Object[] rs, int rowNum) {
-				Map<String, Object> map = new HashMap<String, Object>();
+				Map<String, Object> map = new HashMap<>();
 				int i = 0;
 				map.put("id", rs[i++]);
 				map.put("procinst_name", rs[i++]);
@@ -147,16 +141,14 @@ public class HistoricProcessInstancesAction extends
 				map.put("end_time", rs[i++]);
 				map.put("duration", rs[i++]);
 				map.put("status", rs[i++]);
-				map.put("procinstid", rs[i++]);
 				map.put("version", rs[i++]);
-				map.put("aVersion", rs[i++]);
 				map.put("key", rs[i++]);
 				map.put("start_name", rs[i++]);// 发起人
 				map.put("deployId", rs[i++]);
 				map.put("wf_code", rs[i++]);
-				map.put("todo_names", rs[i++]);
-				map.put("accessactors", rs[i++]);
-				map.put("subject", rs[i++]);
+                map.put("subject", rs[i++]);
+                map.put("todo_names", rs[i++]);
+                map.put("accessactors", rs[i++]);
 
 				map.put("accessControlDocType", "ProcessInstance");
 
@@ -194,19 +186,19 @@ public class HistoricProcessInstancesAction extends
 
 	@Override
 	protected List<Column> getGridColumns() {
-		List<Column> columns = new ArrayList<Column>();
+		List<Column> columns = new ArrayList<>();
 		columns.add(new IdColumn4MapKey("a.id_", "id"));
 		// 状态
 		columns.add(new TextColumn4MapKey("", "status",
 				getText("flow.instance.status"), 50).setSortable(true)
 				.setValueFormater(new EntityStatusFormater(getStatus())));
         // 流水号
-        columns.add(new TextColumn4MapKey("w.wf_code", "wf_code",
+        columns.add(new TextColumn4MapKey("wf_code", "wf_code",
                 getText("flow.workFlowCode"), 120).setSortable(true)
                 .setUseTitleFromLabel(true));
 		// 主题
 		columns.add(new TextColumn4MapKey(
-				"getProcessInstanceSubject(a.proc_inst_id_)", "subject",
+				"subject", "subject",
 				getText("flow.instance.subject"), 300).setSortable(true)
 				.setUseTitleFromLabel(true));
         // 待办任务
@@ -222,7 +214,7 @@ public class HistoricProcessInstancesAction extends
 										.get("todo_names"));
 						if (value_ != null)
 							return value_.replaceAll(";", ",");
-						return value_;
+						return null;
 					}
 				}));
         // 流程名称
@@ -267,20 +259,10 @@ public class HistoricProcessInstancesAction extends
 		// 版本号
 		columns.add(new TextColumn4MapKey("e.version_", "version",
 				getText("flow.instance.version"), 50).setSortable(true)
-				.setUseTitleFromLabel(true)
-				.setValueFormater(new AbstractFormater<String>() {
-                    @SuppressWarnings("unchecked")
-                    @Override
-                    public String format(Object context, Object value) {
-                        Map<String, Object> version = (Map<String, Object>) context;
-                        return version.get("version") + "  ("
-                                + version.get("aVersion") + ")";
-                    }
-
-                }));
+				.setUseTitleFromLabel(true));
         //空列
         columns.add(new TextColumn4MapKey("", "",""));
-		columns.add(new HiddenColumn4MapKey("procinstid", "procinstid"));
+		columns.add(new HiddenColumn4MapKey("procinstid", "id"));
 		columns.add(new HiddenColumn4MapKey("status", "status"));
 		columns.add(new HiddenColumn4MapKey("accessControlDocType",
 				"accessControlDocType"));
@@ -295,7 +277,7 @@ public class HistoricProcessInstancesAction extends
 	 * 
 	 */
 	protected Map<String, String> getStatus() {
-		Map<String, String> map = new LinkedHashMap<String, String>();
+		Map<String, String> map = new LinkedHashMap<>();
 		map.put(String.valueOf(SuspensionState.ACTIVE.getStateCode()),
 				getText("flow.instance.status.processing"));
 		map.put(String.valueOf(SuspensionState.SUSPENDED.getStateCode()),
@@ -313,9 +295,8 @@ public class HistoricProcessInstancesAction extends
 
 	@Override
 	protected String[] getGridSearchFields() {
-		return new String[] { "b.name_", "b.key_", "c.name","w.text_",
-				"getProcessInstanceSubject(a.id_)",
-				"getprocesstodotasknames(a.id_)" };
+		return new String[] { "b.name_", "b.key_", "c.name"
+                , "i.info->>'subject'", "i.info->>'wf_code'"};
 	}
 
 	@Override
@@ -459,10 +440,10 @@ public class HistoricProcessInstancesAction extends
 	protected void initConditionsFrom() throws Exception {
 		List<String> values = this.historicTaskInstanceService
 				.findProcessNames();
-		List<Map<String, String>> list = new ArrayList<Map<String, String>>();
+		List<Map<String, String>> list = new ArrayList<>();
 		Map<String, String> map;
 		for (String value : values) {
-			map = new HashMap<String, String>();
+			map = new HashMap<>();
 			map.put("key", value);
 			map.put("value", value);
 			list.add(map);
