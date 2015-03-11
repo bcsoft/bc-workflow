@@ -32,7 +32,7 @@ CREATE OR REPLACE FUNCTION wf_procinst_info__auto_insert()
 	END;
 	$BODY$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS wf_procinst_info__auto_insert ON ACT_HI_DETAIL;
+DROP TRIGGER IF EXISTS wf_procinst_info__auto_insert ON ACT_HI_PROCINST;
 CREATE TRIGGER wf_procinst_info__auto_insert after INSERT ON ACT_HI_PROCINST
 	FOR EACH ROW EXECUTE PROCEDURE wf_procinst_info__auto_insert();
 
