@@ -83,7 +83,7 @@ public class HistoricTaskInstancesAction extends ViewAction<Map<String, Object>>
         sql.append(",t.start_time_ start_time,t.end_time_ end_time,t.duration_ duration,t.due_date_ as due_date");
         sql.append(",t.proc_inst_id_ process_id,pd.name_ process_name,a.name as assignee");
         sql.append(",e.suspension_state_ pstatus,t.task_def_key_,pd.key_ process_key");
-        sql.append(",pi.info->>'wf_code' as wf_code,pi.info->>'subject' as wf_subject");
+        sql.append(",pi.info->>'wf_code' as wf_code,pi.info->>'subject' as wf_subject, pd.deployment_id_");
         sql.append(" from act_hi_taskinst t");
         sql.append(" inner join act_hi_procinst p on p.proc_inst_id_ = t.proc_inst_id_");
         sql.append(" inner join bc_wf_procinst_info pi on pi.id = p.id_");
@@ -116,8 +116,9 @@ public class HistoricTaskInstancesAction extends ViewAction<Map<String, Object>>
 				map.put("process_key", rs[i++]);
 				map.put("wf_code", rs[i++]);
 				map.put("wf_subject", rs[i++]);
+                map.put("deployId",rs[i++]);
 				map.put("accessControlDocType","ProcessInstance");
-				
+
 				//判断流程状态
 				if (map.get("pstatus") == null) {
 					map.put("pstatus", WorkspaceServiceImpl_old.COMPLETE);
@@ -196,6 +197,7 @@ public class HistoricTaskInstancesAction extends ViewAction<Map<String, Object>>
         //空列
         columns.add(new TextColumn4MapKey("", "",""));
 
+		columns.add(new HiddenColumn4MapKey("deployId", "deployId"));
 		columns.add(new HiddenColumn4MapKey("procinstId", "process_id"));
 		columns.add(new HiddenColumn4MapKey("procinstName", "process_name"));
 		columns.add(new HiddenColumn4MapKey("procinstKey", "process_key"));
