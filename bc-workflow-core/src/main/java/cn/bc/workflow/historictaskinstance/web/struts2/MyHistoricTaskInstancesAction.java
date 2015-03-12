@@ -128,7 +128,7 @@ public class MyHistoricTaskInstancesAction extends HistoricTaskInstancesAction {
 		AndCondition ac = new AndCondition();
 
 		SystemContext context = (SystemContext) this.getContext();
-		ac.add(new EqualsCondition("a.name", context.getUser()
+		ac.add(new EqualsCondition("a.code", context.getUser()
 				.getCode()));
 		// 结束时间不能为空
 		ac.add(new IsNotNullCondition("t.end_time_"));
