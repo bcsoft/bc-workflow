@@ -123,7 +123,7 @@ update bc_wf_procinst_info as pi set info = t.info
 		select i.id_
 		,(select row_to_json(t) from (
 				select (select text_ from act_hi_detail d where d.proc_inst_id_ = i.id_ and d.name_ = 'subject' and d.task_id_ is null order by rev_ desc limit 1) as subject
-					, (select text_ from act_hi_detail d where d.proc_inst_id_ = i.id_ and d.name_ = 'wf_code' order by rev_ desc limit 1) as wf_code
+					, (select text_ from act_hi_detail d where d.proc_inst_id_ = i.id_ and d.name_ = 'wf_code' and d.task_id_ is null order by rev_ desc limit 1) as wf_code
 			) t) as info
 		from act_hi_procinst i
 	) t
