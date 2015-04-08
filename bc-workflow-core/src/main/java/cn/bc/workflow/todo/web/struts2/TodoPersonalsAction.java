@@ -163,14 +163,18 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>> {
 		// 查看按钮
 		tb.addButton(Toolbar.getDefaultOpenToolbarButton(getText("label.read")).setClick("bc.myTodoView.open").setAction(null));
 
-		if (this.isStart()) {
-			// 发起流程
+        //region 发起流程按钮
+        if (this.isStart()) {
 			tb.addButton(new ToolbarButton().setIcon("ui-icon-play")
 					.setText(getText("flow.start"))
 					.setClick("bc.myTodoView.startflow"));
 		}
-		
-		// "更多"按钮
+        //endregion
+
+        // 删除按钮
+        tb.addButton(new ToolbarButton().setIcon("ui-icon-lightbulb").setText("删除").setClick("bc.myTodoView.delete"));
+
+        //region "更多"按钮
 		ToolbarMenuButton menuButton = new ToolbarMenuButton(
 				getText("label.operate"))
 				.setChange("bc.myTodoView.selectMenuButtonItem");
@@ -193,6 +197,7 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>> {
 
 		tb.addButton(Toolbar.getDefaultToolbarRadioGroup(this.getStatus(),
 				"status", 0, getText("title.click2changeSearchStatus")));
+        //endregion
 
 		// 搜索按钮
 		tb.addButton(this.getDefaultSearchToolbarButton());

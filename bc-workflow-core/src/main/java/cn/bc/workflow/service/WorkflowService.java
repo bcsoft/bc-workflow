@@ -8,6 +8,9 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 
+import cn.bc.core.exception.ConstraintViolationException;
+import cn.bc.core.exception.NotExistsException;
+import cn.bc.core.exception.PermissionDeniedException;
 import org.activiti.engine.repository.Deployment;
 import org.activiti.engine.repository.ProcessDefinition;
 import org.activiti.engine.runtime.ProcessInstance;
@@ -332,4 +335,13 @@ public interface WorkflowService {
      * @return 更新成功返回 true 否则返回 false
      */
     boolean updateDeploymentResource(String deploymentId, String resourceName, byte[] in);
+
+    /**
+     * 删除个人发起且没有办理的流程实例
+     *
+     * @param id   流程实例Id
+     * @param code 用户Code
+     */
+    void deleteInstanceNotDeal2Personal(String id, String code)
+            throws NotExistsException, ConstraintViolationException, PermissionDeniedException;
 }
