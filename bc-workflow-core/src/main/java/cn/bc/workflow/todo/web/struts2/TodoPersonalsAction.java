@@ -171,9 +171,6 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>> {
 		}
         //endregion
 
-        // 删除按钮
-        tb.addButton(new ToolbarButton().setIcon("ui-icon-lightbulb").setText("删除").setClick("bc.myTodoView.delete"));
-
         //region "更多"按钮
 		ToolbarMenuButton menuButton = new ToolbarMenuButton(
 				getText("label.operate"))
@@ -191,6 +188,8 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>> {
 			menuButton.addMenuItem(getText("label.assign.task"),
 					"assignTask");
 		}
+
+        menuButton.addMenuItem("todo.personal.delete", "delete");
 		
 		menuButton.addMenuItem(getText("flow.task.requirement"),
 				"requirement");
