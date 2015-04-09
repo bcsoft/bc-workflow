@@ -189,7 +189,7 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>> {
 					"assignTask");
 		}
 
-        menuButton.addMenuItem("todo.personal.delete", "delete");
+        menuButton.addMenuItem(getText("todo.personal.delete"), "delete");
 		
 		menuButton.addMenuItem(getText("flow.task.requirement"),
 				"requirement");
