@@ -302,6 +302,7 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>> {
 		columns.add(new HiddenColumn4MapKey("procinstTaskName", "taskName"));
 		columns.add(new HiddenColumn4MapKey("procinstTaskKey", "taskKey"));
 		columns.add(new HiddenColumn4MapKey("subject", "subject"));
+		columns.add(new HiddenColumn4MapKey("wf_code", "wf_code"));
 
 		return columns;
 	}
