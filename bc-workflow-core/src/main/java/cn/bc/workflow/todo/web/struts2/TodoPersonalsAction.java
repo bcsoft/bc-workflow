@@ -163,14 +163,15 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>> {
 		// 查看按钮
 		tb.addButton(Toolbar.getDefaultOpenToolbarButton(getText("label.read")).setClick("bc.myTodoView.open").setAction(null));
 
-		if (this.isStart()) {
-			// 发起流程
+        //region 发起流程按钮
+        if (this.isStart()) {
 			tb.addButton(new ToolbarButton().setIcon("ui-icon-play")
 					.setText(getText("flow.start"))
 					.setClick("bc.myTodoView.startflow"));
 		}
-		
-		// "更多"按钮
+        //endregion
+
+        //region "更多"按钮
 		ToolbarMenuButton menuButton = new ToolbarMenuButton(
 				getText("label.operate"))
 				.setChange("bc.myTodoView.selectMenuButtonItem");
@@ -187,12 +188,15 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>> {
 			menuButton.addMenuItem(getText("label.assign.task"),
 					"assignTask");
 		}
+
+        menuButton.addMenuItem(getText("todo.personal.delete"), "delete");
 		
 		menuButton.addMenuItem(getText("flow.task.requirement"),
 				"requirement");
 
 		tb.addButton(Toolbar.getDefaultToolbarRadioGroup(this.getStatus(),
 				"status", 0, getText("title.click2changeSearchStatus")));
+        //endregion
 
 		// 搜索按钮
 		tb.addButton(this.getDefaultSearchToolbarButton());
@@ -298,6 +302,7 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>> {
 		columns.add(new HiddenColumn4MapKey("procinstTaskName", "taskName"));
 		columns.add(new HiddenColumn4MapKey("procinstTaskKey", "taskKey"));
 		columns.add(new HiddenColumn4MapKey("subject", "subject"));
+		columns.add(new HiddenColumn4MapKey("wf_code", "wf_code"));
 
 		return columns;
 	}

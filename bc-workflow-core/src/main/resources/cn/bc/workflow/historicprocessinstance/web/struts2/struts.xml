@@ -15,6 +15,7 @@
 		<action name="conditions" class="historicProcessInstancesAction" method="conditions">
 			<result name="success">/bc-workflow/historicprocessinstance/conditions.jsp</result>
 		</action>
+        <action name="deleteNotDeal2Personal" class="historicProcessInstancesAction" method="deleteNotDeal2Personal"/>
 	</package>
 	<!-- 我的经办流程 -->
 	<package name="myHistoricProcessInstances" extends="bc-default" namespace="/bc-workflow/myHistoricProcessInstances">

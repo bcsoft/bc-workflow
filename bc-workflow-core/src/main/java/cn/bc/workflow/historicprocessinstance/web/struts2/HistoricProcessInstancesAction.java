@@ -1,6 +1,9 @@
 package cn.bc.workflow.historicprocessinstance.web.struts2;
 
+import cn.bc.core.exception.ConstraintViolationException;
 import cn.bc.core.exception.CoreException;
+import cn.bc.core.exception.NotExistsException;
+import cn.bc.core.exception.PermissionDeniedException;
 import cn.bc.core.query.condition.Condition;
 import cn.bc.core.query.condition.Direction;
 import cn.bc.core.query.condition.impl.AndCondition;
@@ -480,6 +483,56 @@ public class HistoricProcessInstancesAction extends
 		this.json = json.toString();
 		return "json";
 	}
+
+    /**
+     * 删除个人发起且没有办理的流程实例
+     *
+     * @return {"success": true | false, "msg", ...}
+     */
+    public String deleteNotDeal2Personal() throws JSONException {
+        JSONObject json = new JSONObject();
+        SystemContext context = (SystemContext) this.getContext();
+        try {
+            //region 健壮性判断
+            if (id == null || "".trim().equals(id)) {
+                throw new CoreException("流程实例不能为空！");
+            }
+            //endregion
+
+            // 通过 service 删除个人发起且没有办理的流程实例
+            workflowService.deleteInstanceNotDeal2Personal(id, context.getUser().getCode());
+
+            json.put("success", true);
+            json.put("msg", getText("form.delete.success"));
+        } catch (NotExistsException e) {
+            //region 对象不存在异常
+            logger.warn(e.getMessage(), e);
+            json.put("success", false);
+            json.put("msg", "该流程不存在！");
+            //endregion
+        } catch (ConstraintViolationException e) {
+            //region 违反关联异常
+            logger.warn(e.getMessage(), e);
+            json.put("success", false);
+            json.put("msg", "流程已有用户办理，不能删除！");
+            //endregion
+        } catch (PermissionDeniedException e) {
+            //region 没有权限的异常
+            logger.warn(e.getMessage(), e);
+            json.put("success", false);
+            json.put("msg", "用户" + context.getUser().getName() + "不是流程的发起人！不能删除！");
+            //endregion
+        } catch (Exception e) {
+            //region 其它异常
+            logger.warn(e.getMessage(), e);
+            json.put("success", false);
+            json.put("msg", e.getMessage());
+            //endregion
+        }
+
+        this.json = json.toString();
+        return "json";
+    }
 
 	/** 激活流程 **/
 	public String doActive() {

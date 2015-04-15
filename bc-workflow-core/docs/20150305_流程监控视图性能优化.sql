@@ -13,7 +13,7 @@ CREATE TABLE bc_wf_procinst_info (
 insert into bc_wf_procinst_info(id, info)
 	select i.id_
 	, (select row_to_json(t) from (
-			select (select text_ from act_hi_detail d where d.proc_inst_id_ = i.id_ and d.name_ = 'subject' order by rev_ desc limit 1) as subject
+			select (select text_ from act_hi_detail d where d.proc_inst_id_ = i.id_ and d.name_ = 'subject' and d.task_id_ is null order by rev_ desc limit 1) as subject
 				, (select text_ from act_hi_detail d where d.proc_inst_id_ = i.id_ and d.name_ = 'wf_code' order by rev_ desc limit 1) as wf_code
 		) t) as info
 	from act_hi_procinst i;
@@ -116,3 +116,15 @@ CREATE OR REPLACE FUNCTION json_update(j json, k text, v anyelement) RETURNS jso
 		SELECT $2, to_json($3)
 	) t;
 $$ LANGUAGE sql;
+
+-- 修复 bc_wf_procinst_info 数据错误
+update bc_wf_procinst_info as pi set info = t.info
+	from (
+		select i.id_
+		,(select row_to_json(t) from (
+				select (select text_ from act_hi_detail d where d.proc_inst_id_ = i.id_ and d.name_ = 'subject' and d.task_id_ is null order by rev_ desc limit 1) as subject
+					, (select text_ from act_hi_detail d where d.proc_inst_id_ = i.id_ and d.name_ = 'wf_code' and d.task_id_ is null order by rev_ desc limit 1) as wf_code
+			) t) as info
+		from act_hi_procinst i
+	) t
+	where t.id_ = pi.id;

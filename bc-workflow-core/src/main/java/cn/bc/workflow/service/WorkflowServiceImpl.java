@@ -3,7 +3,10 @@
  */
 package cn.bc.workflow.service;
 
+import cn.bc.core.exception.ConstraintViolationException;
 import cn.bc.core.exception.CoreException;
+import cn.bc.core.exception.NotExistsException;
+import cn.bc.core.exception.PermissionDeniedException;
 import cn.bc.core.util.DateUtils;
 import cn.bc.core.util.JsonUtils;
 import cn.bc.docs.domain.Attach;
@@ -1092,5 +1095,36 @@ public class WorkflowServiceImpl implements WorkflowService {
     @Override
     public boolean updateDeploymentResource(String deploymentId, String resourceName, byte[] in) {
         return this.workflowDao.updateDeploymentResource(deploymentId, resourceName, in);
+    }
+
+    @Override
+    public void deleteInstanceNotDeal2Personal(String id, String code)
+            throws NotExistsException, ConstraintViolationException, PermissionDeniedException {
+        long length = historyService.createHistoricTaskInstanceQuery().processInstanceId(id).count();// 历史任务个数
+        String initiator = (String) runtimeService.getVariable(id, "initiator");// 发起人
+
+        //region 验证：流程实例是否存在
+        if (length == 0) {
+            throw new NotExistsException(this.getClass().getName() +
+                    " historyService.createHistoricTaskInstanceQuery().processInstanceId(" + id + ").count() 结果为0");
+        }
+        //endregion
+
+        //region 验证：流程实例是否未办理
+        if (length > 1) {
+            throw new ConstraintViolationException(this.getClass().getName() +
+                    " historyService.createHistoricTaskInstanceQuery().processInstanceId(" + id + ").count() 结果为" + length);
+        }
+        //endregion
+
+        //region 验证：code 变量是否是发起人
+        if (!initiator.equals(code)) {
+            throw new PermissionDeniedException(this.getClass().getName() +
+                    " 参数 code=" + code + " 流程初始化者initiator=" + initiator);
+        }
+        //endregion
+
+        // 删除该流程实例
+        this.deleteInstance(new String[] {id});
     }
 }
