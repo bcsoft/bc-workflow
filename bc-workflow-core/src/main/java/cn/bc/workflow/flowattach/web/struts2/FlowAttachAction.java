@@ -53,6 +53,7 @@ public class FlowAttachAction extends FileEntityAction<Long, FlowAttach> {
 	public String pid;// 流程实例id
 	public String tid;// 任务id
 	public boolean common;// 是否公共信息
+	public boolean formatted;// 是否格式化，默认false
 	public int type;// 类型：1-附件，2-意见，3-临时子流程附件
 	public String params;
 
@@ -194,6 +195,7 @@ public class FlowAttachAction extends FileEntityAction<Long, FlowAttach> {
 		this.afterCreate(e);
 		e.setSubject(subject);
 		e.setPath(path);
+		e.setFormatted(formatted);
 		e.setAuthor(context.getUserHistory());
 		e.setFileDate(Calendar.getInstance());
 		// 设置最后更新人的信息
