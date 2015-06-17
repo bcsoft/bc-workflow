@@ -304,8 +304,7 @@ public class FlowAttachAction extends FileEntityAction<Long, FlowAttach> {
 			// 构建文件要保存到的目录
 			File _fileDir = new File(realFileDir);
 			if (!_fileDir.exists()) {
-				if (logger.isFatalEnabled())
-					logger.fatal("mkdir=" + realFileDir);
+				logger.warn("mkdir={}", realFileDir);
 				_fileDir.mkdirs();
 			}
 			// 模板文件扩展名
@@ -495,8 +494,7 @@ public class FlowAttachAction extends FileEntityAction<Long, FlowAttach> {
 			// 构建文件要保存到的目录
 			File _fileDir = new File(realFileDir);
 			if (!_fileDir.exists()) {
-				if (logger.isFatalEnabled())
-					logger.fatal("mkdir=" + realFileDir);
+				logger.warn("mkdir={}", realFileDir);
 				_fileDir.mkdirs();
 			}
 			// 不含路径的文件名
@@ -644,8 +642,7 @@ public class FlowAttachAction extends FileEntityAction<Long, FlowAttach> {
 			// 构建文件要保存到的目录
 			File _fileDir = new File(realFileDir);
 			if (!_fileDir.exists()) {
-				if (logger.isFatalEnabled())
-					logger.fatal("mkdir=" + realFileDir);
+				logger.warn("mkdir={}", realFileDir);
 				_fileDir.mkdirs();
 			}
 			// 不含路径的文件名
