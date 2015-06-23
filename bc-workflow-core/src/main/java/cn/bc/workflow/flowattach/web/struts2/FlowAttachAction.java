@@ -115,7 +115,7 @@ public class FlowAttachAction extends FileEntityAction<Long, FlowAttach> {
 	}
 
 	@Override
-	protected void buildFormPageButtons(PageOption pageOption, boolean editable) {
+	protected void buildPageButtons(PageOption pageOption, boolean editable) {
 		if (editable && !isReadonly())
 			// 添加默认的保存按钮
 			pageOption.addButton(new ButtonOption(getText("label.ok"), null,
@@ -123,9 +123,9 @@ public class FlowAttachAction extends FileEntityAction<Long, FlowAttach> {
 	}
 
 	@Override
-	protected PageOption buildFormPageOption(boolean editable) {
+	protected PageOption buildPageOption(boolean editable) {
 		FlowAttach e = this.getE();
-		PageOption po = super.buildFormPageOption(editable).setWidth(500);
+		PageOption po = super.buildPageOption(editable).setWidth(500);
 		// 根据类型控制窗口高度。
 		if (type == FlowAttach.TYPE_ATTACHMENT
 				|| e.getType() == FlowAttach.TYPE_ATTACHMENT) {
@@ -170,7 +170,7 @@ public class FlowAttachAction extends FileEntityAction<Long, FlowAttach> {
 			po.setHeight(210);
 		} else
 			po.setHeight(200);
-		this.formPageOption = po;
+		this.pageOption = po;
 	}
 
 	@Override
