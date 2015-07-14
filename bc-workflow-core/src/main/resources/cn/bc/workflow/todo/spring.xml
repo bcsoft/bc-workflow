@@ -1,41 +1,39 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
-	   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	   xmlns:tx="http://www.springframework.org/schema/tx"
-	   xmlns:aop="http://www.springframework.org/schema/aop"
-	   xsi:schemaLocation="http://www.springframework.org/schema/beans
-        http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+        http://www.springframework.org/schema/beans/spring-beans.xsd
         http://www.springframework.org/schema/tx
-        http://www.springframework.org/schema/tx/spring-tx-3.2.xsd
+        http://www.springframework.org/schema/tx/spring-tx.xsd
         http://www.springframework.org/schema/aop
-        http://www.springframework.org/schema/aop/spring-aop-3.2.xsd">
+        http://www.springframework.org/schema/aop/spring-aop.xsd">
+    <!-- todoService 事务管理 -->
+    <aop:config>
+        <!-- http://static.springsource.org/spring/docs/3.0.x/spring-framework-reference/html/aop.html#aop-pointcuts
+            包或实现类使用within关键字，接口实现使用this关键字
+        -->
+        <aop:pointcut id="todoServiceMethod" expression="this(cn.bc.workflow.todo.service.TodoService)"/>
+        <aop:advisor pointcut-ref="todoServiceMethod" advice-ref="todoServiceTxAdvice"/>
+    </aop:config>
+    <tx:advice id="todoServiceTxAdvice" transaction-manager="transactionManager">
+        <tx:attributes>
+            <tx:method name="load*" propagation="REQUIRED" read-only="true"/>
+            <tx:method name="is*" propagation="REQUIRED" read-only="true"/>
+            <tx:method name="had*" propagation="REQUIRED" read-only="true"/>
+            <tx:method name="createQuery" propagation="REQUIRED" read-only="true"/>
 
-	<!-- todoService 事务管理 -->
-	<aop:config>
-		<!-- http://static.springsource.org/spring/docs/3.0.x/spring-framework-reference/html/aop.html#aop-pointcuts
-			包或实现类使用within关键字，接口实现使用this关键字
-		-->
-		<aop:pointcut id="todoServiceMethod"
-					  expression="this(cn.bc.workflow.todo.service.TodoService)"/>
-		<aop:advisor pointcut-ref="todoServiceMethod" advice-ref="todoServiceTxAdvice"/>
-	</aop:config>
-	<tx:advice id="todoServiceTxAdvice" transaction-manager="transactionManager">
-		<tx:attributes>
-			<tx:method name="load*" propagation="REQUIRED" read-only="true"/>
-			<tx:method name="is*" propagation="REQUIRED" read-only="true"/>
-			<tx:method name="had*" propagation="REQUIRED" read-only="true"/>
-			<tx:method name="createQuery" propagation="REQUIRED" read-only="true"/>
+            <tx:method name="save*" propagation="REQUIRED" read-only="false"/>
+            <tx:method name="delete*" propagation="REQUIRED" read-only="false"/>
+            <tx:method name="update*" propagation="REQUIRED" read-only="false"/>
+            <tx:method name="do*" propagation="REQUIRED" read-only="false"/>
+            <tx:method name="add*" propagation="REQUIRED" read-only="false"/>
 
-			<tx:method name="save*" propagation="REQUIRED" read-only="false"/>
-			<tx:method name="delete*" propagation="REQUIRED" read-only="false"/>
-			<tx:method name="update*" propagation="REQUIRED" read-only="false"/>
-			<tx:method name="do*" propagation="REQUIRED" read-only="false"/>
-			<tx:method name="add*" propagation="REQUIRED" read-only="false"/>
+        </tx:attributes>
+    </tx:advice>
 
-		</tx:attributes>
-	</tx:advice>
-
-	<!-- todoService -->
-	<bean id="todoDao" class="cn.bc.workflow.todo.dao.hibernate.jpa.TodoDaoImpl"/>
-	<bean id="todoService" class="cn.bc.workflow.todo.service.TodoServiceImpl"/>
+    <!-- todoService -->
+    <bean id="todoDao" class="cn.bc.workflow.todo.dao.hibernate.jpa.TodoDaoImpl"/>
+    <bean id="todoService" class="cn.bc.workflow.todo.service.TodoServiceImpl"/>
 </beans>

@@ -1,30 +1,27 @@
 /**
- * 
+ *
  */
 package cn.bc.workflow.activiti.delegate;
-
-import java.util.Calendar;
-
-import org.activiti.engine.delegate.DelegateExecution;
-import org.activiti.engine.delegate.JavaDelegate;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 import cn.bc.core.util.SpringUtils;
 import cn.bc.identity.domain.ActorHistory;
 import cn.bc.identity.web.SystemContextHolder;
 import cn.bc.workflow.domain.ExcutionLog;
 import cn.bc.workflow.service.ExcutionLogService;
+import org.activiti.engine.delegate.DelegateExecution;
+import org.activiti.engine.delegate.JavaDelegate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.Calendar;
 
 /**
  * 记录流转日志的监听器
- * 
+ *
  * @author dragon
- * 
  */
 public class JavaDelegateLogListener implements JavaDelegate {
-	private static final Log logger = LogFactory
-			.getLog(JavaDelegateLogListener.class);
+	private static final Logger logger = LoggerFactory.getLogger(JavaDelegateLogListener.class);
 	private ExcutionLogService excutionLogService;
 
 	public JavaDelegateLogListener() {

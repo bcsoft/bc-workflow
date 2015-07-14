@@ -1,23 +1,7 @@
 /**
- * 
+ *
  */
 package cn.bc.workflow.activiti.delegate;
-
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.List;
-
-import org.activiti.engine.delegate.DelegateTask;
-import org.activiti.engine.delegate.TaskListener;
-import org.activiti.engine.form.TaskFormData;
-import org.activiti.engine.impl.form.TaskFormHandler;
-import org.activiti.engine.impl.persistence.entity.IdentityLinkEntity;
-import org.activiti.engine.impl.persistence.entity.TaskEntity;
-import org.activiti.engine.impl.task.TaskDefinition;
-import org.activiti.engine.task.IdentityLink;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.springframework.util.StringUtils;
 
 import cn.bc.core.exception.CoreException;
 import cn.bc.core.util.SpringUtils;
@@ -26,15 +10,29 @@ import cn.bc.identity.service.ActorHistoryService;
 import cn.bc.identity.web.SystemContextHolder;
 import cn.bc.workflow.domain.ExcutionLog;
 import cn.bc.workflow.service.ExcutionLogService;
+import org.activiti.engine.delegate.DelegateTask;
+import org.activiti.engine.delegate.TaskListener;
+import org.activiti.engine.form.TaskFormData;
+import org.activiti.engine.impl.form.TaskFormHandler;
+import org.activiti.engine.impl.persistence.entity.IdentityLinkEntity;
+import org.activiti.engine.impl.persistence.entity.TaskEntity;
+import org.activiti.engine.impl.task.TaskDefinition;
+import org.activiti.engine.task.IdentityLink;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.util.StringUtils;
+
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.List;
 
 /**
  * 记录任务执行日志的监听器：create创建、assignment分配、complete完成
- * 
+ *
  * @author dragon
- * 
  */
 public class TaskLogListener implements TaskListener {
-	private static final Log logger = LogFactory.getLog(TaskLogListener.class);
+	private static final Logger logger = LoggerFactory.getLogger(TaskLogListener.class);
 	protected ActorHistoryService actorHistoryService;
 	protected ExcutionLogService excutionLogService;
 
@@ -135,7 +133,7 @@ public class TaskLogListener implements TaskListener {
 
 	/**
 	 * 获取日志类型的前缀
-	 * 
+	 *
 	 * @return
 	 */
 	protected String getLogTypePrefix() {

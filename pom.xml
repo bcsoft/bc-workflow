@@ -1,22 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
-	<modelVersion>4.0.0</modelVersion>
-	<parent>
-		<groupId>cn.bc.workflow</groupId>
-		<artifactId>bc-workflow-parent</artifactId>
-		<version>1.0-SNAPSHOT</version>
-		<relativePath>bc-workflow-parent/pom.xml</relativePath>
-	</parent>
-	<artifactId>bc-workflow</artifactId>
-	<packaging>pom</packaging>
-	<name>bc-workflow</name>
-	<modules>
-		<module>bc-workflow-parent</module>
-		<module>bc-workflow-core</module>
-	</modules>
-	<scm>
-		<connection>scm:git:git://localhost/bc-workflow.git</connection>
-		<developerConnection>scm:git:[fetch=]git://localhost/bc-workflow.git[push=]git@localhost:bc-workflow.git</developerConnection>
-		<url>https://localhost/bc-workflow</url>
-	</scm>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <parent>
+        <groupId>cn.bc.workflow</groupId>
+        <artifactId>bc-workflow-parent</artifactId>
+        <version>1.0-SNAPSHOT</version>
+        <relativePath>bc-workflow-parent/pom.xml</relativePath>
+    </parent>
+    <artifactId>bc-workflow</artifactId>
+    <packaging>pom</packaging>
+    <name>bc-workflow</name>
+    <modules>
+        <module>bc-workflow-parent</module>
+        <module>bc-workflow-core</module>
+    </modules>
+    <scm>
+        <connection>scm:git:git://localhost/bc-workflow.git</connection>
+        <developerConnection>scm:git:[fetch=]git://localhost/bc-workflow.git[push=]git@localhost:bc-workflow.git
+        </developerConnection>
+        <url>https://localhost/bc-workflow</url>
+    </scm>
 </project>
