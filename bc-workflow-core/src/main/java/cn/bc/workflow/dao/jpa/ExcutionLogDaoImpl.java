@@ -1,4 +1,4 @@
-package cn.bc.workflow.dao.hibernate.jpa;
+package cn.bc.workflow.dao.jpa;
 
 import cn.bc.core.exception.CoreException;
 import cn.bc.core.query.condition.impl.AndCondition;
@@ -24,6 +24,7 @@ import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
+import org.springframework.stereotype.Component;
 
 import java.util.Date;
 import java.util.LinkedHashMap;
@@ -36,6 +37,7 @@ import java.util.Map.Entry;
  *
  * @author dragon
  */
+@Component
 public class ExcutionLogDaoImpl extends JpaCrudDao<ExcutionLog> implements ExcutionLogDao, InitializingBean, ApplicationContextAware {
 	private static Logger logger = LoggerFactory.getLogger(ExcutionLogDaoImpl.class);
 	private ApplicationContext applicationContext;

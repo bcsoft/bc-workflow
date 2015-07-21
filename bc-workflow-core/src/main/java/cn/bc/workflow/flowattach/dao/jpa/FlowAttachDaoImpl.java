@@ -1,7 +1,7 @@
 /**
  *
  */
-package cn.bc.workflow.flowattach.dao.hibernate.jpa;
+package cn.bc.workflow.flowattach.dao.jpa;
 
 import cn.bc.orm.jpa.JpaCrudDao;
 import cn.bc.workflow.flowattach.dao.FlowAttachDao;
@@ -10,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.stereotype.Component;
 
 import javax.sql.DataSource;
 import java.util.List;
@@ -20,6 +21,7 @@ import java.util.Map;
  *
  * @author lbj
  */
+@Component
 public class FlowAttachDaoImpl extends JpaCrudDao<FlowAttach> implements FlowAttachDao {
 	protected final Logger logger = LoggerFactory.getLogger(getClass());
 	private JdbcTemplate jdbcTemplate;

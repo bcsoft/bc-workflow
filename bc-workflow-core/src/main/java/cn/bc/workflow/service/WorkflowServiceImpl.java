@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package cn.bc.workflow.service;
 
@@ -38,6 +38,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 import org.springframework.util.FileCopyUtils;
 
@@ -47,102 +49,43 @@ import java.util.zip.ZipInputStream;
 
 /**
  * 工作流Service的实现
- * 
+ *
  * @author dragon
  */
+@Service
 public class WorkflowServiceImpl implements WorkflowService {
 	private static final Logger logger = LoggerFactory.getLogger(WorkflowServiceImpl.class);
+	@Autowired
 	private TemplateService templateService;
+	@Autowired
 	private RuntimeService runtimeService;
+	@Autowired
 	private RepositoryService repositoryService;
+	@Autowired
 	private IdentityService identityService;
+	@Autowired
 	private TaskService taskService;
+	@Autowired
 	private ExcutionLogService excutionLogService;
+	@Autowired
 	private ActorHistoryService actorHistoryService;
+	@Autowired
 	private FlowAttachService flowAttachService;
-	// private FormService formService;
+	@Autowired
 	private HistoryService historyService;
+	@Autowired
+	@Qualifier(value = "actorService")
 	private ActorService actorService;
+	@Autowired
 	private DeployService deployService;
+	@Autowired
 	private WorkflowModuleRelationService workflowModuleRelationService;
-
+	@Autowired
 	private WorkflowDao workflowDao;
-
-	@Autowired
-	public void setWorkflowtDao(WorkflowDao workflowDao) {
-		this.workflowDao = workflowDao;
-	}
-
-	@Autowired
-	public void setActorService(
-			@Qualifier(value = "actorService") ActorService actorService) {
-		this.actorService = actorService;
-	}
-
-	@Autowired
-	public void setFlowAttachService(FlowAttachService flowAttachService) {
-		this.flowAttachService = flowAttachService;
-	}
-
-	@Autowired
-	public void setTemplateService(TemplateService templateService) {
-		this.templateService = templateService;
-	}
-
-	@Autowired
-	public void setRuntimeService(RuntimeService runtimeService) {
-		this.runtimeService = runtimeService;
-	}
-
-	@Autowired
-	public void setRepositoryService(RepositoryService repositoryService) {
-		this.repositoryService = repositoryService;
-	}
-
-	@Autowired
-	public void setIdentityService(IdentityService identityService) {
-		this.identityService = identityService;
-	}
-
-	@Autowired
-	public void setTaskService(TaskService taskService) {
-		this.taskService = taskService;
-	}
-
-	@Autowired
-	public void setExcutionLogService(ExcutionLogService excutionLogService) {
-		this.excutionLogService = excutionLogService;
-	}
-
-	@Autowired
-	public void setActorHistoryService(ActorHistoryService actorHistoryService) {
-		this.actorHistoryService = actorHistoryService;
-	}
-
-	@Autowired
-	public void setHistoryService(HistoryService historyService) {
-		this.historyService = historyService;
-	}
-
-	@Autowired
-	public void setDeployService(DeployService deployService) {
-		this.deployService = deployService;
-	}
-	
-	// @Autowired
-	// public void setFormService(FormService formService) {
-	// this.formService = formService;
-	// }
-	
-	@Autowired
-	public void setWorkflowModuleRelationService(
-			WorkflowModuleRelationService workflowModuleRelationService) {
-		this.workflowModuleRelationService = workflowModuleRelationService;
-	}
 
 	/**
 	 * 获取当前用户的帐号信息
-	 * 
+	 *
 	 * @return
 	 */
 	private String getCurrentUserAccount() {
@@ -151,11 +94,11 @@ public class WorkflowServiceImpl implements WorkflowService {
 
 	/**
 	 * 启动指定编码流程的最新版本
-	 * 
-	 * @param key
-	 *            流程编码
+	 *
+	 * @param key 流程编码
 	 * @return 流程实例的id
 	 */
+	@Transactional
 	public String startFlowByKey(String key) {
 		// 设置Activiti认证用户
 		String initiator = setAuthenticatedUser();
@@ -174,10 +117,11 @@ public class WorkflowServiceImpl implements WorkflowService {
 
 	/**
 	 * 启动指定流程定义id的流程
-	 * 
+	 *
 	 * @param id
 	 * @return
 	 */
+	@Transactional
 	public String startFlowByDefinitionId(String id) {
 		// 设置Activiti认证用户
 		String initiator = setAuthenticatedUser();
@@ -195,7 +139,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 
 	/**
 	 * 初始化Activiti的当前认证用户信息
-	 * 
+	 *
 	 * @return
 	 */
 	private String setAuthenticatedUser() {
@@ -207,6 +151,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 		return initiator;
 	}
 
+	@Transactional
 	public void claimTask(String taskId) {
 		// 设置Activiti认证用户
 		setAuthenticatedUser();
@@ -244,13 +189,15 @@ public class WorkflowServiceImpl implements WorkflowService {
 		this.excutionLogService.save(log);
 	}
 
+	@Transactional
 	public void completeTask(String taskId) {
 		this.completeTask(taskId, null, null);
 	}
 
+	@Transactional
 	public void completeTask(String taskId,
-			Map<String, Object> globalVariables,
-			Map<String, Object> localVariables) {
+	                         Map<String, Object> globalVariables,
+	                         Map<String, Object> localVariables) {
 		// 设置Activiti认证用户
 		setAuthenticatedUser();
 
@@ -272,6 +219,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 
 	}
 
+	@Transactional
 	public ActorHistory delegateTask(String taskId, String toUser) {
 		// 设置Activiti认证用户
 		setAuthenticatedUser();
@@ -286,7 +234,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 			saveExcutionLogInfo4DelegateAndAssign(taskId, toUser,
 					ExcutionLog.TYPE_TASK_INSTANCE_DELEGATE, "任务委托给");
 		} else {// 第三方委托
-				// 保存excutionlog信息
+			// 保存excutionlog信息
 			ActorHistory ah = this.actorHistoryService.loadByCode(task
 					.getAssignee());
 			String msg = ah.getName() + "的任务委托给";
@@ -297,6 +245,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 		return this.actorHistoryService.loadByCode(toUser);
 	}
 
+	@Transactional
 	public ActorHistory assignTask(String taskId, String toUser) {
 		// 设置Activiti认证用户
 		setAuthenticatedUser();
@@ -311,9 +260,12 @@ public class WorkflowServiceImpl implements WorkflowService {
 		return this.actorHistoryService.loadByCode(toUser);
 	}
 
-	/** 委托,分派操作保存excutionlog信息 */
+	/**
+	 * 委托,分派操作保存excutionlog信息
+	 */
+	@Transactional
 	public void saveExcutionLogInfo4DelegateAndAssign(String taskId,
-			String toUser, String type, String msg) {
+	                                                  String toUser, String type, String msg) {
 		// 加载当前任务
 		Task task = taskService.createTaskQuery().taskId(taskId).singleResult();
 
@@ -346,6 +298,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 		this.excutionLogService.save(log);
 	}
 
+	@Transactional
 	public Deployment deployZipFromTemplate(String templateCode) {
 		// 获取模板
 		Template template = templateService.loadByCode(templateCode);
@@ -372,6 +325,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 		return d;
 	}
 
+	@Transactional
 	public Deployment deployXmlFromTemplate(String templateCode) {
 		// 获取模板
 		Template template = templateService.loadByCode(templateCode);
@@ -402,24 +356,29 @@ public class WorkflowServiceImpl implements WorkflowService {
 		return d;
 	}
 
+	@Transactional
 	public void deleteDeployment(String deploymentId) {
 		repositoryService.deleteDeployment(deploymentId);
 	}
 
+	@Transactional
 	public void deleteDeployment(String deploymentId, boolean cascade) {
 		repositoryService.deleteDeployment(deploymentId, cascade);
 	}
 
+	@Transactional(readOnly = true)
 	public ProcessInstance loadInstance(String id) {
 		return runtimeService.createProcessInstanceQuery()
 				.processInstanceId(id).singleResult();
 	}
 
+	@Transactional(readOnly = true)
 	public ProcessDefinition loadDefinition(String id) {
 		return repositoryService.createProcessDefinitionQuery()
 				.processDefinitionId(id).singleResult();
 	}
 
+	@Transactional(readOnly = true)
 	public InputStream getInstanceDiagram(String processInstanceId) {
 		// 获取流程实例
 		HistoricProcessInstance instance = historyService
@@ -459,6 +418,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 		return inputStream;
 	}
 
+	@Transactional(readOnly = true)
 	public InputStream getDiagram(Long deployId) {
 		InputStream inputStream = null;
 		Deploy deploy = deployService.load(deployId);
@@ -488,6 +448,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 		return inputStream;
 	}
 
+	@Transactional(readOnly = true)
 	public InputStream getDeploymentDiagram(String deploymentId) {
 		// 获取流程定义
 		ProcessDefinition definition = repositoryService
@@ -505,12 +466,14 @@ public class WorkflowServiceImpl implements WorkflowService {
 				definition.getDiagramResourceName());
 	}
 
+	@Transactional(readOnly = true)
 	public InputStream getDeploymentResource(String deploymentId,
-			String resourceName) {
+	                                         String resourceName) {
 		return repositoryService
 				.getResourceAsStream(deploymentId, resourceName);
 	}
 
+	@Transactional(readOnly = true)
 	public Map<String, Object> getProcessHistoryParams(String processInstanceId) {
 		Assert.notNull(processInstanceId,
 				"process instance id must not to be null:" + processInstanceId);
@@ -660,12 +623,14 @@ public class WorkflowServiceImpl implements WorkflowService {
 		return params;
 	}
 
+	@Transactional(readOnly = true)
 	public Map<String, Object> getTaskHistoryParams(String taskId) {
 		return getTaskHistoryParams(taskId, false);
 	}
 
+	@Transactional(readOnly = true)
 	public Map<String, Object> getTaskHistoryParams(String taskId,
-			boolean withProcessInfo) {
+	                                                boolean withProcessInfo) {
 		Assert.notNull(taskId, "task instance id must not to be null:" + taskId);
 		Map<String, Object> params = new HashMap<String, Object>();
 		Map<String, Object> variableParams;
@@ -704,13 +669,13 @@ public class WorkflowServiceImpl implements WorkflowService {
 
 		// 任务的意见
 		List<FlowAttach> comments = flowAttachService
-				.findCommentsByTask(new String[] { taskId });
+				.findCommentsByTask(new String[]{taskId});
 		params.put("comments", comments);
 		params.put("comments_str", buildCommentsString(comments));
 
 		// 任务的附件
 		List<FlowAttach> attachs = flowAttachService
-				.findAttachsByTask(new String[] { taskId });
+				.findAttachsByTask(new String[]{taskId});
 		params.put("attachs", attachs);
 		params.put("attachs_str", buildAttachsString(attachs));
 
@@ -795,7 +760,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 
 	/**
 	 * 特殊流程变量值的转换
-	 * 
+	 *
 	 * @param v
 	 * @return
 	 */
@@ -873,13 +838,13 @@ public class WorkflowServiceImpl implements WorkflowService {
 
 	/**
 	 * 筛选出指定任务的意见、附件
-	 * 
+	 *
 	 * @param taskId
 	 * @param allFlowAttachs
 	 * @return
 	 */
 	private List<FlowAttach> findTaskFlowAttachs(String taskId,
-			List<FlowAttach> allFlowAttachs) {
+	                                             List<FlowAttach> allFlowAttachs) {
 		List<FlowAttach> taskFlowAttachs = new ArrayList<FlowAttach>();
 		for (FlowAttach flowAttach : allFlowAttachs) {
 			if (taskId.equals(flowAttach.getTid()))
@@ -888,11 +853,12 @@ public class WorkflowServiceImpl implements WorkflowService {
 		return taskFlowAttachs;
 	}
 
+	@Transactional
 	public void deleteInstance(String[] instanceIds) {
 		if (instanceIds == null || instanceIds.length == 0) {
 			throw new CoreException("没有指定要删除的流程实例信息！");
 		}
-		
+
 		List<WorkflowModuleRelation> wmrs;
 		List<Long> wmrIds;
 
@@ -903,18 +869,18 @@ public class WorkflowServiceImpl implements WorkflowService {
 			if (pi == null) {
 				throw new CoreException("要删除的流程实例在系统总已经不存在：id=" + id);
 			}
-			
+
 			//删除流程模块关系
-			wmrs=this.workflowModuleRelationService.findList(id);
-			if(wmrs!=null && wmrs.size()>0){
+			wmrs = this.workflowModuleRelationService.findList(id);
+			if (wmrs != null && wmrs.size() > 0) {
 				wmrIds = new ArrayList<Long>();
-				for(WorkflowModuleRelation wmr : wmrs){
+				for (WorkflowModuleRelation wmr : wmrs) {
 					wmrIds.add(wmr.getId());
 				}
 				this.workflowModuleRelationService.delete(wmrIds.toArray(new Long[]{}));
 			}
-			
-			
+
+
 			boolean flowing = pi.getEndTime() == null;
 
 			// 删除流转中数据
@@ -932,6 +898,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 	/**
 	 * 激活流程
 	 */
+	@Transactional
 	public void doActive(String id) {
 		// 设置Activiti认证用户
 		String initiator = setAuthenticatedUser();
@@ -983,6 +950,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 	/**
 	 * 暂停流程
 	 */
+	@Transactional
 	public void doSuspended(String id) {
 		// 设置Activiti认证用户
 		String initiator = setAuthenticatedUser();
@@ -1031,6 +999,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 
 	}
 
+	@Transactional
 	public String startFlowByKey(String key, Map<String, Object> variables) {
 		// 设置Activiti认证用户
 		String initiator = setAuthenticatedUser();
@@ -1049,15 +1018,18 @@ public class WorkflowServiceImpl implements WorkflowService {
 		return pi.getProcessInstanceId();
 	}
 
+	@Transactional(readOnly = true)
 	public Map<String, Object> findGlobalValue(String pid, String[] valueKeys) {
 		return this.workflowDao.findGlobalValue(pid, valueKeys);
 	}
 
+	@Transactional(readOnly = true)
 	public Object findLocalValue(String pid, String taskKey,
-			String localValueKey) {
+	                             String localValueKey) {
 		return this.workflowDao.findLocalValue(pid, taskKey, localValueKey);
 	}
 
+	@Transactional(readOnly = true)
 	public String[] findTaskIdByProcessInstanceId(String processInstanceId) {
 		// 获得待办任务列表
 		List<Task> listTask = this.taskService.createTaskQuery()
@@ -1078,53 +1050,58 @@ public class WorkflowServiceImpl implements WorkflowService {
 	}
 
 	@Override
+	@Transactional(readOnly = true)
 	public Map<String, Object> findMainProcessInstanceInfoById(String processInstanceId) {
 		return this.workflowDao.findMainProcessInstanceInfoById(processInstanceId);
 	}
 
+	@Transactional(readOnly = true)
 	public List<Map<String, Object>> findSubProcessInstanceInfoById(String processInstanceId) {
 		return this.workflowDao.findSubProcessInstanceInfoById(processInstanceId);
 	}
 
-    @Override
-    public boolean updateDeploymentResource(String deploymentId, String resourceName, InputStream in) throws IOException {
-        byte[] bytes = FileCopyUtils.copyToByteArray(in);
-        return this.updateDeploymentResource(deploymentId, resourceName, bytes);
-    }
+	@Override
+	@Transactional
+	public boolean updateDeploymentResource(String deploymentId, String resourceName, InputStream in) throws IOException {
+		byte[] bytes = FileCopyUtils.copyToByteArray(in);
+		return this.updateDeploymentResource(deploymentId, resourceName, bytes);
+	}
 
-    @Override
-    public boolean updateDeploymentResource(String deploymentId, String resourceName, byte[] in) {
-        return this.workflowDao.updateDeploymentResource(deploymentId, resourceName, in);
-    }
+	@Override
+	@Transactional
+	public boolean updateDeploymentResource(String deploymentId, String resourceName, byte[] in) {
+		return this.workflowDao.updateDeploymentResource(deploymentId, resourceName, in);
+	}
 
-    @Override
-    public void deleteInstanceNotDeal2Personal(String id, String code)
-            throws NotExistsException, ConstraintViolationException, PermissionDeniedException {
-        long length = historyService.createHistoricTaskInstanceQuery().processInstanceId(id).count();// 历史任务个数
-        String initiator = (String) runtimeService.getVariable(id, "initiator");// 发起人
+	@Override
+	@Transactional
+	public void deleteInstanceNotDeal2Personal(String id, String code)
+			throws NotExistsException, ConstraintViolationException, PermissionDeniedException {
+		long length = historyService.createHistoricTaskInstanceQuery().processInstanceId(id).count();// 历史任务个数
+		String initiator = (String) runtimeService.getVariable(id, "initiator");// 发起人
 
-        //region 验证：流程实例是否存在
-        if (length == 0) {
-            throw new NotExistsException(this.getClass().getName() +
-                    " historyService.createHistoricTaskInstanceQuery().processInstanceId(" + id + ").count() 结果为0");
-        }
-        //endregion
+		//region 验证：流程实例是否存在
+		if (length == 0) {
+			throw new NotExistsException(this.getClass().getName() +
+					" historyService.createHistoricTaskInstanceQuery().processInstanceId(" + id + ").count() 结果为0");
+		}
+		//endregion
 
-        //region 验证：流程实例是否未办理
-        if (length > 1) {
-            throw new ConstraintViolationException(this.getClass().getName() +
-                    " historyService.createHistoricTaskInstanceQuery().processInstanceId(" + id + ").count() 结果为" + length);
-        }
-        //endregion
+		//region 验证：流程实例是否未办理
+		if (length > 1) {
+			throw new ConstraintViolationException(this.getClass().getName() +
+					" historyService.createHistoricTaskInstanceQuery().processInstanceId(" + id + ").count() 结果为" + length);
+		}
+		//endregion
 
-        //region 验证：code 变量是否是发起人
-        if (!initiator.equals(code)) {
-            throw new PermissionDeniedException(this.getClass().getName() +
-                    " 参数 code=" + code + " 流程初始化者initiator=" + initiator);
-        }
-        //endregion
+		//region 验证：code 变量是否是发起人
+		if (!initiator.equals(code)) {
+			throw new PermissionDeniedException(this.getClass().getName() +
+					" 参数 code=" + code + " 流程初始化者initiator=" + initiator);
+		}
+		//endregion
 
-        // 删除该流程实例
-        this.deleteInstance(new String[] {id});
-    }
+		// 删除该流程实例
+		this.deleteInstance(new String[]{id});
+	}
 }

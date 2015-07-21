@@ -92,8 +92,7 @@ public class Attach4ProcessListener implements ExecutionListener {
 
 		DeployResource dr; // 流程资源
 		if (pd != null) {
-			DeployService deployService = SpringUtils.getBean("deployService",
-					DeployService.class);
+			DeployService deployService = SpringUtils.getBean(DeployService.class);
 
 			dr = deployService.findDeployResourceByDmIdAndwfCodeAndresCode(
 					pd.getDeploymentId(), pd.getKey(), resourceCode);
@@ -169,8 +168,7 @@ public class Attach4ProcessListener implements ExecutionListener {
 		flowAttach.setFileDate(Calendar.getInstance());
 		flowAttach.setModifiedDate(Calendar.getInstance());
 
-		FlowAttachService flowAttachService = SpringUtils.getBean(
-				"flowAttachService", FlowAttachService.class);
+		FlowAttachService flowAttachService = SpringUtils.getBean(FlowAttachService.class);
 		flowAttachService.save(flowAttach);
 	}
 

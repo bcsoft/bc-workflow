@@ -18,6 +18,7 @@ import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
@@ -45,6 +46,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 	private WorkflowService workflowService;
 
 	@Override
+	@Transactional(readOnly = true)
 	public Map<String, Object> getProcessInstanceDetail(String processInstanceId) {
 		Assert.hasLength(processInstanceId);
 		Date start = new Date();
@@ -296,6 +298,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 	}
 
 	@Override
+	@Transactional(readOnly = true)
 	public Map<String, Object> getWorkspaceData(String processInstanceId) {
 		Date start = new Date();
 

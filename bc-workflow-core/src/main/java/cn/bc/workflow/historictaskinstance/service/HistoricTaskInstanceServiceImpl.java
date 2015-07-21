@@ -6,9 +6,8 @@ package cn.bc.workflow.historictaskinstance.service;
 import cn.bc.core.util.JsonUtils;
 import cn.bc.workflow.historictaskinstance.dao.HistoricTaskInstanceDao;
 import cn.bc.workflow.service.WorkflowService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import java.util.Date;
 import java.util.List;
@@ -19,21 +18,12 @@ import java.util.Map;
  *
  * @author lbj
  */
+@Service
 public class HistoricTaskInstanceServiceImpl implements HistoricTaskInstanceService {
-	protected final Logger logger = LoggerFactory.getLogger(getClass());
-
+	@Autowired
 	private HistoricTaskInstanceDao historicTaskInstanceDao;
+	@Autowired
 	private WorkflowService workflowService;
-
-	@Autowired
-	public void setHistoricTaskInstanceDao(HistoricTaskInstanceDao historicTaskInstanceDao) {
-		this.historicTaskInstanceDao = historicTaskInstanceDao;
-	}
-
-	@Autowired
-	public void setWorkflowService(WorkflowService workflowService) {
-		this.workflowService = workflowService;
-	}
 
 	public List<String> findProcessNames(String account, boolean isDone) {
 		return this.historicTaskInstanceDao.findProcessNames(account, isDone);

@@ -17,7 +17,7 @@ import cn.bc.web.ui.html.grid.IdColumn4MapKey;
 import cn.bc.web.ui.html.grid.TextColumn4MapKey;
 import cn.bc.web.ui.html.page.HtmlPage;
 import cn.bc.web.ui.html.page.PageOption;
-import cn.bc.workflow.service.WorkspaceServiceImpl_old;
+import cn.bc.workflow.service.WorkspaceService;
 import org.activiti.engine.impl.persistence.entity.SuspensionState;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -29,9 +29,8 @@ import java.util.*;
 
 /**
  * 选择流程模块关系视图Action
- * 
+ *
  * @author lbj
- * 
  */
 
 @Scope(BeanDefinition.SCOPE_PROTOTYPE)
@@ -41,7 +40,7 @@ public class SelectWorkflowModuleRelationAction extends AbstractSelectPageAction
 	public Long moduleId;//模块id
 	public String moduleType;//模块类型
 	public String processKey;//流程编码
-	public Boolean complete=false;//已完成的流程
+	public Boolean complete = false;//已完成的流程
 
 
 	@Override
@@ -61,7 +60,7 @@ public class SelectWorkflowModuleRelationAction extends AbstractSelectPageAction
 		sql.append(" left join act_ru_execution e on e.proc_inst_id_=p.id_");
 
 		sqlObject.setSql(sql.toString());
-		
+
 		// 注入参数
 		sqlObject.setArgs(null);
 
@@ -77,17 +76,17 @@ public class SelectWorkflowModuleRelationAction extends AbstractSelectPageAction
 				map.put("end_time", rs[i++]);
 				map.put("suspension_state", rs[i++]);
 				map.put("subject", rs[i++]);
-				
+
 				if (map.get("end_time") != null) {//已结束
-					map.put("status", WorkspaceServiceImpl_old.COMPLETE);
+					map.put("status", WorkspaceService.FLOWSTATUS_COMPLETE);
 				} else {
-					if(String.valueOf(SuspensionState.ACTIVE.getStateCode()).equals(map.get("suspension_state").toString())){//流转中
+					if (String.valueOf(SuspensionState.ACTIVE.getStateCode()).equals(map.get("suspension_state").toString())) {//流转中
 						map.put("status", String.valueOf(SuspensionState.ACTIVE.getStateCode()));
-					}else if(String.valueOf(SuspensionState.SUSPENDED.getStateCode()).equals(map.get("suspension_state").toString())){//已暂停
+					} else if (String.valueOf(SuspensionState.SUSPENDED.getStateCode()).equals(map.get("suspension_state").toString())) {//已暂停
 						map.put("status", String.valueOf(SuspensionState.SUSPENDED.getStateCode()));
 					}
 				}
-				
+
 				return map;
 			}
 		});
@@ -99,10 +98,10 @@ public class SelectWorkflowModuleRelationAction extends AbstractSelectPageAction
 		List<Column> columns = new ArrayList<Column>();
 		columns.add(new IdColumn4MapKey("a.id_", "id"));
 		columns.add(new TextColumn4MapKey("getProcessInstanceSubject(r.pid)", "subject",
-				getText("flow.instance.subject"),200).setSortable(true)
+				getText("flow.instance.subject"), 200).setSortable(true)
 				.setUseTitleFromLabel(true));
 		columns.add(new TextColumn4MapKey("p.name_", "name",
-				getText("flow.instance.name"),200).setSortable(true)
+				getText("flow.instance.name"), 200).setSortable(true)
 				.setUseTitleFromLabel(true));
 		columns.add(new TextColumn4MapKey("p.start_time_", "start_time",
 				getText("flow.instance.startTime"), 150).setSortable(true)
@@ -116,10 +115,9 @@ public class SelectWorkflowModuleRelationAction extends AbstractSelectPageAction
 		columns.add(new HiddenColumn4MapKey("key", "key"));
 		return columns;
 	}
-	
+
 	/**
 	 * 状态值转换:流转中|已暂停|已结束|全部
-	 * 
 	 */
 	private Map<String, String> getStatus() {
 		Map<String, String> map = new LinkedHashMap<String, String>();
@@ -127,7 +125,7 @@ public class SelectWorkflowModuleRelationAction extends AbstractSelectPageAction
 				getText("flow.instance.status.processing"));
 		map.put(String.valueOf(SuspensionState.SUSPENDED.getStateCode()),
 				getText("flow.instance.status.suspended"));
-		map.put(String.valueOf(WorkspaceServiceImpl_old.COMPLETE),
+		map.put(String.valueOf(WorkspaceService.FLOWSTATUS_COMPLETE),
 				getText("flow.instance.status.finished"));
 		map.put("", getText("bc.status.all"));
 		return map;
@@ -140,7 +138,7 @@ public class SelectWorkflowModuleRelationAction extends AbstractSelectPageAction
 
 	@Override
 	protected String[] getGridSearchFields() {
-		return new String[] { "p.name_","getProcessInstanceSubject(r.pid)"};
+		return new String[]{"p.name_", "getProcessInstanceSubject(r.pid)"};
 	}
 
 	@Override
@@ -153,31 +151,31 @@ public class SelectWorkflowModuleRelationAction extends AbstractSelectPageAction
 	protected Condition getGridSpecalCondition() {
 		// 状态条件
 		AndCondition ac = new AndCondition();
-		if(moduleId!=null)
-			ac.add(new EqualsCondition("r.mid",moduleId));
-		if(moduleType!=null&&moduleType.length()>0)
-			ac.add(new EqualsCondition("r.mtype",moduleType));
-		if(processKey!=null&&processKey.length()>0)
-			ac.add(new EqualsCondition("d.key_",processKey));
-		if(complete!=null&&complete)
+		if (moduleId != null)
+			ac.add(new EqualsCondition("r.mid", moduleId));
+		if (moduleType != null && moduleType.length() > 0)
+			ac.add(new EqualsCondition("r.mtype", moduleType));
+		if (processKey != null && processKey.length() > 0)
+			ac.add(new EqualsCondition("d.key_", processKey));
+		if (complete != null && complete)
 			ac.add(new IsNotNullCondition("p.end_time_"));
-			
-		return ac.isEmpty()?null:ac;
+
+		return ac.isEmpty() ? null : ac;
 
 	}
 
 	@Override
-    protected void extendGridExtrasData(JSONObject json) throws JSONException {
-		if(moduleId!=null)
+	protected void extendGridExtrasData(JSONObject json) throws JSONException {
+		if (moduleId != null)
 			json.put("moduleId", moduleId);
-		if(moduleType!=null&&moduleType.length()>0)
+		if (moduleType != null && moduleType.length() > 0)
 			json.put("moduleType", moduleType);
-		if(processKey!=null&&processKey.length()>0)
+		if (processKey != null && processKey.length() > 0)
 			json.put("processKey", processKey);
-		if(complete!=null&&complete)
+		if (complete != null && complete)
 			json.put("complete", complete);
 	}
-	
+
 	@Override
 	protected String getHtmlPageJs() {
 		return this.getHtmlPageNamespace() + "/modulerelation/select.js";
@@ -192,13 +190,13 @@ public class SelectWorkflowModuleRelationAction extends AbstractSelectPageAction
 	protected String getHtmlPageNamespace() {
 		return this.getContextPath() + "/bc-workflow";
 	}
-	
+
 
 	@Override
 	protected String getGridRowLabelExpression() {
 		return "['name']";
 	}
-	
+
 	@Override
 	protected HtmlPage buildHtmlPage() {
 		return super.buildHtmlPage().setNamespace(

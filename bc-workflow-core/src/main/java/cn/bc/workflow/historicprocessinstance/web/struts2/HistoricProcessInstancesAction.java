@@ -31,7 +31,7 @@ import cn.bc.web.ui.html.toolbar.ToolbarButton;
 import cn.bc.web.ui.json.Json;
 import cn.bc.workflow.historictaskinstance.service.HistoricTaskInstanceService;
 import cn.bc.workflow.service.WorkflowService;
-import cn.bc.workflow.service.WorkspaceServiceImpl_old;
+import cn.bc.workflow.service.WorkspaceService;
 import cn.bc.workflow.web.struts2.ViewAction;
 import org.activiti.engine.impl.persistence.entity.SuspensionState;
 import org.apache.commons.logging.Log;
@@ -49,9 +49,8 @@ import java.util.*;
 
 /**
  * 流程监控视图Action
- * 
+ *
  * @author lbj
- * 
  */
 
 @Scope(BeanDefinition.SCOPE_PROTOTYPE)
@@ -149,14 +148,14 @@ public class HistoricProcessInstancesAction extends
 				map.put("start_name", rs[i++]);// 发起人
 				map.put("deployId", rs[i++]);
 				map.put("wf_code", rs[i++]);
-                map.put("subject", rs[i++]);
-                map.put("todo_names", rs[i++]);
-                map.put("accessactors", rs[i++]);
+				map.put("subject", rs[i++]);
+				map.put("todo_names", rs[i++]);
+				map.put("accessactors", rs[i++]);
 
 				map.put("accessControlDocType", "ProcessInstance");
 
 				if (map.get("end_time") != null) {// 已结束
-					map.put("status", WorkspaceServiceImpl_old.COMPLETE);
+					map.put("status", WorkspaceService.FLOWSTATUS_COMPLETE);
 				} else {
 					if (map.get("status").equals(
 							String.valueOf(SuspensionState.ACTIVE
@@ -195,16 +194,16 @@ public class HistoricProcessInstancesAction extends
 		columns.add(new TextColumn4MapKey("", "status",
 				getText("flow.instance.status"), 50).setSortable(true)
 				.setValueFormater(new EntityStatusFormater(getStatus())));
-        // 流水号
-        columns.add(new TextColumn4MapKey("wf_code", "wf_code",
-                getText("flow.workFlowCode"), 120).setSortable(true)
-                .setUseTitleFromLabel(true));
+		// 流水号
+		columns.add(new TextColumn4MapKey("wf_code", "wf_code",
+				getText("flow.workFlowCode"), 120).setSortable(true)
+				.setUseTitleFromLabel(true));
 		// 主题
 		columns.add(new TextColumn4MapKey(
 				"subject", "subject",
 				getText("flow.instance.subject"), 300).setSortable(true)
 				.setUseTitleFromLabel(true));
-        // 待办任务
+		// 待办任务
 		columns.add(new TextColumn4MapKey("", "todo_names",
 				getText("flow.instance.todoTask"), 200).setSortable(true)
 				.setUseTitleFromLabel(true)
@@ -220,51 +219,51 @@ public class HistoricProcessInstancesAction extends
 						return null;
 					}
 				}));
-        // 流程名称
-        columns.add(new TextColumn4MapKey("b.name_", "procinst_name",
-                getText("flow.instance.name"), 180).setSortable(true)
-                .setUseTitleFromLabel(true));
-        // 发起时间
-        columns.add(new TextColumn4MapKey("a.start_time_", "start_time",
-                getText("flow.instance.startTime"), 150).setSortable(true)
-                .setUseTitleFromLabel(true)
-                .setValueFormater(new CalendarFormater("yyyy-MM-dd HH:mm:ss")));
-        // 结束时间
-        columns.add(new TextColumn4MapKey("a.end_time_", "end_time",
-                getText("flow.instance.endTime"), 150).setSortable(true)
-                .setUseTitleFromLabel(true)
-                .setValueFormater(new CalendarFormater("yyyy-MM-dd HH:mm:ss")));
-        // 总耗时
-        columns.add(new TextColumn4MapKey("a.duration_", "duration",
-                getText("flow.instance.duration"), 80).setSortable(true)
-                .setValueFormater(new AbstractFormater<String>() {
-                    @SuppressWarnings("unchecked")
-                    @Override
-                    public String format(Object context, Object value) {
-                        Object duration_obj = ((Map<String, Object>) context)
-                                .get("duration");
-                        if (duration_obj == null)
-                            return null;
-                        return DateUtils.getWasteTime(Long
-                                .parseLong(duration_obj.toString()));
-                    }
-                }));
-        // 发起人
-        columns.add(new TextColumn4MapKey("a.first_", "start_name",
-                getText("flow.instance.startName"), 80).setSortable(true)
-                .setUseTitleFromLabel(true));
-        // 访问者及其权限
-        if (this.isAccessControl()) {
-            columns.add(new TextColumn4MapKey("", "accessactors",
-                    getText("flow.accessControl.accessActorAndRole"), 125)
-                    .setSortable(true).setUseTitleFromLabel(true));
-        }
+		// 流程名称
+		columns.add(new TextColumn4MapKey("b.name_", "procinst_name",
+				getText("flow.instance.name"), 180).setSortable(true)
+				.setUseTitleFromLabel(true));
+		// 发起时间
+		columns.add(new TextColumn4MapKey("a.start_time_", "start_time",
+				getText("flow.instance.startTime"), 150).setSortable(true)
+				.setUseTitleFromLabel(true)
+				.setValueFormater(new CalendarFormater("yyyy-MM-dd HH:mm:ss")));
+		// 结束时间
+		columns.add(new TextColumn4MapKey("a.end_time_", "end_time",
+				getText("flow.instance.endTime"), 150).setSortable(true)
+				.setUseTitleFromLabel(true)
+				.setValueFormater(new CalendarFormater("yyyy-MM-dd HH:mm:ss")));
+		// 总耗时
+		columns.add(new TextColumn4MapKey("a.duration_", "duration",
+				getText("flow.instance.duration"), 80).setSortable(true)
+				.setValueFormater(new AbstractFormater<String>() {
+					@SuppressWarnings("unchecked")
+					@Override
+					public String format(Object context, Object value) {
+						Object duration_obj = ((Map<String, Object>) context)
+								.get("duration");
+						if (duration_obj == null)
+							return null;
+						return DateUtils.getWasteTime(Long
+								.parseLong(duration_obj.toString()));
+					}
+				}));
+		// 发起人
+		columns.add(new TextColumn4MapKey("a.first_", "start_name",
+				getText("flow.instance.startName"), 80).setSortable(true)
+				.setUseTitleFromLabel(true));
+		// 访问者及其权限
+		if (this.isAccessControl()) {
+			columns.add(new TextColumn4MapKey("", "accessactors",
+					getText("flow.accessControl.accessActorAndRole"), 125)
+					.setSortable(true).setUseTitleFromLabel(true));
+		}
 		// 版本号
 		columns.add(new TextColumn4MapKey("e.version_", "version",
 				getText("flow.instance.version"), 50).setSortable(true)
 				.setUseTitleFromLabel(true));
-        //空列
-        columns.add(new TextColumn4MapKey("", "",""));
+		//空列
+		columns.add(new TextColumn4MapKey("", "", ""));
 		columns.add(new HiddenColumn4MapKey("procinstid", "id"));
 		columns.add(new HiddenColumn4MapKey("status", "status"));
 		columns.add(new HiddenColumn4MapKey("accessControlDocType",
@@ -277,7 +276,6 @@ public class HistoricProcessInstancesAction extends
 
 	/**
 	 * 状态值转换:流转中|已暂停|已结束|全部
-	 * 
 	 */
 	protected Map<String, String> getStatus() {
 		Map<String, String> map = new LinkedHashMap<>();
@@ -285,7 +283,7 @@ public class HistoricProcessInstancesAction extends
 				getText("flow.instance.status.processing"));
 		map.put(String.valueOf(SuspensionState.SUSPENDED.getStateCode()),
 				getText("flow.instance.status.suspended"));
-		map.put(String.valueOf(WorkspaceServiceImpl_old.COMPLETE),
+		map.put(String.valueOf(WorkspaceService.FLOWSTATUS_COMPLETE),
 				getText("flow.instance.status.finished"));
 		map.put("", getText("bc.status.all"));
 		return map;
@@ -298,8 +296,8 @@ public class HistoricProcessInstancesAction extends
 
 	@Override
 	protected String[] getGridSearchFields() {
-		return new String[] { "b.name_", "b.key_", "c.name"
-                , "i.info->>'subject'", "i.info->>'wf_code'"};
+		return new String[]{"b.name_", "b.key_", "c.name"
+				, "i.info->>'subject'", "i.info->>'wf_code'"};
 	}
 
 	@Override
@@ -390,10 +388,10 @@ public class HistoricProcessInstancesAction extends
 					sqlstr += " or (f.suspension_state_ ="
 							+ SuspensionState.SUSPENDED.getStateCode() + "))";
 				} else if (ss[0].equals(String
-						.valueOf(WorkspaceServiceImpl_old.COMPLETE))) {
+						.valueOf(WorkspaceService.FLOWSTATUS_COMPLETE))) {
 					sqlstr += " a.end_time_ is not null";
 				}
-				ac.add(new QlCondition(sqlstr, new Object[] {}));
+				ac.add(new QlCondition(sqlstr, new Object[]{}));
 			}
 		}
 
@@ -403,7 +401,7 @@ public class HistoricProcessInstancesAction extends
 	}
 
 	@Override
-    protected void extendGridExtrasData(JSONObject json) throws JSONException {
+	protected void extendGridExtrasData(JSONObject json) throws JSONException {
 		// 状态条件
 		if (status != null && status.length() > 0)
 			json.put("status", status);
@@ -461,7 +459,7 @@ public class HistoricProcessInstancesAction extends
 
 	/**
 	 * 删除流程实例
-	 * 
+	 *
 	 * @return
 	 * @throws Exception
 	 */
@@ -471,7 +469,7 @@ public class HistoricProcessInstancesAction extends
 			if (ids != null) {
 				throw new CoreException("为安全起见，系统限制为每次只可删除一个流程实例！");
 			}
-			this.workflowService.deleteInstance(new String[] { id });
+			this.workflowService.deleteInstance(new String[]{id});
 			json.put("success", true);
 			json.put("msg", getText("form.delete.success"));
 		} catch (Exception e) {
@@ -484,57 +482,59 @@ public class HistoricProcessInstancesAction extends
 		return "json";
 	}
 
-    /**
-     * 删除个人发起且没有办理的流程实例
-     *
-     * @return {"success": true | false, "msg", ...}
-     */
-    public String deleteNotDeal2Personal() throws JSONException {
-        JSONObject json = new JSONObject();
-        SystemContext context = (SystemContext) this.getContext();
-        try {
-            //region 健壮性判断
-            if (id == null || "".trim().equals(id)) {
-                throw new CoreException("流程实例不能为空！");
-            }
-            //endregion
+	/**
+	 * 删除个人发起且没有办理的流程实例
+	 *
+	 * @return {"success": true | false, "msg", ...}
+	 */
+	public String deleteNotDeal2Personal() throws JSONException {
+		JSONObject json = new JSONObject();
+		SystemContext context = (SystemContext) this.getContext();
+		try {
+			//region 健壮性判断
+			if (id == null || "".trim().equals(id)) {
+				throw new CoreException("流程实例不能为空！");
+			}
+			//endregion
 
-            // 通过 service 删除个人发起且没有办理的流程实例
-            workflowService.deleteInstanceNotDeal2Personal(id, context.getUser().getCode());
+			// 通过 service 删除个人发起且没有办理的流程实例
+			workflowService.deleteInstanceNotDeal2Personal(id, context.getUser().getCode());
 
-            json.put("success", true);
-            json.put("msg", getText("form.delete.success"));
-        } catch (NotExistsException e) {
-            //region 对象不存在异常
-            logger.warn(e.getMessage(), e);
-            json.put("success", false);
-            json.put("msg", "该流程不存在！");
-            //endregion
-        } catch (ConstraintViolationException e) {
-            //region 违反关联异常
-            logger.warn(e.getMessage(), e);
-            json.put("success", false);
-            json.put("msg", "流程已有用户办理，不能删除！");
-            //endregion
-        } catch (PermissionDeniedException e) {
-            //region 没有权限的异常
-            logger.warn(e.getMessage(), e);
-            json.put("success", false);
-            json.put("msg", "用户" + context.getUser().getName() + "不是流程的发起人！不能删除！");
-            //endregion
-        } catch (Exception e) {
-            //region 其它异常
-            logger.warn(e.getMessage(), e);
-            json.put("success", false);
-            json.put("msg", e.getMessage());
-            //endregion
-        }
+			json.put("success", true);
+			json.put("msg", getText("form.delete.success"));
+		} catch (NotExistsException e) {
+			//region 对象不存在异常
+			logger.warn(e.getMessage(), e);
+			json.put("success", false);
+			json.put("msg", "该流程不存在！");
+			//endregion
+		} catch (ConstraintViolationException e) {
+			//region 违反关联异常
+			logger.warn(e.getMessage(), e);
+			json.put("success", false);
+			json.put("msg", "流程已有用户办理，不能删除！");
+			//endregion
+		} catch (PermissionDeniedException e) {
+			//region 没有权限的异常
+			logger.warn(e.getMessage(), e);
+			json.put("success", false);
+			json.put("msg", "用户" + context.getUser().getName() + "不是流程的发起人！不能删除！");
+			//endregion
+		} catch (Exception e) {
+			//region 其它异常
+			logger.warn(e.getMessage(), e);
+			json.put("success", false);
+			json.put("msg", e.getMessage());
+			//endregion
+		}
 
-        this.json = json.toString();
-        return "json";
-    }
+		this.json = json.toString();
+		return "json";
+	}
 
-	/** 激活流程 **/
+	/**
+	 * 激活流程
+	 **/
 	public String doActive() {
 		Json json = new Json();
 		this.workflowService.doActive(this.id);
@@ -544,7 +544,9 @@ public class HistoricProcessInstancesAction extends
 		return "json";
 	}
 
-	/** 暂停流程 **/
+	/**
+	 * 暂停流程
+	 **/
 	public String doSuspended() {
 		Json json = new Json();
 		this.workflowService.doSuspended(this.id);

@@ -7,9 +7,9 @@ import cn.bc.core.query.Query;
 import cn.bc.db.jdbc.SqlObject;
 import cn.bc.orm.jpa.JpaNativeQuery;
 import cn.bc.workflow.todo.dao.TodoDao;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.persistence.EntityManager;
 import javax.persistence.PersistenceContext;
@@ -21,18 +21,14 @@ import java.util.Map;
  *
  * @author wis
  */
+@Service
 public class TodoServiceImpl implements TodoService {
-	protected final Logger logger = LoggerFactory.getLogger(getClass());
-
 	@PersistenceContext
 	private EntityManager entityManager;
+	@Autowired
 	private TodoDao todoDao;
 
-	@Autowired
-	public void setTodoDao(TodoDao todoDao) {
-		this.todoDao = todoDao;
-	}
-
+	@Transactional(readOnly = true)
 	public Query<Map<String, Object>> createSqlQuery(SqlObject<Map<String, Object>> sqlObject) {
 		return new JpaNativeQuery<>(entityManager, sqlObject);
 	}
@@ -43,6 +39,7 @@ public class TodoServiceImpl implements TodoService {
 	 * @param excludeId
 	 * @return
 	 */
+	@Transactional(readOnly = true)
 	public Long checkIsSign(Long excludeId) {
 		return this.todoDao.checkIsSign(excludeId);
 	}
@@ -54,22 +51,27 @@ public class TodoServiceImpl implements TodoService {
 	 * @param assignee
 	 */
 	@Deprecated
+	@Transactional
 	public void doSignTask(Long excludeId, String assignee) {
 		this.todoDao.doSignTask(excludeId, assignee);
 	}
 
+	@Transactional(readOnly = true)
 	public List<String> findTaskNames(String account, List<String> groupList) {
 		return this.todoDao.findTaskNames(account, groupList);
 	}
 
+	@Transactional(readOnly = true)
 	public List<String> findProcessNames(String account, List<String> groupList) {
 		return this.todoDao.findProcessNames(account, groupList);
 	}
 
+	@Transactional(readOnly = true)
 	public List<String> findTaskNames() {
 		return this.todoDao.findTaskNames();
 	}
 
+	@Transactional(readOnly = true)
 	public List<String> findProcessNames() {
 		return this.todoDao.findProcessNames();
 	}

@@ -1,7 +1,6 @@
 package cn.bc.workflow.cache;
 
 import cn.bc.core.util.SpringUtils;
-import cn.bc.workflow.service.WorkspaceServiceImpl_old;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.slf4j.Logger;
@@ -18,7 +17,7 @@ import java.util.concurrent.ConcurrentMap;
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:spring-test.xml")
 public class SpringCacheTest {
-	private static final Logger logger = LoggerFactory.getLogger(WorkspaceServiceImpl_old.class);
+	private static final Logger logger = LoggerFactory.getLogger(SpringCacheTest.class);
 	@Autowired
 	private SpringCache service;
 
@@ -42,7 +41,7 @@ public class SpringCacheTest {
 		Map cacheMap;
 		logger.info(cacheManager.getClass().toString());
 		logger.info("	" + cacheManager.getCacheNames().toString());
-		for (String name : cacheManager.getCacheNames()){
+		for (String name : cacheManager.getCacheNames()) {
 			cacheMap = (ConcurrentMap) cacheManager.getCache(name).getNativeCache();
 			logger.info("	" + name + ": " + cacheMap);
 		}

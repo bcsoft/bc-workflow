@@ -1,4 +1,4 @@
-package cn.bc.workflow.deploy.dao.hibernate.jpa;
+package cn.bc.workflow.deploy.dao.jpa;
 
 import cn.bc.BCConstants;
 import cn.bc.core.exception.CoreException;
@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.stereotype.Component;
 
 import javax.sql.DataSource;
 import java.io.FileInputStream;
@@ -32,6 +33,7 @@ import java.util.Map;
  *
  * @author wis
  */
+@Component
 public class DeployDaoImpl extends JpaCrudDao<Deploy> implements DeployDao {
 	protected final Logger logger = LoggerFactory.getLogger(getClass());
 

@@ -1,12 +1,13 @@
 /**
  *
  */
-package cn.bc.workflow.historictaskinstance.dao.hibernate.jpa;
+package cn.bc.workflow.historictaskinstance.dao.jpa;
 
 import cn.bc.workflow.historictaskinstance.dao.HistoricTaskInstanceDao;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
+import org.springframework.stereotype.Component;
 
 import javax.sql.DataSource;
 import java.sql.ResultSet;
@@ -20,6 +21,7 @@ import java.util.Map;
  *
  * @author lbj
  */
+@Component
 public class HistoricTaskInstanceDaoImpl implements HistoricTaskInstanceDao {
 	private JdbcTemplate jdbcTemplate;
 

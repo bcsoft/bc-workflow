@@ -1,26 +1,25 @@
 package cn.bc.workflow.service;
 
-import java.util.Map;
-
-import org.springframework.beans.factory.annotation.Autowired;
-
 import cn.bc.core.service.DefaultCrudService;
 import cn.bc.identity.dao.ActorHistoryDao;
 import cn.bc.identity.domain.ActorHistory;
 import cn.bc.workflow.dao.ExcutionLogDao;
 import cn.bc.workflow.domain.ExcutionLog;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import java.util.Map;
 
 /**
  * 流转日志Service接口实现
- * 
+ *
  * @author dragon
- * 
  */
-public class ExcutionLogServiceImpl extends DefaultCrudService<ExcutionLog>
-		implements ExcutionLogService {
-
-	private ExcutionLogDao excutionLogDao;
+@Service
+public class ExcutionLogServiceImpl extends DefaultCrudService<ExcutionLog> implements ExcutionLogService {
+	@Autowired
 	private ActorHistoryDao actorHistoryDao;
+	private ExcutionLogDao excutionLogDao;
 
 	@Autowired
 	public void setExcutionLogDao(ExcutionLogDao excutionLogDao) {
@@ -28,14 +27,8 @@ public class ExcutionLogServiceImpl extends DefaultCrudService<ExcutionLog>
 		this.setCrudDao(excutionLogDao);
 	}
 
-	@Autowired
-	public void setActorHistoryDao(ActorHistoryDao actorHistoryDao) {
-		this.actorHistoryDao = actorHistoryDao;
-	}
-
 	public ActorHistory getSender(String taskId) {
-		ExcutionLog log = excutionLogDao.loadByTask(taskId,
-				ExcutionLog.TYPE_TASK_INSTANCE_CREATE);
+		ExcutionLog log = excutionLogDao.loadByTask(taskId, ExcutionLog.TYPE_TASK_INSTANCE_CREATE);
 		return actorHistoryDao.load(log.getAuthorId());
 	}
 

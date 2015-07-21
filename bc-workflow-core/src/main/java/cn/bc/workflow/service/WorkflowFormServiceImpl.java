@@ -1,5 +1,5 @@
 /**
- * 
+ *
  */
 package cn.bc.workflow.service;
 
@@ -13,14 +13,11 @@ import cn.bc.template.domain.Template;
 import cn.bc.template.service.TemplateService;
 import cn.bc.web.util.WebUtils;
 import cn.bc.workflow.deploy.service.DeployService;
-import cn.bc.workflow.flowattach.domain.FlowAttach;
-import org.activiti.engine.HistoryService;
-import org.activiti.engine.RepositoryService;
-import org.activiti.engine.history.HistoricTaskInstance;
-import org.activiti.engine.repository.ProcessDefinition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 import org.springframework.util.FileCopyUtils;
 
@@ -31,8 +28,8 @@ import java.util.*;
 
 /**
  * @author dragon
- * 
  */
+@Service
 public class WorkflowFormServiceImpl implements WorkflowFormService {
 	private static final Logger logger = LoggerFactory.getLogger(WorkflowFormServiceImpl.class);
 	@Autowired
@@ -42,6 +39,7 @@ public class WorkflowFormServiceImpl implements WorkflowFormService {
 	private DeployService deployService;
 
 	@Override
+	@Transactional(readOnly = true)
 	public String getRenderedTaskForm(Map<String, Object> task, boolean readonly) {
 		Map<String, Object> addParams = new HashMap<>();
 		addParams.put("readonly", String.valueOf(readonly));
@@ -49,9 +47,10 @@ public class WorkflowFormServiceImpl implements WorkflowFormService {
 	}
 
 	@Override
+	@Transactional(readOnly = true)
 	public String getRenderedTaskForm(Map<String, Object> task, Map<String, Object> addParams) {
 		// 判断是否需要渲染表单
-		if(task.containsKey("emptyForm") && (boolean) task.get("emptyForm")) return null;
+		if (task.containsKey("emptyForm") && (boolean) task.get("emptyForm")) return null;
 
 		Date start = new Date();
 		String taskId = (String) task.get("id");
@@ -79,7 +78,7 @@ public class WorkflowFormServiceImpl implements WorkflowFormService {
 		// 获取模板的原始内容
 		String sourceFormString = loadFormTemplate(task, from, key);
 		logger.debug("form source={}", sourceFormString);
-		if(logger.isInfoEnabled()) logger.info("loadFormTemplate waste {}", DateUtils.getWasteTime(start));
+		if (logger.isInfoEnabled()) logger.info("loadFormTemplate waste {}", DateUtils.getWasteTime(start));
 
 		Map<String, Object> params = new LinkedHashMap<>();
 
@@ -88,8 +87,8 @@ public class WorkflowFormServiceImpl implements WorkflowFormService {
 		// ==== 当前时间
 		addCurrentTimeParams(params);
 		// ==== 系统上下文
-		params.put("context",SystemContextHolder.get());
-		params.put("SystemContext",SystemContextHolder.get());// old
+		params.put("context", SystemContextHolder.get());
+		params.put("SystemContext", SystemContextHolder.get());// old
 		// ==== 任务的参数
 		params.put("ti_id", task.get("id"));
 		params.put("ti_key", task.get("key"));
@@ -115,7 +114,7 @@ public class WorkflowFormServiceImpl implements WorkflowFormService {
 		params.put("pd_deploymentId", definition.get("deployment_id"));
 		params.put("pd_key", definition.get("key"));
 		params.put("pd_name", definition.get("name"));
-		if(logger.isInfoEnabled()) logger.info("addSpecialParams waste {}", DateUtils.getWasteTime(start));
+		if (logger.isInfoEnabled()) logger.info("addSpecialParams waste {}", DateUtils.getWasteTime(start));
 
 		// 获取任务的流程变量
 		Map<String, Object> global_variables = (Map<String, Object>) process_instance.get("variables");
@@ -127,7 +126,7 @@ public class WorkflowFormServiceImpl implements WorkflowFormService {
 		params.putAll(global_variables);// 先放全局变量
 		params.putAll(local_variables);// 再放本地变量(本地变量优先使用)
 		params.put("global", global_variables);// 使用特殊key记录全局变量
-		if(logger.isInfoEnabled()) logger.info("findTaskVariables waste {}", DateUtils.getWasteTime(start));
+		if (logger.isInfoEnabled()) logger.info("findTaskVariables waste {}", DateUtils.getWasteTime(start));
 
 		// 添加额外的格式化参数
 		if (addParams != null) params.putAll(addParams);
@@ -141,7 +140,7 @@ public class WorkflowFormServiceImpl implements WorkflowFormService {
 		logger.debug("params={}", params);
 		String form = formatForm(engine, sourceFormString, params);
 		logger.debug("form formatted={}", form);
-		if(logger.isInfoEnabled()) logger.info("formatForm {}", DateUtils.getWasteTime(start));
+		if (logger.isInfoEnabled()) logger.info("formatForm {}", DateUtils.getWasteTime(start));
 
 		return form;
 	}
@@ -162,7 +161,7 @@ public class WorkflowFormServiceImpl implements WorkflowFormService {
 
 	/**
 	 * 格式化表单
-	 * 
+	 *
 	 * @param source
 	 * @param params
 	 * @return
@@ -183,10 +182,10 @@ public class WorkflowFormServiceImpl implements WorkflowFormService {
 
 	/**
 	 * 获取表单的原始内容
-	 * 
+	 *
 	 * @param task 任务
 	 * @param from 表单来源标识
-	 * @param key 资源编码
+	 * @param key  资源编码
 	 * @return
 	 */
 	private String loadFormTemplate(Map<String, Object> task, String from, String key) {

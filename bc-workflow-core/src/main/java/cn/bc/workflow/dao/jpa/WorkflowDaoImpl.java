@@ -1,10 +1,11 @@
-package cn.bc.workflow.dao.hibernate.jpa;
+package cn.bc.workflow.dao.jpa;
 
 import cn.bc.workflow.dao.WorkflowDao;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
 
 import java.util.List;
@@ -15,6 +16,7 @@ import java.util.Map;
  *
  * @author lbj
  */
+@Component
 public class WorkflowDaoImpl implements WorkflowDao {
 	private static Logger logger = LoggerFactory.getLogger(WorkflowDaoImpl.class);
 	@Autowired

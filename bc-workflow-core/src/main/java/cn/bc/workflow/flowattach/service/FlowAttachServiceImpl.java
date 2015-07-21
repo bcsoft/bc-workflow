@@ -3,34 +3,25 @@
  */
 package cn.bc.workflow.flowattach.service;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.util.Assert;
-
 import cn.bc.core.query.condition.Direction;
-import cn.bc.core.query.condition.impl.AndCondition;
-import cn.bc.core.query.condition.impl.EqualsCondition;
-import cn.bc.core.query.condition.impl.InCondition;
-import cn.bc.core.query.condition.impl.IsNullCondition;
-import cn.bc.core.query.condition.impl.OrCondition;
-import cn.bc.core.query.condition.impl.OrderCondition;
+import cn.bc.core.query.condition.impl.*;
 import cn.bc.core.service.DefaultCrudService;
 import cn.bc.workflow.flowattach.dao.FlowAttachDao;
 import cn.bc.workflow.flowattach.domain.FlowAttach;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.util.Assert;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 流程附加信息Service的实现
  *
  * @author lbj
  */
-public class FlowAttachServiceImpl extends DefaultCrudService<FlowAttach>
-		implements FlowAttachService {
-	protected final Log logger = LogFactory.getLog(getClass());
-
+@Service
+public class FlowAttachServiceImpl extends DefaultCrudService<FlowAttach> implements FlowAttachService {
 	private FlowAttachDao flowAttachDao;
 
 	@Autowired
@@ -43,25 +34,19 @@ public class FlowAttachServiceImpl extends DefaultCrudService<FlowAttach>
 		return findByProcess(processInstanceId, false);
 	}
 
-	public List<FlowAttach> findByProcess(String processInstanceId,
-			boolean includeTask) {
+	public List<FlowAttach> findByProcess(String processInstanceId, boolean includeTask) {
 		return findByProcess(processInstanceId, null, includeTask);
 	}
 
-	public List<FlowAttach> findCommentsByProcess(String processInstanceId,
-			boolean includeTask) {
-		return findByProcess(processInstanceId,
-				new Integer[] { FlowAttach.TYPE_COMMENT }, includeTask);
+	public List<FlowAttach> findCommentsByProcess(String processInstanceId, boolean includeTask) {
+		return findByProcess(processInstanceId, new Integer[]{FlowAttach.TYPE_COMMENT}, includeTask);
 	}
 
-	public List<FlowAttach> findAttachsByProcess(String processInstanceId,
-			boolean includeTask) {
-		return findByProcess(processInstanceId,
-				new Integer[]{FlowAttach.TYPE_ATTACHMENT}, includeTask);
+	public List<FlowAttach> findAttachsByProcess(String processInstanceId, boolean includeTask) {
+		return findByProcess(processInstanceId, new Integer[]{FlowAttach.TYPE_ATTACHMENT}, includeTask);
 	}
 
-	public List<FlowAttach> findByProcess(String processInstanceId,
-			Integer[] types, boolean includeTask) {
+	public List<FlowAttach> findByProcess(String processInstanceId, Integer[] types, boolean includeTask) {
 		Assert.notNull(processInstanceId);
 		AndCondition and = new AndCondition();
 		and.add(new EqualsCondition("pid", processInstanceId));
@@ -126,6 +111,6 @@ public class FlowAttachServiceImpl extends DefaultCrudService<FlowAttach>
 	}
 
 	public List<FlowAttach> findAttachsByTask(String[] taskIds) {
-		return findByTask(taskIds, new Integer[] { FlowAttach.TYPE_ATTACHMENT });
+		return findByTask(taskIds, new Integer[]{FlowAttach.TYPE_ATTACHMENT});
 	}
 }

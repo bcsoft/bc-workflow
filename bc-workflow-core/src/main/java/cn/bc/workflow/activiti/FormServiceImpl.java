@@ -11,6 +11,7 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import org.springframework.util.FileCopyUtils;
 
 import cn.bc.core.exception.CoreException;
@@ -27,6 +28,7 @@ import cn.bc.workflow.service.ExcutionLogService;
  * @author dragon
  * 
  */
+@Component("bcFormService")
 public class FormServiceImpl extends org.activiti.engine.impl.FormServiceImpl {
 	private static final Log logger = LogFactory.getLog(FormServiceImpl.class);
 	private ExcutionLogService excutionLogService;

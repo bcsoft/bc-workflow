@@ -1,14 +1,15 @@
-package cn.bc.workflow.dao.hibernate.jpa;
+package cn.bc.workflow.dao.jpa;
 
 import cn.bc.orm.jpa.JpaCrudDao;
 import cn.bc.workflow.dao.WorkflowModuleRelationDao;
 import cn.bc.workflow.domain.WorkflowModuleRelation;
-import cn.bc.workflow.service.WorkspaceServiceImpl_old;
+import cn.bc.workflow.service.WorkspaceService;
 import org.activiti.engine.impl.persistence.entity.SuspensionState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
@@ -21,6 +22,7 @@ import java.util.Map;
  *
  * @author lbj
  */
+@Component
 public class WorkflowModuleRelationDaoImpl extends JpaCrudDao<WorkflowModuleRelation> implements WorkflowModuleRelationDao {
 	private static Logger logger = LoggerFactory.getLogger(WorkflowModuleRelationDaoImpl.class);
 
@@ -75,7 +77,7 @@ public class WorkflowModuleRelationDaoImpl extends JpaCrudDao<WorkflowModuleRela
 				o.put("key", rs[i++]);
 				Object suspensionState = rs[i++];
 				if (o.get("endTime") != null) {// 已结束
-					o.put("status", WorkspaceServiceImpl_old.COMPLETE);
+					o.put("status", WorkspaceService.FLOWSTATUS_COMPLETE);
 				} else {
 					if (suspensionState.toString().equals(String.valueOf(SuspensionState.ACTIVE.getStateCode()))) {// 流转中
 						o.put("status", String.valueOf(SuspensionState.ACTIVE.getStateCode()));
@@ -154,7 +156,7 @@ public class WorkflowModuleRelationDaoImpl extends JpaCrudDao<WorkflowModuleRela
 				o.put("key", rs[i++]);
 				Object suspensionState = rs[i++];
 				if (o.get("endTime") != null) {// 已结束
-					o.put("status", WorkspaceServiceImpl_old.COMPLETE);
+					o.put("status", WorkspaceService.FLOWSTATUS_COMPLETE);
 				} else {
 					if (suspensionState.toString().equals(String.valueOf(SuspensionState.ACTIVE.getStateCode()))) {// 流转中
 						o.put("status", String.valueOf(SuspensionState.ACTIVE.getStateCode()));
@@ -287,7 +289,7 @@ public class WorkflowModuleRelationDaoImpl extends JpaCrudDao<WorkflowModuleRela
 				o.put("key", rs[i++]);
 				Object suspensionState = rs[i++];
 				if (o.get("endTime") != null) {// 已结束
-					o.put("status", WorkspaceServiceImpl_old.COMPLETE);
+					o.put("status", WorkspaceService.FLOWSTATUS_COMPLETE);
 				} else {
 					if (suspensionState.toString().equals(String.valueOf(SuspensionState.ACTIVE.getStateCode()))) {// 流转中
 						o.put("status", String.valueOf(SuspensionState.ACTIVE.getStateCode()));

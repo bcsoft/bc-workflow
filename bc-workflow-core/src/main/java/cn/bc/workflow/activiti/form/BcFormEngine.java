@@ -21,6 +21,7 @@ import org.activiti.engine.impl.scripting.ScriptingEngines;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import org.springframework.util.FileCopyUtils;
 
 import cn.bc.core.exception.CoreException;
@@ -33,6 +34,7 @@ import cn.bc.template.service.TemplateService;
 import cn.bc.core.util.FreeMarkerUtils;
 import cn.bc.web.util.WebUtils;
 
+@Component("bcFormEngine")
 public class BcFormEngine implements FormEngine {
 	private static final Log logger = LogFactory.getLog(BcFormEngine.class);
 

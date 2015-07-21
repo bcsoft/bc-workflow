@@ -102,11 +102,6 @@
             <artifactId>bc-acl</artifactId>
             <version>${framework.version}</version>
         </dependency>
-        <!--<dependency>
-            <groupId>org.codehaus.groovy</groupId>
-            <artifactId>groovy</artifactId>
-            <version>1.7.5</version>
-        </dependency>-->
 
         <!-- activiti -->
         <dependency>
