@@ -1,0 +1,72 @@
+.sidebar-todo>* {
+	border-width: 0;
+	font-size: 125%;
+	cursor: default;
+}
+.sidebar-todo>.empty {
+	padding:.5em;
+	font-size: 150%;
+}
+
+.sidebar-todo>table.ui-widget-header {
+	width: 100%;
+	position: relative;
+	height: 1.5em;
+	text-align: left;
+	padding: 5px 2px;
+}
+
+.sidebar-todo>.tasks {
+	width: 100%;
+	text-align: left;
+	border-width: 0;
+	border-spacing: 0;
+}
+.sidebar-todo>.tasks .task>td{
+	border-width: 0 0 0 0;
+	vertical-align: top;
+	padding:0;
+}
+.sidebar-todo>.tasks .task .simple{
+	margin:0;
+	border-width: 1px 0 0 ;
+}
+.sidebar-todo>.tasks .task .simple>.icons{
+	float:left;
+}
+.sidebar-todo>.tasks .task .simple>.icons>.ui-icon{
+	display:inline-block;
+	cursor: pointer;
+}
+.sidebar-todo>.tasks .task .simple>.icons>.ui-icon.alarm{
+	cursor: default;
+}
+.sidebar-todo>.tasks .task .simple>.name{
+	font-weight: bold;
+	line-height: 1.5em;
+	text-indent: .5em;
+	cursor: pointer;
+	display:inline;
+	/*display:inline-block; 这个会导致内容超过一行时换行*/
+	text-decoration: underline;
+}
+
+.sidebar-todo>.tasks .task .detail{
+	clear: both;
+	margin: 0;
+}
+.sidebar-todo>.tasks .task .detail>div{
+	margin: .25em;
+}
+.sidebar-todo>.tasks .task.collapse .detail{
+	display:none;
+}
+.sidebar-todo>.tasks .task .detail>.durdate>.content{
+	border-width: 0
+}
+
+.sidebar-todo>.tasks .task .detail>.low{
+	opacity: .4;
+	filter: Alpha(Opacity=40);
+	font-size: 90%;
+}
