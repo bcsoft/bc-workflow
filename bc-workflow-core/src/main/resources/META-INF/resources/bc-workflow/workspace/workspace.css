@@ -1,0 +1,170 @@
+.ws>* {
+	width: 100%;
+	border-width: 0;
+	text-align: left;
+	border-width: 0;
+	border-spacing: 0;
+}
+
+.ws>.error {
+	padding: .5em .5em .1em .5em;
+	font-size: 150%;
+}
+.ws>.error .click2see {
+	font-size: 60%;
+	color:#ccc;
+	text-decoration: underline;
+	margin-left: 4px;
+	cursor: pointer;
+}
+.ws>.error pre {
+	font-size: 60%;
+	color:#ccc;
+	margin: 4px;
+	border-width: 1 0 0 0;
+}
+
+.ws>.common .header{
+	border-top-width: 0;
+}
+
+.ws .info.collapse .detail {
+	display: none;
+}
+
+.ws .info {
+	border-width: 0;
+	font-weight: normal;
+	background: none;
+}
+
+.ws .line {
+	position: relative;
+	padding: 2px 0;
+	border-radius: 0; 
+	margin-bottom: 0;
+}
+.ws .info[data-isMyTask="true"]>.simple>.line>.text{
+	font-weight: bold;
+}
+
+.ws .header {
+	height: 1.5em;
+	padding: 5px 2px;
+	border-width: 1px 0 0 0;
+	border-radius: 0; 
+}
+
+.ws .line>.leftIcon {
+	position: absolute;
+	top: 50%;
+	margin: -8px 2px 0 2px;
+	cursor: default;
+}
+
+.ws .line>.click {
+	cursor: pointer;
+}
+
+.ws .line>.text {
+	line-height: 1.5em;
+	text-indent: 0;
+	margin: 0 4px 0 20px;
+	cursor: default;
+	display: inline-block;
+	border-width: 0;
+}
+
+.ws .line>pre.text {
+	word-wrap: break-word; /* Internet Explorer 5.5+ */
+	white-space: -moz-pre-wrap; /* Mozilla, since 1999 */
+	white-space: -pre-wrap; /* Opera 4-6 */
+	white-space: -o-pre-wrap; /* Opera 7 */
+	white-space: pre-wrap; /* css-3 */
+	_white-space: normal; /* Internet Explorer 5.5+ */
+	max-height:8em;
+	-webkit-box-sizing: border-box; /* Safari/Chrome, other WebKit */
+    -moz-box-sizing: border-box;    /* Firefox, other Gecko */
+    box-sizing: border-box;
+	width: 96%;
+	overflow: auto;
+	border-width: 1px;
+	border-style: dotted;
+	font-family: "微软雅黑", "宋体", sans-serif;
+}
+
+.ws .line>.form {
+	overflow: auto;
+	margin: 0 4px 0 4px;
+	cursor: default;
+	display: inline-block;
+	border-width: 1px;
+	-webkit-box-sizing: border-box; /* Safari/Chrome, other WebKit */
+    -moz-box-sizing: border-box;    /* Firefox, other Gecko */
+	box-sizing: border-box;
+	width: 98%;
+	background: none;
+}
+
+.ws .line>.rightIcons {
+	display: block;
+	position: absolute;
+	right: 0;
+	top: 50%;
+	margin: -8px 2px 0 2px;
+	top: 50%;
+}
+
+.ws .line>.rightIcons>span>.ui-icon {
+	display: inline-block;
+	cursor: pointer;
+}
+
+.ws .line>.rightIcons>span>.text {
+	cursor: pointer;
+}
+
+.ws .line>.rightIcons>span.text>* {
+	cursor: default;
+}
+
+.ws .line .link{
+	cursor: pointer;
+}
+
+.ws .line .link:hover {
+	text-decoration: underline;
+}
+.ws .line.topic{
+	border-width: 1px 0 0 0;
+}
+
+.ws .detail {
+	margin-left: 16px;
+}
+
+.ws .low,.ws .low>* {
+	opacity: .7;
+	filter: Alpha(Opacity =   70);
+}
+
+.ws .little,.ws .little>* {
+	font-size: 90%;
+}
+.ws .order {
+	display: inline-block;
+	padding:0;
+	margin:0 0 0 0.5em;
+	list-style: none;
+	outline: none;
+}
+.ws .order>div>.ui-button-text{
+	padding: 0.05em 0.2em;
+}
+.ws .order>.ui-button{
+	margin-right: -0.4em;
+}
+.ws .tip {
+  border-radius: 8px;
+  cursor: pointer !important;
+}
