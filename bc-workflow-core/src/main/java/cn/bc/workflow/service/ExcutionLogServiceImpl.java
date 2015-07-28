@@ -15,7 +15,7 @@ import java.util.Map;
  *
  * @author dragon
  */
-@Service
+@Service("excutionLogService")
 public class ExcutionLogServiceImpl extends DefaultCrudService<ExcutionLog> implements ExcutionLogService {
 	@Autowired
 	private ActorHistoryDao actorHistoryDao;

@@ -36,7 +36,7 @@ import java.util.zip.ZipInputStream;
  *
  * @author wis
  */
-@Service
+@Service("deployService")
 public class DeployServiceImpl extends DefaultCrudService<Deploy> implements DeployService {
 	private static Logger logger = LoggerFactory.getLogger(DeployServiceImpl.class);
 	@Autowired

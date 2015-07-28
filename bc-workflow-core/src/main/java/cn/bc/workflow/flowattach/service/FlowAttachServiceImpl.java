@@ -20,7 +20,7 @@ import java.util.List;
  *
  * @author lbj
  */
-@Service
+@Service("flowAttachService")
 public class FlowAttachServiceImpl extends DefaultCrudService<FlowAttach> implements FlowAttachService {
 	private FlowAttachDao flowAttachDao;
 

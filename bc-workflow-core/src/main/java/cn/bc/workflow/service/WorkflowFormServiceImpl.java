@@ -29,7 +29,7 @@ import java.util.*;
 /**
  * @author dragon
  */
-@Service
+@Service("workflowFormService")
 public class WorkflowFormServiceImpl implements WorkflowFormService {
 	private static final Logger logger = LoggerFactory.getLogger(WorkflowFormServiceImpl.class);
 	@Autowired

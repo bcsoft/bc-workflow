@@ -18,7 +18,7 @@ import java.util.Map;
  *
  * @author lbj
  */
-@Service
+@Service("historicTaskInstanceService")
 public class HistoricTaskInstanceServiceImpl implements HistoricTaskInstanceService {
 	@Autowired
 	private HistoricTaskInstanceDao historicTaskInstanceDao;
