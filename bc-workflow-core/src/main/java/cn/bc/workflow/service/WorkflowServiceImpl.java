@@ -52,7 +52,7 @@ import java.util.zip.ZipInputStream;
  *
  * @author dragon
  */
-@Service
+@Service("workflowService")
 public class WorkflowServiceImpl implements WorkflowService {
 	private static final Logger logger = LoggerFactory.getLogger(WorkflowServiceImpl.class);
 	@Autowired

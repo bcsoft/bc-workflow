@@ -16,7 +16,7 @@ import java.util.Map;
  *
  * @author lbj
  */
-@Service
+@Service("workflowModuleRelationService")
 public class WorkflowModuleRelationServiceImpl extends DefaultCrudService<WorkflowModuleRelation>
 		implements WorkflowModuleRelationService {
 	private WorkflowModuleRelationDao workflowModuleRelationDao;

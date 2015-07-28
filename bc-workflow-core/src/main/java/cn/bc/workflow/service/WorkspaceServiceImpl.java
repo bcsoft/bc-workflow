@@ -32,7 +32,7 @@ import java.util.*;
  *
  * @author dragon
  */
-@Service
+@Service("workspaceService")
 public class WorkspaceServiceImpl implements WorkspaceService {
 	private static final Logger logger = LoggerFactory.getLogger(WorkspaceServiceImpl.class);
 
