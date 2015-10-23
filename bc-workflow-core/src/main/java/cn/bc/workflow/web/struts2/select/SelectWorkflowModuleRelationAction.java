@@ -177,8 +177,8 @@ public class SelectWorkflowModuleRelationAction extends AbstractSelectPageAction
 	}
 
 	@Override
-	protected String getHtmlPageJs() {
-		return this.getHtmlPageNamespace() + "/modulerelation/select.js";
+	protected void addJsCss(List<String> container) {
+		container.add(this.getHtmlPageNamespace() + "/modulerelation/select.js");
 	}
 
 	@Override

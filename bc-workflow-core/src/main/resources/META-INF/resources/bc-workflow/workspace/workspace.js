@@ -729,8 +729,9 @@ bc.flow.workspace = {
 
 		// 默认的表单数据获取方法
 		function getFormDataByDefaultWay($form) {
-			var $inputs = $form.find(":input:not(.ignore)");
-			if ($inputs.size() == 0) return false;
+			var $inputs = $form.find(":input:not(.ignore)").not(".radios [type=radio], .checkboxes [type=checkbox]");
+			var $rcs = $form.find(".radios, .checkboxes");
+			if ($inputs.size() + $rcs.size() == 0) return false;
 
 			var data = [];
 			$inputs.each(function () {
@@ -742,6 +743,37 @@ bc.flow.workspace = {
 					scope: $input.attr("data-scope") || "local"
 				});
 			});
+
+			// 处理用 .radios、.checkboxes 容器标记分组的单选、多选框的数据
+			$rcs.each(function () {
+				var $rc = $(this);
+				var $ms = $rc.find(":checked");// 收集被选中的单选、多选框
+
+				// 没有选中任何值时不设置流程变量
+				if ($ms.size() == 0) {
+					console.log("nothing was checked for " + $rc.attr("class"));
+					return;
+				}
+
+				// 生成选中值的流程变量数据
+				// -- 流程变量的名称为容器的 data-name 属性值，如果没有定义则使用其内第一个控件的 name 属性值
+				var name = $rc.attr("data-name") || $rc.find("[type=checkbox]:eq(0),[type=radio]:eq(0)").attr("name");
+				var value;
+				if ($rc.is(".checkboxes")) {     // 多选框：多个选中值用逗号连接在一起
+					value = $ms.map(function () {
+						return this.value;
+					}).join(",");
+				} else {                        // 单选框
+					value = $ms.val();
+				}
+				data.push({
+					name: name,
+					value: value,
+					type: $rc.attr("data-type") || "string",
+					scope: $rc.attr("data-scope") || "local"
+				});
+			});
+
 			return data;
 		}
 	},

@@ -165,7 +165,7 @@ public class FlowAttachAction extends FileEntityAction<Long, FlowAttach> {
 	@Override
 	protected void afterOpen(FlowAttach entity) {
 		super.afterOpen(entity);
-		PageOption po = buildFormPageOption(false);
+		PageOption po = buildPageOption(false);
 		if (entity.getType() == FlowAttach.TYPE_ATTACHMENT) {
 			po.setHeight(210);
 		} else

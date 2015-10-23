@@ -48,7 +48,7 @@ public class CustomGroupManager extends GroupManager {
 			e.setType("assignment");
 
 			e.setId(info[i++].toString());
-			e.setName(info[i++].toString());
+			e.setName(info[i].toString());
 			return e;
 		} else {
 			return null;
@@ -56,6 +56,7 @@ public class CustomGroupManager extends GroupManager {
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public List<Group> findGroupsByUser(String userCode) {
 		if (userCode == null)
 			return null;

@@ -101,7 +101,7 @@ public class Attach4ProcessListener implements ExecutionListener {
 		}
 
 		if (dr == null)
-			throw new CoreException("没有找到编码未“" + resourceCode + "”的附件");
+			throw new CoreException("没有找到编码为“" + resourceCode + "”的附件");
 
 		// 模板文件扩展名
 		String extension = StringUtils.getFilenameExtension(dr.getPath());

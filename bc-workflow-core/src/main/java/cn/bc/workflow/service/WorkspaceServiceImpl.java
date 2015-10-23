@@ -87,6 +87,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 	 *
 	 * @param instanceDetail 实例明细
 	 */
+	@SuppressWarnings("unchecked")
 	private void convertVariables(Map<String, Object> instanceDetail) {
 		// 全局流程变量
 		Object[] variables = (Object[]) instanceDetail.get("variables");
@@ -117,6 +118,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 	 *
 	 * @param tasks 任务集
 	 */
+	@SuppressWarnings("unchecked")
 	private void convertVariables4Tasks(Object[] tasks) {
 		if (tasks == null || tasks.length == 0) return;
 
@@ -153,6 +155,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 	 *
 	 * @param variables 流程变量原始数组
 	 */
+	@SuppressWarnings("unchecked")
 	private Map<String, Object> convertVariables(Object[] variables) {
 		if (variables == null) return null;
 
@@ -259,6 +262,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 	 * @param id_bytes 二进制值集 key=【id】, value=【bytes[]】
 	 * @param tasks    任务列表
 	 */
+	@SuppressWarnings("unchecked")
 	private void deserializeByteArrayVariable4Tasks(Map<String, Object> id_bytes, Object[] tasks) {
 		if (tasks == null || tasks.length == 0)
 			return;
@@ -276,6 +280,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 	 * @param id_bytes  二进制值集 key=【id】, value=【bytes[]】
 	 * @param variables 流程变量列表
 	 */
+	@SuppressWarnings("unchecked")
 	private void deserializeByteArrayVariable(Map<String, Object> id_bytes, Object[] variables) {
 		if (variables == null || variables.length == 0)
 			return;
@@ -299,6 +304,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 
 	@Override
 	@Transactional(readOnly = true)
+	@SuppressWarnings("unchecked")
 	public Map<String, Object> getWorkspaceData(String processInstanceId) {
 		Date start = new Date();
 
@@ -358,6 +364,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 	 *
 	 * @param instance 流程实例明细
 	 */
+	@SuppressWarnings("unchecked")
 	private Map<String, Object> buildWSCommonInfo(Map<String, Object> instance) {
 		int flowStatus = (int) instance.get("status");
 		Map<String, Object> info = new LinkedHashMap<>();
@@ -450,8 +457,8 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 	 *
 	 * @param task         任务
 	 * @param variableName 变量名称
-	 * @return
 	 */
+	@SuppressWarnings("unchecked")
 	private Object getTaskVariableValue(Map<String, Object> task, String variableName) {
 		Map<String, Object> vars = (Map<String, Object>) task.get("variables");
 		return vars != null ? vars.get(variableName) : null;
@@ -462,8 +469,8 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 	 *
 	 * @param task     任务
 	 * @param userCode 用户账号
-	 * @return
 	 */
+	@SuppressWarnings("unchecked")
 	private boolean isTaskActor(Map<String, Object> task, String userCode) {
 		return userCode.equals(((Map<String, Object>) task.get("actor")).get("code"));
 	}
@@ -487,7 +494,6 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 	 * @param isMyTask              是否是我的个人或岗位待办
 	 * @param isShowSuspendedButton 是否显示暂停按钮
 	 * @param isShowActiveButton    是否显示激活按钮
-	 * @return
 	 */
 	private String buildHeaderDefaultButtons(int flowStatus, String type, boolean isMyTask, boolean isShowSuspendedButton
 			, boolean isShowActiveButton, String hiddenButtonCodes) {
@@ -521,10 +527,10 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 				if (context.hasAnyRole("BC_WORKFLOW_DELEGATE"))// 有权限才能委派任务
 					buttons.append("<span class='mainOperate delegate'><span class='ui-icon ui-icon-person'></span><span class='text link'>委托任务</span></span>");
 
-				if (hiddenButtonCodes.indexOf("BUTTON_ADDCOMMENT") == -1)
+				if (!hiddenButtonCodes.contains("BUTTON_ADDCOMMENT"))
 					buttons.append(ITEM_BUTTON_ADDCOMMENT);// 添加意见
 
-				if (hiddenButtonCodes.indexOf("BUTTON_ADDATTACH") == -1)
+				if (!hiddenButtonCodes.contains("BUTTON_ADDATTACH"))
 					buttons.append(ITEM_BUTTON_ADDATTACH);// 添加附件
 				buttons.append("<span class='mainOperate finish'><span class='ui-icon ui-icon-check'></span><span class='text link'>完成办理</span></span>");
 			}
@@ -547,6 +553,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 	 *
 	 * @param instance 流程实例明细
 	 */
+	@SuppressWarnings("unchecked")
 	private Map<String, Object> buildWSTodoInfo(Map<String, Object> instance) {
 		int flowStatus = (int) instance.get("status");
 		Map<String, Object> info = new LinkedHashMap<>();
@@ -658,6 +665,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 	 *
 	 * @param instance 流程实例明细
 	 */
+	@SuppressWarnings("unchecked")
 	private Map<String, Object> buildWSDoneInfo(Map<String, Object> instance) {
 		Map<String, Object> info = new LinkedHashMap<>();
 		List<Map<String, Object>> taskItems = new ArrayList<>();// 一级条目列表
@@ -742,6 +750,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 	}
 
 	// 获取任务渲染区的数据
+	@SuppressWarnings("unchecked")
 	private Map<String, Object> buildTaskFormInfo(Map<String, Object> task, boolean readonly) {
 		// 判断是否需要渲染表单
 		if(task.containsKey("emptyForm") && (boolean) task.get("emptyForm")) return null;
@@ -799,7 +808,6 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 	 *
 	 * @param flowStatus 流转状态:1、2、3
 	 * @param type       类型: attach|form|comment
-	 * @return
 	 */
 	private String buildItemDefaultButtons(int flowStatus, String type) {
 		StringBuffer buttons = new StringBuffer();
@@ -822,8 +830,8 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 	 *
 	 * @param flowStatus 流转状态
 	 * @param attachs 附件信息
-	 * @return
 	 */
+	@SuppressWarnings("unchecked")
 	private List<Map<String, Object>> buildFlowAttachsInfo(Object[] attachs, int flowStatus) {
 		if(attachs == null) return null;
 		List<Map<String, Object>> attachItems = new ArrayList<>();

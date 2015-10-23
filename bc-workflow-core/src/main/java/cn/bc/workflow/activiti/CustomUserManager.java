@@ -51,7 +51,7 @@ public class CustomUserManager extends UserManager {
 			e.setId((String) info[i++]);
 			e.setLastName((String) info[i++]);
 			e.setEmail((String) info[i++]);
-			e.setPassword((String) info[i++]);
+			e.setPassword((String) info[i]);
 			return e;
 		} else {
 			return null;
@@ -59,6 +59,7 @@ public class CustomUserManager extends UserManager {
 	}
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public List<Group> findGroupsByUser(String userCode) {
 		if (userCode == null)
 			return null;
