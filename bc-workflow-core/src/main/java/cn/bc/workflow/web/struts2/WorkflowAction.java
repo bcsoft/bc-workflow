@@ -347,13 +347,33 @@ public class WorkflowAction extends AbstractBaseAction {
 		Map<String, Object> localVariables = new LinkedHashMap<>();
 		variables[0] = globalVariables;
 		variables[1] = localVariables;
+		String scope, name;
 		for (Map<String, Object> m : data) {
-			if ("global".equals(m.get("scope"))) {// 全局
-				globalVariables.put((String) m.get("name"), StringUtils.convertValueByType((String) m.get("type"), (String) m.get("value")));
-			} else if ("local".equals(m.get("scope"))) {// 本地
-				localVariables.put((String) m.get("name"), StringUtils.convertValueByType((String) m.get("type"), (String) m.get("value")));
-			} else {
-				throw new CoreException("unsupport formData scope:" + m.get("scope"));
+			scope = (String) m.get("scope");
+			if (scope == null || scope.isEmpty()) scope = "local"; // 默认为本地变量
+			if (!scope.contains(",")) {                 // 简单格式：local、global 或 both(=local,global)
+				name = (String) m.get("name");
+				if ("both".equals(scope)) {                 // 全局+本地
+					globalVariables.put(name, StringUtils.convertValueByType((String) m.get("type"), (String) m.get("value")));
+					localVariables.put(name, StringUtils.convertValueByType((String) m.get("type"), (String) m.get("value")));
+				} else if ("global".equals(scope)) {        // 全局
+					globalVariables.put(name, StringUtils.convertValueByType((String) m.get("type"), (String) m.get("value")));
+				} else if ("local".equals(scope)) {         // 本地
+					localVariables.put(name, StringUtils.convertValueByType((String) m.get("type"), (String) m.get("value")));
+				} else {
+					throw new CoreException("unsupport formData scope:" + m);
+				}
+			} else {                                    // 复杂格式：local[|localName],global[|globalName]
+				for (String s : scope.split(",")) {
+					name = s.contains("|") ? s.substring(s.indexOf("|") + 1) : (String) m.get("name");
+					if (s.startsWith("global")) {           // 全局
+						globalVariables.put(name, StringUtils.convertValueByType((String) m.get("type"), (String) m.get("value")));
+					} else if (s.startsWith("local")) {     // 本地
+						localVariables.put(name, StringUtils.convertValueByType((String) m.get("type"), (String) m.get("value")));
+					} else {
+						throw new CoreException("unsupport formData scope:" + m);
+					}
+				}
 			}
 		}
 		return variables;
