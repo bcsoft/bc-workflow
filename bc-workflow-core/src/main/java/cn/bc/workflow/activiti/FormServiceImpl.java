@@ -1,38 +1,42 @@
 /**
- * 
+ *
  */
 package cn.bc.workflow.activiti;
+
+import cn.bc.core.exception.CoreException;
+import cn.bc.core.util.FreeMarkerUtils;
+import cn.bc.core.util.TemplateUtils;
+import cn.bc.docs.domain.Attach;
+import cn.bc.template.domain.Template;
+import cn.bc.template.service.TemplateService;
+import cn.bc.web.util.WebUtils;
+import cn.bc.workflow.activiti.form.BcFormEngine;
+import cn.bc.workflow.deploy.service.DeployService;
+import cn.bc.workflow.service.ExcutionLogService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.stereotype.Component;
+import org.springframework.util.FileCopyUtils;
 
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Map;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Component;
-import org.springframework.util.FileCopyUtils;
-
-import cn.bc.core.exception.CoreException;
-import cn.bc.core.util.TemplateUtils;
-import cn.bc.docs.domain.Attach;
-import cn.bc.template.domain.Template;
-import cn.bc.template.service.TemplateService;
-import cn.bc.core.util.FreeMarkerUtils;
-import cn.bc.web.util.WebUtils;
-import cn.bc.workflow.activiti.form.BcFormEngine;
-import cn.bc.workflow.service.ExcutionLogService;
-
 /**
  * @author dragon
- * 
  */
 @Component("bcFormService")
 public class FormServiceImpl extends org.activiti.engine.impl.FormServiceImpl {
-	private static final Log logger = LogFactory.getLog(FormServiceImpl.class);
+	private static final Logger logger = LoggerFactory.getLogger(FormServiceImpl.class);
 	private ExcutionLogService excutionLogService;
 	private TemplateService templateService;
+	@Autowired
+	private DeployService deployService;
+	@Autowired
+	private JdbcTemplate jdbcTemplate;
 
 	@Autowired
 	public void setTemplateService(TemplateService templateService) {
@@ -42,6 +46,11 @@ public class FormServiceImpl extends org.activiti.engine.impl.FormServiceImpl {
 	@Autowired
 	public void setExcutionLogService(ExcutionLogService excutionLogService) {
 		this.excutionLogService = excutionLogService;
+	}
+
+	@Override
+	public Object getRenderedTaskForm(String taskId) {
+		return this.getRenderedTaskForm(taskId, BcFormEngine.NAME);
 	}
 
 	@Override
@@ -59,7 +68,7 @@ public class FormServiceImpl extends org.activiti.engine.impl.FormServiceImpl {
 
 	/**
 	 * 获取表单
-	 * 
+	 *
 	 * @param formKey
 	 * @return
 	 */
@@ -98,7 +107,7 @@ public class FormServiceImpl extends org.activiti.engine.impl.FormServiceImpl {
 		}
 
 		// 获取模板的原始内容
-		String sourceFormString = loadFormTemplate(from, key);
+		String sourceFormString = loadFormTemplate(from, key, taskId);
 		if (logger.isDebugEnabled()) {
 			logger.debug("source=" + sourceFormString);
 		}
@@ -116,13 +125,13 @@ public class FormServiceImpl extends org.activiti.engine.impl.FormServiceImpl {
 
 	/**
 	 * 格式化表单
-	 * 
+	 *
 	 * @param source
 	 * @param params
 	 * @return
 	 */
 	private String formatForm(String engine, String source,
-			Map<String, Object> params) {
+	                          Map<String, Object> params) {
 		String form;
 
 		// 格式化
@@ -141,12 +150,12 @@ public class FormServiceImpl extends org.activiti.engine.impl.FormServiceImpl {
 
 	/**
 	 * 获取表单的原始内容
-	 * 
+	 *
 	 * @param from
 	 * @param key
 	 * @return
 	 */
-	private String loadFormTemplate(String from, String key) {
+	private String loadFormTemplate(String from, String key, String taskId) {
 		String sourceFormString;
 		if ("tpl".equalsIgnoreCase(from)) {// 从模板中加载资源
 			sourceFormString = loadFormTemplateByTemplate(key);
@@ -157,6 +166,8 @@ public class FormServiceImpl extends org.activiti.engine.impl.FormServiceImpl {
 		} else if ("res".equalsIgnoreCase(from)
 				|| "resource".equalsIgnoreCase(from)) {// 从类资源中获取
 			sourceFormString = loadFormTemplateByClassResource(key);
+		} else if ("wf".equalsIgnoreCase(from)) {// 从流程部署的资源中获取
+			sourceFormString = loadFormTemplateByWFResource(key, taskId);
 		} else {
 			sourceFormString = null;
 			new CoreException("unsupport form type:from=" + from);
@@ -210,5 +221,27 @@ public class FormServiceImpl extends org.activiti.engine.impl.FormServiceImpl {
 		}
 		sourceFormString = template.getContentEx();
 		return sourceFormString;
+	}
+
+	// 从流程部署资源中获取表单
+	private String loadFormTemplateByWFResource(String key, String taskId) {
+		String sql = "select f.key_ wf_code, f.deployment_id_ deployment_id\n" +
+				" from act_re_procdef f\n" +
+				" inner join act_hi_taskinst t on t.proc_def_id_ = f.id_\n" +
+				" where t.id_ = ?";
+		Map<String, Object> m = jdbcTemplate.queryForMap(sql, taskId);
+		String deploymentId = (String) m.get("deployment_id");  // 流程部署ID
+		String wfCode = (String) m.get("wf_code");              // 流程编码
+		String resCode;                                         // 资源编码
+		if (!key.contains("/")) {
+			resCode = key;
+		} else {
+			String[] cs = key.split("/");
+			resCode = cs[1];
+		}
+		logger.debug("deploymentId={}, wfCode={}, resCode={}", deploymentId, wfCode, resCode);
+
+		// 获取资源内容
+		return this.deployService.getResourceContent(deploymentId, resCode);
 	}
 }
