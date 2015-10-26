@@ -4,7 +4,7 @@
     <parent>
         <groupId>cn.bc</groupId>
         <artifactId>bc-parent</artifactId>
-        <version>3.0-SNAPSHOT</version>
+        <version>3.0</version>
         <relativePath>../../bc-framework/bc-parent/pom.xml</relativePath>
     </parent>
     <groupId>cn.bc.workflow</groupId>
@@ -15,7 +15,7 @@
 
     <properties>
         <!-- 平台版本号 -->
-        <framework.version>3.0-SNAPSHOT</framework.version>
+        <framework.version>3.0</framework.version>
         <!-- activiti版本号 -->
         <activiti-version>5.9</activiti-version>
 
