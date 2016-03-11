@@ -3,17 +3,21 @@
  */
 package cn.bc.workflow.service;
 
+import cn.bc.ContextHolder;
 import cn.bc.core.exception.ConstraintViolationException;
 import cn.bc.core.exception.CoreException;
 import cn.bc.core.exception.NotExistsException;
 import cn.bc.core.exception.PermissionDeniedException;
 import cn.bc.core.util.DateUtils;
 import cn.bc.core.util.JsonUtils;
+import cn.bc.desktop.service.LoginService;
 import cn.bc.docs.domain.Attach;
 import cn.bc.identity.domain.ActorHistory;
 import cn.bc.identity.service.ActorHistoryService;
 import cn.bc.identity.service.ActorService;
+import cn.bc.identity.web.SystemContext;
 import cn.bc.identity.web.SystemContextHolder;
+import cn.bc.identity.web.SystemContextImpl;
 import cn.bc.template.domain.Template;
 import cn.bc.template.service.TemplateService;
 import cn.bc.workflow.activiti.ActivitiUtils;
@@ -82,6 +86,8 @@ public class WorkflowServiceImpl implements WorkflowService {
 	private WorkflowModuleRelationService workflowModuleRelationService;
 	@Autowired
 	private WorkflowDao workflowDao;
+	@Autowired
+	private LoginService loginService;
 
 	/**
 	 * 获取当前用户的帐号信息
@@ -138,17 +144,50 @@ public class WorkflowServiceImpl implements WorkflowService {
 	}
 
 	/**
-	 * 初始化Activiti的当前认证用户信息
+	 * 初始化 Activiti 的当前认证用户信息
 	 *
-	 * @return
+	 * @return 账号
 	 */
 	private String setAuthenticatedUser() {
+		return setAuthenticatedUser(null);
+	}
+
+	/**
+	 * 初始化 Activiti 的认证用户信息为指定账号
+	 *
+	 * @param initiator 发起流程者的账号，为空则使用当前登录账号
+	 * @return
+	 */
+	private String setAuthenticatedUser(String initiator) {
 		// 获取当前用户
-		String initiator = getCurrentUserAccount();
+		if (initiator == null || initiator.isEmpty()) {
+			initiator = getCurrentUserAccount();
+		} else {
+			createInitiatorContext(initiator);
+		}
 
 		// 设置认证用户
 		identityService.setAuthenticatedUserId(initiator);
 		return initiator;
+	}
+
+	/**
+	 * 创建指定账号的上下文
+	 */
+	private void createInitiatorContext(String initiator) {
+		logger.warn("为账号 {} 创建基本的上下文信息", initiator);
+		// 获取账号信息
+		Map<String, Object> map = this.loginService.loadActorByCode(initiator);
+
+		// 创建上下文
+		if (SystemContextHolder.get() == null) {
+			SystemContext context = new SystemContextImpl();
+			ContextHolder.set(context);
+
+			// 记录用户信息
+			context.setAttr(SystemContext.KEY_USER, map.get("actor"));
+			context.setAttr(SystemContext.KEY_USER_HISTORY, map.get("history"));
+		}
 	}
 
 	@Transactional
@@ -1001,17 +1040,20 @@ public class WorkflowServiceImpl implements WorkflowService {
 
 	@Transactional
 	public String startFlowByKey(String key, Map<String, Object> variables) {
+		return startFlowByKey(null, key, variables);
+	}
+
+	@Transactional
+	public String startFlowByKey(String initiator, String key, Map<String, Object> variables) {
 		// 设置Activiti认证用户
-		String initiator = setAuthenticatedUser();
+		initiator = setAuthenticatedUser(initiator);
 
 		// 启动流程： 表单信息的处理
-		ProcessInstance pi = runtimeService.startProcessInstanceByKey(key,
-				variables);
+		ProcessInstance pi = runtimeService.startProcessInstanceByKey(key, variables);
 		if (logger.isDebugEnabled()) {
-			logger.debug("key=" + key);
-			logger.debug("initiator=" + initiator);
-			logger.debug("pi=" + ActivitiUtils.toString(pi));
-			logger.debug("variables=" + variables.toString());
+			logger.debug("initiator={}, key={}", initiator, key);
+			logger.debug("pi={}", ActivitiUtils.toString(pi));
+			logger.debug("variables={}", variables.toString());
 		}
 
 		// 返回流程实例的id
