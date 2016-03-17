@@ -120,7 +120,7 @@
 					</div>
 				</div>
 				<div class="bc-dateContainer">
-					<div class="value radios" data-condition='{"type":"string","ql":"p.end_time_ is not null""}' >
+					<div class="value radios" data-condition='{"type":"string","ql":"p.end_time_ is not null"}' >
 						<label><input type="radio" name="radioField2" ><span>已结束</span></label>
 					</div>
 				</div>
