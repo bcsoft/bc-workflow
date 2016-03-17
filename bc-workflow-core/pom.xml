@@ -64,6 +64,11 @@
 			<version>${framework.version}</version>
 			<scope>compile</scope>
 		</dependency>
+		<dependency>
+			<groupId>cn.bc</groupId>
+			<artifactId>bc-desktop</artifactId>
+			<version>${framework.version}</version>
+		</dependency>
 
 		<!-- log -->
 		<dependency>
