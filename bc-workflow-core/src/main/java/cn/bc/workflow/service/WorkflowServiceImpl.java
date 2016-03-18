@@ -3,7 +3,6 @@
  */
 package cn.bc.workflow.service;
 
-import cn.bc.ContextHolder;
 import cn.bc.core.exception.ConstraintViolationException;
 import cn.bc.core.exception.CoreException;
 import cn.bc.core.exception.NotExistsException;
@@ -175,18 +174,17 @@ public class WorkflowServiceImpl implements WorkflowService {
 	 * 创建指定账号的上下文
 	 */
 	private void createInitiatorContext(String initiator) {
-		logger.warn("为账号 {} 创建基本的上下文信息", initiator);
-		// 获取账号信息
-		Map<String, Object> map = this.loginService.loadActorByCode(initiator);
+		SystemContext context = SystemContextHolder.get();
+		if (context == null || context.getUser() == null || !context.getUser().getCode().equals(initiator)) {
+			logger.warn("为账号 {} 创建基本的上下文信息", initiator);
+			// 获取账号信息
+			Map<String, Object> map = this.loginService.loadActorByCode(initiator);
 
-		// 创建上下文
-		if (SystemContextHolder.get() == null) {
-			SystemContext context = new SystemContextImpl();
-			ContextHolder.set(context);
-
-			// 记录用户信息
+			// 创建上下文记录用户信息
+			context = new SystemContextImpl();
 			context.setAttr(SystemContext.KEY_USER, map.get("actor"));
 			context.setAttr(SystemContext.KEY_USER_HISTORY, map.get("history"));
+			SystemContextHolder.set(context);
 		}
 	}
 
