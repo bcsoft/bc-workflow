@@ -67,7 +67,7 @@ public class UpdateModuleInfoOfficial4FlowListener extends ExcutionLogListener {
 	@Override
 	public void notify(DelegateExecution execution) throws Exception {
 		// 判断是否执行更新方法
-		String execute = isExecuteUpdateMethod.getExpressionText();
+		String execute = isExecuteUpdateMethod != null ? isExecuteUpdateMethod.getExpressionText() : null;
 		if (execute != null) {
 			if (execute.indexOf("$") != -1) {
 				Object isExecute = execution.getVariable(execute.substring(
