@@ -80,9 +80,9 @@ public class WorkflowModuleRelationDaoImpl extends JpaCrudDao<WorkflowModuleRela
 					o.put("status", WorkspaceService.FLOWSTATUS_COMPLETE);
 				} else {
 					if (suspensionState.toString().equals(String.valueOf(SuspensionState.ACTIVE.getStateCode()))) {// 流转中
-						o.put("status", String.valueOf(SuspensionState.ACTIVE.getStateCode()));
+						o.put("status", SuspensionState.ACTIVE.getStateCode());
 					} else if (suspensionState.toString().equals(String.valueOf(SuspensionState.SUSPENDED.getStateCode()))) {// 已暂停
-						o.put("status", String.valueOf(SuspensionState.SUSPENDED.getStateCode()));
+						o.put("status", SuspensionState.SUSPENDED.getStateCode());
 					}
 				}
 
