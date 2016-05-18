@@ -8,6 +8,7 @@ import org.commontemplate.util.Assert;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import javax.persistence.NoResultException;
 import java.util.List;
 import java.util.Map;
 
@@ -15,6 +16,7 @@ import java.util.Map;
  * 流程关系Service接口实现
  *
  * @author lbj
+ * @modified dragon 2016-05-18
  */
 @Service("workflowModuleRelationService")
 public class WorkflowModuleRelationServiceImpl extends DefaultCrudService<WorkflowModuleRelation>
@@ -56,5 +58,13 @@ public class WorkflowModuleRelationServiceImpl extends DefaultCrudService<Workfl
 	public List<WorkflowModuleRelation> findList(String pid) {
 		Assert.assertNotNull(pid);
 		return this.createQuery().condition(new EqualsCondition("pid", pid)).list();
+	}
+
+	@Override
+	public boolean isLastFlowFinished(Long mid, String mtype) throws NoResultException {
+		String status = this.workflowModuleRelationDao.getLastFlowStatus(mid, mtype);
+		if (status == null) throw new NoResultException("没有发起相应的业务流程：mid=" + mid + ", mtype=" + mtype);
+
+		return "1".equals(status);
 	}
 }
