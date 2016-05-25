@@ -1,6 +1,7 @@
 package cn.bc.workflow.dao;
 
 import cn.bc.core.dao.CrudDao;
+import cn.bc.workflow.domain.FlowStatus;
 import cn.bc.workflow.domain.WorkflowModuleRelation;
 
 import java.util.List;
@@ -61,12 +62,12 @@ public interface WorkflowModuleRelationDao extends CrudDao<WorkflowModuleRelatio
 	                                   String[] values, String[] globalKeys);
 
 	/**
-	 * 获取指定业务信息对指定流程最新的流转结束
+	 * 获取指定业务信息的最新流转状态
 	 * <p>如果发起了多个流程，则获取最后发起流程的状态</p>
 	 *
 	 * @param mid   业务信息ID
 	 * @param mtype 业务类型
-	 * @return 没有发起流程返回 null，有则返回最新的流程状态：0-流转中，1-已结束
+	 * @return <code>FlowStatus</code>
 	 */
-	String getLastFlowStatus(Long mid, String mtype);
+	FlowStatus getLastFlowStatus(Long mid, String mtype);
 }

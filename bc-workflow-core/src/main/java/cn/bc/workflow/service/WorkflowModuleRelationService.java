@@ -1,9 +1,9 @@
 package cn.bc.workflow.service;
 
 import cn.bc.core.dao.CrudDao;
+import cn.bc.workflow.domain.FlowStatus;
 import cn.bc.workflow.domain.WorkflowModuleRelation;
 
-import javax.persistence.NoResultException;
 import java.util.List;
 import java.util.Map;
 
@@ -57,7 +57,7 @@ public interface WorkflowModuleRelationService extends
 
 	/**
 	 * @param mtype模块类型
-	 * @param propertys  流程中的变量
+	 * @param properties  流程中的变量
 	 * @param values     流程中的变量值
 	 * @param globalKeys 查询全局参数的key
 	 * @return返回Map格式{ pid:流程实例id， startTime:发起时间， endTime:结束时间， name:流程名称，
@@ -66,7 +66,7 @@ public interface WorkflowModuleRelationService extends
 	 * globalKey1：对应的流程全局参数的值， globalKey2：对应的流程全局参数的值，
 	 * globalKey3：对应的流程全局参数的值， ... }
 	 */
-	List<Map<String, Object>> findList(String[] mtype, String[] propertys,
+	List<Map<String, Object>> findList(String[] mtype, String[] properties,
 	                                   String[] values, String[] globalKeys);
 
 	/**
@@ -97,12 +97,12 @@ public interface WorkflowModuleRelationService extends
 	List<WorkflowModuleRelation> findList(String pid);
 
 	/**
-	 * 判断指定业务信息对最后发起的流程是否已经流转结束
+	 * 获取指定业务信息的最新流转状态
+	 * <p>如果发起了多个流程，则获取最后发起流程的状态</p>
 	 *
 	 * @param mid   业务信息ID
 	 * @param mtype 业务类型
-	 * @return 没有发起流程返回 null，流程已结束返回 true，否则返回 false
-	 * @throws NoResultException 如果业务信息还没有发起流程
+	 * @return <code>FlowStatus</code>
 	 */
-	boolean isLastFlowFinished(Long mid, String mtype) throws NoResultException;
+	FlowStatus getLastFlowStatus(Long mid, String mtype);
 }

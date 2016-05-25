@@ -2,6 +2,7 @@ package cn.bc.workflow.dao.jpa;
 
 import cn.bc.orm.jpa.JpaCrudDao;
 import cn.bc.workflow.dao.WorkflowModuleRelationDao;
+import cn.bc.workflow.domain.FlowStatus;
 import cn.bc.workflow.domain.WorkflowModuleRelation;
 import cn.bc.workflow.service.WorkspaceService;
 import org.activiti.engine.impl.persistence.entity.SuspensionState;
@@ -312,13 +313,13 @@ public class WorkflowModuleRelationDaoImpl extends JpaCrudDao<WorkflowModuleRela
 	}
 
 	@Override
-	public String getLastFlowStatus(Long mid, String mtype) {
+	public FlowStatus getLastFlowStatus(Long mid, String mtype) {
 		String sql = "select wf_get_last_process_info(?, ?)::text";
 		try {
 			String json = jdbcTemplate.queryForObject(sql, String.class, mid.intValue(), mtype);
-			return json == null ? null : new JSONObject(json).getString("status");
+			return json == null ? FlowStatus.None : FlowStatus.valueOf(new JSONObject(json).getInt("status"));
 		} catch (EmptyResultDataAccessException e) {
-			return null;
+			return FlowStatus.None;
 		}
 	}
 }

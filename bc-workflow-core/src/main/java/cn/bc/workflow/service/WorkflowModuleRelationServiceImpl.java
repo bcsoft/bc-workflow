@@ -3,12 +3,12 @@ package cn.bc.workflow.service;
 import cn.bc.core.query.condition.impl.EqualsCondition;
 import cn.bc.core.service.DefaultCrudService;
 import cn.bc.workflow.dao.WorkflowModuleRelationDao;
+import cn.bc.workflow.domain.FlowStatus;
 import cn.bc.workflow.domain.WorkflowModuleRelation;
 import org.commontemplate.util.Assert;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.persistence.NoResultException;
 import java.util.List;
 import java.util.Map;
 
@@ -51,8 +51,8 @@ public class WorkflowModuleRelationServiceImpl extends DefaultCrudService<Workfl
 		return this.workflowModuleRelationDao.hasRelation(mid, mtype, key);
 	}
 
-	public List<Map<String, Object>> findList(String[] mtype, String[] propertys, String[] values, String[] globalKeys) {
-		return this.workflowModuleRelationDao.findList(mtype, propertys, values, globalKeys);
+	public List<Map<String, Object>> findList(String[] mtype, String[] properties, String[] values, String[] globalKeys) {
+		return this.workflowModuleRelationDao.findList(mtype, properties, values, globalKeys);
 	}
 
 	public List<WorkflowModuleRelation> findList(String pid) {
@@ -61,10 +61,7 @@ public class WorkflowModuleRelationServiceImpl extends DefaultCrudService<Workfl
 	}
 
 	@Override
-	public boolean isLastFlowFinished(Long mid, String mtype) throws NoResultException {
-		String status = this.workflowModuleRelationDao.getLastFlowStatus(mid, mtype);
-		if (status == null) throw new NoResultException("没有发起相应的业务流程：mid=" + mid + ", mtype=" + mtype);
-
-		return "1".equals(status);
+	public FlowStatus getLastFlowStatus(Long mid, String mtype) {
+		return this.workflowModuleRelationDao.getLastFlowStatus(mid, mtype);
 	}
 }
