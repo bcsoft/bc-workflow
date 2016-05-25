@@ -1,18 +1,7 @@
 /**
- * 
+ *
  */
 package cn.bc.workflow.activiti.delegate;
-
-import java.util.Calendar;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-
-import org.activiti.engine.delegate.DelegateTask;
-import org.activiti.engine.delegate.TaskListener;
-import org.activiti.engine.impl.el.Expression;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 import cn.bc.core.util.JsonUtils;
 import cn.bc.core.util.SpringUtils;
@@ -20,16 +9,26 @@ import cn.bc.identity.domain.ActorHistory;
 import cn.bc.identity.web.SystemContextHolder;
 import cn.bc.workflow.domain.ExcutionLog;
 import cn.bc.workflow.service.ExcutionLogService;
+import org.activiti.engine.delegate.DelegateTask;
+import org.activiti.engine.delegate.TaskListener;
+import org.activiti.engine.impl.el.Expression;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import java.util.Calendar;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * 流程更新模块的相关信息监听器
- * 
+ *
  * @author zxr
- * 
+ * @modifier dragon 2016-05-25 优化代码
  */
 public class UpdateModuleInfo4TaskListener implements TaskListener {
 	protected final Log logger = LogFactory.getLog(getClass());
-	
+
 	protected ExcutionLogService excutionLogService;
 
 	/**
@@ -55,95 +54,88 @@ public class UpdateModuleInfo4TaskListener implements TaskListener {
 	 * 更新对象的id
 	 */
 	private Expression updateObjectId;
-	
+
 	/**
 	 * 同步日志记录
 	 */
 	private Expression log;
-	
-	public UpdateModuleInfo4TaskListener(){
+
+	public UpdateModuleInfo4TaskListener() {
 		excutionLogService = SpringUtils.getBean(ExcutionLogService.class);
 	}
 
-	public void notify(DelegateTask arg0) {
+	public void notify(DelegateTask execution) {
 		if (logger.isDebugEnabled()) {
-			logger.debug("execution=" + arg0.getClass());
+			logger.debug("execution=" + execution.getClass());
 			logger.debug("this=" + this.getClass());
-			logger.debug("id=" + arg0.getId());
-			logger.debug("eventName=" + arg0.getEventName());
-			logger.debug("processInstanceId"
-					+ arg0.getProcessInstanceId());
-			logger.debug("executionId=" + arg0.getExecutionId());
-			logger.debug("taskDefinitionKey="
-					+ arg0.getTaskDefinitionKey());
+			logger.debug("id=" + execution.getId());
+			logger.debug("eventName=" + execution.getEventName());
+			logger.debug("processInstanceId" + execution.getProcessInstanceId());
+			logger.debug("executionId=" + execution.getExecutionId());
+			logger.debug("taskDefinitionKey=" + execution.getTaskDefinitionKey());
 		}
 
 		// 判断是否执行更新方法
-		String execute = isExecuteUpdateMethod.getExpressionText();
-		if (execute == null)
-			return;
-		if (execute.indexOf("$") == -1)
-			return;
-
-		execute = execute.substring(execute.indexOf("{") + 1, execute.indexOf("}"));
-		boolean go = "true".equals(execute);// isExecuteUpdateMethod 设置为：${true}，就执行更新
-		if(!go){// 设置为其他变量，变量的值必须为true才执行更新
-			Object isExecute = arg0.getVariable(execute);
-			if (isExecute != null && "true".equalsIgnoreCase(isExecute.toString())) {
-				go = true;
+		String execute = isExecuteUpdateMethod != null ? isExecuteUpdateMethod.getExpressionText() : null;
+		boolean update = true;  // 默认执行 (原默认不执行) by dragon 2016-05-25
+		if (execute != null) {
+			if (execute.indexOf("$") != -1) {
+				String variableName = execute.substring(execute.indexOf("{") + 1, execute.indexOf("}"));
+				Object value;
+				if (execution.hasVariable(variableName)) {
+					// 旧的代码通过奇葩的方式解析出变量名再获取变量的值
+					value = execution.getVariable(variableName);
+				} else {
+					// 直接使用 activiti 的内置方法获取
+					value = isExecuteUpdateMethod.getValue(execution);
+				}
+				update = (value != null && "true".equalsIgnoreCase(value.toString()));
+			} else {
+				update = execute.equalsIgnoreCase("true");
 			}
 		}
 
-		if(go){
-			executeUpdateMethod(arg0);
-			if(log!=null&& arg0.hasVariable(log.getExpressionText())) {
-				saveExcutionLog(arg0,arg0.getVariable(log.getExpressionText()).toString());
+		// 执行更新方法
+		if (update) {
+			executeUpdateMethod(execution);
+			if (log != null && execution.hasVariable(log.getExpressionText())) {
+				saveExecutionLog(execution, execution.getVariable(log.getExpressionText()).toString());
 			}
 		}
 	}
 
 	/**
 	 * 更新方法的实现
-	 * 
-	 * @param execution
 	 */
 	private void executeUpdateMethod(DelegateTask execution) {
-		Map<String, Object> arguments = JsonUtils.toMap(parameter
-				.getExpressionText());
-		Map<String, Object> args = new HashMap<String, Object>();
+		Map<String, Object> arguments = JsonUtils.toMap(parameter.getExpressionText());
+		Map<String, Object> args = new HashMap<>();
 		Set<String> keySet = arguments.keySet();
 		for (String key : keySet) {
-
 			Object arg = arguments.get(key);
 			if (arg instanceof String) {
 				String value = arg.toString();
 				// 如果包含"$"号就取变量值
 				if (value.indexOf("$") != -1) {
-					args.put(key, execution.getVariable(value.substring(
-							value.indexOf("{") + 1, value.indexOf("}"))));
+					args.put(key, execution.getVariable(value.substring(value.indexOf("{") + 1, value.indexOf("}"))));
 				} else {
 					args.put(key, arguments.get(key));
 				}
-
 			} else {
 				args.put(key, arguments.get(key));
-				logger.debug(arguments.get(key) + " :arguments.get(key): "
-						+ arguments.get(key).getClass());
+				logger.debug(arguments.get(key) + " :arguments.get(key): " + arguments.get(key).getClass());
 			}
 		}
 		// 获取id
 		String ObjectId = updateObjectId.getExpressionText();
 		if (ObjectId.indexOf("$") != -1) {
-
-			Object ModuleId = execution.getVariable(ObjectId.substring(
-					ObjectId.indexOf("{") + 1, ObjectId.indexOf("}")));
+			Object ModuleId = execution.getVariable(ObjectId.substring(ObjectId.indexOf("{") + 1, ObjectId.indexOf("}")));
 			SpringUtils.invokeBeanMethod(serviceName.getExpressionText(),
-					serviceMethod.getExpressionText(),
-					new Object[] { Long.valueOf(ModuleId.toString()), args });
+					serviceMethod.getExpressionText(), new Object[]{Long.valueOf(ModuleId.toString()), args});
 		}
 	}
-	
-	private void saveExcutionLog(DelegateTask delegateTask,String desc){
+
+	private void saveExecutionLog(DelegateTask delegateTask, String desc) {
 		// 创建同步日志
 		ExcutionLog log = new ExcutionLog();
 		log.setFileDate(Calendar.getInstance());
@@ -168,5 +160,4 @@ public class UpdateModuleInfo4TaskListener implements TaskListener {
 		log.setDescription(desc);
 		this.excutionLogService.save(log);
 	}
-
 }
