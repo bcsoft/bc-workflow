@@ -1,17 +1,7 @@
 /**
- * 
+ *
  */
 package cn.bc.workflow.activiti.delegate;
-
-import java.util.Calendar;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
-
-import org.activiti.engine.delegate.DelegateExecution;
-import org.activiti.engine.impl.el.Expression;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 
 import cn.bc.core.util.JsonUtils;
 import cn.bc.core.util.SpringUtils;
@@ -19,18 +9,27 @@ import cn.bc.identity.domain.ActorHistory;
 import cn.bc.identity.web.SystemContextHolder;
 import cn.bc.workflow.domain.ExcutionLog;
 import cn.bc.workflow.service.ExcutionLogService;
+import org.activiti.engine.delegate.DelegateExecution;
+import org.activiti.engine.impl.el.Expression;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import java.util.Calendar;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * 流程更新模块的相关信息监听器
- * 
+ *
  * @author zxr
- * 
+ * @modifier dragon 2016-05-25 优化代码
  */
 public class UpdateModuleInfoOfficial4FlowListener extends ExcutionLogListener {
 	protected final Log logger = LogFactory.getLog(getClass());
 
 	protected ExcutionLogService excutionLogService;
-	
+
 	/**
 	 * service名称
 	 */
@@ -54,13 +53,13 @@ public class UpdateModuleInfoOfficial4FlowListener extends ExcutionLogListener {
 	 * 更新对象的id
 	 */
 	private Expression updateObjectId;
-	
+
 	/**
 	 * 同步日志记录
 	 */
 	private Expression log;
-	
-	public UpdateModuleInfoOfficial4FlowListener(){
+
+	public UpdateModuleInfoOfficial4FlowListener() {
 		excutionLogService = SpringUtils.getBean(ExcutionLogService.class);
 	}
 
@@ -68,43 +67,41 @@ public class UpdateModuleInfoOfficial4FlowListener extends ExcutionLogListener {
 	public void notify(DelegateExecution execution) throws Exception {
 		// 判断是否执行更新方法
 		String execute = isExecuteUpdateMethod != null ? isExecuteUpdateMethod.getExpressionText() : null;
+		boolean update = true;  // 默认执行
 		if (execute != null) {
 			if (execute.indexOf("$") != -1) {
-				Object isExecute = execution.getVariable(execute.substring(
-						execute.indexOf("{") + 1, execute.indexOf("}")));
-				// 如果为true就执行
-				if (isExecute != null) {
-					if (isExecute.toString().equals("true")) {
-						executeUpdateMethod(execution);
-						if(log!=null&& execution.hasVariable(log.getExpressionText())){
-							saveExcutionLog(execution,execution.getVariable(log.getExpressionText()).toString());
-						}
-					}
+				String variableName = execute.substring(execute.indexOf("{") + 1, execute.indexOf("}"));
+				Object value;
+				if (execution.hasVariable(variableName)) {
+					// 旧的代码通过奇葩的方式解析出变量名再获取变量的值
+					value = execution.getVariable(variableName);
+				} else {
+					// 直接使用 activiti 的内置方法获取
+					value = isExecuteUpdateMethod.getValue(execution);
 				}
-			}
-		} else {
-			// 如果不配置默认执行
-			// 组装参数
-			executeUpdateMethod(execution);
-			if(log!=null&& execution.hasVariable(log.getExpressionText())){
-				saveExcutionLog(execution,execution.getVariable(log.getExpressionText()).toString());
+				update = (value != null && "true".equalsIgnoreCase(value.toString()));
+			} else {
+				update = execute.equalsIgnoreCase("true");
 			}
 		}
 
+		// 执行更新方法
+		if (update) {
+			executeUpdateMethod(execution);
+			if (log != null && execution.hasVariable(log.getExpressionText())) {
+				saveExecutionLog(execution, execution.getVariable(log.getExpressionText()).toString());
+			}
+		}
 	}
 
 	/**
 	 * 更新方法的实现
-	 * 
-	 * @param execution
 	 */
 	private void executeUpdateMethod(DelegateExecution execution) {
-		Map<String, Object> arguments = JsonUtils.toMap(parameter
-				.getExpressionText());
-		Map<String, Object> args = new HashMap<String, Object>();
+		Map<String, Object> arguments = JsonUtils.toMap(parameter.getExpressionText());
+		Map<String, Object> args = new HashMap<>();
 		Set<String> keySet = arguments.keySet();
 		for (String key : keySet) {
-
 			Object arg = arguments.get(key);
 			if (arg instanceof String) {
 				String value = arg.toString();
@@ -118,26 +115,21 @@ public class UpdateModuleInfoOfficial4FlowListener extends ExcutionLogListener {
 
 			} else {
 				args.put(key, arguments.get(key));
-				logger.debug(arguments.get(key) + " :arguments.get(key): "
-						+ arguments.get(key).getClass());
+				logger.debug(arguments.get(key) + " :arguments.get(key): " + arguments.get(key).getClass());
 			}
 		}
 		// 获取id
 		String caseId = updateObjectId.getExpressionText();
 		if (caseId.indexOf("$") != -1) {
-
-			Object case4InfractTrafficId = execution.getVariable(caseId
-					.substring(caseId.indexOf("{") + 1, caseId.indexOf("}")));
+			Object case4InfractTrafficId = execution.getVariable
+					(caseId.substring(caseId.indexOf("{") + 1, caseId.indexOf("}")));
 			SpringUtils.invokeBeanMethod(
-					serviceName.getExpressionText(),
-					serviceMethod.getExpressionText(),
-					new Object[] {
-							Long.valueOf(case4InfractTrafficId.toString()),
-							args });
+					serviceName.getExpressionText(), serviceMethod.getExpressionText(),
+					new Object[]{Long.valueOf(case4InfractTrafficId.toString()), args});
 		}
 	}
-	
-	private void saveExcutionLog(DelegateExecution excution,String desc){
+
+	private void saveExecutionLog(DelegateExecution execution, String desc) {
 		// 创建同步日志
 		ExcutionLog log = new ExcutionLog();
 		log.setFileDate(Calendar.getInstance());
@@ -149,13 +141,12 @@ public class UpdateModuleInfoOfficial4FlowListener extends ExcutionLogListener {
 		log.setAssigneeCode(h.getCode());
 		log.setAssigneeName(h.getName());
 
-		log.setListener(excution.getClass().getName());
-		log.setExcutionId(excution.getId());
+		log.setListener(execution.getClass().getName());
+		log.setExcutionId(execution.getId());
 		log.setType(ExcutionLog.TYPE_PROCESS_SYNC_INFO);
-		log.setProcessInstanceId(excution.getProcessInstanceId());
+		log.setProcessInstanceId(execution.getProcessInstanceId());
 
 		log.setDescription(desc);
 		this.excutionLogService.save(log);
 	}
-
 }

@@ -27,7 +27,7 @@ import java.util.List;
  * <li>groupName - 岗位名称</li>
  * </ul>
  * 监听器通过判断流程变量 startInBackground 的值来判断流程是否是后台系统发起的（不是某个用户通过系统手动发起流程）。
- * 如果 startInBackground = true 则为后台发起的流程，此时将 Task 的办理人设置为 upperId 下的岗位 groupName；
+ * 如果 startInBackground = true 则为后台发起的流程，此时将 Task 的办理人设置为 orgId 下的岗位 groupName；
  * 如果此岗位内只有一个用户，就直接将任务分配给此用户，否则分配给此岗位。
  * 如果 startInBackground = false 或不存在，则将 Task 的办理人设置为 initiator。
  * </p>

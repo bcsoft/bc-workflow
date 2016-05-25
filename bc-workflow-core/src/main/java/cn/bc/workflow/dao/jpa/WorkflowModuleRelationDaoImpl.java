@@ -2,12 +2,15 @@ package cn.bc.workflow.dao.jpa;
 
 import cn.bc.orm.jpa.JpaCrudDao;
 import cn.bc.workflow.dao.WorkflowModuleRelationDao;
+import cn.bc.workflow.domain.FlowStatus;
 import cn.bc.workflow.domain.WorkflowModuleRelation;
 import cn.bc.workflow.service.WorkspaceService;
 import org.activiti.engine.impl.persistence.entity.SuspensionState;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
@@ -307,5 +310,16 @@ public class WorkflowModuleRelationDaoImpl extends JpaCrudDao<WorkflowModuleRela
 				return o;
 			}
 		});
+	}
+
+	@Override
+	public FlowStatus getLastFlowStatus(Long mid, String mtype) {
+		String sql = "select wf_get_last_process_info(?, ?)::text";
+		try {
+			String json = jdbcTemplate.queryForObject(sql, String.class, mid.intValue(), mtype);
+			return json == null ? FlowStatus.None : FlowStatus.valueOf(new JSONObject(json).getInt("status"));
+		} catch (EmptyResultDataAccessException e) {
+			return FlowStatus.None;
+		}
 	}
 }

@@ -11,7 +11,7 @@ $BODY$
  *  @return json 格式为：{
  *  	id: "流程实例ID",
  *  	name: "流程名称",
- *  	status: "流程状态：0-流转中，1-已结束",
+ *  	status: "流程状态：1-流转中、2-暂停、3-已结束",
  *  	start_time: "流程发起时间",
  *  	end_time: "流程结束时间",
  *  	todo_tasks: [ // 待办列表
@@ -31,7 +31,8 @@ DECLARE
 BEGIN
 	select row_to_json(act_hi_inst) into hi_inst from (
 		select a.proc_inst_id_ as id, b.name_ as name
-			,f.suspension_state_ as status
+			-- 状态：1-流转中、2-已暂停、3-已结束
+			, (case a.end_time_ is not null when true then 3 else f.suspension_state_ end) as status
 			,a.start_time_ as start_time,a.end_time_ as end_time
 			-- 查找待办列表
 			,to_json(
@@ -52,6 +53,7 @@ BEGIN
 		from act_hi_procinst a 
 			inner join act_re_procdef b on b.id_=a.proc_def_id_ 
 			inner join bc_wf_module_relation mr on mr.pid = a.proc_inst_id_
+			-- f.suspension_state_: 1-流转中、2-暂停、null - 流转结束
 			left join act_ru_execution f on a.id_ = f.proc_inst_id_
 			where mr.mid = $1 and mr.mtype = $2
 			order by a.start_time_ desc
@@ -59,5 +61,6 @@ BEGIN
 	) act_hi_inst;
 	return hi_inst;
 END;
-$BODY$
-  LANGUAGE plpgsql VOLATILE
+$BODY$ LANGUAGE plpgsql;
+
+-- select wf_get_last_process_info(28949812, 'Case4InfractBusiness');

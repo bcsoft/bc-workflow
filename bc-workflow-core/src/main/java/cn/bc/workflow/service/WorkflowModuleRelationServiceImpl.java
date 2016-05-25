@@ -3,6 +3,7 @@ package cn.bc.workflow.service;
 import cn.bc.core.query.condition.impl.EqualsCondition;
 import cn.bc.core.service.DefaultCrudService;
 import cn.bc.workflow.dao.WorkflowModuleRelationDao;
+import cn.bc.workflow.domain.FlowStatus;
 import cn.bc.workflow.domain.WorkflowModuleRelation;
 import org.commontemplate.util.Assert;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +16,7 @@ import java.util.Map;
  * 流程关系Service接口实现
  *
  * @author lbj
+ * @modified dragon 2016-05-18
  */
 @Service("workflowModuleRelationService")
 public class WorkflowModuleRelationServiceImpl extends DefaultCrudService<WorkflowModuleRelation>
@@ -49,12 +51,17 @@ public class WorkflowModuleRelationServiceImpl extends DefaultCrudService<Workfl
 		return this.workflowModuleRelationDao.hasRelation(mid, mtype, key);
 	}
 
-	public List<Map<String, Object>> findList(String[] mtype, String[] propertys, String[] values, String[] globalKeys) {
-		return this.workflowModuleRelationDao.findList(mtype, propertys, values, globalKeys);
+	public List<Map<String, Object>> findList(String[] mtype, String[] properties, String[] values, String[] globalKeys) {
+		return this.workflowModuleRelationDao.findList(mtype, properties, values, globalKeys);
 	}
 
 	public List<WorkflowModuleRelation> findList(String pid) {
 		Assert.assertNotNull(pid);
 		return this.createQuery().condition(new EqualsCondition("pid", pid)).list();
+	}
+
+	@Override
+	public FlowStatus getLastFlowStatus(Long mid, String mtype) {
+		return this.workflowModuleRelationDao.getLastFlowStatus(mid, mtype);
 	}
 }
