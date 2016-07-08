@@ -77,7 +77,12 @@ public class UpdateModuleInfoOfficial4FlowListener extends ExcutionLogListener {
 					value = execution.getVariable(variableName);
 				} else {
 					// 直接使用 activiti 的内置方法获取
-					value = isExecuteUpdateMethod.getValue(execution);
+					try {
+						value = isExecuteUpdateMethod.getValue(execution);
+					} catch (Exception e) {
+						logger.info(e.getMessage(), e);
+						value = null;
+					}
 				}
 				update = (value != null && "true".equalsIgnoreCase(value.toString()));
 			} else {
