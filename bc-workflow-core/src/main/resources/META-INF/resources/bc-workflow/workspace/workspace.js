@@ -88,6 +88,7 @@ bc.flow.workspace = {
 				} else if ($this.is(".suspended")) {
 					bc.msg.confirm("确定暂停此流程吗？", function () {
 						jQuery.ajax({
+							method: "POST", type: "POST",
 							url: bc.root + "/bc-workflow/flowMonitors/doSuspended",
 							data: {id: pid},
 							dataType: "json",
@@ -102,6 +103,7 @@ bc.flow.workspace = {
 				} else if ($this.is(".active")) {
 					bc.msg.confirm("确定激活此流程吗？", function () {
 						jQuery.ajax({
+							method: "POST", type: "POST",
 							url: bc.root + "/bc-workflow/flowMonitors/doActive",
 							data: {id: pid},
 							dataType: "json",
@@ -282,6 +284,7 @@ bc.flow.workspace = {
 
 		bc.msg.confirm("确定签领此任务吗？", function () {
 			jQuery.ajax({
+				method: "POST", type: "POST",
 				url: bc.root + "/bc-workflow/workflow/claimTask?id=" + taskId,
 				dataType: "json",
 				success: function (json) {
@@ -317,6 +320,7 @@ bc.flow.workspace = {
 			history: false,
 			onOk: function (user) {
 				jQuery.ajax({
+					method: "POST", type: "POST",
 					url: bc.root + "/bc-workflow/workflow/delegateTask",
 					data: {id: taskId, toUser: user.account},
 					dataType: "json",
@@ -380,6 +384,7 @@ bc.flow.workspace = {
 					// alert($form.serialize());
 					// 完成办理
 					jQuery.ajax({
+						method: "POST", type: "POST",
 						url: bc.root + "/bc-workflow/workflow/completeTask?id=" + taskId,
 						data: formData ? {formData: $.toJSON(formData)} : null,
 						dataType: "json",
@@ -411,6 +416,7 @@ bc.flow.workspace = {
 				// alert($form.serialize());
 				// 完成办理
 				jQuery.ajax({
+					method: "POST", type: "POST",
 					url: bc.root + "/bc-workflow/workflow/completeTask?id=" + taskId,
 					data: null,
 					dataType: "json",
@@ -467,6 +473,7 @@ bc.flow.workspace = {
 			bc.msg.confirm(vr, function () {
 				// 发起子流程
 				jQuery.ajax({
+					method: "POST", type: "POST",
 					url: bc.root + "/bc-workflow/workflow/startSubProcess",
 					data: {
 						id: taskId,
@@ -503,6 +510,7 @@ bc.flow.workspace = {
 			taskId: taskId,
 			onOk: function (user) {
 				jQuery.ajax({
+					method: "POST", type: "POST",
 					url: bc.root + "/bc-workflow/workflow/assignTask",
 					data: {id: taskId, toUser: user.account},
 					dataType: "json",
