@@ -33,12 +33,10 @@
 		<dependency>
 			<groupId>cn.bc</groupId>
 			<artifactId>bc-message</artifactId>
-			<version>${project.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>cn.bc</groupId>
 			<artifactId>bc-workday</artifactId>
-			<version>${project.version}</version>
 		</dependency>
 		<!-- for test -->
 		<dependency>
@@ -54,19 +52,16 @@
 		<dependency>
 			<groupId>cn.bc</groupId>
 			<artifactId>bc-test</artifactId>
-			<version>${project.version}</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>cn.bc</groupId>
 			<artifactId>bc-spider</artifactId>
-			<version>${project.version}</version>
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>cn.bc</groupId>
 			<artifactId>bc-desktop</artifactId>
-			<version>${project.version}</version>
 		</dependency>
 
 		<!-- log -->

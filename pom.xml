@@ -12,17 +12,14 @@
 	<packaging>pom</packaging>
 	<name>bc-workflow-parent</name>
 	<description>BC 工作流</description>
-
 	<modules>
 		<module>bc-workflow-core</module>
 	</modules>
-
 	<scm>
 		<connection>scm:git:git@github.com:bcsoft/bc-workflow.git</connection>
 		<developerConnection>scm:git:git@github.com:bcsoft/bc-workflow.git</developerConnection>
 		<url>https://github.com/bcsoft/bc-workflow</url>
 	</scm>
-
 	<properties>
 		<!-- activiti 版本 -->
 		<activiti-version>5.9</activiti-version>
@@ -49,7 +46,6 @@
 		<hibernate.hbm2ddl.auto>none</hibernate.hbm2ddl.auto>
 		<hibernate.show_sql>false</hibernate.show_sql>
 	</properties>
-
 	<profiles>
 		<profile>
 			<id>bcdev</id>
@@ -80,125 +76,6 @@
 			</dependencies>
 		</profile>
 	</profiles>
-
-	<dependencies>
-		<!-- 平台模块 -->
-		<dependency>
-			<groupId>cn.bc</groupId>
-			<artifactId>bc-core</artifactId>
-			<version>${project.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>cn.bc</groupId>
-			<artifactId>bc-template</artifactId>
-			<version>${project.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>cn.bc</groupId>
-			<artifactId>bc-db-jdbc</artifactId>
-			<version>${project.version}</version>
-			<scope>compile</scope>
-		</dependency>
-		<dependency>
-			<groupId>cn.bc</groupId>
-			<artifactId>bc-log</artifactId>
-			<version>${project.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>cn.bc</groupId>
-			<artifactId>bc-acl</artifactId>
-			<version>${project.version}</version>
-		</dependency>
-
-		<!-- activiti -->
-		<dependency>
-			<groupId>org.activiti</groupId>
-			<artifactId>activiti-engine</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.activiti</groupId>
-			<artifactId>activiti-spring</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.activiti</groupId>
-			<artifactId>activiti-camel</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.activiti</groupId>
-			<artifactId>activiti-cdi</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.activiti</groupId>
-			<artifactId>activiti-cxf</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.activiti</groupId>
-			<artifactId>activiti-osgi</artifactId>
-		</dependency>
-
-		<!-- activiti all
-		<dependency>
-			<groupId>org.activiti</groupId>
-			<artifactId>activiti-webapp-explorer2</artifactId>
-		</dependency>
-		<dependency>
-			<groupId>org.activiti</groupId>
-			<artifactId>activiti-mule</artifactId>
-		</dependency>
-		-->
-
-		<!-- activiti sources
-		<dependency>
-			<groupId>org.activiti</groupId>
-			<artifactId>activiti-engine</artifactId>
-			<version>${activiti-version}</version>
-			<classifier>sources</classifier>
-		</dependency>
-		<dependency>
-			<groupId>org.activiti</groupId>
-			<artifactId>activiti-spring</artifactId>
-			<version>${activiti-version}</version>
-			<classifier>sources</classifier>
-		</dependency>
-		<dependency>
-			<groupId>org.activiti</groupId>
-			<artifactId>activiti-camel</artifactId>
-			<version>${activiti-version}</version>
-			<classifier>sources</classifier>
-		</dependency>
-		<dependency>
-			<groupId>org.activiti</groupId>
-			<artifactId>activiti-cdi</artifactId>
-			<version>${activiti-version}</version>
-			<classifier>sources</classifier>
-		</dependency>
-		<dependency>
-			<groupId>org.activiti</groupId>
-			<artifactId>activiti-cxf</artifactId>
-			<version>${activiti-version}</version>
-			<classifier>sources</classifier>
-		</dependency>
-		<dependency>
-			<groupId>org.activiti</groupId>
-			<artifactId>activiti-osgi</artifactId>
-			<version>${activiti-version}</version>
-			<classifier>sources</classifier>
-		</dependency>
-		<dependency>
-			<groupId>org.activiti</groupId>
-			<artifactId>activiti-mule</artifactId>
-			<version>${activiti-version}</version>
-			<classifier>sources</classifier>
-		</dependency>
-		<dependency>
-			<groupId>org.activiti</groupId>
-			<artifactId>activiti-webapp-explorer2</artifactId>
-			<version>${activiti-version}</version>
-			<classifier>sources</classifier>
-		</dependency>
-		-->
-	</dependencies>
-
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
@@ -266,50 +143,58 @@
 				<artifactId>activiti-osgi</artifactId>
 				<version>${activiti-version}</version>
 			</dependency>
-
-			<!--
-			<dependency>
-				<groupId>org.activiti</groupId>
-				<artifactId>activiti-pvm</artifactId>
-				<version>${activiti-version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.activiti</groupId>
-				<artifactId>activiti-rest</artifactId>
-				<version>${activiti-version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.activiti</groupId>
-				<artifactId>activiti-probe</artifactId>
-				<version>${activiti-version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.activiti</groupId>
-				<artifactId>activiti-explorer</artifactId>
-				<version>${activiti-version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.activiti</groupId>
-				<artifactId>activiti-spring</artifactId>
-				<version>${activiti-version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.activiti</groupId>
-				<artifactId>activiti-webapp</artifactId>
-				<version>${activiti-version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.activiti</groupId>
-				<artifactId>activiti-engine-examples</artifactId>
-				<version>${activiti-version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.activiti</groupId>
-				<artifactId>activiti-engine-test-cfg</artifactId>
-				<version>${activiti-version}</version>
-			</dependency>-->
 		</dependencies>
 	</dependencyManagement>
+	<dependencies>
+		<!-- 平台模块 -->
+		<dependency>
+			<groupId>cn.bc</groupId>
+			<artifactId>bc-core</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>cn.bc</groupId>
+			<artifactId>bc-template</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>cn.bc</groupId>
+			<artifactId>bc-db-jdbc</artifactId>
+			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>cn.bc</groupId>
+			<artifactId>bc-log</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>cn.bc</groupId>
+			<artifactId>bc-acl</artifactId>
+		</dependency>
+
+		<!-- activiti -->
+		<dependency>
+			<groupId>org.activiti</groupId>
+			<artifactId>activiti-engine</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.activiti</groupId>
+			<artifactId>activiti-spring</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.activiti</groupId>
+			<artifactId>activiti-camel</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.activiti</groupId>
+			<artifactId>activiti-cdi</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.activiti</groupId>
+			<artifactId>activiti-cxf</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.activiti</groupId>
+			<artifactId>activiti-osgi</artifactId>
+		</dependency>
+	</dependencies>
 	<build>
 		<plugins>
 			<plugin>
