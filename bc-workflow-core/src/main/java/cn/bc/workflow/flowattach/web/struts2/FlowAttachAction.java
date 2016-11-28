@@ -106,7 +106,7 @@ public class FlowAttachAction extends FileEntityAction<Long, FlowAttach> {
 	public boolean isReadonly() {
 		// 普通人员
 		SystemContext context = (SystemContext) this.getContext();
-		return !context.hasAnyRole(getText("key.role.bc.common"));
+		return !context.hasAnyRole("BC_WORKFLOW_START");
 	}
 
 	@Override
