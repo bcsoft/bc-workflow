@@ -67,7 +67,7 @@ public class HistoricProcessInstancesAction extends
 		this.workflowService = workflowService;
 	}
 
-	public String status = "1";// 默认待办中
+	public String status = "";// 默认待办中
 
 	@Override
 	public boolean isReadonly() {
