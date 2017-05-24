@@ -318,6 +318,7 @@ bc.flow.workspace = {
 		// 选择委托人
 		bc.identity.selectUser({
 			history: false,
+			status: '0',
 			onOk: function (user) {
 				jQuery.ajax({
 					method: "POST", type: "POST",
