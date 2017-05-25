@@ -6,10 +6,7 @@ import cn.bc.core.exception.NotExistsException;
 import cn.bc.core.exception.PermissionDeniedException;
 import cn.bc.core.query.condition.Condition;
 import cn.bc.core.query.condition.Direction;
-import cn.bc.core.query.condition.impl.AndCondition;
-import cn.bc.core.query.condition.impl.IsNullCondition;
-import cn.bc.core.query.condition.impl.OrderCondition;
-import cn.bc.core.query.condition.impl.QlCondition;
+import cn.bc.core.query.condition.impl.*;
 import cn.bc.core.util.DateUtils;
 import cn.bc.core.util.StringUtils;
 import cn.bc.db.jdbc.RowMapper;
@@ -556,4 +553,18 @@ public class HistoricProcessInstancesAction extends
 		return "json";
 	}
 
+	@Override
+	protected Condition buildDefaultLikeCondition(String field, String value) {
+		if (value == null || value.length() == 0)
+			return null;
+		boolean s = value.startsWith("%");
+		boolean e = value.endsWith("%");
+		if (s && !e) {
+			return new LikeRightCondition(field, "%" + value, true);
+		} else if (!s && e) {
+			return new LikeLeftCondition(field, value + "%", true);
+		} else {
+			return new LikeCondition(field, value, true);
+		}
+	}
 }
