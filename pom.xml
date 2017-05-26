@@ -7,7 +7,7 @@
 		<artifactId>bc-parent</artifactId>
 		<version>3.2</version>
 	</parent>
-	<version>3.2.2</version>
+	<version>3.2.3</version>
 	<groupId>cn.bc.workflow</groupId>
 	<artifactId>bc-workflow-parent</artifactId>
 	<packaging>pom</packaging>

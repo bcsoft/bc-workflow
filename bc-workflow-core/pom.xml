@@ -6,6 +6,7 @@
 		<artifactId>bc-workflow-parent</artifactId>
 		<version>3.2.2</version>
 	</parent>
+	<version>3.2.3</version>
 	<artifactId>bc-workflow-core</artifactId>
 	<name>bc-workflow-core</name>
 	<description>工作流核心</description>
