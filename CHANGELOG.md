@@ -1,5 +1,8 @@
 ﻿# [BC 平台](https://github.com/bcsoft/bc-framework)变更日志
 
+## 3.2.4 2017-07-18
+- 修正打开工作空间 WorkspaceServiceImpl.isTaskActor 的空指针异常
+
 ## 3.2.3 2017-05-26
 - 委托任务时不可委托给禁用的用户
 - 流程监控模糊搜索不分大小写
