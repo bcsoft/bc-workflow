@@ -28,6 +28,7 @@ bc.todoView = {
 				// 选择委托人
 				bc.identity.selectUser({
 					history: false,
+					status: "0",
 					onOk : function(user) {
 						jQuery.ajax({
 							url: bc.root + "/bc-workflow/workflow/delegateTask", 
