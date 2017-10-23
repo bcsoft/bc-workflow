@@ -472,7 +472,8 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 	 */
 	@SuppressWarnings("unchecked")
 	private boolean isTaskActor(Map<String, Object> task, String userCode) {
-		return userCode.equals(((Map<String, Object>) task.get("actor")).get("code"));
+		return null != userCode && null != task && task.containsKey("actor") && null != task.get("actor") &&
+			userCode.equals(((Map<String, Object>) task.get("actor")).get("code"));
 	}
 
 	private final static String ITEM_BUTTON_OPEN = "<span class='itemOperate open'><span class='ui-icon ui-icon-document-b'></span><span class='text link'>查看</span></span>";
