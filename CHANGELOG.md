@@ -1,5 +1,8 @@
 ﻿# [BC 平台](https://github.com/bcsoft/bc-framework)变更日志
 
+## 3.2.5 2017-10-23
+- 委托任务时只显示正常状态的用户
+
 ## 3.2.4 2017-07-18
 - 修正打开工作空间 WorkspaceServiceImpl.isTaskActor 的空指针异常
 
