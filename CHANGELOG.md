@@ -1,5 +1,9 @@
 ﻿# [BC 平台](https://github.com/bcsoft/bc-framework)变更日志
 
+## 2018-05-26
+
+- 挂载为 [bc-framework] 的子模块并跟随其版本号
+
 ## 3.2.5 2017-10-23
 - 委托任务时只显示正常状态的用户
 
@@ -18,3 +22,6 @@
 
 ## 3.2.0 (2016-08-30)
 - 基于 bc-framework-bom 简化版本的依赖配置
+
+
+[bc-framework]: https://github.com/bcsoft/bc-framework

@@ -1,10 +1,11 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>cn.bc.workflow</groupId>
 		<artifactId>bc-workflow-parent</artifactId>
-		<version>3.2-SNAPSHOT</version>
+		<version>${revision}</version>
+		<relativePath>..</relativePath>
 	</parent>
 	<artifactId>bc-workflow-core</artifactId>
 	<name>bc-workflow-core</name>
@@ -93,7 +94,6 @@
 			<scope>compile</scope>
 		</dependency>
 	</dependencies>
-
 	<properties>
 		<app.name>bcsystem</app.name>
 		<app.ts>20120601</app.ts>
@@ -148,4 +148,39 @@
 			</dependencies>
 		</profile>
 	</profiles>
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>flatten-maven-plugin</artifactId>
+				<inherited>false</inherited>
+				<executions>
+					<execution>
+						<!-- Tidy up all POMs before they are published -->
+						<id>flatten</id>
+						<phase>process-resources</phase>
+						<goals>
+							<goal>flatten</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${project.build.directory}</outputDirectory>
+							<flattenedPomFilename>flattened-pom.xml</flattenedPomFilename>
+							<updatePomFile>true</updatePomFile>
+							<flattenMode>clean</flattenMode>
+							<pomElements>
+								<parent>resolve</parent>
+								<properties>interpolate</properties>
+								<dependencyManagement>keep</dependencyManagement>
+								<dependencies>keep</dependencies>
+								<pluginManagement>keep</pluginManagement>
+								<name>resolve</name>
+								<description>resolve</description>
+								<profiles>keep</profiles>
+							</pomElements>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
 </project>

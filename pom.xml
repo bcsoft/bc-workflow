@@ -5,7 +5,8 @@
 	<parent>
 		<groupId>cn.bc</groupId>
 		<artifactId>bc-parent</artifactId>
-		<version>3.2-SNAPSHOT</version>
+		<version>${revision}</version>
+		<relativePath>../bc-parent</relativePath>
 	</parent>
 	<groupId>cn.bc.workflow</groupId>
 	<artifactId>bc-workflow-parent</artifactId>
@@ -15,11 +16,31 @@
 	<modules>
 		<module>bc-workflow-core</module>
 	</modules>
+	<url>https://github.com/bcsoft/bc-workflow</url>
+	<organization>
+		<name>bcsoft</name>
+		<url>https://github.com/bcsoft</url>
+	</organization>
+	<licenses>
+		<license>
+			<name>MIT</name>
+			<url>https://opensource.org/licenses/MIT</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+	<developers>
+		<developer>
+			<name>RJ.Hwang</name>
+			<email>rongjihuang@gmail.com</email>
+		</developer>
+	</developers>
 	<scm>
-		<connection>scm:git:git@github.com:bcsoft/bc-workflow.git</connection>
-		<developerConnection>scm:git:git@github.com:bcsoft/bc-workflow.git</developerConnection>
-		<url>https://github.com/bcsoft/bc-workflow</url>
+		<url>https://github.com/bcsoft/bc-workflow.git</url>
 	</scm>
+	<issueManagement>
+		<system>GitHub</system>
+		<url>https://github.com/bcsoft/bc-workflow/issues</url>
+	</issueManagement>
 	<properties>
 		<!-- activiti 版本 -->
 		<activiti-version>5.9</activiti-version>
@@ -208,6 +229,30 @@
 						</classpathContainer>
 					</classpathContainers>
 				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>flatten-maven-plugin</artifactId>
+				<inherited>true</inherited>
+				<executions>
+					<execution>
+						<id>flatten</id>
+						<phase>process-resources</phase>
+						<goals>
+							<goal>flatten</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${project.build.directory}</outputDirectory>
+							<flattenedPomFilename>flattened-pom.xml</flattenedPomFilename>
+							<updatePomFile>true</updatePomFile>
+							<flattenMode>oss</flattenMode>
+							<pomElements>
+								<parent>resolve</parent>
+								<properties>interpolate</properties>
+							</pomElements>
+						</configuration>
+					</execution>
+				</executions>
 			</plugin>
 		</plugins>
 	</build>
