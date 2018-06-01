@@ -17,34 +17,34 @@ import java.util.Map;
  */
 @Service("excutionLogService")
 public class ExcutionLogServiceImpl extends DefaultCrudService<ExcutionLog> implements ExcutionLogService {
-	@Autowired
-	private ActorHistoryDao actorHistoryDao;
-	private ExcutionLogDao excutionLogDao;
+  @Autowired
+  private ActorHistoryDao actorHistoryDao;
+  private ExcutionLogDao excutionLogDao;
 
-	@Autowired
-	public void setExcutionLogDao(ExcutionLogDao excutionLogDao) {
-		this.excutionLogDao = excutionLogDao;
-		this.setCrudDao(excutionLogDao);
-	}
+  @Autowired
+  public void setExcutionLogDao(ExcutionLogDao excutionLogDao) {
+    this.excutionLogDao = excutionLogDao;
+    this.setCrudDao(excutionLogDao);
+  }
 
-	public ActorHistory getSender(String taskId) {
-		ExcutionLog log = excutionLogDao.loadByTask(taskId, ExcutionLog.TYPE_TASK_INSTANCE_CREATE);
-		return actorHistoryDao.load(log.getAuthorId());
-	}
+  public ActorHistory getSender(String taskId) {
+    ExcutionLog log = excutionLogDao.loadByTask(taskId, ExcutionLog.TYPE_TASK_INSTANCE_CREATE);
+    return actorHistoryDao.load(log.getAuthorId());
+  }
 
-	public Map<String, String> findTaskFormKeys(String processInstanceId) {
-		return excutionLogDao.findTaskFormKeys(processInstanceId);
-	}
+  public Map<String, String> findTaskFormKeys(String processInstanceId) {
+    return excutionLogDao.findTaskFormKeys(processInstanceId);
+  }
 
-	public String findTaskFormKey(String taskId) {
-		return excutionLogDao.findTaskFormKey(taskId);
-	}
+  public String findTaskFormKey(String taskId) {
+    return excutionLogDao.findTaskFormKey(taskId);
+  }
 
-	public Map<String, Object> findTaskVariables(String taskId) {
-		return this.excutionLogDao.findTaskVariables(taskId);
-	}
+  public Map<String, Object> findTaskVariables(String taskId) {
+    return this.excutionLogDao.findTaskVariables(taskId);
+  }
 
-	public Object getTaskVariableLocal(String taskId, String variableName) {
-		return this.excutionLogDao.getTaskVariableLocal(taskId, variableName);
-	}
+  public Object getTaskVariableLocal(String taskId, String variableName) {
+    return this.excutionLogDao.getTaskVariableLocal(taskId, variableName);
+  }
 }

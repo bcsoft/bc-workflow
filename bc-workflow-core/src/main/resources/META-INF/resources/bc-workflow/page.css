@@ -1,144 +1,146 @@
 body {
-	margin: 0;
-	padding: 0;
-	border: 0;
-	font-family: "宋体" ,"微软雅黑","仿宋", "仿宋_GB2312",sans-serif;
-	font-size: 14px;
-	background-color: #cccccc;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font-family: "宋体", "微软雅黑", "仿宋", "仿宋_GB2312", sans-serif;
+  font-size: 14px;
+  background-color: #cccccc;
 }
 
 /* 纸张 */
 .paper {
-	background-color: #ffffff;
-	box-shadow: #000 0px 0px 10px;
-	margin: 4px auto;
-	width: 175mm;
-	padding: 10mm;
+  background-color: #ffffff;
+  box-shadow: #000 0px 0px 10px;
+  margin: 4px auto;
+  width: 175mm;
+  padding: 10mm;
 }
 
-.paper>.title {
-	text-align: center;
-	font-size: 30px;
-	font-weight: bold;
-	color: red;
-	margin: 0;
+.paper > .title {
+  text-align: center;
+  font-size: 30px;
+  font-weight: bold;
+  color: red;
+  margin: 0;
 }
 
-.paper>.rows {
-	
-}
-
-.paper>.rows>.row {
-	table-layout: fixed;
-	border-spacing: 0;
-	padding: 0;
-	margin: 0;
-	border-width: 1px 2px 1px 2px;
-	border-style: solid;
-	border-color: black red;
-	box-sizing: border-box;
-	width: 100%;
-}
-.paper>.rows>.row:first-child {
-	border-top-color: red;
-	border-top-width: 2px;
-}
-.paper>.rows>.row:last-child {
-	border-bottom-color: red;
-	border-bottom-width: 2px;
-}
-.paper>.rows>.row .groupName{
-	width: 10em;
-	text-align: center;
-	vertical-align: middle;
-	border-right: 1px solid #000;
-	padding: 2px;
-}
-
-.paper>.rows>.row .group{
-	min-width: 10em;
-	text-align: center;
-	padding: 2px;
+.paper > .rows {
 
 }
 
-.paper>.rows>.row .label{
-	text-align: center;
-	vertical-align: middle;
-	padding: 2px;
+.paper > .rows > .row {
+  table-layout: fixed;
+  border-spacing: 0;
+  padding: 0;
+  margin: 0;
+  border-width: 1px 2px 1px 2px;
+  border-style: solid;
+  border-color: black red;
+  box-sizing: border-box;
+  width: 100%;
 }
 
-.paper>.rows>.row .value{
-	font-family: "仿宋", "仿宋_GB2312","宋体","微软雅黑",sans-serif;
+.paper > .rows > .row:first-child {
+  border-top-color: red;
+  border-top-width: 2px;
 }
 
-.signItems>.signItem:last-child {
-	border-bottom-width: 0;
+.paper > .rows > .row:last-child {
+  border-bottom-color: red;
+  border-bottom-width: 2px;
+}
+
+.paper > .rows > .row .groupName {
+  width: 10em;
+  text-align: center;
+  vertical-align: middle;
+  border-right: 1px solid #000;
+  padding: 2px;
+}
+
+.paper > .rows > .row .group {
+  min-width: 10em;
+  text-align: center;
+  padding: 2px;
+
+}
+
+.paper > .rows > .row .label {
+  text-align: center;
+  vertical-align: middle;
+  padding: 2px;
+}
+
+.paper > .rows > .row .value {
+  font-family: "仿宋", "仿宋_GB2312", "宋体", "微软雅黑", sans-serif;
+}
+
+.signItems > .signItem:last-child {
+  border-bottom-width: 0;
 }
 
 .signItem {
-	border-bottom: 1px solid black;
-	padding: 4px;
+  border-bottom: 1px solid black;
+  padding: 4px;
 }
 
-.signItem>.content,.signItem>.attach {
-	text-align: left;
-	padding: 0;
-	margin: 0;
-	word-break: break-all;
-	word-wrap: break-word;
-	font-family: inherit;
-	width: 100%;
-	white-space: pre-wrap;
+.signItem > .content, .signItem > .attach {
+  text-align: left;
+  padding: 0;
+  margin: 0;
+  word-break: break-all;
+  word-wrap: break-word;
+  font-family: inherit;
+  width: 100%;
+  white-space: pre-wrap;
 }
 
-.signItem>.assignee {
-	text-align: right;
-	margin-bottom: 0;
+.signItem > .assignee {
+  text-align: right;
+  margin-bottom: 0;
 }
 
+.signItem > .assignee > .name, .signItem > .assignee > .date {
+  display: inline-block;
+  text-align: center;
+  margin-right: 1em;
 
-.signItem>.assignee>.name,.signItem>.assignee>.date {
-	display: inline-block;
-	text-align: center;
-	margin-right: 1em;
-	
-	/* 这里使用白色颜色来模拟无边框是因为Chrome从v22开始才支持右键打印页面时边框才受样式控制*/
-	border: 1px solid #fff;
-	border-bottom-color: #000;
-	font-family: "仿宋_GB2312", "仿宋 ", "宋体", "微软雅黑", sans-serif;
+  /* 这里使用白色颜色来模拟无边框是因为Chrome从v22开始才支持右键打印页面时边框才受样式控制*/
+  border: 1px solid #fff;
+  border-bottom-color: #000;
+  font-family: "仿宋_GB2312", "仿宋 ", "宋体", "微软雅黑", sans-serif;
 }
 
-.signItem>.assignee>.name {
-	min-width: 5em;
+.signItem > .assignee > .name {
+  min-width: 5em;
 }
 
-.signItem>.assignee>.date {
-	min-width: 9em;
+.signItem > .assignee > .date {
+  min-width: 9em;
 }
 
 /*表格样式控制*/
 tr.widthMarker {
-	line-height: 1px;
-	font-size: 1px;
+  line-height: 1px;
+  font-size: 1px;
 }
 
-.paper>.rows>.row .first{
-	border-bottom: 1px solid #000;
-	height: 21px;
-	padding:0 0 0 2px;
+.paper > .rows > .row .first {
+  border-bottom: 1px solid #000;
+  height: 21px;
+  padding: 0 0 0 2px;
 }
 
-.paper>.rows>.row .middle{
-	border-left: 1px solid #000;
-	border-bottom: 1px solid #000;
-	padding:0 0 0 2px;
-	height: 21px;
+.paper > .rows > .row .middle {
+  border-left: 1px solid #000;
+  border-bottom: 1px solid #000;
+  padding: 0 0 0 2px;
+  height: 21px;
 }
 
-.paper>.rows>.row .last{
-	border-left: 1px solid #000;
-	border-bottom: 1px solid #000;
-	height: 21px;
-	padding:0 0 0 2px;
+.paper > .rows > .row .last {
+  border-left: 1px solid #000;
+  border-bottom: 1px solid #000;
+  height: 21px;
+  padding: 0 0 0 2px;
 }

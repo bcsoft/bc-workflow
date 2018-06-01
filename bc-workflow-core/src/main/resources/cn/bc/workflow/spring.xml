@@ -3,21 +3,21 @@
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xsi:schemaLocation="http://www.springframework.org/schema/beans
         http://www.springframework.org/schema/beans/spring-beans.xsd">
-    <!-- 通用节点监听器：执行日志 -->
-    <bean id="excutionLogListener" class="cn.bc.workflow.activiti.delegate.ExcutionLogListener"/>
+  <!-- 通用节点监听器：执行日志 -->
+  <bean id="excutionLogListener" class="cn.bc.workflow.activiti.delegate.ExcutionLogListener"/>
 
-    <!-- 通用流程启动、结束监听器：执行日志 -->
-    <bean id="processLogListener" class="cn.bc.workflow.activiti.delegate.ProcessLogListener"/>
+  <!-- 通用流程启动、结束监听器：执行日志 -->
+  <bean id="processLogListener" class="cn.bc.workflow.activiti.delegate.ProcessLogListener"/>
 
-    <!-- 通用任务节点创建、分配、完成监听器：任务日志 -->
-    <bean id="taskLogListener" class="cn.bc.workflow.activiti.delegate.TaskLogListener"/>
+  <!-- 通用任务节点创建、分配、完成监听器：任务日志 -->
+  <bean id="taskLogListener" class="cn.bc.workflow.activiti.delegate.TaskLogListener"/>
 
-    <!-- 通用流向节点take监听器：任务日志 -->
-    <bean id="flowLogListener" class="cn.bc.workflow.activiti.delegate.FlowLogListener"/>
+  <!-- 通用流向节点take监听器：任务日志 -->
+  <bean id="flowLogListener" class="cn.bc.workflow.activiti.delegate.FlowLogListener"/>
 
-    <!-- 通用JavaDelegate监听器：任务日志 -->
-    <bean id="javaDelegateLogListener" class="cn.bc.workflow.activiti.delegate.JavaDelegateLogListener"/>
+  <!-- 通用JavaDelegate监听器：任务日志 -->
+  <bean id="javaDelegateLogListener" class="cn.bc.workflow.activiti.delegate.JavaDelegateLogListener"/>
 
-    <!-- 初始化流程实例添加流水号变量值的监听器 -->
-    <bean id="idGeneratorProcessListener" class="cn.bc.workflow.activiti.delegate.IdGeneratorProcessListener"/>
+  <!-- 初始化流程实例添加流水号变量值的监听器 -->
+  <bean id="idGeneratorProcessListener" class="cn.bc.workflow.activiti.delegate.IdGeneratorProcessListener"/>
 </beans>

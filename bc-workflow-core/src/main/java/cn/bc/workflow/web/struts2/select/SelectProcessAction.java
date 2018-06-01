@@ -33,131 +33,130 @@ import java.util.Map;
 
 /**
  * 选择流程视图Action
- * 
+ *
  * @author lbj
- * 
  */
 
 @Scope(BeanDefinition.SCOPE_PROTOTYPE)
 @Controller
 public class SelectProcessAction extends AbstractSelectPageAction<Map<String, Object>> {
-	private static final long serialVersionUID = 1L;
-	public boolean isNewVersion=false;//是否只显示最新版本,否-显示全部版本
-	private boolean constraint; //发起权限控制
-	
-	public boolean isNewVersion() {
-		return isNewVersion;
-	}
+  private static final long serialVersionUID = 1L;
+  public boolean isNewVersion = false;//是否只显示最新版本,否-显示全部版本
+  private boolean constraint; //发起权限控制
 
-	public void setNewVersion(boolean isNewVersion) {
-		this.isNewVersion = isNewVersion;
-	}
-	
-	public boolean isConstraint() {
-		return constraint;
-	}
+  public boolean isNewVersion() {
+    return isNewVersion;
+  }
 
-	public void setConstraint(boolean constraint) {
-		this.constraint = constraint;
-	}
+  public void setNewVersion(boolean isNewVersion) {
+    this.isNewVersion = isNewVersion;
+  }
 
-	public boolean isManager() {
-		SystemContext context = (SystemContext) this.getContext();
-		// 配置权限：、超级管理员
-		return !context.hasAnyRole(getText("key.role.bc.workflow"));
-	}
+  public boolean isConstraint() {
+    return constraint;
+  }
 
-	@Override
-	protected String getOkButtonLabel() {
-		return getText("flow.start");
-	}
+  public void setConstraint(boolean constraint) {
+    this.constraint = constraint;
+  }
 
-	@Override
-	protected OrderCondition getGridOrderCondition() {
-		return new OrderCondition("c.deploy_time_", Direction.Desc);
-	}
+  public boolean isManager() {
+    SystemContext context = (SystemContext) this.getContext();
+    // 配置权限：、超级管理员
+    return !context.hasAnyRole(getText("key.role.bc.workflow"));
+  }
 
-	@Override
-	protected SqlObject<Map<String, Object>> getSqlObject() {
-		SqlObject<Map<String, Object>> sqlObject = new SqlObject<Map<String, Object>>();
-		// 构建查询语句,where和order by不要包含在sql中(要统一放到condition中)
-		StringBuffer sql = new StringBuffer();
-		sql.append("select distinct a.id_,a.name_,e.version_,c.deploy_time_,a.key_,e.desc_");
-		sql.append(" from act_re_procdef a");
-		sql.append(" inner join act_re_deployment c on c.id_=a.deployment_id_");
-		sql.append(" INNER join bc_wf_deploy e on e.deployment_id=c.id_");
-		sql.append(" left JOIN bc_wf_deploy_actor da on da.did=e.id");
+  @Override
+  protected String getOkButtonLabel() {
+    return getText("flow.start");
+  }
 
-		sqlObject.setSql(sql.toString());
-		
-		// 注入参数
-		sqlObject.setArgs(null);
+  @Override
+  protected OrderCondition getGridOrderCondition() {
+    return new OrderCondition("c.deploy_time_", Direction.Desc);
+  }
 
-		// 数据映射器
-		sqlObject.setRowMapper(new RowMapper<Map<String, Object>>() {
-			public Map<String, Object> mapRow(Object[] rs, int rowNum) {
-				Map<String, Object> map = new HashMap<String, Object>();
-				int i = 0;
-				map.put("id", rs[i++]);
-				map.put("name", rs[i++]);
-				map.put("version", rs[i++]);
-				map.put("deploy_time", rs[i++]);
-				map.put("key", rs[i++]);
-				map.put("desc", rs[i++]);
-				return map;
-			}
-		});
-		return sqlObject;
-	}
+  @Override
+  protected SqlObject<Map<String, Object>> getSqlObject() {
+    SqlObject<Map<String, Object>> sqlObject = new SqlObject<Map<String, Object>>();
+    // 构建查询语句,where和order by不要包含在sql中(要统一放到condition中)
+    StringBuffer sql = new StringBuffer();
+    sql.append("select distinct a.id_,a.name_,e.version_,c.deploy_time_,a.key_,e.desc_");
+    sql.append(" from act_re_procdef a");
+    sql.append(" inner join act_re_deployment c on c.id_=a.deployment_id_");
+    sql.append(" INNER join bc_wf_deploy e on e.deployment_id=c.id_");
+    sql.append(" left JOIN bc_wf_deploy_actor da on da.did=e.id");
 
-	@Override
-	protected List<Column> getGridColumns() {
-		List<Column> columns = new ArrayList<Column>();
-		columns.add(new IdColumn4MapKey("a.id_", "id"));
-		columns.add(new TextColumn4MapKey("a.name_", "name",
-				getText("flow.name")).setSortable(true)
-				.setValueFormater(new AbstractFormater<String>() {
-					@Override
-					public String format(Object context, Object value) {
-						return (String)value;
-					}
+    sqlObject.setSql(sql.toString());
 
-					@Override
-					public String getExportText(Object context, Object value) {
-						Map<String, String> map = (Map<String, String>)context;
-						String desc = map.get("desc");
+    // 注入参数
+    sqlObject.setArgs(null);
 
-						return super.getExportText(context, (desc!=null && !"".equals(desc)) ? desc : value);
-					}
-				})
-				.setUseTitleFromLabel(true));
-		columns.add(new TextColumn4MapKey("a.version_", "version",
-				getText("flow.version"), 40).setUseTitleFromLabel(true));
-		columns.add(new TextColumn4MapKey("c.deploy_time", "deploy_time",
-				getText("flow.deployDate"),85).setUseTitleFromLabel(true)
-				.setValueFormater(new CalendarFormater("yyyy-MM-dd")));
-		columns.add(new HiddenColumn4MapKey("key", "key"));
-		return columns;
-	}
+    // 数据映射器
+    sqlObject.setRowMapper(new RowMapper<Map<String, Object>>() {
+      public Map<String, Object> mapRow(Object[] rs, int rowNum) {
+        Map<String, Object> map = new HashMap<String, Object>();
+        int i = 0;
+        map.put("id", rs[i++]);
+        map.put("name", rs[i++]);
+        map.put("version", rs[i++]);
+        map.put("deploy_time", rs[i++]);
+        map.put("key", rs[i++]);
+        map.put("desc", rs[i++]);
+        return map;
+      }
+    });
+    return sqlObject;
+  }
 
-	@Override
-	protected String getHtmlPageTitle() {
-		return this.getText("flow.select.title");
-	}
+  @Override
+  protected List<Column> getGridColumns() {
+    List<Column> columns = new ArrayList<Column>();
+    columns.add(new IdColumn4MapKey("a.id_", "id"));
+    columns.add(new TextColumn4MapKey("a.name_", "name",
+      getText("flow.name")).setSortable(true)
+      .setValueFormater(new AbstractFormater<String>() {
+        @Override
+        public String format(Object context, Object value) {
+          return (String) value;
+        }
 
-	@Override
-	protected String[] getGridSearchFields() {
-		return new String[] { "a.name_"};
-	}
+        @Override
+        public String getExportText(Object context, Object value) {
+          Map<String, String> map = (Map<String, String>) context;
+          String desc = map.get("desc");
 
-	@Override
-	protected PageOption getHtmlPageOption() {
-		return super.getHtmlPageOption().setWidth(350).setMinWidth(200)
-				.setHeight(360).setMinHeight(200).setModal(true);
-	}
+          return super.getExportText(context, (desc != null && !"".equals(desc)) ? desc : value);
+        }
+      })
+      .setUseTitleFromLabel(true));
+    columns.add(new TextColumn4MapKey("a.version_", "version",
+      getText("flow.version"), 40).setUseTitleFromLabel(true));
+    columns.add(new TextColumn4MapKey("c.deploy_time", "deploy_time",
+      getText("flow.deployDate"), 85).setUseTitleFromLabel(true)
+      .setValueFormater(new CalendarFormater("yyyy-MM-dd")));
+    columns.add(new HiddenColumn4MapKey("key", "key"));
+    return columns;
+  }
 
-	@Override
-	protected Condition getGridSpecalCondition() {
+  @Override
+  protected String getHtmlPageTitle() {
+    return this.getText("flow.select.title");
+  }
+
+  @Override
+  protected String[] getGridSearchFields() {
+    return new String[]{"a.name_"};
+  }
+
+  @Override
+  protected PageOption getHtmlPageOption() {
+    return super.getHtmlPageOption().setWidth(350).setMinWidth(200)
+      .setHeight(360).setMinHeight(200).setModal(true);
+  }
+
+  @Override
+  protected Condition getGridSpecalCondition() {
 //		// 状态条件
 //		AndCondition ac = new AndCondition();
 //		
@@ -167,71 +166,70 @@ public class SelectProcessAction extends AbstractSelectPageAction<Map<String, Ob
 //							,(Object[])null));
 //
 //		return ac.isEmpty()?null:ac;
-		
-		// 查找当前登录用户条件
-		SystemContext context = (SystemContext) this.getContext();
-		Long [] ids = context.getAttr(SystemContext.KEY_ANCESTORS);
-		Condition isNewVersionCondition = null; //显示最新版本
-		Condition isUsersCondition = null; //发布是否分配使用者
-		Condition userCondition = null; //当前登录用户id
-		Condition groupCondition = null; //当前用户岗位列表
-		Condition statusCondition = new EqualsCondition("e.status_", Deploy.STATUS_USING); //状态为使用中
-		
-		if(isManager() && constraint == true){//不是流程管理员并且有权限限制
-			isUsersCondition = new QlCondition("e.id not in(select wda.did from  bc_wf_deploy_actor wda)"
-					, (Object[]) null);
-			userCondition = new EqualsCondition("da.aid",context.getUser().getId());
-			groupCondition = new InCondition("da.aid",ids);
+
+    // 查找当前登录用户条件
+    SystemContext context = (SystemContext) this.getContext();
+    Long[] ids = context.getAttr(SystemContext.KEY_ANCESTORS);
+    Condition isNewVersionCondition = null; //显示最新版本
+    Condition isUsersCondition = null; //发布是否分配使用者
+    Condition userCondition = null; //当前登录用户id
+    Condition groupCondition = null; //当前用户岗位列表
+    Condition statusCondition = new EqualsCondition("e.status_", Deploy.STATUS_USING); //状态为使用中
+
+    if (isManager() && constraint == true) {//不是流程管理员并且有权限限制
+      isUsersCondition = new QlCondition("e.id not in(select wda.did from  bc_wf_deploy_actor wda)"
+        , (Object[]) null);
+      userCondition = new EqualsCondition("da.aid", context.getUser().getId());
+      groupCondition = new InCondition("da.aid", ids);
 //			if(isNewVersion){
 //				isNewVersionCondition = new QlCondition(
 //						"not exists(select 0 from act_re_procdef b where a.key_=b.key_ and a.version_<b.version_)",
 //						(Object[]) null);
 //			}
-			return ConditionUtils.mix2AndCondition(isNewVersionCondition,statusCondition,
-					ConditionUtils.mix2OrCondition(isUsersCondition,userCondition,groupCondition).setAddBracket(true));
-		}
-		return ConditionUtils.mix2AndCondition(statusCondition);
-	}
+      return ConditionUtils.mix2AndCondition(isNewVersionCondition, statusCondition,
+        ConditionUtils.mix2OrCondition(isUsersCondition, userCondition, groupCondition).setAddBracket(true));
+    }
+    return ConditionUtils.mix2AndCondition(statusCondition);
+  }
 
-	@Override
-    protected void extendGridExtrasData(JSONObject json) throws JSONException {
-		if(isNewVersion)
-			json.put("isNewVersion", isNewVersion);
-		if(constraint)
-			json.put("constraint", constraint);
-	}
-	
-	@Override
-	protected String getHtmlPageJs() {
-		return this.getHtmlPageNamespace() + "/select/select.js";
-	}
+  @Override
+  protected void extendGridExtrasData(JSONObject json) throws JSONException {
+    if (isNewVersion)
+      json.put("isNewVersion", isNewVersion);
+    if (constraint)
+      json.put("constraint", constraint);
+  }
 
-	@Override
-	protected String getClickOkMethod() {
-		return "bc.flow.selectDialog.clickOk";
-	}
+  @Override
+  protected String getHtmlPageJs() {
+    return this.getHtmlPageNamespace() + "/select/select.js";
+  }
 
-	@Override
-	protected String getHtmlPageNamespace() {
-		return this.getContextPath() + "/bc-workflow";
-	}
-	
-	
+  @Override
+  protected String getClickOkMethod() {
+    return "bc.flow.selectDialog.clickOk";
+  }
 
-	@Override
-	protected String getGridDblRowMethod() {
-		return "";
-	}
+  @Override
+  protected String getHtmlPageNamespace() {
+    return this.getContextPath() + "/bc-workflow";
+  }
 
-	@Override
-	protected String getGridRowLabelExpression() {
-		return "['name'] + '.' + ['version']";
-	}
-	
-	@Override
-	protected HtmlPage buildHtmlPage() {
-		return super.buildHtmlPage().setNamespace(
-				this.getHtmlPageNamespace() + "/select");
-	}
+
+  @Override
+  protected String getGridDblRowMethod() {
+    return "";
+  }
+
+  @Override
+  protected String getGridRowLabelExpression() {
+    return "['name'] + '.' + ['version']";
+  }
+
+  @Override
+  protected HtmlPage buildHtmlPage() {
+    return super.buildHtmlPage().setNamespace(
+      this.getHtmlPageNamespace() + "/select");
+  }
 
 }

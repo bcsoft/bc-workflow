@@ -1,44 +1,45 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE struts PUBLIC
-    "-//Apache Software Foundation//DTD Struts Configuration 2.0//EN"
-    "http://struts.apache.org/dtds/struts-2.0.dtd">
+  "-//Apache Software Foundation//DTD Struts Configuration 2.0//EN"
+  "http://struts.apache.org/dtds/struts-2.0.dtd">
 <struts>
-	<!-- 我的经办 -->
-	<package name="myDones" extends="bc-default" namespace="/bc-workflow/myDones">
-		<action name="list" class="myHistoricTaskInstancesAction" method="list">
-		</action>
-		<action name="data" class="myHistoricTaskInstancesAction" method="data">
-		</action>
-		<action name="paging" class="myHistoricTaskInstancesAction" method="paging">
-		</action>
-		<action name="export" class="myHistoricTaskInstancesAction" method="export"/>
-		<action name="conditions" class="myHistoricTaskInstancesAction" method="conditions">
-			<result name="success">/bc-workflow/historictaskinstance/my/conditions.jsp</result>
-		</action>
-	</package>
-	<!-- 任务监控 -->
-	<package name="historicTaskInstances" extends="bc-default" namespace="/bc-workflow/historicTaskInstances">
-		<action name="list" class="historicTaskInstancesAction" method="list"/>
-		<action name="data" class="historicTaskInstancesAction" method="data"/>
-		<action name="paging" class="historicTaskInstancesAction" method="paging"/>
-		<action name="export" class="historicTaskInstancesAction" method="export"/>
-		<action name="conditions" class="historicTaskInstancesAction" method="conditions">
-			<result name="success">/bc-workflow/historictaskinstance/conditions.jsp</result>
-		</action>
-		<action name="startFlow" class="historicTaskInstancesAction" method="startFlow"/>
-	</package>
-	<!-- 部门经办监控 -->
-	<package name="groupHistoricTaskInstancesAction" extends="bc-default" namespace="/bc-workflow/groupHistoricTaskInstances">
-		<action name="list" class="groupHistoricTaskInstancesAction" method="list"/>
-		<action name="data" class="groupHistoricTaskInstancesAction" method="data"/>
-		<action name="paging" class="groupHistoricTaskInstancesAction" method="paging"/>
-		<action name="export" class="groupHistoricTaskInstancesAction" method="export"/>
-		<action name="conditions" class="groupHistoricTaskInstancesAction" method="conditions">
-			<result name="success">/bc-workflow/historictaskinstance/conditions.jsp</result>
-		</action>
-	</package>
-	<!-- 历史任务 -->
-	<package name="historicTaskInstanceAction" extends="bc-default" namespace="/bc-workflow/historicTaskInstanceAction">
-		<action name="findHisProcessTaskVarValue" class="historicTaskInstanceAction" method="findHisProcessTaskVarValue"/>
-	</package>
+  <!-- 我的经办 -->
+  <package name="myDones" extends="bc-default" namespace="/bc-workflow/myDones">
+    <action name="list" class="myHistoricTaskInstancesAction" method="list">
+    </action>
+    <action name="data" class="myHistoricTaskInstancesAction" method="data">
+    </action>
+    <action name="paging" class="myHistoricTaskInstancesAction" method="paging">
+    </action>
+    <action name="export" class="myHistoricTaskInstancesAction" method="export"/>
+    <action name="conditions" class="myHistoricTaskInstancesAction" method="conditions">
+      <result name="success">/bc-workflow/historictaskinstance/my/conditions.jsp</result>
+    </action>
+  </package>
+  <!-- 任务监控 -->
+  <package name="historicTaskInstances" extends="bc-default" namespace="/bc-workflow/historicTaskInstances">
+    <action name="list" class="historicTaskInstancesAction" method="list"/>
+    <action name="data" class="historicTaskInstancesAction" method="data"/>
+    <action name="paging" class="historicTaskInstancesAction" method="paging"/>
+    <action name="export" class="historicTaskInstancesAction" method="export"/>
+    <action name="conditions" class="historicTaskInstancesAction" method="conditions">
+      <result name="success">/bc-workflow/historictaskinstance/conditions.jsp</result>
+    </action>
+    <action name="startFlow" class="historicTaskInstancesAction" method="startFlow"/>
+  </package>
+  <!-- 部门经办监控 -->
+  <package name="groupHistoricTaskInstancesAction" extends="bc-default"
+           namespace="/bc-workflow/groupHistoricTaskInstances">
+    <action name="list" class="groupHistoricTaskInstancesAction" method="list"/>
+    <action name="data" class="groupHistoricTaskInstancesAction" method="data"/>
+    <action name="paging" class="groupHistoricTaskInstancesAction" method="paging"/>
+    <action name="export" class="groupHistoricTaskInstancesAction" method="export"/>
+    <action name="conditions" class="groupHistoricTaskInstancesAction" method="conditions">
+      <result name="success">/bc-workflow/historictaskinstance/conditions.jsp</result>
+    </action>
+  </package>
+  <!-- 历史任务 -->
+  <package name="historicTaskInstanceAction" extends="bc-default" namespace="/bc-workflow/historicTaskInstanceAction">
+    <action name="findHisProcessTaskVarValue" class="historicTaskInstanceAction" method="findHisProcessTaskVarValue"/>
+  </package>
 </struts>

@@ -17,40 +17,40 @@ import java.util.concurrent.ConcurrentMap;
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration("classpath:spring-test.xml")
 public class SpringCacheTest {
-	private static final Logger logger = LoggerFactory.getLogger(SpringCacheTest.class);
-	@Autowired
-	private SpringCache service;
+  private static final Logger logger = LoggerFactory.getLogger(SpringCacheTest.class);
+  @Autowired
+  private SpringCache service;
 
-	@Test
-	public void cache1() {
-		debugCacheManager();
+  @Test
+  public void cache1() {
+    debugCacheManager();
 
-		service.cache1("1");
-		service.cache1("1");
-		service.cache1("2");
-		service.cache1("2");
-		// null 值不缓存
-		service.cache1(null);
-		service.cache1(null);
+    service.cache1("1");
+    service.cache1("1");
+    service.cache1("2");
+    service.cache1("2");
+    // null 值不缓存
+    service.cache1(null);
+    service.cache1(null);
 
-		debugCacheManager();
-	}
+    debugCacheManager();
+  }
 
-	private void debugCacheManager() {
-		CacheManager cacheManager = SpringUtils.getBean(SimpleCacheManager.class);
-		Map cacheMap;
-		logger.info(cacheManager.getClass().toString());
-		logger.info("	" + cacheManager.getCacheNames().toString());
-		for (String name : cacheManager.getCacheNames()) {
-			cacheMap = (ConcurrentMap) cacheManager.getCache(name).getNativeCache();
-			logger.info("	" + name + ": " + cacheMap);
-		}
-	}
+  private void debugCacheManager() {
+    CacheManager cacheManager = SpringUtils.getBean(SimpleCacheManager.class);
+    Map cacheMap;
+    logger.info(cacheManager.getClass().toString());
+    logger.info("	" + cacheManager.getCacheNames().toString());
+    for (String name : cacheManager.getCacheNames()) {
+      cacheMap = (ConcurrentMap) cacheManager.getCache(name).getNativeCache();
+      logger.info("	" + name + ": " + cacheMap);
+    }
+  }
 
-	@Test
-	public void cache2() {
-		service.cache1("1");
-		service.noCache("1");
-		service.cache1("1");
-	}
+  @Test
+  public void cache2() {
+    service.cache1("1");
+    service.noCache("1");
+    service.cache1("1");
+  }
 }

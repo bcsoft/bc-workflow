@@ -23,58 +23,58 @@ import java.util.Map;
 @Transactional
 @ContextConfiguration("classpath:spring-test.xml")
 public class WorkspaceServiceImplTest {
-	private static final Logger logger = LoggerFactory.getLogger(WorkspaceServiceImplTest.class);
+  private static final Logger logger = LoggerFactory.getLogger(WorkspaceServiceImplTest.class);
 
-	@Autowired
-	WorkspaceService workspaceService;
-	@Autowired
-	private UserService userService;
-	@Autowired
-	private ActorHistoryService actorHistoryService;
+  @Autowired
+  WorkspaceService workspaceService;
+  @Autowired
+  private UserService userService;
+  @Autowired
+  private ActorHistoryService actorHistoryService;
 
-	@Test
-	public void getProcessInstanceDetail() {
-		this.mockSystemContext();
+  @Test
+  public void getProcessInstanceDetail() {
+    this.mockSystemContext();
 
-		String processInstanceId = "3349285";//"3326570";
-		Map<String, Object> instanceDetail = workspaceService.getProcessInstanceDetail(processInstanceId);
+    String processInstanceId = "3349285";//"3326570";
+    Map<String, Object> instanceDetail = workspaceService.getProcessInstanceDetail(processInstanceId);
 
-		logger.debug("instanceDetail={}", instanceDetail);
-		for (Map.Entry<String, Object> e : instanceDetail.entrySet()){
-			logger.debug("key={}", e.getKey());
-			logger.debug("value.class={}", e.getValue() != null ? e.getValue().getClass() : "null");
-			logger.debug("value={}", e.getValue());
-		}
-		logger.debug("variables.class={}", instanceDetail.get("variables").getClass());
-		logger.debug("variable={}", instanceDetail.get("variables"));
-		/**/
-	}
+    logger.debug("instanceDetail={}", instanceDetail);
+    for (Map.Entry<String, Object> e : instanceDetail.entrySet()) {
+      logger.debug("key={}", e.getKey());
+      logger.debug("value.class={}", e.getValue() != null ? e.getValue().getClass() : "null");
+      logger.debug("value={}", e.getValue());
+    }
+    logger.debug("variables.class={}", instanceDetail.get("variables").getClass());
+    logger.debug("variable={}", instanceDetail.get("variables"));
+    /**/
+  }
 
 
-	@Test
-	public void getWorkspaceData() {
-		this.mockSystemContext();
-		String processInstanceId = "3349285";//"3349285";//"3326570";
-		Map<String, Object> ws = workspaceService.getWorkspaceData(processInstanceId);
-		logger.debug("ws={}", ws);
-		for (Map.Entry<String, Object> e : ws.entrySet()){
-			//logger.debug("key={}, value.class={}, value={}", e.getKey(), e.getValue() != null ? e.getValue().getClass() : "null", e.getValue());
-		}
-	}
+  @Test
+  public void getWorkspaceData() {
+    this.mockSystemContext();
+    String processInstanceId = "3349285";//"3349285";//"3326570";
+    Map<String, Object> ws = workspaceService.getWorkspaceData(processInstanceId);
+    logger.debug("ws={}", ws);
+    for (Map.Entry<String, Object> e : ws.entrySet()) {
+      //logger.debug("key={}, value.class={}, value={}", e.getKey(), e.getValue() != null ? e.getValue().getClass() : "null", e.getValue());
+    }
+  }
 
-	private void mockSystemContext() {
-		SystemContext context = new SystemContextImpl();
-		SystemContextHolder.set(context);
+  private void mockSystemContext() {
+    SystemContext context = new SystemContextImpl();
+    SystemContextHolder.set(context);
 
-		// 系统上下文
-		context.setAttr(SystemContext.KEY_SYSCONTEXTPATH, "/bctest");
-		context.setAttr(SystemContext.KEY_HTMLPAGENAMESPACE, "/webapp/bc");
-		context.setAttr(SystemContext.KEY_APPTS, new Date().getTime());
+    // 系统上下文
+    context.setAttr(SystemContext.KEY_SYSCONTEXTPATH, "/bctest");
+    context.setAttr(SystemContext.KEY_HTMLPAGENAMESPACE, "/webapp/bc");
+    context.setAttr(SystemContext.KEY_APPTS, new Date().getTime());
 
-		// 用户信息
-		Actor user = this.userService.loadByCode("admin");
-		context.setAttr(SystemContext.KEY_USER, user);
-		ActorHistory userHistory = this.actorHistoryService.loadByCode("admin");
-		context.setAttr(SystemContext.KEY_USER_HISTORY, userHistory);
-	}
+    // 用户信息
+    Actor user = this.userService.loadByCode("admin");
+    context.setAttr(SystemContext.KEY_USER, user);
+    ActorHistory userHistory = this.actorHistoryService.loadByCode("admin");
+    context.setAttr(SystemContext.KEY_USER_HISTORY, userHistory);
+  }
 }

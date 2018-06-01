@@ -1,139 +1,241 @@
 body {
-	background-color: #cccccc;
-	margin: 0; padding: 0; border: 0;
-	/* 字体推荐
-	 * 1. 对于英文字符，首先查找Helvetica(Mac)，然后查找Tahoma(Win)，都找不到就用Arial(Mac&Win)；若是以上三者都缺失，则使用当前默认的sans-serif字体(操作系统或浏览器指定)；
-	 * 2. 对于中文字体，华文细黑STXihei(Mac)、微软雅黑Microsoft YaHei(Win)是这两个平台的默认中文字体。
-	*/
-	font-family: SimSun, "宋体", "Microsoft YaHei", "微软雅黑", STXihei, "华文细黑", FangSong, "仿宋", FangSong_GB2312, "仿宋_GB2312", Helvetica, Tahoma, Arial, sans-serif;
-	font-size: 16px;
-	/*letter-spacing: 0.01em; 字与字之间的间距 */
+  background-color: #cccccc;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  /* 字体推荐
+   * 1. 对于英文字符，首先查找Helvetica(Mac)，然后查找Tahoma(Win)，都找不到就用Arial(Mac&Win)；若是以上三者都缺失，则使用当前默认的sans-serif字体(操作系统或浏览器指定)；
+   * 2. 对于中文字体，华文细黑STXihei(Mac)、微软雅黑Microsoft YaHei(Win)是这两个平台的默认中文字体。
+  */
+  font-family: SimSun, "宋体", "Microsoft YaHei", "微软雅黑", STXihei, "华文细黑", FangSong, "仿宋", FangSong_GB2312, "仿宋_GB2312", Helvetica, Tahoma, Arial, sans-serif;
+  font-size: 16px;
+  /*letter-spacing: 0.01em; 字与字之间的间距 */
 }
 
 /* 纸张: 模拟 A4 纵向的宽度 */
 .paper {
-	background-color: #ffffff;
-	box-shadow: #000 0px 0px 10px;
-	margin: 4px auto;
-	width: 180mm;
-	padding: 10mm;
-	position: relative;
+  background-color: #ffffff;
+  box-shadow: #000 0px 0px 10px;
+  margin: 4px auto;
+  width: 180mm;
+  padding: 10mm;
+  position: relative;
 }
+
 /* 打印时将字体设小 */
-.paper.print{font-size: 12px;}
+.paper.print {
+  font-size: 12px;
+}
 
 /* 大标题 */
-.paper>.title {
-	text-align: center;
-	font-size: 200%;
-	font-weight: bold;
-	margin: 0;position: relative;
+.paper > .title {
+  text-align: center;
+  font-size: 200%;
+  font-weight: bold;
+  margin: 0;
+  position: relative;
 }
+
 /* 与标题同行的单一编号 */
-.paper>.title>.code, .paper>.title>.codes {
-	text-align: right;
-	font-weight: normal;
-	font-size: 30%;
-	position: absolute;
-	right: 0.5em; bottom: 2px;
+.paper > .title > .code, .paper > .title > .codes {
+  text-align: right;
+  font-weight: normal;
+  font-size: 30%;
+  position: absolute;
+  right: 0.5em;
+  bottom: 2px;
 }
+
 /* 与标题同行的上下双编号 */
-.paper>.title>.codes>.code {text-align: left}
+.paper > .title > .codes > .code {
+  text-align: left
+}
+
 /* 独立一行的编号 */
-.paper>.code {
-	text-align: right;
-	font-weight: normal;
-	font-size: 60%;
-	padding-right: 0.5em;
+.paper > .code {
+  text-align: right;
+  font-weight: normal;
+  font-size: 60%;
+  padding-right: 0.5em;
 }
 
 /* 带周边厚边框的行数据容器 */
 .paper .row {
-	padding: 0; margin: 0;box-sizing: border-box;
-	border: 2px solid black;
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+  border: 2px solid black;
 }
-.paper .row:not(:first-child) {border-top-width: 0;}
-.paper .row>table {border:none; table-layout: fixed; border-collapse: collapse; border-spacing: 0;width: 100%}
+
+.paper .row:not(:first-child) {
+  border-top-width: 0;
+}
+
+.paper .row > table {
+  border: none;
+  table-layout: fixed;
+  border-collapse: collapse;
+  border-spacing: 0;
+  width: 100%
+}
+
 /* table 内的 td 内边框控制*/
-.paper .row td{border: 1px solid #666;}
-.paper .row td:first-child{border-left: 0}
-.paper .row td:last-child{border-right: 0}
-.paper .row tr:first-child>td{border-top: 0}
-.paper .row tr:last-child>td{border-bottom: 0}
+.paper .row td {
+  border: 1px solid #666;
+}
+
+.paper .row td:first-child {
+  border-left: 0
+}
+
+.paper .row td:last-child {
+  border-right: 0
+}
+
+.paper .row tr:first-child > td {
+  border-top: 0
+}
+
+.paper .row tr:last-child > td {
+  border-bottom: 0
+}
 
 /* 内容区 */
-.paper .content{text-align: left;padding: 0.2em 0.25em}
-.paper .content pre, .paper pre.content{
-	font: inherit;
-	padding: 0; margin: 0;
+.paper .content {
+  text-align: left;
+  padding: 0.2em 0.25em
 }
-/* 固定的文字标签 */
-.paper .label, .paper .department-name{
-	/* 行高 */
-	line-height: 1.5;
-	
-	color: #666;
-	/*font-weight: 600;*/
-	/*font-family: SimSun, "宋体"*/
-}
-.paper td.label{text-align: right;padding: 0.2em 0.25em}
-/* 任务名称 */
-.paper .task-name{color: black;font-weight: bold}
-/* 用户填写的内容 */
-.paper .value,.paper pre.value{
-	/* 行高 */
-	line-height: 1.5;
 
-	/* 自动换行的配置 */
-	word-break: break-all;
-	word-wrap: break-word;
-	white-space: pre-wrap;
+.paper .content pre, .paper pre.content {
+  font: inherit;
+  padding: 0;
+  margin: 0;
 }
-.paper td.value{text-align: left;padding: 0.2em 0.25em}
+
+/* 固定的文字标签 */
+.paper .label, .paper .department-name {
+  /* 行高 */
+  line-height: 1.5;
+
+  color: #666;
+  /*font-weight: 600;*/
+  /*font-family: SimSun, "宋体"*/
+}
+
+.paper td.label {
+  text-align: right;
+  padding: 0.2em 0.25em
+}
+
+/* 任务名称 */
+.paper .task-name {
+  color: black;
+  font-weight: bold
+}
+
+/* 用户填写的内容 */
+.paper .value, .paper pre.value {
+  /* 行高 */
+  line-height: 1.5;
+
+  /* 自动换行的配置 */
+  word-break: break-all;
+  word-wrap: break-word;
+  white-space: pre-wrap;
+}
+
+.paper td.value {
+  text-align: left;
+  padding: 0.2em 0.25em
+}
 
 /* 用户的签名、日期 */
-.paper .assignee {text-align: right}
-.paper .signer-name, .paper .signed-date {
-	min-width: 5em;
-	display: inline-block;
-	text-align: center;
-	margin-right: 0.5em;
-
-	/* 这里使用白色颜色来模拟无边框是因为Chrome从v22开始才支持右键打印页面时边框才受样式控制*/
-	border: 1px solid #fff;
-	border-bottom-color: #000;
+.paper .assignee {
+  text-align: right
 }
-.paper .signer-name {min-width: 5em}
-.paper .signed-date {min-width: 9em}
-.paper .task-name, .paper .department-name {margin-right: 1.5em}
+
+.paper .signer-name, .paper .signed-date {
+  min-width: 5em;
+  display: inline-block;
+  text-align: center;
+  margin-right: 0.5em;
+
+  /* 这里使用白色颜色来模拟无边框是因为Chrome从v22开始才支持右键打印页面时边框才受样式控制*/
+  border: 1px solid #fff;
+  border-bottom-color: #000;
+}
+
+.paper .signer-name {
+  min-width: 5em
+}
+
+.paper .signed-date {
+  min-width: 9em
+}
+
+.paper .task-name, .paper .department-name {
+  margin-right: 1.5em
+}
 
 /* 文本对齐 */
-.paper .align-left {text-align: left}
-.paper .align-center {text-align: center}
-.paper .align-right {text-align: right}
+.paper .align-left {
+  text-align: left
+}
+
+.paper .align-center {
+  text-align: center
+}
+
+.paper .align-right {
+  text-align: right
+}
 
 /* 细水平线 */
-.paper .solid-line {border-bottom: 1px solid #666}
-.paper .dashed-line {border-bottom: 1px dashed #666}
-.paper .dotted-line {border-bottom: 1px dotted #666}
-.paper .gap {height: 0.25em}
+.paper .solid-line {
+  border-bottom: 1px solid #666
+}
+
+.paper .dashed-line {
+  border-bottom: 1px dashed #666
+}
+
+.paper .dotted-line {
+  border-bottom: 1px dotted #666
+}
+
+.paper .gap {
+  height: 0.25em
+}
 
 #tool {
-	z-index: 2;
-	position: fixed;
-	bottom: 0.5em;right: 0.5em;
-	width: 4em;
-	/*border-radius: 2em;*/
-	/*cursor: pointer;*/
-	/*background-color: #2B2B2B;*/
-	/*background: url("print.png") center no-repeat;*/
-	/*background-size: 100%; *//* 背景图片自动缩放 */
-	/*box-shadow: #000055 4px 4px;*/
+  z-index: 2;
+  position: fixed;
+  bottom: 0.5em;
+  right: 0.5em;
+  width: 4em;
+  /*border-radius: 2em;*/
+  /*cursor: pointer;*/
+  /*background-color: #2B2B2B;*/
+  /*background: url("print.png") center no-repeat;*/
+  /*background-size: 100%; *//* 背景图片自动缩放 */
+  /*box-shadow: #000055 4px 4px;*/
 }
+
 /* 工具 */
-#tool img {width: 100%}
-#tool>div {opacity: 0.5}
-#tool>div:hover {opacity: 1}
+#tool img {
+  width: 100%
+}
+
+#tool > div {
+  opacity: 0.5
+}
+
+#tool > div:hover {
+  opacity: 1
+}
+
 @media print {
-	#tool {display: none}
+  #tool {
+    display: none
+  }
 }

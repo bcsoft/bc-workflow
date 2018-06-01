@@ -10,17 +10,17 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class SpringCache {
-	private static final Logger logger = LoggerFactory.getLogger(SpringCache.class);
+  private static final Logger logger = LoggerFactory.getLogger(SpringCache.class);
 
-	// 不缓存 null 结果
-	@Cacheable(value = "test", unless = "#result == null")
-	public String cache1(String id) {
-		logger.debug("cache1 id={}", id);
-		return id;
-	}
+  // 不缓存 null 结果
+  @Cacheable(value = "test", unless = "#result == null")
+  public String cache1(String id) {
+    logger.debug("cache1 id={}", id);
+    return id;
+  }
 
-	public String noCache(String id) {
-		logger.debug("noCache id={}", id);
-		return this.cache1(id);
-	}
+  public String noCache(String id) {
+    logger.debug("noCache id={}", id);
+    return this.cache1(id);
+  }
 }

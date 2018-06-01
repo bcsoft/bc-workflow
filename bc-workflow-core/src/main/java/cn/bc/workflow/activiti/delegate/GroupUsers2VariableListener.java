@@ -22,33 +22,33 @@ import java.util.List;
  * @author dragon
  */
 public class GroupUsers2VariableListener implements ExecutionListener {
-	private static final Logger logger = LoggerFactory.getLogger(GroupUsers2VariableListener.class);
+  private static final Logger logger = LoggerFactory.getLogger(GroupUsers2VariableListener.class);
 
-	/**
-	 * 岗位编码
-	 */
-	private Expression groupCode;
+  /**
+   * 岗位编码
+   */
+  private Expression groupCode;
 
-	/**
-	 * 全局变量名，默认为 users
-	 */
-	private Expression variableName;
+  /**
+   * 全局变量名，默认为 users
+   */
+  private Expression variableName;
 
-	public void notify(DelegateExecution execution) throws Exception {
-		if (logger.isDebugEnabled()) {
-			logger.debug("groupCode={}", groupCode != null ? groupCode.getExpressionText() : "null");
-			logger.debug("variableName={}", variableName != null ? variableName.getExpressionText() : "null");
-		}
+  public void notify(DelegateExecution execution) throws Exception {
+    if (logger.isDebugEnabled()) {
+      logger.debug("groupCode={}", groupCode != null ? groupCode.getExpressionText() : "null");
+      logger.debug("variableName={}", variableName != null ? variableName.getExpressionText() : "null");
+    }
 
-		// 验证
-		if (groupCode == null) throw new CoreException("没有配置岗位编码的值！");
+    // 验证
+    if (groupCode == null) throw new CoreException("没有配置岗位编码的值！");
 
-		// 获取岗位内的有效用户
-		UserService userService = SpringUtils.getBean(UserService.class);
-		List<String> users = userService.findAllUserCodeByGroup(groupCode.getExpressionText(), new Integer[]{BCConstants.STATUS_ENABLED});
-		logger.debug("users={}", users);
+    // 获取岗位内的有效用户
+    UserService userService = SpringUtils.getBean(UserService.class);
+    List<String> users = userService.findAllUserCodeByGroup(groupCode.getExpressionText(), new Integer[]{BCConstants.STATUS_ENABLED});
+    logger.debug("users={}", users);
 
-		// 设置全局变量
-		execution.setVariable(variableName != null ? variableName.getExpressionText() : "users", users);
-	}
+    // 设置全局变量
+    execution.setVariable(variableName != null ? variableName.getExpressionText() : "users", users);
+  }
 }

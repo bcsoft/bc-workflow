@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:activiti="http://activiti.org/bpmn" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:omgdc="http://www.omg.org/spec/DD/20100524/DC" xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI" typeLanguage="http://www.w3.org/2001/XMLSchema" expressionLanguage="http://www.w3.org/1999/XPath" targetNamespace="http://activiti.org/bpmn20">
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xmlns:activiti="http://activiti.org/bpmn" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+             xmlns:omgdc="http://www.omg.org/spec/DD/20100524/DC" xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI"
+             typeLanguage="http://www.w3.org/2001/XMLSchema" expressionLanguage="http://www.w3.org/1999/XPath"
+             targetNamespace="http://activiti.org/bpmn20">
   <process id="vacationRequest" name="Vacation request">
     <startEvent id="request" name="Start" activiti:formKey="org/activiti/examples/taskforms/request.form"></startEvent>
     <userTask id="handleRequest" name="Handle vacation request" activiti:candidateGroups="management">
@@ -13,12 +17,15 @@
     <userTask id="adjustVacationRequestTask" name="Adjust vacation request" activiti:assignee="${employeeName}">
       <documentation>Your manager has not approved your vacation request.</documentation>
     </userTask>
-    <sequenceFlow id="flow5" name="${vacationApproved == 'false'}" sourceRef="requestApprovedDecision" targetRef="adjustVacationRequestTask">
+    <sequenceFlow id="flow5" name="${vacationApproved == 'false'}" sourceRef="requestApprovedDecision"
+                  targetRef="adjustVacationRequestTask">
       <conditionExpression xsi:type="tFormalExpression"><![CDATA[${vacationApproved == 'false'}]]></conditionExpression>
     </sequenceFlow>
     <exclusiveGateway id="resendRequestDecision" name="Resend request?"></exclusiveGateway>
-    <sequenceFlow id="flow6" name="" sourceRef="adjustVacationRequestTask" targetRef="resendRequestDecision"></sequenceFlow>
-    <sequenceFlow id="flow7" name="${resendRequest == 'true'}" sourceRef="resendRequestDecision" targetRef="handleRequest">
+    <sequenceFlow id="flow6" name="" sourceRef="adjustVacationRequestTask"
+                  targetRef="resendRequestDecision"></sequenceFlow>
+    <sequenceFlow id="flow7" name="${resendRequest == 'true'}" sourceRef="resendRequestDecision"
+                  targetRef="handleRequest">
       <conditionExpression xsi:type="tFormalExpression"><![CDATA[${resendRequest == 'true'}]]></conditionExpression>
     </sequenceFlow>
     <sequenceFlow id="flow8" name="${resendRequest == 'false'}" sourceRef="resendRequestDecision" targetRef="theEnd2">

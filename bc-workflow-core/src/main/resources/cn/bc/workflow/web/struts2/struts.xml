@@ -1,92 +1,93 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE struts PUBLIC
-    "-//Apache Software Foundation//DTD Struts Configuration 2.0//EN"
-    "http://struts.apache.org/dtds/struts-2.0.dtd">
+  "-//Apache Software Foundation//DTD Struts Configuration 2.0//EN"
+  "http://struts.apache.org/dtds/struts-2.0.dtd">
 <struts>
-	<!-- 工作空间 -->
-	<package name="workspace" extends="bc-default" namespace="/bc-workflow/workspace">
-		<action name="design" class="workspaceAction" method="design">
-			<result name="success">/bc-workflow/workspace/workspaceDesign.jsp</result>
-		</action>
-		<action name="open" class="workspaceAction" method="open">
-			<result name="success">/bc-workflow/workspace/workspace.jsp</result>
-		</action>
-	</package>
-	<package name="sidebar" extends="bc-default" namespace="/bc-workflow/sidebar">
-		<action name="design" class="workspaceAction" method="sidebarDesign">
-			<result name="success">/bc-workflow/todo/sidebarDesign.jsp</result>
-		</action>
-	</package>
-	
-	<!-- 流程常用处理 -->
-	<package name="workflow" extends="bc-default" namespace="/bc-workflow/workflow">
-		<action name="deleteDeployment" class="workflowAction" method="deleteDeployment" />
-		<action name="deploy" class="workflowAction" method="deploy" />
-		<action name="startFlow" class="workflowAction" method="startFlow" />
-		<action name="startSubProcess" class="workflowAction" method="startSubProcess" />
-		<action name="findMainProcessInstanceInfo" class="workflowAction" method="findMainProcessInstanceInfo" />
-		<action name="findSubProcessInstanceInfo" class="workflowAction" method="findSubProcessInstanceInfo" />
-		<action name="claimTask" class="workflowAction" method="claimTask" />
-		<action name="completeTask" class="workflowAction" method="completeTask" />
-		<action name="delegateTask" class="workflowAction" method="delegateTask" />
-		<action name="assignTask" class="workflowAction" method="assignTask" />
-		<action name="findGlobalValues" class="workflowAction" method="findGlobalValues" />
-		<action name="diagram" class="workflowAction" method="diagram">
-			<result name="success" type="stream">
-				<!-- 下载文件类型定义 -->
-				<param name="contentType">${contentType}</param>
-				<param name="contentLength">${contentLength}</param>
-				<!-- 下载文件输出流定义 -->
-				<param name="inputName">inputStream</param>
-				<param name="bufferSize">4096</param>
-				<!-- 下载文件处理方法 -->
-				<param name="contentDisposition">inline; filename="${filename}"</param>
-			</result>
-		</action>
-	</package>
-	
-	<!-- 流转日志 -->
-	<package name="excutionLogs" extends="bc-default" namespace="/bc-workflow/excutionLogs">
-		<action name="list" class="excutionLogsAction" method="list"/>
-		<action name="paging" class="excutionLogsAction" method="paging"/>
-		<action name="data" class="excutionLogsAction" method="data"/>
-		<action name="export" class="excutionLogsAction" method="export"/>
-	</package>
-	
-	<!-- 流程资源 -->
-	<package name="wfResource" extends="bc-default" namespace="/bc-workflow">
-		<action name="resource" class="workflowResourceAction" method="getResource">
-			<result name="success" type="stream">
-				<!-- 下载文件类型定义 -->
-				<param name="contentType">${contentType}</param>
-				<param name="contentLength">${contentLength}</param>
-				<!-- 下载文件输出流定义 -->
-				<param name="inputName">inputStream</param>
-				<param name="bufferSize">4096</param>
-				<!-- 下载文件处理方法 -->
-				<param name="contentDisposition">inline; filename="${filename}"</param>
-			</result>
-		</action>
-	</package>
-	
-	<!-- 选择流程 -->
-	<package name="selectWorkflow" extends="bc-default" namespace="/bc-workflow/select">
-		<action name="list" class="selectProcessAction" method="list"/>
-		<action name="data" class="selectProcessAction" method="data"/>
-		<action name="paging" class="selectProcessAction" method="paging"/>
-	</package>
-	
-	<!-- 选择用户 -->
-	<package name="selectUsers4Flow" extends="bc-default" namespace="/bc-workflow/selectUsers">
-		<action name="list" class="selectUsers4FlowAction" method="list"/>
-		<action name="data" class="selectUsers4FlowAction" method="data"/>
-		<action name="paging" class="selectUsers4FlowAction" method="paging"/>
-	</package>
-	
-	<!-- 选择流程关系 -->
-	<package name="selectWorkflowModuleRelation" extends="bc-default" namespace="/bc-workflow/selectWorkflowModuleRelation">
-		<action name="list" class="selectWorkflowModuleRelationAction" method="list"/>
-		<action name="data" class="selectWorkflowModuleRelationAction" method="data"/>
-		<action name="paging" class="selectWorkflowModuleRelationAction" method="paging"/>
-	</package>
+  <!-- 工作空间 -->
+  <package name="workspace" extends="bc-default" namespace="/bc-workflow/workspace">
+    <action name="design" class="workspaceAction" method="design">
+      <result name="success">/bc-workflow/workspace/workspaceDesign.jsp</result>
+    </action>
+    <action name="open" class="workspaceAction" method="open">
+      <result name="success">/bc-workflow/workspace/workspace.jsp</result>
+    </action>
+  </package>
+  <package name="sidebar" extends="bc-default" namespace="/bc-workflow/sidebar">
+    <action name="design" class="workspaceAction" method="sidebarDesign">
+      <result name="success">/bc-workflow/todo/sidebarDesign.jsp</result>
+    </action>
+  </package>
+
+  <!-- 流程常用处理 -->
+  <package name="workflow" extends="bc-default" namespace="/bc-workflow/workflow">
+    <action name="deleteDeployment" class="workflowAction" method="deleteDeployment"/>
+    <action name="deploy" class="workflowAction" method="deploy"/>
+    <action name="startFlow" class="workflowAction" method="startFlow"/>
+    <action name="startSubProcess" class="workflowAction" method="startSubProcess"/>
+    <action name="findMainProcessInstanceInfo" class="workflowAction" method="findMainProcessInstanceInfo"/>
+    <action name="findSubProcessInstanceInfo" class="workflowAction" method="findSubProcessInstanceInfo"/>
+    <action name="claimTask" class="workflowAction" method="claimTask"/>
+    <action name="completeTask" class="workflowAction" method="completeTask"/>
+    <action name="delegateTask" class="workflowAction" method="delegateTask"/>
+    <action name="assignTask" class="workflowAction" method="assignTask"/>
+    <action name="findGlobalValues" class="workflowAction" method="findGlobalValues"/>
+    <action name="diagram" class="workflowAction" method="diagram">
+      <result name="success" type="stream">
+        <!-- 下载文件类型定义 -->
+        <param name="contentType">${contentType}</param>
+        <param name="contentLength">${contentLength}</param>
+        <!-- 下载文件输出流定义 -->
+        <param name="inputName">inputStream</param>
+        <param name="bufferSize">4096</param>
+        <!-- 下载文件处理方法 -->
+        <param name="contentDisposition">inline; filename="${filename}"</param>
+      </result>
+    </action>
+  </package>
+
+  <!-- 流转日志 -->
+  <package name="excutionLogs" extends="bc-default" namespace="/bc-workflow/excutionLogs">
+    <action name="list" class="excutionLogsAction" method="list"/>
+    <action name="paging" class="excutionLogsAction" method="paging"/>
+    <action name="data" class="excutionLogsAction" method="data"/>
+    <action name="export" class="excutionLogsAction" method="export"/>
+  </package>
+
+  <!-- 流程资源 -->
+  <package name="wfResource" extends="bc-default" namespace="/bc-workflow">
+    <action name="resource" class="workflowResourceAction" method="getResource">
+      <result name="success" type="stream">
+        <!-- 下载文件类型定义 -->
+        <param name="contentType">${contentType}</param>
+        <param name="contentLength">${contentLength}</param>
+        <!-- 下载文件输出流定义 -->
+        <param name="inputName">inputStream</param>
+        <param name="bufferSize">4096</param>
+        <!-- 下载文件处理方法 -->
+        <param name="contentDisposition">inline; filename="${filename}"</param>
+      </result>
+    </action>
+  </package>
+
+  <!-- 选择流程 -->
+  <package name="selectWorkflow" extends="bc-default" namespace="/bc-workflow/select">
+    <action name="list" class="selectProcessAction" method="list"/>
+    <action name="data" class="selectProcessAction" method="data"/>
+    <action name="paging" class="selectProcessAction" method="paging"/>
+  </package>
+
+  <!-- 选择用户 -->
+  <package name="selectUsers4Flow" extends="bc-default" namespace="/bc-workflow/selectUsers">
+    <action name="list" class="selectUsers4FlowAction" method="list"/>
+    <action name="data" class="selectUsers4FlowAction" method="data"/>
+    <action name="paging" class="selectUsers4FlowAction" method="paging"/>
+  </package>
+
+  <!-- 选择流程关系 -->
+  <package name="selectWorkflowModuleRelation" extends="bc-default"
+           namespace="/bc-workflow/selectWorkflowModuleRelation">
+    <action name="list" class="selectWorkflowModuleRelationAction" method="list"/>
+    <action name="data" class="selectWorkflowModuleRelationAction" method="data"/>
+    <action name="paging" class="selectWorkflowModuleRelationAction" method="paging"/>
+  </package>
 </struts>

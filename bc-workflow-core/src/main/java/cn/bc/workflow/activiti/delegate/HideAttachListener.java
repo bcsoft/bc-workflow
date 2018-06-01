@@ -9,8 +9,8 @@ import org.activiti.engine.delegate.TaskListener;
  * @author Action
  */
 public class HideAttachListener implements TaskListener {
-    @Override
-    public void notify(DelegateTask delegateTask) {
-        delegateTask.setVariableLocal("hideAttach", true);
-    }
+  @Override
+  public void notify(DelegateTask delegateTask) {
+    delegateTask.setVariableLocal("hideAttach", true);
+  }
 }

@@ -1,9 +1,9 @@
 -- ##BC平台workflow的 postgresql 删表脚本##
-DROP TABLE IF EXISTS bc_wf_module_relation;
-DROP TABLE IF EXISTS BC_WF_DEPLOY_RESOURCE_PARAM;
-DROP TABLE IF EXISTS BC_WF_DEPLOY_RESOURCE;
-DROP TABLE IF EXISTS BC_WF_DEPLOY_ACTOR;
-DROP TABLE IF EXISTS BC_WF_DEPLOY;
-DROP TABLE IF EXISTS BC_WF_EXCUTION_LOG;
-DROP TABLE IF EXISTS BC_WF_ATTACH_PARAM;
-DROP TABLE IF EXISTS BC_WF_ATTACH;
+drop table if exists bc_wf_module_relation;
+drop table if exists BC_WF_DEPLOY_RESOURCE_PARAM;
+drop table if exists BC_WF_DEPLOY_RESOURCE;
+drop table if exists BC_WF_DEPLOY_ACTOR;
+drop table if exists BC_WF_DEPLOY;
+drop table if exists BC_WF_EXCUTION_LOG;
+drop table if exists BC_WF_ATTACH_PARAM;
+drop table if exists BC_WF_ATTACH;

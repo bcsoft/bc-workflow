@@ -19,26 +19,26 @@ import org.slf4j.LoggerFactory;
  * @author dragon 2015-10-23
  */
 public class MultiInstanceAssignByElementVariableListener implements TaskListener {
-	private static final Logger logger = LoggerFactory.getLogger(MultiInstanceAssignByElementVariableListener.class);
-	private Expression name; // Element variable 配置
+  private static final Logger logger = LoggerFactory.getLogger(MultiInstanceAssignByElementVariableListener.class);
+  private Expression name; // Element variable 配置
 
-	public void notify(DelegateTask delegateTask) {
-		if (logger.isDebugEnabled()) {
-			logger.debug("taskDefinitionKey=" + delegateTask.getTaskDefinitionKey());
-			logger.debug("taskId=" + delegateTask.getId());
-			logger.debug("eventName=" + delegateTask.getEventName());
-		}
+  public void notify(DelegateTask delegateTask) {
+    if (logger.isDebugEnabled()) {
+      logger.debug("taskDefinitionKey=" + delegateTask.getTaskDefinitionKey());
+      logger.debug("taskId=" + delegateTask.getId());
+      logger.debug("eventName=" + delegateTask.getEventName());
+    }
 
-		//@SuppressWarnings("rawtypes")
-		if (name == null) throw new CoreException("name could not be null");
-		String value = (String) delegateTask.getVariable(name.getExpressionText());
-		if (value == null || value.isEmpty())
-			throw new CoreException("value could not be empty (name=" + name.getExpressionText() + ")");
+    //@SuppressWarnings("rawtypes")
+    if (name == null) throw new CoreException("name could not be null");
+    String value = (String) delegateTask.getVariable(name.getExpressionText());
+    if (value == null || value.isEmpty())
+      throw new CoreException("value could not be empty (name=" + name.getExpressionText() + ")");
 
-		if (value.startsWith("group|")) {       // 分配到岗位
-			delegateTask.addCandidateGroup(value.substring(6));
-		} else {                                // 分配到人
-			delegateTask.setAssignee(value);
-		}
-	}
+    if (value.startsWith("group|")) {       // 分配到岗位
+      delegateTask.addCandidateGroup(value.substring(6));
+    } else {                                // 分配到人
+      delegateTask.setAssignee(value);
+    }
+  }
 }

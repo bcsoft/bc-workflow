@@ -1,1 +1,1 @@
-COMMENT ON COLUMN bc_wf_attach.type_ IS '类型：1-附件，2-意见，3-临时附件，将作为子流程的附件';
+comment on column bc_wf_attach.type_ is '类型：1-附件，2-意见，3-临时附件，将作为子流程的附件';

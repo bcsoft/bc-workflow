@@ -1,9 +1,15 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:activiti="http://activiti.org/bpmn" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:omgdc="http://www.omg.org/spec/DD/20100524/DC" xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI" typeLanguage="http://www.w3.org/2001/XMLSchema" expressionLanguage="http://www.w3.org/1999/XPath" targetNamespace="http://www.bctaxi.com.cn/workflow">
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xmlns:activiti="http://activiti.org/bpmn" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI"
+             xmlns:omgdc="http://www.omg.org/spec/DD/20100524/DC" xmlns:omgdi="http://www.omg.org/spec/DD/20100524/DI"
+             typeLanguage="http://www.w3.org/2001/XMLSchema" expressionLanguage="http://www.w3.org/1999/XPath"
+             targetNamespace="http://www.bctaxi.com.cn/workflow">
   <process id="ApprovalItem" name="审批事项处理流程">
     <extensionElements>
-      <activiti:executionListener event="start" class="cn.bc.workflow.activiti.delegate.ProcessLogListener"></activiti:executionListener>
-      <activiti:executionListener event="end" class="cn.bc.workflow.activiti.delegate.ProcessLogListener"></activiti:executionListener>
+      <activiti:executionListener event="start"
+                                  class="cn.bc.workflow.activiti.delegate.ProcessLogListener"></activiti:executionListener>
+      <activiti:executionListener event="end"
+                                  class="cn.bc.workflow.activiti.delegate.ProcessLogListener"></activiti:executionListener>
       <activiti:executionListener event="start" class="cn.bc.workflow.activiti.delegate.IdGeneratorProcessListener">
         <activiti:field name="type4Date">
           <activiti:string>yyyyMM</activiti:string>
@@ -25,12 +31,15 @@
       </activiti:executionListener>
     </extensionElements>
     <startEvent id="startevent1" name="Start" activiti:initiator="initiator"></startEvent>
-    <userTask id="t010ApplyMatter" name="提出申请" activiti:assignee="${initiator}" activiti:formKey="fm:wf:ApprovalItem/t010ApplyMatter">
+    <userTask id="t010ApplyMatter" name="提出申请" activiti:assignee="${initiator}"
+              activiti:formKey="fm:wf:ApprovalItem/t010ApplyMatter">
       <documentation>&lt;p&gt;申请部门填写申请事由，简述申请事项的基本情况、分析及建议、请示的具体事项。&lt;/p&gt;&lt;p&gt;提出的申请将根据事项类别由系统自动提交相关部门会签，会签部门一致通过的提交相应分管领导审批；任一会签部门不通过的，则返回申请部门确认。&lt;/p&gt;
-</documentation>
+      </documentation>
       <extensionElements>
-        <activiti:taskListener event="create" class="cn.bc.workflow.activiti.delegate.TaskLogListener"></activiti:taskListener>
-        <activiti:taskListener event="complete" class="cn.bc.workflow.activiti.delegate.TaskLogListener"></activiti:taskListener>
+        <activiti:taskListener event="create"
+                               class="cn.bc.workflow.activiti.delegate.TaskLogListener"></activiti:taskListener>
+        <activiti:taskListener event="complete"
+                               class="cn.bc.workflow.activiti.delegate.TaskLogListener"></activiti:taskListener>
         <activiti:taskListener event="create" class="cn.bc.workflow.activiti.delegate.AutoLoadAssignUpperListener">
           <activiti:field name="add_global">
             <activiti:string>true</activiti:string>
@@ -41,7 +50,8 @@
             <activiti:string>BUTTON_ADDCOMMENT</activiti:string>
           </activiti:field>
         </activiti:taskListener>
-        <activiti:taskListener event="complete" class="cn.bc.business.workflow.approvalitem.delegate.BuildCheckCooperationListener">
+        <activiti:taskListener event="complete"
+                               class="cn.bc.business.workflow.approvalitem.delegate.BuildCheckCooperationListener">
           <activiti:field name="departmentIdName">
             <activiti:string>upperId</activiti:string>
           </activiti:field>
@@ -54,7 +64,8 @@
         </activiti:taskListener>
       </extensionElements>
     </userTask>
-    <userTask id="t020DepartmentCooperation" name="相关部门会签" activiti:formKey="fm:wf:ApprovalItem/t020DepartmentCooperation">
+    <userTask id="t020DepartmentCooperation" name="相关部门会签"
+              activiti:formKey="fm:wf:ApprovalItem/t020DepartmentCooperation">
       <documentation>&lt;p&gt;1、会签部门应根据自身部门职责进行审核，并加具审核意见。对申请依据及材料明显不足的，应判断为&amp;ldquo;不通过&amp;rdquo;。&lt;/p&gt;&lt;p&gt;2、如会签部门一致通过，系统直接呈公司分管领导审批。&lt;/p&gt;&lt;p&gt;3、如任一部门不通过的，按以下方式操作：&lt;/p&gt;&lt;p&gt;（1）退回：申请事项不符合公司规定，依据及材料明显不足、处理意见不合理的，会签部门加具意见后退回，由申请部门调整处理申请或补充证明资料后呈公司分管领导审批。&lt;/p&gt;&lt;p&gt;（2）协商：&lt;/p&gt;&lt;p&gt;A、会签部门对申请事项存有异议的，应通过电话、跨部门会议等方式与申请部门进行协商，协商后达成一致的，呈公司分管领导审批。&lt;/p&gt;&lt;p&gt;B、若经协商后未能达成统一意见，但申请部门坚持己方意见的，可在申请中予以说明并报上一级领导审批。&lt;/p&gt;</documentation>
       <extensionElements>
         <activiti:taskListener event="create" class="cn.bc.workflow.activiti.delegate.MultiInstanceAssigneeListener">
@@ -62,8 +73,10 @@
             <activiti:string>true</activiti:string>
           </activiti:field>
         </activiti:taskListener>
-        <activiti:taskListener event="create" class="cn.bc.workflow.activiti.delegate.TaskLogListener"></activiti:taskListener>
-        <activiti:taskListener event="complete" class="cn.bc.workflow.activiti.delegate.TaskLogListener"></activiti:taskListener>
+        <activiti:taskListener event="create"
+                               class="cn.bc.workflow.activiti.delegate.TaskLogListener"></activiti:taskListener>
+        <activiti:taskListener event="complete"
+                               class="cn.bc.workflow.activiti.delegate.TaskLogListener"></activiti:taskListener>
         <activiti:taskListener event="create" class="cn.bc.workflow.activiti.delegate.InitHiddenButtons4TaskListener">
           <activiti:field name="hiddenButtonCodes">
             <activiti:string>BUTTON_ADDCOMMENT</activiti:string>
@@ -83,14 +96,17 @@
           </activiti:field>
         </activiti:taskListener>
       </extensionElements>
-      <multiInstanceLoopCharacteristics isSequential="false" activiti:collection="list_co4departmentAndAssignee" activiti:elementVariable="multiInstanceCollentionKey"></multiInstanceLoopCharacteristics>
+      <multiInstanceLoopCharacteristics isSequential="false" activiti:collection="list_co4departmentAndAssignee"
+                                        activiti:elementVariable="multiInstanceCollentionKey"></multiInstanceLoopCharacteristics>
     </userTask>
     <endEvent id="endevent1" name="End"></endEvent>
     <exclusiveGateway id="exclusivegateway7" name="Exclusive Gateway" default="flow79"></exclusiveGateway>
-    <userTask id="t040AccordingCheckTreatment" name="根据批示处理" activiti:formKey="fm:wf:ApprovalItem/t040AccordingCheckTreatment">
+    <userTask id="t040AccordingCheckTreatment" name="根据批示处理"
+              activiti:formKey="fm:wf:ApprovalItem/t040AccordingCheckTreatment">
       <documentation>如会签部门、申请部门对审批有异议（如发现存在越权审批等情况的），可进行反馈，由流程监控员介入处理</documentation>
       <extensionElements>
-        <activiti:taskListener event="complete" class="cn.bc.business.workflow.approvalitem.delegate.FindExecutorsListener">
+        <activiti:taskListener event="complete"
+                               class="cn.bc.business.workflow.approvalitem.delegate.FindExecutorsListener">
           <activiti:field name="departmentIdName">
             <activiti:string>upperId</activiti:string>
           </activiti:field>
@@ -107,9 +123,12 @@
             <activiti:string>分公司经理,部门经理,财务部经理,办公室主任,修理厂厂长</activiti:string>
           </activiti:field>
         </activiti:taskListener>
-        <activiti:taskListener event="create" class="cn.bc.workflow.activiti.delegate.MultiInstanceAssigneeListener"></activiti:taskListener>
-        <activiti:taskListener event="create" class="cn.bc.workflow.activiti.delegate.TaskLogListener"></activiti:taskListener>
-        <activiti:taskListener event="complete" class="cn.bc.workflow.activiti.delegate.TaskLogListener"></activiti:taskListener>
+        <activiti:taskListener event="create"
+                               class="cn.bc.workflow.activiti.delegate.MultiInstanceAssigneeListener"></activiti:taskListener>
+        <activiti:taskListener event="create"
+                               class="cn.bc.workflow.activiti.delegate.TaskLogListener"></activiti:taskListener>
+        <activiti:taskListener event="complete"
+                               class="cn.bc.workflow.activiti.delegate.TaskLogListener"></activiti:taskListener>
         <activiti:taskListener event="create" class="cn.bc.workflow.activiti.delegate.InitHiddenButtons4TaskListener">
           <activiti:field name="hiddenButtonCodes">
             <activiti:string>BUTTON_ADDCOMMENT</activiti:string>
@@ -129,10 +148,13 @@
           </activiti:field>
         </activiti:taskListener>
       </extensionElements>
-      <multiInstanceLoopCharacteristics isSequential="false" activiti:collection="listExecuteGroups" activiti:elementVariable="multiInstanceCollentionKey"></multiInstanceLoopCharacteristics>
+      <multiInstanceLoopCharacteristics isSequential="false" activiti:collection="listExecuteGroups"
+                                        activiti:elementVariable="multiInstanceCollentionKey"></multiInstanceLoopCharacteristics>
     </userTask>
     <userTask id="t030LeaderCheck" name="领导审批" activiti:formKey="fm:wf:ApprovalItem/t030LeaderCheck">
-      <documentation>&lt;p&gt;1、会签部门一致同意的：由公司领导根据自身权限，结合公司实际情况作出批示。&lt;br /&gt;2、会签部门意见不一的：&lt;br /&gt;（1）根据申请及会签意见可作出判断的，直接给予批示。&lt;br /&gt;（2）存有疑问，不能直接作出判断的，召集相关部门召开联席会议进行协商。如协商一致的，可直接给予批示。若会议协商后仍未能统一意见的：A、根据会议相关情况，直接作出批示；B、提交上一级领导审批。&lt;/p&gt;</documentation>
+      <documentation>&lt;p&gt;1、会签部门一致同意的：由公司领导根据自身权限，结合公司实际情况作出批示。&lt;br /&gt;2、会签部门意见不一的：&lt;br /&gt;（1）根据申请及会签意见可作出判断的，直接给予批示。&lt;br
+        /&gt;（2）存有疑问，不能直接作出判断的，召集相关部门召开联席会议进行协商。如协商一致的，可直接给予批示。若会议协商后仍未能统一意见的：A、根据会议相关情况，直接作出批示；B、提交上一级领导审批。&lt;/p&gt;
+      </documentation>
       <extensionElements>
         <activiti:taskListener event="create" class="cn.bc.business.workflow.approvalitem.delegate.FindLeadersListener">
           <activiti:field name="checkLevel">
@@ -156,8 +178,10 @@
             <activiti:string>true</activiti:string>
           </activiti:field>
         </activiti:taskListener>
-        <activiti:taskListener event="create" class="cn.bc.workflow.activiti.delegate.TaskLogListener"></activiti:taskListener>
-        <activiti:taskListener event="complete" class="cn.bc.workflow.activiti.delegate.TaskLogListener"></activiti:taskListener>
+        <activiti:taskListener event="create"
+                               class="cn.bc.workflow.activiti.delegate.TaskLogListener"></activiti:taskListener>
+        <activiti:taskListener event="complete"
+                               class="cn.bc.workflow.activiti.delegate.TaskLogListener"></activiti:taskListener>
         <activiti:taskListener event="create" class="cn.bc.workflow.activiti.delegate.InitHiddenButtons4TaskListener">
           <activiti:field name="hiddenButtonCodes">
             <activiti:string>BUTTON_ADDCOMMENT</activiti:string>
@@ -172,11 +196,14 @@
     </userTask>
     <exclusiveGateway id="exclusivegateway10" name="Exclusive Gateway" default="flow96"></exclusiveGateway>
     <exclusiveGateway id="exclusivegateway11" name="Exclusive Gateway" default="flow103"></exclusiveGateway>
-    <userTask id="t050ApplyMatterCheck" name="申请部门确认" activiti:assignee="${initiator}" activiti:formKey="fm:wf:ApprovalItem/t050ApplyMatterCheck">
+    <userTask id="t050ApplyMatterCheck" name="申请部门确认" activiti:assignee="${initiator}"
+              activiti:formKey="fm:wf:ApprovalItem/t050ApplyMatterCheck">
       <documentation>&lt;p&gt;1、申请部门一般情况下应根据会签部门意见进行调整或补充材料后再呈公司领导审批。&lt;/p&gt;&lt;p&gt;2、如申请部门与会签部门意见不一致的，应进行协商。协商后仍不能达成共识的，申请部门有权继续呈公司领导审批。但申请依据及材料明显不足的情况下，不得继续呈批。&lt;/p&gt;</documentation>
       <extensionElements>
-        <activiti:taskListener event="create" class="cn.bc.workflow.activiti.delegate.TaskLogListener"></activiti:taskListener>
-        <activiti:taskListener event="complete" class="cn.bc.workflow.activiti.delegate.TaskLogListener"></activiti:taskListener>
+        <activiti:taskListener event="create"
+                               class="cn.bc.workflow.activiti.delegate.TaskLogListener"></activiti:taskListener>
+        <activiti:taskListener event="complete"
+                               class="cn.bc.workflow.activiti.delegate.TaskLogListener"></activiti:taskListener>
         <activiti:taskListener event="create" class="cn.bc.workflow.activiti.delegate.TaskMailListener">
           <activiti:field name="detail">
             <activiti:string>applyMatterDesc</activiti:string>
@@ -205,16 +232,20 @@
             <activiti:string>applyMatterDesc</activiti:string>
           </activiti:field>
         </activiti:taskListener>
-        <activiti:taskListener event="create" class="cn.bc.workflow.activiti.delegate.InitHiddenButtons4TaskListener"></activiti:taskListener>
-        <activiti:taskListener event="create" class="cn.bc.workflow.activiti.delegate.TaskLogListener"></activiti:taskListener>
-        <activiti:taskListener event="complete" class="cn.bc.workflow.activiti.delegate.TaskLogListener"></activiti:taskListener>
+        <activiti:taskListener event="create"
+                               class="cn.bc.workflow.activiti.delegate.InitHiddenButtons4TaskListener"></activiti:taskListener>
+        <activiti:taskListener event="create"
+                               class="cn.bc.workflow.activiti.delegate.TaskLogListener"></activiti:taskListener>
+        <activiti:taskListener event="complete"
+                               class="cn.bc.workflow.activiti.delegate.TaskLogListener"></activiti:taskListener>
       </extensionElements>
     </userTask>
     <exclusiveGateway id="exclusivegateway13" name="Exclusive Gateway" default="flow109"></exclusiveGateway>
     <exclusiveGateway id="exclusivegateway14" name="Exclusive Gateway" default="flow107"></exclusiveGateway>
     <exclusiveGateway id="exclusivegateway15" name="Exclusive Gateway"></exclusiveGateway>
     <sequenceFlow id="flow46" name="审批事项处理流程" sourceRef="startevent1" targetRef="t010ApplyMatter"></sequenceFlow>
-    <sequenceFlow id="flow78" name="" sourceRef="t020DepartmentCooperation" targetRef="exclusivegateway7"></sequenceFlow>
+    <sequenceFlow id="flow78" name="" sourceRef="t020DepartmentCooperation"
+                  targetRef="exclusivegateway7"></sequenceFlow>
     <sequenceFlow id="flow79" name="不通过（任一部门）" sourceRef="exclusivegateway7" targetRef="t050ApplyMatterCheck">
       <conditionExpression xsi:type="tFormalExpression"><![CDATA[${checkResult == false}]]></conditionExpression>
     </sequenceFlow>
@@ -226,7 +257,8 @@
     <sequenceFlow id="flow96" name="呈批" sourceRef="exclusivegateway10" targetRef="t030LeaderCheck"></sequenceFlow>
     <sequenceFlow id="flow97" name="获得办理岗位" sourceRef="exclusivegateway10" targetRef="t040AccordingCheckTreatment">
       <extensionElements>
-        <activiti:executionListener event="complete" class="cn.bc.business.workflow.approvalitem.delegate.FindExecutorsForConfigListener">
+        <activiti:executionListener event="complete"
+                                    class="cn.bc.business.workflow.approvalitem.delegate.FindExecutorsForConfigListener">
           <activiti:field name="departmentIdName">
             <activiti:string>upperId</activiti:string>
           </activiti:field>
@@ -244,9 +276,11 @@
           </activiti:field>
         </activiti:executionListener>
       </extensionElements>
-      <conditionExpression xsi:type="tFormalExpression"><![CDATA[${handling=="complete" && leaderCheckResult==true}]]></conditionExpression>
+      <conditionExpression xsi:type="tFormalExpression">
+        <![CDATA[${handling=="complete" && leaderCheckResult==true}]]></conditionExpression>
     </sequenceFlow>
-    <sequenceFlow id="flow98" name="" sourceRef="t040AccordingCheckTreatment" targetRef="exclusivegateway11"></sequenceFlow>
+    <sequenceFlow id="flow98" name="" sourceRef="t040AccordingCheckTreatment"
+                  targetRef="exclusivegateway11"></sequenceFlow>
     <sequenceFlow id="flow99" name="" sourceRef="exclusivegateway11" targetRef="t040AccordingCheckTreatment">
       <conditionExpression xsi:type="tFormalExpression"><![CDATA[${isNext}]]></conditionExpression>
     </sequenceFlow>

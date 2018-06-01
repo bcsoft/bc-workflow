@@ -1,46 +1,46 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <persistence version="1.0"
-	xmlns="http://java.sun.com/xml/ns/persistence" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_1_0.xsd">
-	<persistence-unit name="persistenceUnit"
-		transaction-type="RESOURCE_LOCAL">
-		<provider>org.hibernate.ejb.HibernatePersistence</provider>
-		<class>cn.bc.identity.domain.IdGenerator</class>
-		<class>cn.bc.identity.domain.Resource</class>
-		<class>cn.bc.identity.domain.Role</class>
-		<class>cn.bc.identity.domain.Actor</class>
-		<class>cn.bc.identity.domain.ActorHistory</class>
-		<class>cn.bc.identity.domain.ActorDetail</class>
-		<class>cn.bc.identity.domain.ActorRelation</class>
-		<class>cn.bc.identity.domain.Duty</class>
-		<class>cn.bc.identity.domain.AuthData</class>
+             xmlns="http://java.sun.com/xml/ns/persistence" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xsi:schemaLocation="http://java.sun.com/xml/ns/persistence http://java.sun.com/xml/ns/persistence/persistence_1_0.xsd">
+  <persistence-unit name="persistenceUnit"
+                    transaction-type="RESOURCE_LOCAL">
+    <provider>org.hibernate.ejb.HibernatePersistence</provider>
+    <class>cn.bc.identity.domain.IdGenerator</class>
+    <class>cn.bc.identity.domain.Resource</class>
+    <class>cn.bc.identity.domain.Role</class>
+    <class>cn.bc.identity.domain.Actor</class>
+    <class>cn.bc.identity.domain.ActorHistory</class>
+    <class>cn.bc.identity.domain.ActorDetail</class>
+    <class>cn.bc.identity.domain.ActorRelation</class>
+    <class>cn.bc.identity.domain.Duty</class>
+    <class>cn.bc.identity.domain.AuthData</class>
 
-		<!-- 模板管理 -->
-		<class>cn.bc.template.domain.Template</class>
-		<class>cn.bc.template.domain.TemplateType</class>
-		<class>cn.bc.template.domain.TemplateParam</class>
+    <!-- 模板管理 -->
+    <class>cn.bc.template.domain.Template</class>
+    <class>cn.bc.template.domain.TemplateType</class>
+    <class>cn.bc.template.domain.TemplateParam</class>
 
-		<!-- syslog -->
-		<class>cn.bc.log.domain.Syslog</class>
-		<class>cn.bc.log.domain.OperateLog</class>
-		<class>cn.bc.log.domain.AuditItem</class>
+    <!-- syslog -->
+    <class>cn.bc.log.domain.Syslog</class>
+    <class>cn.bc.log.domain.OperateLog</class>
+    <class>cn.bc.log.domain.AuditItem</class>
 
-		<!-- docs -->
-		<class>cn.bc.docs.domain.Attach</class>
-		<class>cn.bc.docs.domain.AttachHistory</class>
+    <!-- docs -->
+    <class>cn.bc.docs.domain.Attach</class>
+    <class>cn.bc.docs.domain.AttachHistory</class>
 
-		<!-- 流转引擎 -->
-		<class>cn.bc.workflow.domain.ExcutionLog</class>
-		<class>cn.bc.workflow.domain.WorkflowModuleRelation</class>
-		<class>cn.bc.workflow.flowattach.domain.FlowAttach</class>
-		<class>cn.bc.workflow.deploy.domain.Deploy</class>
-		<class>cn.bc.workflow.deploy.domain.DeployResource</class>
-		
-		<!-- 分类模块 -->
-		<class>cn.bc.category.domain.Category</class>
+    <!-- 流转引擎 -->
+    <class>cn.bc.workflow.domain.ExcutionLog</class>
+    <class>cn.bc.workflow.domain.WorkflowModuleRelation</class>
+    <class>cn.bc.workflow.flowattach.domain.FlowAttach</class>
+    <class>cn.bc.workflow.deploy.domain.Deploy</class>
+    <class>cn.bc.workflow.deploy.domain.DeployResource</class>
 
-		<!-- 排除没有在这里声明的注解类:否则报错“nested exception is org.hibernate.DuplicateMappingException: 
-			Duplicate class/entity mapping cn.bc.orm.hibernate.TestDomain” -->
-		<exclude-unlisted-classes>true</exclude-unlisted-classes>
-	</persistence-unit>
+    <!-- 分类模块 -->
+    <class>cn.bc.category.domain.Category</class>
+
+    <!-- 排除没有在这里声明的注解类:否则报错“nested exception is org.hibernate.DuplicateMappingException:
+      Duplicate class/entity mapping cn.bc.orm.hibernate.TestDomain” -->
+    <exclude-unlisted-classes>true</exclude-unlisted-classes>
+  </persistence-unit>
 </persistence>

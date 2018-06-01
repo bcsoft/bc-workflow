@@ -1,53 +1,54 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE struts PUBLIC
-    "-//Apache Software Foundation//DTD Struts Configuration 2.0//EN"
-    "http://struts.apache.org/dtds/struts-2.0.dtd">
+  "-//Apache Software Foundation//DTD Struts Configuration 2.0//EN"
+  "http://struts.apache.org/dtds/struts-2.0.dtd">
 <struts>
-	<package name="deploy" extends="bc-default" namespace="/bc-workflow">
-		<action name="deploy/create" class="deployAction" method="create">
-			<result name="form">/bc-workflow/deploy/form.jsp</result>
-		</action>
-		<action name="deploy/edit" class="deployAction" method="edit">
-			<result name="form">/bc-workflow/deploy/form.jsp</result>
-		</action>
-		<action name="deploy/open" class="deployAction" method="open">
-			<result name="formr">/bc-workflow/deploy/form.jsp</result>
-		</action>
-		<action name="deploy/save" class="deployAction" method="save"/>
-		
-		<action name="deploys/list" class="deploysAction" method="list"/>
-		<action name="deploys/paging" class="deploysAction" method="paging"/>
-		<action name="deploys/data" class="deploysAction" method="data"/>
-		<action name="deploys/conditions" class="deploysAction" method="conditions">
-			<result name="success">/bc-workflow/deploy/conditions.jsp</result>
-		</action>
-		
-		<action name="deploys/isReleased" class="deploysAction" method="isReleased"/>
-		<action name="deploys/isStarted" class="deploysAction" method="isStarted"/>
-		<action name="deploys/dodeployRelease" class="deploysAction" method="dodeployRelease"/>
-		<action name="deploys/dodeployCancel" class="deploysAction" method="dodeployCancel"/>
-		<action name="deploys/dodeployStop" class="deploysAction" method="dodeployStop"/>
-		<action name="deploys/dodeployChangeStatus" class="deploysAction" method="dodeployChangeStatus"/>
-		
-		<!-- 流程部署的编码加版本号是否唯一检查  -->
-		<action name="deploy/isUniqueCodeAndVersion" class="deployAction" method="isUniqueCodeAndVersion"/>
-		<!-- 流程部署的编码是否唯一和扩展名是否有效检查  -->
-		<action name="deploy/isUniqueResourceCodeAndExtCheck" class="deployAction" method="isUniqueResourceCodeAndExtCheck"/>
-		<!-- 页面添加一项资源设置UID和文件大小  -->
-		<action name="deploy/setInputUid" class="deployAction" method="setInputUid"/>
-		<!-- 加载模板类型列表  -->
-		<action name="deploy/loadTemplateTypeList" class="deployAction" method="loadTemplateTypeList"/>
-		<action name="deploy/diagram" class="deployAction" method="diagram">
-			<result name="success" type="stream">
-				<!-- 下载文件类型定义 -->
-				<param name="contentType">${contentType}</param>
-				<param name="contentLength">${contentLength}</param>
-				<!-- 下载文件输出流定义 -->
-				<param name="inputName">inputStream</param>
-				<param name="bufferSize">4096</param>
-				<!-- 下载文件处理方法 -->
-				<param name="contentDisposition">inline; filename="${filename}"</param>
-			</result>
-		</action>
-	</package>
+  <package name="deploy" extends="bc-default" namespace="/bc-workflow">
+    <action name="deploy/create" class="deployAction" method="create">
+      <result name="form">/bc-workflow/deploy/form.jsp</result>
+    </action>
+    <action name="deploy/edit" class="deployAction" method="edit">
+      <result name="form">/bc-workflow/deploy/form.jsp</result>
+    </action>
+    <action name="deploy/open" class="deployAction" method="open">
+      <result name="formr">/bc-workflow/deploy/form.jsp</result>
+    </action>
+    <action name="deploy/save" class="deployAction" method="save"/>
+
+    <action name="deploys/list" class="deploysAction" method="list"/>
+    <action name="deploys/paging" class="deploysAction" method="paging"/>
+    <action name="deploys/data" class="deploysAction" method="data"/>
+    <action name="deploys/conditions" class="deploysAction" method="conditions">
+      <result name="success">/bc-workflow/deploy/conditions.jsp</result>
+    </action>
+
+    <action name="deploys/isReleased" class="deploysAction" method="isReleased"/>
+    <action name="deploys/isStarted" class="deploysAction" method="isStarted"/>
+    <action name="deploys/dodeployRelease" class="deploysAction" method="dodeployRelease"/>
+    <action name="deploys/dodeployCancel" class="deploysAction" method="dodeployCancel"/>
+    <action name="deploys/dodeployStop" class="deploysAction" method="dodeployStop"/>
+    <action name="deploys/dodeployChangeStatus" class="deploysAction" method="dodeployChangeStatus"/>
+
+    <!-- 流程部署的编码加版本号是否唯一检查  -->
+    <action name="deploy/isUniqueCodeAndVersion" class="deployAction" method="isUniqueCodeAndVersion"/>
+    <!-- 流程部署的编码是否唯一和扩展名是否有效检查  -->
+    <action name="deploy/isUniqueResourceCodeAndExtCheck" class="deployAction"
+            method="isUniqueResourceCodeAndExtCheck"/>
+    <!-- 页面添加一项资源设置UID和文件大小  -->
+    <action name="deploy/setInputUid" class="deployAction" method="setInputUid"/>
+    <!-- 加载模板类型列表  -->
+    <action name="deploy/loadTemplateTypeList" class="deployAction" method="loadTemplateTypeList"/>
+    <action name="deploy/diagram" class="deployAction" method="diagram">
+      <result name="success" type="stream">
+        <!-- 下载文件类型定义 -->
+        <param name="contentType">${contentType}</param>
+        <param name="contentLength">${contentLength}</param>
+        <!-- 下载文件输出流定义 -->
+        <param name="inputName">inputStream</param>
+        <param name="bufferSize">4096</param>
+        <!-- 下载文件处理方法 -->
+        <param name="contentDisposition">inline; filename="${filename}"</param>
+      </result>
+    </action>
+  </package>
 </struts>

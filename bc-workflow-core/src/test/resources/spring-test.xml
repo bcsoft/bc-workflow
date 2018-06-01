@@ -1,40 +1,40 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xmlns:context="http://www.springframework.org/schema/context"
-	xsi:schemaLocation="http://www.springframework.org/schema/beans
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
         http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
         http://www.springframework.org/schema/context
         http://www.springframework.org/schema/context/spring-context-3.2.xsd">
-    <!-- 
-    	启用 Spring 2.5 注释驱动功能: http://www.ibm.com/developerworks/cn/java/j-lo-spring25-ioc/
-     --> 
-	<context:annotation-config/>
-	<context:component-scan base-package="cn.bc"/>
-	
-	<!-- 数据库连接及事务管理配置 -->
-	<import resource="classpath:spring-test-db.xml" />
-	<import resource="classpath:spring-test-db2.xml" />
+  <!--
+    启用 Spring 2.5 注释驱动功能: http://www.ibm.com/developerworks/cn/java/j-lo-spring25-ioc/
+   -->
+  <context:annotation-config/>
+  <context:component-scan base-package="cn.bc"/>
 
-	<!-- 标准的crud事务拦截配置：拦截所有实现CrudService接口的类 -->
-	<import resource="classpath:cn/bc/core/spring.xml" />
-	
-	<!-- 平台相关模块的配置 -->
-	<import resource="classpath:cn/bc/identity/spring.xml"/>
-	<import resource="classpath:cn/bc/template/spring.xml"/>
-	<import resource="classpath:cn/bc/docs/spring.xml"/>
-	<import resource="classpath:cn/bc/log/spring.xml"/>
+  <!-- 数据库连接及事务管理配置 -->
+  <import resource="classpath:spring-test-db.xml"/>
+  <import resource="classpath:spring-test-db2.xml"/>
 
-	<!-- 本模块的配置 -->
-	<import resource="classpath:cn/bc/workflow/spring.xml"/>
-	<import resource="classpath:cn/bc/workflow/todo/spring.xml"/>
-	<import resource="classpath:cn/bc/workflow/deploy/spring.xml"/>
-	<import resource="classpath:cn/bc/workflow/flowattach/spring.xml"/>
-	<import resource="classpath:cn/bc/workflow/historictaskinstance/spring.xml"/>
+  <!-- 标准的crud事务拦截配置：拦截所有实现CrudService接口的类 -->
+  <import resource="classpath:cn/bc/core/spring.xml"/>
 
-	<!-- activiti的配置 -->
-	<import resource="classpath:spring-test-activiti.xml"/>
+  <!-- 平台相关模块的配置 -->
+  <import resource="classpath:cn/bc/identity/spring.xml"/>
+  <import resource="classpath:cn/bc/template/spring.xml"/>
+  <import resource="classpath:cn/bc/docs/spring.xml"/>
+  <import resource="classpath:cn/bc/log/spring.xml"/>
 
-	<!-- spring cache -->
-	<import resource="classpath:spring-test-cache.xml"/>
+  <!-- 本模块的配置 -->
+  <import resource="classpath:cn/bc/workflow/spring.xml"/>
+  <import resource="classpath:cn/bc/workflow/todo/spring.xml"/>
+  <import resource="classpath:cn/bc/workflow/deploy/spring.xml"/>
+  <import resource="classpath:cn/bc/workflow/flowattach/spring.xml"/>
+  <import resource="classpath:cn/bc/workflow/historictaskinstance/spring.xml"/>
+
+  <!-- activiti的配置 -->
+  <import resource="classpath:spring-test-activiti.xml"/>
+
+  <!-- spring cache -->
+  <import resource="classpath:spring-test-cache.xml"/>
 </beans>

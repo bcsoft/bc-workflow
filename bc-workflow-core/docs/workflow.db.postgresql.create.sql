@@ -1,145 +1,153 @@
 -- ##BC平台workflow的 postgresql 建表脚本##
 -- 流转日志
-CREATE TABLE BC_WF_EXCUTION_LOG (
-    ID INTEGER NOT NULL,
-    TYPE_ varchar(255) NOT NULL,
-    LISTENTER varchar(255) NOT NULL,
-    EID varchar(255) NOT NULL,
-    PID varchar(255) NOT NULL,
-    TID varchar(255),
-    ECODE varchar(255),
-    ENAME varchar(255),
-    FORMKEY varchar(1000),
-    DESC_ varchar(1000),
-    AUTHOR_ID integer NOT NULL,
-    AUTHOR_CODE varchar(255) NOT NULL,
-    AUTHOR_NAME varchar(255) NOT NULL,
-    ASSIGNEE_ID integer,
-    ASSIGNEE_CODE varchar(255),
-    ASSIGNEE_NAME varchar(255),
-    FILE_DATE TIMESTAMP NOT NULL,
-    CONSTRAINT BCWFPK_EXCUTION_LOG PRIMARY KEY (ID)
+create table BC_WF_EXCUTION_LOG (
+  ID            integer      not null,
+  TYPE_         varchar(255) not null,
+  LISTENTER     varchar(255) not null,
+  EID           varchar(255) not null,
+  PID           varchar(255) not null,
+  TID           varchar(255),
+  ECODE         varchar(255),
+  ENAME         varchar(255),
+  FORMKEY       varchar(1000),
+  DESC_         varchar(1000),
+  AUTHOR_ID     integer      not null,
+  AUTHOR_CODE   varchar(255) not null,
+  AUTHOR_NAME   varchar(255) not null,
+  ASSIGNEE_ID   integer,
+  ASSIGNEE_CODE varchar(255),
+  ASSIGNEE_NAME varchar(255),
+  FILE_DATE     timestamp    not null,
+  constraint BCWFPK_EXCUTION_LOG primary key (ID)
 );
-COMMENT ON TABLE BC_WF_EXCUTION_LOG IS '流转日志';
-COMMENT ON COLUMN BC_WF_EXCUTION_LOG.TYPE_ IS '日志类型：参考ExcutionLog.TYPE_XXX常数的定义';
-COMMENT ON COLUMN BC_WF_EXCUTION_LOG.LISTENTER IS '监听器类型';
-COMMENT ON COLUMN BC_WF_EXCUTION_LOG.EID IS '执行实例的ID';
-COMMENT ON COLUMN BC_WF_EXCUTION_LOG.PID IS '流程实例ID';
-COMMENT ON COLUMN BC_WF_EXCUTION_LOG.TID IS '任务ID';
-COMMENT ON COLUMN BC_WF_EXCUTION_LOG.ECODE IS '执行实例的编码：对应流程、任务、流向的definitionKey';
-COMMENT ON COLUMN BC_WF_EXCUTION_LOG.ENAME IS '执行实例的名称：对应流程、任务、流向的名称';
-COMMENT ON COLUMN BC_WF_EXCUTION_LOG.FORMKEY IS '表单配置';
-COMMENT ON COLUMN BC_WF_EXCUTION_LOG.DESC_ IS '备注';
-COMMENT ON COLUMN BC_WF_EXCUTION_LOG.AUTHOR_ID IS '创建人ID(ActorHistory)';
-COMMENT ON COLUMN BC_WF_EXCUTION_LOG.AUTHOR_CODE IS '创建人帐号';
-COMMENT ON COLUMN BC_WF_EXCUTION_LOG.AUTHOR_NAME IS '创建人姓名';
-COMMENT ON COLUMN BC_WF_EXCUTION_LOG.ASSIGNEE_ID IS '处理人ID(ActorHistory)';
-COMMENT ON COLUMN BC_WF_EXCUTION_LOG.ASSIGNEE_CODE IS '处理人帐号';
-COMMENT ON COLUMN BC_WF_EXCUTION_LOG.ASSIGNEE_NAME IS '处理人姓名';
-COMMENT ON COLUMN BC_WF_EXCUTION_LOG.FILE_DATE IS '创建时间';
-CREATE INDEX BCWFIDX_EXCUTION_LOG_TASK ON BC_WF_EXCUTION_LOG (TYPE_,EID);
+comment on table BC_WF_EXCUTION_LOG is '流转日志';
+comment on column BC_WF_EXCUTION_LOG.TYPE_ is '日志类型：参考ExcutionLog.TYPE_XXX常数的定义';
+comment on column BC_WF_EXCUTION_LOG.LISTENTER is '监听器类型';
+comment on column BC_WF_EXCUTION_LOG.EID is '执行实例的ID';
+comment on column BC_WF_EXCUTION_LOG.PID is '流程实例ID';
+comment on column BC_WF_EXCUTION_LOG.TID is '任务ID';
+comment on column BC_WF_EXCUTION_LOG.ECODE is '执行实例的编码：对应流程、任务、流向的definitionKey';
+comment on column BC_WF_EXCUTION_LOG.ENAME is '执行实例的名称：对应流程、任务、流向的名称';
+comment on column BC_WF_EXCUTION_LOG.FORMKEY is '表单配置';
+comment on column BC_WF_EXCUTION_LOG.DESC_ is '备注';
+comment on column BC_WF_EXCUTION_LOG.AUTHOR_ID is '创建人ID(ActorHistory)';
+comment on column BC_WF_EXCUTION_LOG.AUTHOR_CODE is '创建人帐号';
+comment on column BC_WF_EXCUTION_LOG.AUTHOR_NAME is '创建人姓名';
+comment on column BC_WF_EXCUTION_LOG.ASSIGNEE_ID is '处理人ID(ActorHistory)';
+comment on column BC_WF_EXCUTION_LOG.ASSIGNEE_CODE is '处理人帐号';
+comment on column BC_WF_EXCUTION_LOG.ASSIGNEE_NAME is '处理人姓名';
+comment on column BC_WF_EXCUTION_LOG.FILE_DATE is '创建时间';
+create index BCWFIDX_EXCUTION_LOG_TASK on BC_WF_EXCUTION_LOG (TYPE_, EID);
 
 -- 流程部署
-CREATE TABLE BC_WF_DEPLOY(
-	ID 			INTEGER NOT NULL,
-	UID_			VARCHAR(36),
-	DEPLOYMENT_ID		VARCHAR(64),	
-	ORDER_ 			VARCHAR(255),
-	STATUS_ 		INTEGER NOT NULL DEFAULT 0,
-	TYPE_ 			INTEGER NOT NULL DEFAULT 0,
-	CATEGORY		VARCHAR(255) NOT NULL ,
-	CODE			VARCHAR(255) NOT NULL ,
-	VERSION_		VARCHAR(255) NOT NULL ,
-	SUBJECT			VARCHAR(255),
-	PATH 			VARCHAR(255),
-	SIZE_ 			INTEGER NOT NULL DEFAULT 0,
-	DESC_ 			VARCHAR(4000),
-	SOURCE			VARCHAR(255),
-	DEPLOYER_ID 		INTEGER ,
-	DEPLOY_DATE 		TIMESTAMP,
-	FILE_DATE 		TIMESTAMP NOT NULL,
-	AUTHOR_ID 		INTEGER NOT NULL,
-	MODIFIER_ID 		INTEGER,
-	MODIFIED_DATE 		TIMESTAMP,
-	CONSTRAINT BCPK_WF_DEPLOY PRIMARY KEY (ID)
+create table BC_WF_DEPLOY (
+  ID            integer      not null,
+  UID_          varchar(36),
+  DEPLOYMENT_ID varchar(64),
+  ORDER_        varchar(255),
+  STATUS_       integer      not null default 0,
+  TYPE_         integer      not null default 0,
+  CATEGORY      varchar(255) not null,
+  CODE          varchar(255) not null,
+  VERSION_      varchar(255) not null,
+  SUBJECT       varchar(255),
+  PATH          varchar(255),
+  SIZE_         integer      not null default 0,
+  DESC_         varchar(4000),
+  SOURCE        varchar(255),
+  DEPLOYER_ID   integer,
+  DEPLOY_DATE   timestamp,
+  FILE_DATE     timestamp    not null,
+  AUTHOR_ID     integer      not null,
+  MODIFIER_ID   integer,
+  MODIFIED_DATE timestamp,
+  constraint BCPK_WF_DEPLOY primary key (ID)
 );
-COMMENT ON TABLE BC_WF_DEPLOY IS '流程部署管理';
-COMMENT ON COLUMN BC_WF_DEPLOY.ORDER_ IS '排序号';
-COMMENT ON COLUMN BC_WF_DEPLOY.STATUS_ IS '状态：0-已发布,-1-未发布';
-COMMENT ON COLUMN BC_WF_DEPLOY.TYPE_ IS '类型：0-XML,1-BAR';
-COMMENT ON COLUMN BC_WF_DEPLOY.CATEGORY IS '所属分类';
-COMMENT ON COLUMN BC_WF_DEPLOY.CODE IS '编码';
-COMMENT ON COLUMN BC_WF_DEPLOY.VERSION_ IS '版本号';
-COMMENT ON COLUMN BC_WF_DEPLOY.SUBJECT IS '标题';
-COMMENT ON COLUMN BC_WF_DEPLOY.PATH IS '物理文件保存的相对路径';
-COMMENT ON COLUMN BC_WF_DEPLOY.DESC_ IS '描述';
-COMMENT ON COLUMN BC_WF_DEPLOY.SOURCE IS '原始文件名';
-COMMENT ON COLUMN BC_WF_DEPLOY.DEPLOYER_ID IS '最后部署人';
-COMMENT ON COLUMN BC_WF_DEPLOY.DEPLOY_DATE IS '最后部署时间';
-COMMENT ON COLUMN BC_WF_DEPLOY.FILE_DATE IS '创建时间';
-COMMENT ON COLUMN BC_WF_DEPLOY.AUTHOR_ID IS '创建人ID';
-COMMENT ON COLUMN BC_WF_DEPLOY.MODIFIER_ID IS '最后修改人ID';
-COMMENT ON COLUMN BC_WF_DEPLOY.MODIFIED_DATE IS '最后修改时间';
-ALTER TABLE BC_WF_DEPLOY ADD CONSTRAINT BCFK_WF_DEPLOY_DEPLOYER FOREIGN KEY (DEPLOYER_ID)
-      REFERENCES BC_IDENTITY_ACTOR_HISTORY (ID);
-ALTER TABLE BC_WF_DEPLOY ADD CONSTRAINT BCFK_WF_DEPLOY_AUTHORID FOREIGN KEY (AUTHOR_ID)
-      REFERENCES BC_IDENTITY_ACTOR_HISTORY (ID);
-ALTER TABLE BC_WF_DEPLOY ADD CONSTRAINT BCFK_WF_DEPLOY_MODIFIER FOREIGN KEY (MODIFIER_ID)
-      REFERENCES BC_IDENTITY_ACTOR_HISTORY (ID);
-ALTER TABLE BC_WF_DEPLOY ADD CONSTRAINT BCUK_WF_DEPLOY_CODE_VERSION UNIQUE (CODE,VERSION_);
+comment on table BC_WF_DEPLOY is '流程部署管理';
+comment on column BC_WF_DEPLOY.ORDER_ is '排序号';
+comment on column BC_WF_DEPLOY.STATUS_ is '状态：0-已发布,-1-未发布';
+comment on column BC_WF_DEPLOY.TYPE_ is '类型：0-XML,1-BAR';
+comment on column BC_WF_DEPLOY.CATEGORY is '所属分类';
+comment on column BC_WF_DEPLOY.CODE is '编码';
+comment on column BC_WF_DEPLOY.VERSION_ is '版本号';
+comment on column BC_WF_DEPLOY.SUBJECT is '标题';
+comment on column BC_WF_DEPLOY.PATH is '物理文件保存的相对路径';
+comment on column BC_WF_DEPLOY.DESC_ is '描述';
+comment on column BC_WF_DEPLOY.SOURCE is '原始文件名';
+comment on column BC_WF_DEPLOY.DEPLOYER_ID is '最后部署人';
+comment on column BC_WF_DEPLOY.DEPLOY_DATE is '最后部署时间';
+comment on column BC_WF_DEPLOY.FILE_DATE is '创建时间';
+comment on column BC_WF_DEPLOY.AUTHOR_ID is '创建人ID';
+comment on column BC_WF_DEPLOY.MODIFIER_ID is '最后修改人ID';
+comment on column BC_WF_DEPLOY.MODIFIED_DATE is '最后修改时间';
+alter table BC_WF_DEPLOY
+  add constraint BCFK_WF_DEPLOY_DEPLOYER foreign key (DEPLOYER_ID)
+references BC_IDENTITY_ACTOR_HISTORY (ID);
+alter table BC_WF_DEPLOY
+  add constraint BCFK_WF_DEPLOY_AUTHORID foreign key (AUTHOR_ID)
+references BC_IDENTITY_ACTOR_HISTORY (ID);
+alter table BC_WF_DEPLOY
+  add constraint BCFK_WF_DEPLOY_MODIFIER foreign key (MODIFIER_ID)
+references BC_IDENTITY_ACTOR_HISTORY (ID);
+alter table BC_WF_DEPLOY
+  add constraint BCUK_WF_DEPLOY_CODE_VERSION unique (CODE, VERSION_);
 
 -- 流程部署使用人
-CREATE TABLE BC_WF_DEPLOY_ACTOR(
-		DID INTEGER NOT NULL,
-		AID INTEGER NOT NULL,
-	CONSTRAINT BCPK_WF_DEPLOY_ACTOR PRIMARY KEY (DID,AID)
+create table BC_WF_DEPLOY_ACTOR (
+  DID integer not null,
+  AID integer not null,
+  constraint BCPK_WF_DEPLOY_ACTOR primary key (DID, AID)
 );
-COMMENT ON TABLE BC_WF_DEPLOY_ACTOR IS '流程部署使用人';
-COMMENT ON COLUMN BC_WF_DEPLOY_ACTOR.DID IS '流程部署id';
-COMMENT ON COLUMN BC_WF_DEPLOY_ACTOR.AID IS '使用人id';
-ALTER TABLE BC_WF_DEPLOY_ACTOR ADD CONSTRAINT BCFK_BC_WF_DEPLOY_ACTOR_DEPLOY FOREIGN KEY (DID)
-      REFERENCES BC_WF_DEPLOY (ID);
-ALTER TABLE BC_WF_DEPLOY_ACTOR ADD CONSTRAINT BCFK_BC_WF_DEPLOY_ACTOR_ACTOR FOREIGN KEY (AID)
-      REFERENCES BC_IDENTITY_ACTOR (ID);
+comment on table BC_WF_DEPLOY_ACTOR is '流程部署使用人';
+comment on column BC_WF_DEPLOY_ACTOR.DID is '流程部署id';
+comment on column BC_WF_DEPLOY_ACTOR.AID is '使用人id';
+alter table BC_WF_DEPLOY_ACTOR
+  add constraint BCFK_BC_WF_DEPLOY_ACTOR_DEPLOY foreign key (DID)
+references BC_WF_DEPLOY (ID);
+alter table BC_WF_DEPLOY_ACTOR
+  add constraint BCFK_BC_WF_DEPLOY_ACTOR_ACTOR foreign key (AID)
+references BC_IDENTITY_ACTOR (ID);
 
 -- 流程附件、意见
-CREATE TABLE BC_WF_ATTACH(
-	ID	INTEGER	NOT NULL,
-	UID_ VARCHAR(36) NOT NULL,
-	TID	VARCHAR(255),
-	PID VARCHAR(255) NOT NULL,
-	TYPE_	INT,
-	COMMON BOOLEAN NOT NULL DEFAULT TRUE,
-	SUBJECT VARCHAR(255),
-	PATH_ VARCHAR(255),
-	EXT VARCHAR(255),
-	SIZE_ INTEGER DEFAULT 0,
-	DESC_ VARCHAR(4000),
-	FORMATTED BOOLEAN,
-	TEMPLATE_ID INTEGER,
-	FILE_DATE	TIMESTAMP	NOT NULL,
-	AUTHOR_ID	INTEGER	NOT NULL,
-	MODIFIED_DATE	TIMESTAMP,
-	MODIFIER_ID	INTEGER,
-	CONSTRAINT BCPK_WF_ATTACH PRIMARY KEY (ID)
+create table BC_WF_ATTACH (
+  ID            integer      not null,
+  UID_          varchar(36)  not null,
+  TID           varchar(255),
+  PID           varchar(255) not null,
+  TYPE_         int,
+  COMMON        boolean      not null default true,
+  SUBJECT       varchar(255),
+  PATH_         varchar(255),
+  EXT           varchar(255),
+  SIZE_         integer               default 0,
+  DESC_         varchar(4000),
+  FORMATTED     boolean,
+  TEMPLATE_ID   integer,
+  FILE_DATE     timestamp    not null,
+  AUTHOR_ID     integer      not null,
+  MODIFIED_DATE timestamp,
+  MODIFIER_ID   integer,
+  constraint BCPK_WF_ATTACH primary key (ID)
 );
-COMMENT ON TABLE BC_WF_ATTACH IS '流程附加信息';
-COMMENT ON COLUMN BC_WF_ATTACH.TID IS '流程任务id';
-COMMENT ON COLUMN BC_WF_ATTACH.PID IS '流程实例id';
-COMMENT ON COLUMN BC_WF_ATTACH.TYPE_ IS '类型：1-附件，2-意见';
-COMMENT ON COLUMN BC_WF_ATTACH.COMMON IS '是否为公共信息，true是，false任务信息';
-COMMENT ON COLUMN BC_WF_ATTACH.SUBJECT IS '标题';
-COMMENT ON COLUMN BC_WF_ATTACH.PATH_ IS '附件路径';
-COMMENT ON COLUMN BC_WF_ATTACH.EXT IS '附件扩展名';
-COMMENT ON COLUMN BC_WF_ATTACH.SIZE_ IS '附件大小';
-COMMENT ON COLUMN BC_WF_ATTACH.DESC_ IS '附加信息的类型为附件时:附件备注。附加信息的类型为意见时:意见信息。';
-COMMENT ON COLUMN BC_WF_ATTACH.FORMATTED IS '附件是否需要格式化,类型为意见时字段为空';
-COMMENT ON COLUMN BC_WF_ATTACH.TEMPLATE_ID  IS '模板ID';
-COMMENT ON COLUMN BC_WF_ATTACH.FILE_DATE IS '创建时间';
-COMMENT ON COLUMN BC_WF_ATTACH.AUTHOR_ID IS '创建人ID';
-COMMENT ON COLUMN BC_WF_ATTACH.MODIFIED_DATE IS '最后修改时间';
-COMMENT ON COLUMN BC_WF_ATTACH.MODIFIER_ID IS '最后修改人ID';
-ALTER TABLE BC_WF_ATTACH ADD CONSTRAINT BCFK_WF_ATTACH_AUTHOR FOREIGN KEY (AUTHOR_ID)
-      REFERENCES BC_IDENTITY_ACTOR_HISTORY (ID);
-ALTER TABLE BC_WF_ATTACH ADD CONSTRAINT BCFK_WF_ATTACH_MODIFIER FOREIGN KEY (MODIFIER_ID)
-      REFERENCES BC_IDENTITY_ACTOR_HISTORY (ID);
+comment on table BC_WF_ATTACH is '流程附加信息';
+comment on column BC_WF_ATTACH.TID is '流程任务id';
+comment on column BC_WF_ATTACH.PID is '流程实例id';
+comment on column BC_WF_ATTACH.TYPE_ is '类型：1-附件，2-意见';
+comment on column BC_WF_ATTACH.COMMON is '是否为公共信息，true是，false任务信息';
+comment on column BC_WF_ATTACH.SUBJECT is '标题';
+comment on column BC_WF_ATTACH.PATH_ is '附件路径';
+comment on column BC_WF_ATTACH.EXT is '附件扩展名';
+comment on column BC_WF_ATTACH.SIZE_ is '附件大小';
+comment on column BC_WF_ATTACH.DESC_ is '附加信息的类型为附件时:附件备注。附加信息的类型为意见时:意见信息。';
+comment on column BC_WF_ATTACH.FORMATTED is '附件是否需要格式化,类型为意见时字段为空';
+comment on column BC_WF_ATTACH.TEMPLATE_ID is '模板ID';
+comment on column BC_WF_ATTACH.FILE_DATE is '创建时间';
+comment on column BC_WF_ATTACH.AUTHOR_ID is '创建人ID';
+comment on column BC_WF_ATTACH.MODIFIED_DATE is '最后修改时间';
+comment on column BC_WF_ATTACH.MODIFIER_ID is '最后修改人ID';
+alter table BC_WF_ATTACH
+  add constraint BCFK_WF_ATTACH_AUTHOR foreign key (AUTHOR_ID)
+references BC_IDENTITY_ACTOR_HISTORY (ID);
+alter table BC_WF_ATTACH
+  add constraint BCFK_WF_ATTACH_MODIFIER foreign key (MODIFIER_ID)
+references BC_IDENTITY_ACTOR_HISTORY (ID);
