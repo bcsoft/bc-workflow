@@ -5,6 +5,7 @@ package cn.bc.workflow.activiti;
 
 import cn.bc.core.exception.CoreException;
 import cn.bc.core.util.FreeMarkerUtils;
+import cn.bc.core.util.SpringUtils;
 import cn.bc.core.util.TemplateUtils;
 import cn.bc.docs.domain.Attach;
 import cn.bc.template.domain.Template;
@@ -33,7 +34,6 @@ public class FormServiceImpl extends org.activiti.engine.impl.FormServiceImpl {
   private static final Logger logger = LoggerFactory.getLogger(FormServiceImpl.class);
   private ExcutionLogService excutionLogService;
   private TemplateService templateService;
-  @Autowired
   private DeployService deployService;
   @Autowired
   private JdbcTemplate jdbcTemplate;
@@ -41,6 +41,12 @@ public class FormServiceImpl extends org.activiti.engine.impl.FormServiceImpl {
   @Autowired
   public void setTemplateService(TemplateService templateService) {
     this.templateService = templateService;
+  }
+
+  // 延迟获取 deployService 避免循环依赖导致的 spring 加载失败
+  public DeployService getDeployService() {
+    if (deployService == null) deployService = SpringUtils.getBean(DeployService.class);
+    return deployService;
   }
 
   @Autowired
@@ -242,6 +248,6 @@ public class FormServiceImpl extends org.activiti.engine.impl.FormServiceImpl {
     logger.debug("deploymentId={}, wfCode={}, resCode={}", deploymentId, wfCode, resCode);
 
     // 获取资源内容
-    return this.deployService.getResourceContent(deploymentId, resCode);
+    return this.getDeployService().getResourceContent(deploymentId, resCode);
   }
 }
