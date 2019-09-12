@@ -812,16 +812,20 @@ public class WorkspaceServiceImpl implements WorkspaceService {
    */
   private String buildItemDefaultButtons(int flowStatus, String type) {
     StringBuffer buttons = new StringBuffer();
+    /* 不显示编辑按钮
     if (flowStatus == WorkspaceService.FLOWSTATUS_ACTIVE) {
       buttons.append(ITEM_BUTTON_EDIT);
     }
+    */
     buttons.append(ITEM_BUTTON_OPEN);
     if ("attach".equals(type)) {
       buttons.append(ITEM_BUTTON_DOWNLOAD);
     }
+    /* 不显示删除按钮
     if (flowStatus == WorkspaceService.FLOWSTATUS_ACTIVE && !"form".equals(type)) {
       buttons.append(ITEM_BUTTON_DELETE);
     }
+    */
     return buttons.length() > 0 ? buttons.toString() : null;
   }
 
