@@ -13,6 +13,7 @@ import cn.bc.workflow.flowattach.domain.FlowAttach;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -44,6 +45,9 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 
   @Autowired
   private WorkflowService workflowService;
+
+  @Value("${wf.disable-common-region-edit:true}")
+  private boolean disableCommonRegionEdit;
 
   @Override
   @Transactional(readOnly = true)
@@ -417,7 +421,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
     // 构建表单条目 TODO
 
     // 构建意见附件条目
-    List<Map<String, Object>> attachItems = buildFlowAttachsInfo((Object[]) instance.get("attachs"), flowStatus);
+    List<Map<String, Object>> attachItems = buildFlowAttachsInfo((Object[]) instance.get("attachs"), flowStatus, true);
     if (attachItems != null) items.addAll(attachItems);
 
     // 统计信息条目
@@ -634,7 +638,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 
       // -- 意见、附件信息
       if (!(boolean) task.get("hideAttach")) {
-        attachItems = buildFlowAttachsInfo((Object[]) task.get("attachs"), flowStatus);
+        attachItems = buildFlowAttachsInfo((Object[]) task.get("attachs"), flowStatus, false);
         if (attachItems != null) items.addAll(attachItems);
       }
 
@@ -726,7 +730,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
 
       // -- 意见、附件信息
       if (!(boolean) task.get("hideAttach")) {
-        attachItems = buildFlowAttachsInfo((Object[]) task.get("attachs"), WorkspaceService.FLOWSTATUS_COMPLETE);
+        attachItems = buildFlowAttachsInfo((Object[]) task.get("attachs"), WorkspaceService.FLOWSTATUS_COMPLETE, false);
         if (attachItems != null) items.addAll(attachItems);
       }
 
@@ -775,7 +779,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
     item.put("tid", taskId);// 任务id
     item.put("type", type);// 信息类型
     item.put("link", false);// 链接标题
-    item.put("buttons", this.buildItemDefaultButtons(flowStatus, type));// 操作按钮列表
+    item.put("buttons", this.buildItemDefaultButtons(flowStatus, type, false));// 操作按钮列表
     item.put("hasButtons", item.get("buttons") != null);// 有否有操作按钮
     item.put("iconClass", "ui-icon-document");// 左侧显示的小图标
     item.put("subject", "完成任务前需要你处理如下信息：");// 标题信息
@@ -809,19 +813,22 @@ public class WorkspaceServiceImpl implements WorkspaceService {
    *
    * @param flowStatus 流转状态:1、2、3
    * @param type       类型: attach|form|comment
+   * @param isCommonRegion 是否流程公共信息区
    */
-  private String buildItemDefaultButtons(int flowStatus, String type) {
+  private String buildItemDefaultButtons(int flowStatus, String type, boolean isCommonRegion) {
     StringBuffer buttons = new StringBuffer();
-    if (flowStatus == WorkspaceService.FLOWSTATUS_ACTIVE) {
+    // 如果不是公共信息区或公共信息区附件编辑按钮不禁用，并且流程为流转中
+    if ((!isCommonRegion || !disableCommonRegionEdit) && flowStatus == WorkspaceService.FLOWSTATUS_ACTIVE)
       buttons.append(ITEM_BUTTON_EDIT);
-    }
+
     buttons.append(ITEM_BUTTON_OPEN);
     if ("attach".equals(type)) {
       buttons.append(ITEM_BUTTON_DOWNLOAD);
     }
-    if (flowStatus == WorkspaceService.FLOWSTATUS_ACTIVE && !"form".equals(type)) {
+
+    // 如果不是公共信息区或公共信息区附件编辑按钮不禁用，并且流程为流转中和创建类型不是“表单”
+    if ((!isCommonRegion || !disableCommonRegionEdit) && flowStatus == WorkspaceService.FLOWSTATUS_ACTIVE && !"form".equals(type))
       buttons.append(ITEM_BUTTON_DELETE);
-    }
     return buttons.length() > 0 ? buttons.toString() : null;
   }
 
@@ -831,9 +838,10 @@ public class WorkspaceServiceImpl implements WorkspaceService {
    *
    * @param flowStatus 流转状态
    * @param attachs    附件信息
+   * @param isCommonRegion 是否流程公共信息区
    */
   @SuppressWarnings("unchecked")
-  private List<Map<String, Object>> buildFlowAttachsInfo(Object[] attachs, int flowStatus) {
+  private List<Map<String, Object>> buildFlowAttachsInfo(Object[] attachs, int flowStatus, boolean isCommonRegion) {
     if (attachs == null) return null;
     List<Map<String, Object>> attachItems = new ArrayList<>();
     Map<String, Object> item;
@@ -870,7 +878,7 @@ public class WorkspaceServiceImpl implements WorkspaceService {
       }
       item.put("type", itemType);// 信息类型
       item.put("link", true);// 链接标题
-      item.put("buttons", this.buildItemDefaultButtons(flowStatus, itemType));// 操作按钮列表
+      item.put("buttons", this.buildItemDefaultButtons(flowStatus, itemType, isCommonRegion));// 操作按钮列表
       item.put("hasButtons", item.get("buttons") != null);// 有否操作按钮
 
       // 详细信息
