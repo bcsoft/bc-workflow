@@ -4,11 +4,12 @@
   <parent>
     <groupId>cn.bc.workflow</groupId>
     <artifactId>bc-workflow-parent</artifactId>
-    <version>${revision}</version>
+    <version>4.1.0</version>
     <relativePath>..</relativePath>
   </parent>
   <artifactId>bc-workflow-core</artifactId>
   <name>bc-workflow-core</name>
+  <version>4.1.0</version>
   <description>工作流核心</description>
   <dependencies>
     <dependency>
