@@ -5,11 +5,12 @@
   <parent>
     <groupId>cn.bc</groupId>
     <artifactId>bc-parent</artifactId>
-    <version>${revision}</version>
+    <version>4.0.3</version>
     <relativePath>../bc-parent</relativePath>
   </parent>
   <groupId>cn.bc.workflow</groupId>
   <artifactId>bc-workflow-parent</artifactId>
+  <version>${revision}</version>
   <packaging>pom</packaging>
   <name>bc-workflow-parent</name>
   <description>BC 工作流</description>
