@@ -46,13 +46,12 @@ public class WorkflowAction extends AbstractBaseAction {
   public long contentLength;
   public InputStream inputStream;
   public String n;// [可选]指定下载文件的文件名
-  public String mid;// 模块 ID，模块与流程关联标识之一
-  public String mtype;// 模块类型，模块与流程关联标识之一
-  public boolean autoCompleteFirstTask;// 是否自动完成办理
+  public String mid;// 模块 ID，对应 WorkflowModuleRelation.mid
+  public String mtype;// 模块类型，对应 WorkflowModuleRelation.mtype
+  public boolean autoCompleteFirstTask;// 是否自动完成首个待办的办理
 
   /**
-   * 任务的表单数据，使用标准的Json数据格式：[{name:"",value:"",type:"int|long|string|date|...",
-   * scope:"process|task"}]
+   * 任务的表单数据，使用标准的Json数据格式：[{name:"",value:"",type:"int|long|string|date|...",scope:"process|task"}]
    */
   public String formData;
 
@@ -188,10 +187,14 @@ public class WorkflowAction extends AbstractBaseAction {
         // 启动流程
         processInstanceId = this.workflowService.startFlowByDefinitionId(id);
       }
-      // 如果需要自动完成
+      // 如果需要自动完成首个待办任务
       if (autoCompleteFirstTask) {
         // 找到待办任务
         String[] taskIds = this.workflowService.findTaskIdByProcessInstanceId(processInstanceId);
+        if (taskIds == null || taskIds.length == 0)
+          throw new RuntimeException("流程实例 " + processInstanceId + " 没有待办任务，无法完成办理！");
+
+        // 完成第一个待办任务的办理
         workflowService.completeTask(taskIds[0], globalVariables, localVariables);
       }
 
