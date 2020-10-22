@@ -8,7 +8,9 @@ import cn.bc.docs.web.AttachUtils;
 import cn.bc.identity.domain.ActorHistory;
 import cn.bc.web.ui.json.Json;
 import cn.bc.web.util.WebUtils;
+import cn.bc.workflow.domain.WorkflowModuleRelation;
 import cn.bc.workflow.flowattach.service.FlowAttachService;
+import cn.bc.workflow.service.WorkflowModuleRelationService;
 import org.activiti.engine.repository.Deployment;
 import org.activiti.engine.task.Task;
 import org.apache.struts2.ServletActionContext;
@@ -21,6 +23,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.InputStream;
 import java.util.*;
@@ -44,18 +47,28 @@ public class WorkflowAction extends AbstractBaseAction {
   public long contentLength;
   public InputStream inputStream;
   public String n;// [可选]指定下载文件的文件名
+  public String mid;// 模块 ID，对应 WorkflowModuleRelation.mid
+  public String mtype;// 模块类型，对应 WorkflowModuleRelation.mtype
+  public boolean autoCompleteFirstTask;// 是否自动完成首个待办的办理
 
   /**
-   * 任务的表单数据，使用标准的Json数据格式：[{name:"",value:"",type:"int|long|string|date|...",
-   * scope:"process|task"}]
+   * 任务的表单数据，使用标准的Json数据格式：[{name:"",value:"",type:"int|long|string|date|...",scope:"process|task"}]
    */
   public String formData;
 
   private FlowAttachService flowAttachService;
 
+  private WorkflowModuleRelationService workflowModuleRelationService;
+
   @Autowired
   public void setFlowAttachService(FlowAttachService flowAttachService) {
     this.flowAttachService = flowAttachService;
+  }
+
+  @Autowired
+  public void setWorkflowModuleRelationService(
+    WorkflowModuleRelationService workflowModuleRelationService) {
+    this.workflowModuleRelationService = workflowModuleRelationService;
   }
 
   /**
@@ -154,18 +167,47 @@ public class WorkflowAction extends AbstractBaseAction {
    *
    * @throws Exception
    */
+  @Transactional
   public String startFlow() throws Exception {
     try {
       String processInstanceId;
+      Object[] variables = buildFormVariables();
+      Map<String, Object> globalVariables = (Map<String, Object>) variables[0];
+      Map<String, Object> localVariables = (Map<String, Object>) variables[1];
 
       if (null != key && key.length() > 0) {
-        //启动流程
-        processInstanceId = this.workflowService.startFlowByKey(key);
+        if (null != formData && formData.length() > 0) {
+          //启动流程，携带全局变量
+          processInstanceId = this.workflowService.startFlowByKey(key, globalVariables);
+        } else {
+          //启动流程
+          processInstanceId = this.workflowService.startFlowByKey(key);
+        }
       } else {
         // id为流程实例id
         Assert.assertNotEmpty(id);
-        //启动流程
+        // 启动流程
         processInstanceId = this.workflowService.startFlowByDefinitionId(id);
+      }
+      // 如果需要自动完成首个待办任务
+      if (autoCompleteFirstTask) {
+        // 找到待办任务
+        String[] taskIds = this.workflowService.findTaskIdByProcessInstanceId(processInstanceId);
+        if (taskIds == null || taskIds.length == 0)
+          throw new RuntimeException("流程实例 " + processInstanceId + " 没有待办任务，无法完成办理！");
+
+        // 完成第一个待办任务的办理
+        workflowService.completeTask(taskIds[0], globalVariables, localVariables);
+      }
+
+      // 如果设置了 mid、mtype 就创建模块与流程的关联关系
+      if (null != mid && null != mtype) {
+        // 保存流程与模块信息的关系
+        WorkflowModuleRelation workflowModuleRelation = new WorkflowModuleRelation();
+        workflowModuleRelation.setMid(Long.parseLong(mid));
+        workflowModuleRelation.setPid(processInstanceId);
+        workflowModuleRelation.setMtype(mtype);
+        this.workflowModuleRelationService.save(workflowModuleRelation);
       }
 
       // 返回信息
