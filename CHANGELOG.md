@@ -1,5 +1,12 @@
 ﻿# bc-workflow 变更日志
 
+## 4.2.0 2020-10-23
+
+- 升级到 bc-parent-4.0.4
+- 添加创建流程与模块关联关系的监听器 - CreateModuleRelationListener
+- 扩展发起流程接口 - 允许携带业务数据与可自动完成首个待办任务的办理
+- 添加可发送 HTTP 请求的监听器 - SendHttpRequestListener
+
 ## 4.1.1 2020-07-14
 
 - 设置固定依赖 bc-parent-4.0.3
