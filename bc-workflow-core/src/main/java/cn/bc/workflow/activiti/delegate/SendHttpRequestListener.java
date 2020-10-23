@@ -109,15 +109,15 @@ public class SendHttpRequestListener extends ExcutionLogListener implements Task
 
       @Override
       protected Result defaultBadResult(HttpResponse response) {
-        Result result = super.defaultBadResult(response);
         try {
-          // 请求失败，返回请求体包含的信息
+          // 请求失败，返回响应体包含的文本信息
           String Response = getResponseText();
-          if (!StringUtil.isBlank(Response)) result = new Result<>(false, Response);
+          if (!StringUtil.isBlank(Response)) return new Result<>(false, Response);
+          else return super.defaultBadResult(response); // 响应体无内容返回默认值
         } catch (Exception e) {
-          e.printStackTrace();
+          logger.warn("解析响应失败，返回默认值代替！", e);
+          return super.defaultBadResult(response); // 有异常返回默认值
         }
-        return result;
       }
 
       @Override
