@@ -12,14 +12,16 @@ import org.activiti.engine.delegate.VariableScope;
 import org.activiti.engine.impl.el.Expression;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.HttpResponse;
 import org.jsoup.helper.StringUtil;
 
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * 调用可发起 HTTP 请求的监听器
+ * 调用可发起 HTTP 请求的监听器。
+ * <p>
+ * 可用在环节的监听（实现了 TaskListener），也可用在流向和流程的监听（实现了 ExecutionListener）。
  *
  * @author zf
  */
@@ -106,7 +108,7 @@ public class SendHttpRequestListener extends ExcutionLogListener implements Task
       }
 
       @Override
-      protected Result defaultBadResult(CloseableHttpResponse response) {
+      protected Result defaultBadResult(HttpResponse response) {
         Result result = super.defaultBadResult(response);
         try {
           // 请求失败，返回请求体包含的信息
