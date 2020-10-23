@@ -14,7 +14,7 @@ import org.apache.commons.logging.LogFactory;
 /**
  * 创建流程与模块关联关系的监听器。
  *
- * 可用在环节的监听（实现了 TaskListener）也可用在流向的监听（实现了 ExecutionListener）。
+ * 可用在环节的监听（实现了 TaskListener），也可用在流向和流程的监听（实现了 ExecutionListener）。
  *
  * 1. 通过参数 ignore 控制是否创建关联关系。
  * 2. 需要创建关联关系时必须提供 mid、mtype 这两个流程变量，否则抛出异常。
