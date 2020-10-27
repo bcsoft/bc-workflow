@@ -63,6 +63,27 @@ public interface WorkflowService {
   void deleteInstance(String[] instanceIds);
 
   /**
+   * 启动流程。
+   *
+   * @param key 流程编码，有此参数则忽略 id 参数，按流程编码发起流程
+   * @param id 流程定义的ID
+   * @param globalVariables 流程全局变量
+   * @param taskLocalVariables 任务本地变量
+   * @param moduleType 关联模块的类型，用于创建流程与模块的关联关系
+   * @param moduleId 关联模块的ID，用于创建流程与模块的关联关系
+   * @param autoCompleteFirstTask 是否自动完成流程发起后的首个待办。
+   *        设置为 true 时，将按流程发起人身份自动完成首个待办，此待办的全局变量将设置为 globalVariables，本地变量将设置为 taskLocalVariables
+   * @return 流程实例的ID
+   */
+  String startFlow(
+    String key, String id,
+    Map<String, Object> globalVariables,
+    Map<String, Object> taskLocalVariables,
+    String moduleType, String moduleId,
+    boolean autoCompleteFirstTask
+  );
+
+  /**
    * 启动指定编码流程的最新版本
    *
    * @param key 流程编码

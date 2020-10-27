@@ -97,6 +97,56 @@ public class WorkflowServiceImpl implements WorkflowService {
     return SystemContextHolder.get().getUser().getCode();
   }
 
+  @Transactional
+  @Override
+  public String startFlow(String key,
+                          String id,
+                          Map<String, Object> globalVariables,
+                          Map<String, Object> taskLocalVariables,
+                          String moduleType,
+                          String moduleId,
+                          boolean autoCompleteFirstTask) {
+    String processInstanceId;
+    if (null != key && !key.isEmpty()) {
+      if (null != globalVariables && !globalVariables.isEmpty()) {
+        // 启动流程，携带全局变量
+        processInstanceId = this.startFlowByKey(key, globalVariables);
+      } else {
+        // 启动流程
+        processInstanceId = this.startFlowByKey(key);
+      }
+    } else {
+      // id 为流程定义 id（格式类似 PayPlanApproval:1:17457707）
+      if (id == null || id.isEmpty()) throw new IllegalArgumentException("需指定流程编码或流程定义ID的值才能发起流程!");
+
+      // 启动流程
+      processInstanceId = this.startFlowByDefinitionId(id);
+    }
+
+    // 如果需要自动完成首个待办任务
+    if (autoCompleteFirstTask) {
+      // 找到待办任务
+      String[] taskIds = this.findTaskIdByProcessInstanceId(processInstanceId);
+      if (taskIds == null || taskIds.length == 0)
+        throw new RuntimeException("流程实例 " + processInstanceId + " 没有待办任务，无法完成办理！");
+
+      // 完成第一个待办任务的办理
+      this.completeTask(taskIds[0], globalVariables, taskLocalVariables);
+    }
+
+    // 如果设置了 moduleType、moduleId 就创建模块与流程的关联关系
+    if (null != moduleType && null != moduleId) {
+      // 保存流程与模块信息的关系
+      WorkflowModuleRelation workflowModuleRelation = new WorkflowModuleRelation();
+      workflowModuleRelation.setMid(Long.parseLong(moduleId));
+      workflowModuleRelation.setPid(processInstanceId);
+      workflowModuleRelation.setMtype(moduleType);
+      this.workflowModuleRelationService.save(workflowModuleRelation);
+    }
+
+    return processInstanceId;
+  }
+
   /**
    * 启动指定编码流程的最新版本
    *
