@@ -143,7 +143,8 @@ public abstract class AbstractBaseAction extends ActionSupport implements
   protected Json createFailureMsg(Exception e) {
     Json json = new Json();
     json.put("success", false);
-    json.put("msg", e.getMessage());
+    String message = e.getMessage();
+    json.put("msg", message != null && !message.isEmpty() ? message : e.getClass().getSimpleName());
     return json;
   }
 }
