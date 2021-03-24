@@ -11,9 +11,11 @@ import cn.bc.core.util.DateUtils;
 import cn.bc.core.util.JsonUtils;
 import cn.bc.desktop.service.LoginService;
 import cn.bc.docs.domain.Attach;
+import cn.bc.docs.service.AttachService;
 import cn.bc.identity.domain.ActorHistory;
 import cn.bc.identity.service.ActorHistoryService;
 import cn.bc.identity.service.ActorService;
+import cn.bc.identity.service.IdGeneratorService;
 import cn.bc.identity.web.SystemContext;
 import cn.bc.identity.web.SystemContextHolder;
 import cn.bc.identity.web.SystemContextImpl;
@@ -48,6 +50,7 @@ import org.springframework.util.FileCopyUtils;
 
 import java.io.*;
 import java.util.*;
+import java.util.stream.Collectors;
 import java.util.zip.ZipInputStream;
 
 /**
@@ -87,6 +90,10 @@ public class WorkflowServiceImpl implements WorkflowService {
   private WorkflowDao workflowDao;
   @Autowired
   private LoginService loginService;
+  @Autowired
+  private AttachService attachService;
+  @Autowired
+  private IdGeneratorService idGeneratorService;// 用于生成uid的服务
 
   /**
    * 获取当前用户的帐号信息
@@ -144,7 +151,114 @@ public class WorkflowServiceImpl implements WorkflowService {
       this.workflowModuleRelationService.save(workflowModuleRelation);
     }
 
+    // 如果有附件信息
+    if (globalVariables != null && globalVariables.containsKey("attachInfo")) {
+      // 设计 attachInfo 的 value 值格式为 ptype_puid_search 组成的字符串，其中前两个 ptype 和 puid 必须存在，search 可以不存在
+      String attachInfo = (String) globalVariables.get("attachInfo");
+      String[] s = attachInfo.split("_");
+
+      // 找到待办任务
+      String[] taskIds = this.findTaskIdByProcessInstanceId(processInstanceId);
+      // 流程实例没有待办任务
+      if (taskIds == null || taskIds.length == 0) {
+        // 复制模块附件到流程全局附件中
+        this.copyModuleAttach(s[0], s[1], s.length == 3 ? s[2] : null, processInstanceId, null);
+      } else {
+        // 复制模块附件到流程首待办任务附件中
+        this.copyModuleAttach(s[0], s[1], s.length == 3 ? s[2] : null, processInstanceId, taskIds[0]);
+      }
+    }
+
     return processInstanceId;
+  }
+
+  /**
+   * 将指定模块的附件复制到流程附件中。
+   * @param ptype 所关联文档的类型
+   * @param puid 所关联文档的UID
+   * @param search 所关联文档附件的模糊搜索名
+   * @param procInstId 流程id
+   * @param taskId 任务id
+   * @return 如果复制失败，响应相关错误信息，如果成功，则不返回
+   */
+  private void copyModuleAttach(String ptype, String puid, String search, String procInstId, String taskId) {
+    List<Attach> attachList = attachService.findByPtype(ptype, puid);
+    List<Attach> sources = search == null ? attachList : attachList.stream()
+        .filter(attach -> attach.getSubject().contains(search)).collect(Collectors.toList());
+    if (sources.isEmpty()) {
+      throw new NotExistsException("找不到附件！");
+    }
+
+    List<FlowAttach> flowAttachList = new ArrayList<>();
+    for (Attach attach : sources) {
+      // ======== 复制附件到流程任务附件位置中 ========
+      // 扩展名
+      String extension = this.getFilenameExtension(attach.getPath());
+      // 文件存储的相对路径（年月），避免超出目录内文件数的限制
+      String subFolder = DateUtils.formatCalendar(Calendar.getInstance(), "yyyyMM");
+      // 上传文件存储的绝对路径
+      String appRealDir = Attach.DATA_REAL_PATH + File.separator + FlowAttach.DATA_SUB_PATH;
+      // 所保存文件所在的目录的绝对路径名
+      String realFileDir = appRealDir + File.separator + subFolder;
+      // 不含路径的文件名
+      String fileName = DateUtils.formatCalendar(Calendar.getInstance(), "yyyyMMddHHmmssSSSS") + "." + extension;
+      // 所保存文件的绝对路径名
+      String realFilePath = realFileDir + File.separator + fileName;
+      // 构建文件要保存到的目录
+      File _fileDir = new File(realFileDir);
+      if (!_fileDir.exists()) {
+        logger.warn("mkdir={}", realFileDir);
+        _fileDir.mkdirs();
+      }
+
+      // 附件路径
+      String path = Attach.DATA_REAL_PATH + File.separator + attach.getPath();
+
+      // 从附件目录下的指定文件复制到attachment目录下
+      try {
+        FileCopyUtils.copy(new FileInputStream(new File(path)), new FileOutputStream(realFilePath));
+      } catch (IOException e) {
+        throw new NotExistsException(e.getMessage());
+      }
+
+      // 插入流程附件记录信息
+      FlowAttach flowAttach = new FlowAttach();
+      flowAttach.setUid(idGeneratorService.next(FlowAttach.ATTACH_TYPE));
+      flowAttach.setType(FlowAttach.TYPE_ATTACHMENT); // 类型：1-附件，2-意见
+      flowAttach.setPid(procInstId); // 流程id
+      flowAttach.setPath(subFolder + File.separator + fileName); // 附件路径，物理文件保存的相对路径
+      flowAttach.setExt(extension); // 扩展名
+      flowAttach.setSubject(attach.getSubject()); // 标题
+      flowAttach.setSize(attach.getSize());
+      flowAttach.setFormatted(false);// 附件是否需要格式化
+
+      if (taskId == null) {
+        flowAttach.setCommon(true); // 公共附件
+      } else {
+        flowAttach.setCommon(false); // 任务附件
+        flowAttach.setTid(taskId);
+      }
+
+      // 创建人,最后修改人信息
+      SystemContext context = SystemContextHolder.get();
+      flowAttach.setAuthor(context.getUserHistory());
+      flowAttach.setModifier(context.getUserHistory());
+      flowAttach.setFileDate(Calendar.getInstance());
+      flowAttach.setModifiedDate(Calendar.getInstance());
+
+      flowAttachList.add(flowAttach);
+    }
+
+    // 开始保存
+    this.flowAttachService.save(flowAttachList);
+  }
+
+  private String getFilenameExtension(String path) {
+    if (path == null) {
+      return null;
+    }
+    int sepIndex = path.lastIndexOf('.');
+    return (sepIndex != -1 ? path.substring(sepIndex + 1) : null);
   }
 
   /**
