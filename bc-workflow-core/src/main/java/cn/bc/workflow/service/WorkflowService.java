@@ -71,8 +71,7 @@ public interface WorkflowService {
    * @param taskLocalVariables 任务本地变量
    * @param moduleType 关联模块的类型，用于创建流程与模块的关联关系
    * @param moduleId 关联模块的ID，用于创建流程与模块的关联关系
-   * @param autoCompleteFirstTask 是否自动完成流程发起后的首个待办。
-   *        设置为 true 时，将按流程发起人身份自动完成首个待办，此待办的全局变量将设置为 globalVariables，本地变量将设置为 taskLocalVariables
+   * @param autoCompleteFirstTask 是否自动完成流程发起后的首个待办，true-自动完成，false-不完成。
    * @return 流程实例的ID
    */
   String startFlow(
