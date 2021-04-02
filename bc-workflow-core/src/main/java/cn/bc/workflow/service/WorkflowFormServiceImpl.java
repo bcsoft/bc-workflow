@@ -103,6 +103,7 @@ public class WorkflowFormServiceImpl implements WorkflowFormService {
     params.put("ti_dueDate", task.get("due_date"));
     // ==== 流程实例的一些参数
     params.put("pi_id", process_instance.get(""));
+    params.put("pi_start_time", process_instance.get("start_time"));
     Map<String, Object> definition = (Map<String, Object>) process_instance.get("definition");
     params.put("pi_businessKey", definition.get("key"));
     params.put("pi_definitionId", definition.get("id"));
