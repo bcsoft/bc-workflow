@@ -36,7 +36,9 @@ begin
       , to_json(
       ( -- 合并为 json 数组
         select array_agg(row_to_json(c)) from (
-          select art.id_ as id, art.name_ as name
+          select art.id_ as id
+            -- 如果任务有本地 subject 变量就取此变量的值，否则取任务的名称
+            , coalesce((select wf__get_task_subject(a.proc_inst_id_, art.id_)), art.name_) as name
             -- 如果待办人CODE不为空则返回待办人CODE，否则返回待办岗位CODE
             , coalesce(art.assignee_, i.group_id_) as actor_code
             -- 如果待办人不为空则返回待办人，否则返回待办岗位
@@ -61,6 +63,8 @@ end;
 $$;
 
 /* test
-select * from bc_wf_module_relation where pid = '17909370';
+select * from bc_wf_module_relation where pid = '18694200';
 select wf_get_last_process_info(61089060, 'Case4InfractTraffic');
+select wf_get_last_process_info(3966, 'PayPlan');
+select wf_get_last_process_info(3967, 'PayPlan');
 */
