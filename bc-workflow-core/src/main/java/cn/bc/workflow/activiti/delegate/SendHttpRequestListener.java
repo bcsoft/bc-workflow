@@ -10,10 +10,10 @@ import org.activiti.engine.delegate.DelegateTask;
 import org.activiti.engine.delegate.TaskListener;
 import org.activiti.engine.delegate.VariableScope;
 import org.activiti.engine.impl.el.Expression;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.HttpResponse;
-import org.jsoup.helper.StringUtil;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -25,6 +25,7 @@ import java.util.Map;
  *
  * @author zf
  */
+@SuppressWarnings("unused")
 public class SendHttpRequestListener extends ExcutionLogListener implements TaskListener {
   protected final Log logger = LogFactory.getLog(getClass());
 
@@ -97,7 +98,7 @@ public class SendHttpRequestListener extends ExcutionLogListener implements Task
   private void buildRequest(VariableScope execution) {
     String methodValue = method != null ? (String) method.getValue(execution) : null;
     int Status = successStatusCode != null ? (successStatusCode.getExpressionText().contains("$") ? ((Long) successStatusCode.getValue(execution)).intValue() : Integer.parseInt(successStatusCode.getExpressionText())) : 200;
-    String[] responseArray = response != null && !StringUtil.isBlank((String) response.getValue(execution)) ? ((String) response.getValue(execution)).replaceAll("\\s*", "").split(",") : null;
+    String[] responseArray = response != null && !StringUtils.isBlank((String) response.getValue(execution)) ? ((String) response.getValue(execution)).replaceAll("\\s*", "").split(",") : null;
     String moduleTypeValue = mtype != null ? (String) mtype.getValue(execution) : null;
 
     // 构建同步分期还款请求
@@ -112,7 +113,7 @@ public class SendHttpRequestListener extends ExcutionLogListener implements Task
         try {
           // 请求失败，返回响应体包含的文本信息
           String Response = getResponseText();
-          if (!StringUtil.isBlank(Response)) return new Result<>(false, Response);
+          if (!StringUtils.isBlank(Response)) return new Result<>(false, Response);
           else return super.defaultBadResult(response); // 响应体无内容返回默认值
         } catch (Exception e) {
           logger.warn("解析响应失败，返回默认值代替！", e);
@@ -166,7 +167,7 @@ public class SendHttpRequestListener extends ExcutionLogListener implements Task
   private Map<String, Object> getResultData(Map<String, Object> data) {
     Map<String, Object> result = new HashMap<>();
     for (Map.Entry<String, Object> entry : data.entrySet()) {
-      if (null != entry.getValue() && !StringUtil.isBlank(entry.getValue().toString())) {
+      if (null != entry.getValue() && !StringUtils.isBlank(entry.getValue().toString())) {
         String value = entry.getValue().toString();
         if (entry.getKey().equalsIgnoreCase("Location")) {
           String newValue = value.substring(value.lastIndexOf("/") + 1);
