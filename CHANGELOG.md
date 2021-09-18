@@ -1,5 +1,10 @@
 ﻿# bc-workflow 变更日志
 
+## 4.4.0 2021-09-18
+
+- 增加 SendHttpRequestListener.SuccessCallback 处理机制
+    > 响应成功后的回调处理机制
+
 ## 4.3.1 2021-04-02
 
 - 任务的 form 渲染时增加流程的启动时间参数
