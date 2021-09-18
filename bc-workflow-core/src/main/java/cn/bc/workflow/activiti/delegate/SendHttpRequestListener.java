@@ -2,8 +2,9 @@ package cn.bc.workflow.activiti.delegate;
 
 import cn.bc.core.exception.CoreException;
 import cn.bc.core.util.JsonUtils;
+import cn.bc.core.util.SpringUtils;
 import cn.bc.spider.Result;
-import cn.bc.spider.callable.BaseCallable;
+import cn.bc.spider.callable.TextCallable;
 import cn.bc.spider.http.TaskExecutor;
 import org.activiti.engine.delegate.DelegateExecution;
 import org.activiti.engine.delegate.DelegateTask;
@@ -11,12 +12,15 @@ import org.activiti.engine.delegate.TaskListener;
 import org.activiti.engine.delegate.VariableScope;
 import org.activiti.engine.impl.el.Expression;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.http.HttpResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * 调用可发起 HTTP 请求的监听器。
@@ -24,10 +28,20 @@ import java.util.Map;
  * 可用在环节的监听（实现了 TaskListener），也可用在流向和流程的监听（实现了 ExecutionListener）。
  *
  * @author zf
+ * @author RJ
  */
 @SuppressWarnings("unused")
 public class SendHttpRequestListener extends ExcutionLogListener implements TaskListener {
-  protected final Log logger = LogFactory.getLog(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(SendHttpRequestListener.class);
+
+  /**
+   * 响应成功后的回调接口。
+   * <p>
+   * 仅适用于 {@link SendHttpRequestListener} 请求响应成功后的回调处理。
+   */
+  public interface SuccessCallback {
+    void call(VariableScope scope, String responseBody, int statusCode, List<Map.Entry<String, String>> responseHeaders);
+  }
 
   /**
    * 是否执行请求的发送
@@ -54,18 +68,17 @@ public class SendHttpRequestListener extends ExcutionLogListener implements Task
    */
   private Expression successStatusCode;
   /**
-   * 调用此监听器的模块类型，作为模块与流程关联的标识，如：PayPlan
+   * 请求发送成功后回调处理配置。
+   * <p>
+   * 这了配置的是 spring 的 bean 名称，该 bean 必须实现 {@link SuccessCallback} 接口。
+   * 实现者可以利用该接口进行额外的处理，如设置额外的流程变量、读取响应头等。
    */
-  private Expression mtype;
-  /**
-   * 需要获取的响应数据名称，如：Connection，Location, body
-   */
-  private Expression response;
+  private Expression successCallbackBean;
 
   @Override
   public void notify(DelegateExecution execution) {
     // 判断是否执行发送请求
-    Boolean ignoreValue = ignore == null || (ignore.getExpressionText().contains("$") ? (Boolean) ignore.getValue(execution) : Boolean.parseBoolean(ignore.getExpressionText()));
+    boolean ignoreValue = ignore == null || (ignore.getExpressionText().contains("$") ? (Boolean) ignore.getValue(execution) : Boolean.parseBoolean(ignore.getExpressionText()));
     // 判断是否执行请求的发送
     if (!ignoreValue) {
       logger.debug("ignore = false，无需执行请求的发送");
@@ -86,7 +99,7 @@ public class SendHttpRequestListener extends ExcutionLogListener implements Task
       logger.debug("taskDefinitionKey=" + execution.getTaskDefinitionKey());
     }
     // 判断是否执行发送请求
-    Boolean ignoreValue = ignore == null || (ignore.getExpressionText().contains("$") ? (Boolean) ignore.getValue(execution) : Boolean.parseBoolean(ignore.getExpressionText()));
+    boolean ignoreValue = ignore == null || (ignore.getExpressionText().contains("$") ? (Boolean) ignore.getValue(execution) : Boolean.parseBoolean(ignore.getExpressionText()));
     // 判断是否执行请求的发送
     if (!ignoreValue) {
       logger.debug("ignore = false，无需执行请求的发送");
@@ -96,24 +109,23 @@ public class SendHttpRequestListener extends ExcutionLogListener implements Task
   }
 
   private void buildRequest(VariableScope execution) {
-    String methodValue = method != null ? (String) method.getValue(execution) : null;
-    int Status = successStatusCode != null ? (successStatusCode.getExpressionText().contains("$") ? ((Long) successStatusCode.getValue(execution)).intValue() : Integer.parseInt(successStatusCode.getExpressionText())) : 200;
-    String[] responseArray = response != null && !StringUtils.isBlank((String) response.getValue(execution)) ? ((String) response.getValue(execution)).replaceAll("\\s*", "").split(",") : null;
-    String moduleTypeValue = mtype != null ? (String) mtype.getValue(execution) : null;
+    String methodValue = method != null ? (String) method.getValue(execution) : "GET";
+    int successStatusCodeValue = successStatusCode != null ? Integer.parseInt(successStatusCode.getValue(execution).toString()) : 200;
+    final List<Map.Entry<String, String>> responseHeaders = new ArrayList<>();
 
     // 构建同步分期还款请求
-    BaseCallable callable = new BaseCallable() {
+    TextCallable callable = new TextCallable() {
       @Override
       protected int getSuccessStatusCode() {
-        return Status;
+        return successStatusCodeValue;
       }
 
       @Override
-      protected Result defaultBadResult(HttpResponse response) {
+      protected Result<String> defaultBadResult(HttpResponse response) {
         try {
           // 请求失败，返回响应体包含的文本信息
-          String Response = getResponseText();
-          if (!StringUtils.isBlank(Response)) return new Result<>(false, Response);
+          String responseBody = getResponseText();
+          if (!StringUtils.isBlank(responseBody)) return new Result<>(false, responseBody);
           else return super.defaultBadResult(response); // 响应体无内容返回默认值
         } catch (Exception e) {
           logger.warn("解析响应失败，返回默认值代替！", e);
@@ -122,41 +134,30 @@ public class SendHttpRequestListener extends ExcutionLogListener implements Task
       }
 
       @Override
-      public Object parseResponse() throws Exception {
-        if (responseArray != null) {
-          Map<String, String> responseMap = new HashMap<>();
-          for (String k : responseArray) {
-            // 请求体信息， body 作为 key
-            if (k.equalsIgnoreCase("body")) responseMap.put("body", getResponseText());
-              // 请求头信息，'k' 作为 key，如：Location
-            else responseMap.put(k, getResponseHeader(k));
-          }
-          // 以 Map 形式返回需要的 response
-          return responseMap;
-        } else {
-          // 以 String 形式返回请求体信息
-          return getResponseText();
-        }
+      public String parseResponse() throws Exception {
+        // 缓存响应头
+        responseHeaders.clear();
+        responseHeaders.addAll(this.getResponseHeaders());
+
+        // 返回 body
+        return super.parseResponse();
       }
     };
 
     // 设置请求参数
     callable.setMethod(methodValue);
     callable.setUrl((String) url.getValue(execution));
-    Map<String, Object> headersMap = JsonUtils.toMap((String) headers.getValue(execution));
+    Map<String, String> headersMap = JsonUtils.toMap((String) headers.getValue(execution))
+      .entrySet().stream()
+      .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().toString()));
     callable.addHeader(headersMap);
     callable.setPayload(body.getValue(execution));
-    Result result = TaskExecutor.get(callable);
+    Result<String> result = TaskExecutor.get(callable);
     if (result.isSuccess()) {
-      if ("POST".equalsIgnoreCase(methodValue) && responseArray != null) {
-        // 以 responseArray 的值作为 key，解析相应 response 的值作为 value
-        Map<String, Object> resultData = getResultData((Map<String, Object>) result.getData());
-        // 如果是 POST 请求，获取实体类 ID，并设置为全局参数
-        if (!resultData.isEmpty() && resultData.get("Location") != null) {
-          execution.setVariable("mid", resultData.get("Location"));
-          // 设置调用此监听器的模块标识
-          if (moduleTypeValue != null) execution.setVariable("mtype", moduleTypeValue);
-        }
+      if (successCallbackBean != null) {
+        String beanName = (String) successCallbackBean.getValue(execution);
+        SuccessCallback callback = SpringUtils.getBean(beanName, SuccessCallback.class);
+        callback.call(execution, result.getData(), successStatusCodeValue, responseHeaders);
       }
     } else {
       logger.debug(methodValue + "/" + url.getValue(execution) + "请求发送成功，响应失败：" + result.getError());
