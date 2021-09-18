@@ -11,12 +11,13 @@ import org.activiti.engine.delegate.TaskListener;
 import org.activiti.engine.delegate.VariableScope;
 import org.activiti.engine.impl.el.Expression;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.http.HttpResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 /**
  * 调用可发起 HTTP 请求的监听器。
@@ -24,10 +25,11 @@ import java.util.Map;
  * 可用在环节的监听（实现了 TaskListener），也可用在流向和流程的监听（实现了 ExecutionListener）。
  *
  * @author zf
+ * @author RJ
  */
 @SuppressWarnings("unused")
 public class SendHttpRequestListener extends ExcutionLogListener implements TaskListener {
-  protected final Log logger = LogFactory.getLog(getClass());
+  private static final Logger logger = LoggerFactory.getLogger(SendHttpRequestListener.class);
 
   /**
    * 是否执行请求的发送
@@ -65,7 +67,7 @@ public class SendHttpRequestListener extends ExcutionLogListener implements Task
   @Override
   public void notify(DelegateExecution execution) {
     // 判断是否执行发送请求
-    Boolean ignoreValue = ignore == null || (ignore.getExpressionText().contains("$") ? (Boolean) ignore.getValue(execution) : Boolean.parseBoolean(ignore.getExpressionText()));
+    boolean ignoreValue = ignore == null || (ignore.getExpressionText().contains("$") ? (Boolean) ignore.getValue(execution) : Boolean.parseBoolean(ignore.getExpressionText()));
     // 判断是否执行请求的发送
     if (!ignoreValue) {
       logger.debug("ignore = false，无需执行请求的发送");
@@ -86,7 +88,7 @@ public class SendHttpRequestListener extends ExcutionLogListener implements Task
       logger.debug("taskDefinitionKey=" + execution.getTaskDefinitionKey());
     }
     // 判断是否执行发送请求
-    Boolean ignoreValue = ignore == null || (ignore.getExpressionText().contains("$") ? (Boolean) ignore.getValue(execution) : Boolean.parseBoolean(ignore.getExpressionText()));
+    boolean ignoreValue = ignore == null || (ignore.getExpressionText().contains("$") ? (Boolean) ignore.getValue(execution) : Boolean.parseBoolean(ignore.getExpressionText()));
     // 判断是否执行请求的发送
     if (!ignoreValue) {
       logger.debug("ignore = false，无需执行请求的发送");
@@ -102,14 +104,14 @@ public class SendHttpRequestListener extends ExcutionLogListener implements Task
     String moduleTypeValue = mtype != null ? (String) mtype.getValue(execution) : null;
 
     // 构建同步分期还款请求
-    BaseCallable callable = new BaseCallable() {
+    BaseCallable<Object> callable = new BaseCallable<Object>() {
       @Override
       protected int getSuccessStatusCode() {
         return Status;
       }
 
       @Override
-      protected Result defaultBadResult(HttpResponse response) {
+      protected Result<Object> defaultBadResult(HttpResponse response) {
         try {
           // 请求失败，返回响应体包含的文本信息
           String Response = getResponseText();
@@ -143,13 +145,16 @@ public class SendHttpRequestListener extends ExcutionLogListener implements Task
     // 设置请求参数
     callable.setMethod(methodValue);
     callable.setUrl((String) url.getValue(execution));
-    Map<String, Object> headersMap = JsonUtils.toMap((String) headers.getValue(execution));
+    Map<String, String> headersMap = JsonUtils.toMap((String) headers.getValue(execution))
+      .entrySet().stream()
+      .collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().toString()));
     callable.addHeader(headersMap);
     callable.setPayload(body.getValue(execution));
-    Result result = TaskExecutor.get(callable);
+    Result<Object> result = TaskExecutor.get(callable);
     if (result.isSuccess()) {
       if ("POST".equalsIgnoreCase(methodValue) && responseArray != null) {
         // 以 responseArray 的值作为 key，解析相应 response 的值作为 value
+        @SuppressWarnings("unchecked")
         Map<String, Object> resultData = getResultData((Map<String, Object>) result.getData());
         // 如果是 POST 请求，获取实体类 ID，并设置为全局参数
         if (!resultData.isEmpty() && resultData.get("Location") != null) {
