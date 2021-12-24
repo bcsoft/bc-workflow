@@ -43,6 +43,7 @@ import java.util.Map;
  * 格式化流程附件处理Action
  *
  * @author lbj
+ * @author RJ
  */
 @Scope(BeanDefinition.SCOPE_PROTOTYPE)
 @Controller
@@ -116,32 +117,26 @@ public class FlowAttachFileAction extends ActionSupport {
     if (flowAttach.getFormatted()) {
       // 声明格式化参数
       Map<String, Object> params;
-      // docx
+
       if (flowAttach.getExt().equals(
-        templateTypeService.loadByCode("word-docx").getExtension())) {
+        templateTypeService.loadByCode("word-docx").getExtension())) { // docx
         params = getParams(flowAttach);
         XWPFDocument docx = DocxUtils.format(inputStream, params);
         docx.write(out);
         this.inputStream = new ByteArrayInputStream(out.toByteArray());
         out.close();
         this.contentLength = this.inputStream.available();
-        // xls
       } else if (flowAttach.getExt().equals(
-        templateTypeService.loadByCode("xls").getExtension())) {
+        templateTypeService.loadByCode("xls").getExtension())) { // xls
         params = getParams(flowAttach);
-        HSSFWorkbook xls = XlsUtils.format(inputStream, params);
-        xls.write(out);
+        XlsUtils.formatTo(inputStream, out, params);
         this.inputStream = new ByteArrayInputStream(out.toByteArray());
-        out.close();
         this.contentLength = this.inputStream.available();
-        // xlsx
       } else if (flowAttach.getExt().equals(
-        templateTypeService.loadByCode("xlsx").getExtension())) {
+        templateTypeService.loadByCode("xlsx").getExtension())) { // xlsx
         params = getParams(flowAttach);
-        XSSFWorkbook xlsx = XlsxUtils.format(inputStream, params);
-        xlsx.write(out);
+        XlsxUtils.formatTo(inputStream, out, params);
         this.inputStream = new ByteArrayInputStream(out.toByteArray());
-        out.close();
         this.contentLength = this.inputStream.available();
       } else {
         this.contentLength = flowAttach.getSize();
@@ -237,26 +232,22 @@ public class FlowAttachFileAction extends ActionSupport {
         } else if (flowAttach.getExt().equals(
           templateTypeService.loadByCode("xls").getExtension())) {
           params = getParams(flowAttach);
-          HSSFWorkbook xls = XlsUtils.format(file_is, params);
           ByteArrayOutputStream out = new ByteArrayOutputStream();
-          xls.write(out);
+          XlsUtils.formatTo(file_is, out, params);
           // convert
           OfficeUtils.convert(
             new ByteArrayInputStream(out.toByteArray()),
             this.from, outputStream, this.to);
-          out.close();
           bs = outputStream.toByteArray();
         } else if (flowAttach.getExt().equals(
           templateTypeService.loadByCode("xlsx").getExtension())) {
           params = getParams(flowAttach);
-          XSSFWorkbook xlsx = XlsxUtils.format(file_is, params);
           ByteArrayOutputStream out = new ByteArrayOutputStream();
-          xlsx.write(out);
+          XlsxUtils.formatTo(file_is, out, params);
           // convert
           OfficeUtils.convert(
             new ByteArrayInputStream(out.toByteArray()),
             this.from, outputStream, this.to);
-          out.close();
           bs = outputStream.toByteArray();
         } else if (flowAttach.getExt().equals(
           templateTypeService.loadByCode("html").getExtension())) {
