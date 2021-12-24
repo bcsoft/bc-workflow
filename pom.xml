@@ -43,7 +43,7 @@
     <url>https://github.com/bcsoft/bc-workflow/issues</url>
   </issueManagement>
   <properties>
-    <revision>4.4-SNAPSHOT</revision>
+    <revision>4.5-SNAPSHOT</revision>
 
     <!-- activiti 版本 -->
     <activiti-version>5.9</activiti-version>
