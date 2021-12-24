@@ -1,5 +1,10 @@
 ﻿# bc-workflow 变更日志
 
+## 4.5.0 2021-12-24
+
+- 格式化 Excel 文档改为使用 jxls2
+- 更新依赖到 bc-framework-4.5.0
+
 ## 4.4.0 2021-09-18
 
 - 增加 SendHttpRequestListener.SuccessCallback 处理机制
