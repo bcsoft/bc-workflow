@@ -2,6 +2,7 @@ package cn.bc.workflow.historictaskinstance.web.struts2;
 
 import cn.bc.acl.domain.AccessActor;
 import cn.bc.acl.service.AccessService;
+import cn.bc.core.query.cfg.PagingQueryConfig;
 import cn.bc.core.query.condition.Condition;
 import cn.bc.core.query.condition.impl.*;
 import cn.bc.identity.domain.Actor;
@@ -82,25 +83,43 @@ public class GroupHistoricTaskInstancesAction extends HistoricTaskInstancesActio
       + this.getModuleContextPath() + "/historictaskinstance/group/view.js";
   }
 
+  /**
+   * SQL分页查询语句及参数配置
+   */
   @Override
-  protected Condition getGridSpecalCondition() {
-    // 状态条件
-    AndCondition ac = new AndCondition();
+  protected PagingQueryConfig getPagingQueryConfig() {
+    cn.bc.core.query.cfg.impl.PagingQueryConfig config =
+      (cn.bc.core.query.cfg.impl.PagingQueryConfig) super.getPagingQueryConfig();
 
-    InCondition ownActors_ic = this.getOwnActorCondition();
+    QlCondition ownActors_qc = this.getOwnActorCondition();
     QlCondition deploy_qc = this.getDeployAccessControlCondition();
     QlCondition pi_qc = this.getProcessInstanceAccessControlCondition();
 
     OrCondition or = new OrCondition();
-    if (deploy_qc != null) or.add(deploy_qc);
-    if (pi_qc != null) or.add(pi_qc);
-    if (ownActors_ic != null) or.add(ownActors_ic);
-
-    if (or.isEmpty()) {
-      ac.add(new QlCondition("false"));
-    } else {
-      ac.add(or.setAddBracket(true));
+    if (ownActors_qc != null) {
+      config.addTemplateParam("ownActors_qc", ownActors_qc.getExpression());
+      or.add(ownActors_qc);
     }
+    if (deploy_qc != null) {
+      config.addTemplateParam("deploy_qc", deploy_qc.getExpression());
+      or.add(deploy_qc);
+    }
+    if (pi_qc != null) {
+      config.addTemplateParam("pi_qc", pi_qc.getExpression());
+      or.add(pi_qc);
+    }
+
+    if (!or.isEmpty()) {
+      config.addTemplateParam("extra_condition", or.setAddBracket(true).getExpression());
+    }
+
+    return config;
+  }
+
+  @Override
+  protected Condition getGridSpecalCondition() {
+    // 状态条件
+    AndCondition ac = new AndCondition();
 
     // 结束时间不能为空
     ac.add(new IsNotNullCondition("t.end_time_"));
@@ -110,7 +129,7 @@ public class GroupHistoricTaskInstancesAction extends HistoricTaskInstancesActio
   }
 
   /*获取属于当前用户拥有的指定岗位对应的上组织下的对应用户的条件*/
-  private InCondition getOwnActorCondition() {
+  private QlCondition getOwnActorCondition() {
     if (!this.isGroupControl()) return null;
 
     // 查找当前登录用户条件
@@ -167,13 +186,15 @@ public class GroupHistoricTaskInstancesAction extends HistoricTaskInstancesActio
 
     if (ownActors == null || ownActors.size() == 0) return null;
 
-    List<String> ownActorCodes = new ArrayList<>();
+    String sql = "t.assignee_code in (";
+    for (int i = 0; i < ownActors.size(); i++) {
+      if (i > 0) sql += ",";
 
-    for (Actor a : ownActors) {
-      ownActorCodes.add(a.getCode());
+      sql += "'" + ownActors.get(i).getCode() + "'";
     }
+    sql += ")";
 
-    return new InCondition("t.assignee_", ownActorCodes);
+    return new QlCondition(sql);
   }
 
   //获取可访问属于流程部署的任务的条件
@@ -209,7 +230,7 @@ public class GroupHistoricTaskInstancesAction extends HistoricTaskInstancesActio
     String sql = "exists(select 1 from act_hi_taskinst dc_t";
     sql += " inner join act_re_procdef dc_r on dc_r.id_=dc_t.proc_def_id_";
     sql += " inner join bc_wf_deploy dc_d on dc_d.deployment_id=dc_r.deployment_id_";
-    sql += " where dc_t.id_=t.id_ and dc_d.id in(";
+    sql += " where dc_t.id_=t.task_id and dc_d.id in(";
 
     for (int i = 0; i < deployIds.size(); i++) {
       if (i > 0) sql += ",";
@@ -252,7 +273,7 @@ public class GroupHistoricTaskInstancesAction extends HistoricTaskInstancesActio
     if (pIds.size() == 0) return null;
 
     String sql = "exists(select 1 from act_hi_taskinst pi_a";
-    sql += " where pi_a.id_=t.id_ and pi_a.proc_inst_id_ in(";
+    sql += " where pi_a.id_=t.task_id and pi_a.proc_inst_id_ in(";
 
     for (int i = 0; i < pIds.size(); i++) {
       if (i > 0) sql += ",";

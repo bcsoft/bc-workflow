@@ -1,5 +1,8 @@
 package cn.bc.workflow.historictaskinstance.web.struts2;
 
+import cn.bc.core.Page;
+import cn.bc.core.query.Query;
+import cn.bc.core.query.cfg.PagingQueryConfig;
 import cn.bc.core.query.condition.Condition;
 import cn.bc.core.query.condition.Direction;
 import cn.bc.core.query.condition.impl.AndCondition;
@@ -9,8 +12,10 @@ import cn.bc.core.query.condition.impl.QlCondition;
 import cn.bc.core.util.DateUtils;
 import cn.bc.db.jdbc.RowMapper;
 import cn.bc.db.jdbc.SqlObject;
+import cn.bc.db.jdbc.spring.JdbcTemplatePagingQuery;
 import cn.bc.identity.web.SystemContext;
 import cn.bc.option.domain.OptionItem;
+import cn.bc.template.service.TemplateService;
 import cn.bc.web.formater.AbstractFormater;
 import cn.bc.web.formater.CalendarFormater;
 import cn.bc.web.formater.EntityStatusFormater;
@@ -32,6 +37,7 @@ import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Scope;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Controller;
 
 import java.util.*;
@@ -45,6 +51,11 @@ import java.util.*;
 @Scope(BeanDefinition.SCOPE_PROTOTYPE)
 @Controller
 public class HistoricTaskInstancesAction extends ViewAction<Map<String, Object>> {
+  @Autowired
+  private TemplateService templateService;
+  @Autowired
+  private JdbcTemplate jdbcTemplate;
+
   private static final long serialVersionUID = 1L;
   private static final int TASK_STATUS_DOING = 1;// 任务状态：处理中
   private static final int TASK_STATUS_SUSPENDED = 2;// 任务状态：暂停
@@ -73,75 +84,39 @@ public class HistoricTaskInstancesAction extends ViewAction<Map<String, Object>>
     return new OrderCondition("t.start_time_", Direction.Desc);
   }
 
+  /**
+   * SQL分页查询语句及参数配置
+   */
+  protected PagingQueryConfig getPagingQueryConfig() {
+    // 加载模板，获得查询SQL
+    String querySql = this.templateService.getContent("HISTORIC_TASK_INSTANCE");
+    String countSql = this.templateService.getContent("HISTORIC_TASK_INSTANCE_COUNT");
+
+    // 查询对象
+    cn.bc.core.query.cfg.impl.PagingQueryConfig cfg =
+      new cn.bc.core.query.cfg.impl.PagingQueryConfig(querySql, countSql, null);
+
+    // 分页参数
+    Page<Map<String, Object>> p = getPage();
+    if (p != null) {
+      cfg.setLimit(p.getPageSize());
+      cfg.setOffset(p.getFirstResult());
+    }
+    return cfg;
+  }
+
+  @Override
+  protected Query<Map<String, Object>> getQuery() {
+    JdbcTemplatePagingQuery<Map<String, Object>> jdbcQuery =
+      new JdbcTemplatePagingQuery<>(jdbcTemplate, getPagingQueryConfig(), null);
+
+    jdbcQuery.condition(this.getGridCondition());
+    return jdbcQuery;
+  }
+
   @Override
   protected SqlObject<Map<String, Object>> getSqlObject() {
-    SqlObject<Map<String, Object>> sqlObject = new SqlObject<>();
-
-    // 构建查询语句,where和order by不要包含在sql中(要统一放到condition中)
-    StringBuffer sql = new StringBuffer();
-    sql.append("select t.id_ task_id, t.name_ task_name");
-    // 任务状态：1-处理中、2-暂停、3-已结束
-    sql.append(",case when t.end_time_ is not null then 3 else (case when (pd.suspension_state_ = 2 or e.suspension_state_ = 2) then 2 else 1 end) end as task_status");
-    sql.append(",t.start_time_ start_time,t.end_time_ end_time,t.duration_ duration,t.due_date_ as due_date");
-    sql.append(",t.proc_inst_id_ process_id,pd.name_ process_name,a.name as assignee");
-    sql.append(",e.suspension_state_ pstatus,t.task_def_key_,pd.key_ process_key");
-    sql.append(",pi.info->>'wf_code' as wf_code,pi.info->>'subject' as wf_subject, pd.deployment_id_");
-    sql.append(" from act_hi_taskinst t");
-    sql.append(" inner join act_hi_procinst p on p.proc_inst_id_ = t.proc_inst_id_");
-    sql.append(" inner join bc_wf_procinst_info pi on pi.id = p.id_");
-    sql.append(" inner join act_re_procdef pd on pd.id_ = t.proc_def_id_");
-    sql.append(" left join act_ru_execution e on e.proc_inst_id_ = t.proc_inst_id_");// 暂停及流转中流程需要join此表
-    sql.append(" left join bc_identity_actor a on a.code = t.assignee_");
-
-    sqlObject.setSql(sql.toString());
-
-    // 注入参数
-    sqlObject.setArgs(null);
-
-    // 数据映射器
-    sqlObject.setRowMapper(new RowMapper<Map<String, Object>>() {
-      public Map<String, Object> mapRow(Object[] rs, int rowNum) {
-        Map<String, Object> map = new HashMap<>();
-        int i = 0;
-        map.put("task_id", rs[i++]);
-        map.put("task_name", rs[i++]);
-        map.put("task_status", rs[i++]);
-        map.put("start_time", rs[i++]);
-        map.put("end_time", rs[i++]);
-        map.put("duration", rs[i++]);
-        map.put("due_date", rs[i++]);
-        map.put("process_id", rs[i++]);
-        map.put("process_name", rs[i++]);
-        map.put("assignee", rs[i++]);
-        map.put("pstatus", rs[i++]);
-        map.put("task_def_key", rs[i++]);
-        map.put("process_key", rs[i++]);
-        map.put("wf_code", rs[i++]);
-        map.put("wf_subject", rs[i++]);
-        map.put("deployId", rs[i++]);
-        map.put("accessControlDocType", "ProcessInstance");
-
-        //判断流程状态
-        if (map.get("pstatus") == null) {
-          map.put("pstatus", WorkspaceService.FLOWSTATUS_COMPLETE);
-        } else {
-          if (map.get("pstatus").toString().equals(String.valueOf(SuspensionState.ACTIVE.getStateCode()))) {//处理中
-            map.put("pstatus", String.valueOf(SuspensionState.ACTIVE.getStateCode()));
-          } else if (map.get("pstatus").toString().equals(String.valueOf(SuspensionState.SUSPENDED.getStateCode()))) {//已暂停
-            map.put("pstatus", String.valueOf(SuspensionState.SUSPENDED.getStateCode()));
-          }
-        }
-
-        if (map.get("subject") != null && !map.get("subject").toString().equals("")) {
-          map.put("accessControlDocName", map.get("subject").toString());
-        } else {
-          map.put("accessControlDocName", map.get("process_name").toString());
-        }
-
-        return map;
-      }
-    });
-    return sqlObject;
+    throw new UnsupportedOperationException();
   }
 
   @Override
@@ -199,15 +174,15 @@ public class HistoricTaskInstancesAction extends ViewAction<Map<String, Object>>
     //空列
     columns.add(new TextColumn4MapKey("", "", ""));
 
-    columns.add(new HiddenColumn4MapKey("deployId", "deployId"));
+    columns.add(new HiddenColumn4MapKey("deployId", "deployment_id"));
     columns.add(new HiddenColumn4MapKey("procinstId", "process_id"));
     columns.add(new HiddenColumn4MapKey("procinstName", "process_name"));
     columns.add(new HiddenColumn4MapKey("procinstKey", "process_key"));
     columns.add(new HiddenColumn4MapKey("procinstTaskName", "task_name"));
     columns.add(new HiddenColumn4MapKey("procinstTaskKey", "task_def_key"));
     columns.add(new HiddenColumn4MapKey("subject", "wf_subject"));
-    columns.add(new HiddenColumn4MapKey("accessControlDocType", "accessControlDocType"));
-    columns.add(new HiddenColumn4MapKey("accessControlDocName", "accessControlDocName"));
+    columns.add(new HiddenColumn4MapKey("accessControlDocType", "access_control_doc_type"));
+    columns.add(new HiddenColumn4MapKey("accessControlDocName", "access_control_doc_name"));
     return columns;
   }
 
