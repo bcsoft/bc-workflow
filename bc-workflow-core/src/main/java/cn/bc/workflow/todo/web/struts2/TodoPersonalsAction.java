@@ -509,4 +509,18 @@ public class TodoPersonalsAction extends ViewAction<Map<String, Object>> {
     }
     this.taskNames = OptionItem.toLabelValues(list);
   }
+
+  @Override
+  protected Condition buildDefaultLikeCondition(String field, String value) {
+    if (value == null || value.isEmpty()) return null;
+    boolean s = value.startsWith("%");
+    boolean e = value.endsWith("%");
+    if (s && !e) {
+      return new LikeRightCondition(field, "%" + value, true);
+    } else if (!s && e) {
+      return new LikeLeftCondition(field, value + "%", true);
+    } else {
+      return new LikeCondition(field, value, true);
+    }
+  }
 }

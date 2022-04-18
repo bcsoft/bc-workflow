@@ -2,10 +2,7 @@ package cn.bc.workflow.historictaskinstance.web.struts2;
 
 import cn.bc.core.query.condition.Condition;
 import cn.bc.core.query.condition.Direction;
-import cn.bc.core.query.condition.impl.AndCondition;
-import cn.bc.core.query.condition.impl.IsNullCondition;
-import cn.bc.core.query.condition.impl.OrderCondition;
-import cn.bc.core.query.condition.impl.QlCondition;
+import cn.bc.core.query.condition.impl.*;
 import cn.bc.core.util.DateUtils;
 import cn.bc.db.jdbc.RowMapper;
 import cn.bc.db.jdbc.SqlObject;
@@ -384,4 +381,17 @@ public class HistoricTaskInstancesAction extends ViewAction<Map<String, Object>>
     return "json";
   }
 
+  @Override
+  protected Condition buildDefaultLikeCondition(String field, String value) {
+    if (value == null || value.isEmpty()) return null;
+    boolean s = value.startsWith("%");
+    boolean e = value.endsWith("%");
+    if (s && !e) {
+      return new LikeRightCondition(field, "%" + value, true);
+    } else if (!s && e) {
+      return new LikeLeftCondition(field, value + "%", true);
+    } else {
+      return new LikeCondition(field, value, true);
+    }
+  }
 }
