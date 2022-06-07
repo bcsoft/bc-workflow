@@ -387,9 +387,9 @@ public class HistoricTaskInstancesAction extends ViewAction<Map<String, Object>>
     boolean s = value.startsWith("%");
     boolean e = value.endsWith("%");
     if (s && !e) {
-      return new LikeRightCondition(field, "%" + value, true);
+      return new LikeRightCondition(field, value, true);
     } else if (!s && e) {
-      return new LikeLeftCondition(field, value + "%", true);
+      return new LikeLeftCondition(field, value, true);
     } else {
       return new LikeCondition(field, value, true);
     }
