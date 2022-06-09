@@ -170,17 +170,17 @@ public class HistoricTaskInstancesAction extends ViewAction<Map<String, Object>>
     columns.add(new TextColumn4MapKey("e.suspension_state_", "pstatus", getText("flow.task.pstatus"), 80)
       .setSortable(true).setValueFormater(new EntityStatusFormater(getPStatus())));
     // 任务 key 值
-    columns.add(new TextColumn4MapKey("t.task_def_key_", "task_def_key_", "任务key值", 200)
+    columns.add(new TextColumn4MapKey("t.task_def_key_", "task_def_key", "任务key值", 200)
       .setSortable(true).setUseTitleFromLabel(true));
     //空列
     columns.add(new TextColumn4MapKey("", "", ""));
 
-    columns.add(new HiddenColumn4MapKey("deployId", "deployment_id_"));
+    columns.add(new HiddenColumn4MapKey("deployId", "deployment_id"));
     columns.add(new HiddenColumn4MapKey("procinstId", "process_id"));
     columns.add(new HiddenColumn4MapKey("procinstName", "process_name"));
     columns.add(new HiddenColumn4MapKey("procinstKey", "process_key"));
     columns.add(new HiddenColumn4MapKey("procinstTaskName", "task_name"));
-    columns.add(new HiddenColumn4MapKey("procinstTaskKey", "task_def_key_"));
+    columns.add(new HiddenColumn4MapKey("procinstTaskKey", "task_def_key"));
     columns.add(new HiddenColumn4MapKey("subject", "wf_subject"));
     columns.add(new HiddenColumn4MapKey("accessControlDocType", "access_control_doc_type"));
     columns.add(new HiddenColumn4MapKey("accessControlDocName", "access_control_doc_name"));
