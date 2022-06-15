@@ -7,6 +7,7 @@ with t(task_id, assignee_code) as (
   left join bc_identity_actor a on a.code = t.assignee_
   <#if condition??>${condition}</#if>
 )
+<#if extra_condition??>
 select count(*) - 1
 from (
   select ''
@@ -20,3 +21,6 @@ from (
     union select t.task_id from t where ${pi_qc}
   </#if>
 ) p;
+<#else>
+select count(*) from t;
+</#if>
