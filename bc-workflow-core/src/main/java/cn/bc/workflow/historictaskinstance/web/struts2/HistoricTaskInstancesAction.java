@@ -80,7 +80,7 @@ public class HistoricTaskInstancesAction extends ViewAction<Map<String, Object>>
   }
 
   @Override
-  protected OrderCondition getGridOrderCondition() {
+  protected OrderCondition getGridDefaultOrderCondition() {
     return new OrderCondition("t.start_time_", Direction.Desc);
   }
 
