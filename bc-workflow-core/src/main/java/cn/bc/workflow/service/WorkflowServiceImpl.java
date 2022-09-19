@@ -11,6 +11,7 @@ import cn.bc.core.util.DateUtils;
 import cn.bc.core.util.JsonUtils;
 import cn.bc.desktop.service.LoginService;
 import cn.bc.docs.domain.Attach;
+import cn.bc.docs.domain.AttachHistory;
 import cn.bc.docs.service.AttachService;
 import cn.bc.identity.domain.ActorHistory;
 import cn.bc.identity.service.ActorHistoryService;
@@ -21,6 +22,7 @@ import cn.bc.identity.web.SystemContextHolder;
 import cn.bc.identity.web.SystemContextImpl;
 import cn.bc.template.domain.Template;
 import cn.bc.template.service.TemplateService;
+import cn.bc.web.util.WebUtils;
 import cn.bc.workflow.activiti.ActivitiUtils;
 import cn.bc.workflow.dao.WorkflowDao;
 import cn.bc.workflow.deploy.domain.Deploy;
@@ -39,6 +41,7 @@ import org.activiti.engine.repository.Deployment;
 import org.activiti.engine.repository.ProcessDefinition;
 import org.activiti.engine.runtime.ProcessInstance;
 import org.activiti.engine.task.Task;
+import org.apache.struts2.ServletActionContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,8 +50,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.Assert;
 import org.springframework.util.FileCopyUtils;
+import org.springframework.util.StringUtils;
 
 import java.io.*;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.zip.ZipInputStream;
@@ -112,7 +117,8 @@ public class WorkflowServiceImpl implements WorkflowService {
                           Map<String, Object> taskLocalVariables,
                           String moduleType,
                           String moduleId,
-                          boolean autoCompleteFirstTask) {
+                          boolean autoCompleteFirstTask,
+                          List<String> templateCodes) {
     String processInstanceId;
     if (null != key && !key.isEmpty()) {
       // 有全局变量
@@ -167,7 +173,104 @@ public class WorkflowServiceImpl implements WorkflowService {
       this.workflowModuleRelationService.save(workflowModuleRelation);
     }
 
+    if (templateCodes != null && !templateCodes.isEmpty())
+      templateCodes.forEach(code->createAttachByTemplate(code, processInstanceId, taskIds[0]));
+
     return processInstanceId;
+  }
+
+  /**
+   * 通过模板创建流程附件
+   * @param code 附件模板编码
+   * @param pid  流程实例 ID
+   * @param tid  流程任务 ID
+   */
+  private void createAttachByTemplate(String code, String pid,String tid) {
+    // 复制模板新建流程附件
+    try {
+      Template t = templateService.loadByCode(code);
+      if (t == null) throw new RuntimeException("编号" + code + "的模板文件不存在！");
+
+      Calendar now = Calendar.getInstance();
+      // 文件存储的相对路径（年月），避免超出目录内文件数的限制
+      String subFolder = new SimpleDateFormat("yyyyMM").format(now
+        .getTime());
+      // 上传文件存储的绝对路径
+      String appRealDir = Attach.DATA_REAL_PATH + "/"
+        + FlowAttach.DATA_SUB_PATH;
+      // 所保存文件所在的目录的绝对路径名
+      String realFileDir = appRealDir + "/" + subFolder;
+      // 构建文件要保存到的目录
+      File _fileDir = new File(realFileDir);
+      if (!_fileDir.exists()) {
+        logger.warn("mkdir={}", realFileDir);
+        _fileDir.mkdirs();
+      }
+      // 模板文件扩展名
+      String extension = StringUtils.getFilenameExtension(t.getPath());
+      // 不含路径的文件名
+      String fileName = new SimpleDateFormat("yyyyMMddHHmmssSSSS")
+        .format(now.getTime()) + "." + extension;
+      // 所保存文件的绝对路径名
+      String realFilePath = realFileDir + "/" + fileName;
+      // 上下文
+      SystemContext sc = SystemContextHolder.get();
+      String uid = idGeneratorService.next(FlowAttach.ATTACH_TYPE);
+      String ptype = "FlowAttachFromTemplate";
+      String localFile = t.getSubject();
+      String subPath = subFolder + "/" + fileName;
+      String path = FlowAttach.DATA_SUB_PATH + "/" + subPath;
+
+      // 创建附件记录
+      Attach attach = new Attach();
+      attach.setAuthor(sc.getUserHistory());
+      attach.setPtype(ptype);
+      attach.setPuid(uid);
+      attach.setFormat(extension);
+      attach.setFileDate(now);
+      attach.setPath(path);
+      attach.setSize(t.getSize());
+      attach.setSubject(localFile);
+      attach.setAppPath(false);
+      attach = attachService.save(attach);
+
+      // 创建附件上传日志
+      AttachHistory history = new AttachHistory();
+      history.setPtype(Attach.class.getSimpleName());
+      history.setPuid(attach.getId().toString());
+      history.setType(AttachHistory.TYPE_UPLOAD);
+      history.setAuthor(sc.getUserHistory());
+      history.setFileDate(now);
+      history.setPath(path);
+      history.setAppPath(false);
+      history.setFormat(attach.getFormat());
+      history.setSubject(attach.getSubject());
+      String[] c = WebUtils.getClient(ServletActionContext.getRequest());
+      history.setClientIp(c[0]);
+      history.setClientInfo(c[2]);
+      attachService.saveHistory(history);
+
+      // 创建流程附件记录
+      FlowAttach flowAttach = new FlowAttach();
+      flowAttach.setPid(pid);
+      flowAttach.setTid(tid);
+      flowAttach.setType(FlowAttach.TYPE_ATTACHMENT);
+      flowAttach.setSubject(localFile);
+      flowAttach.setPath(subPath);
+      flowAttach.setUid(uid);
+      flowAttach.setSize(attach.getSize());
+      flowAttach.setExt(attach.getFormat());
+      flowAttach.setFormatted(false);
+      flowAttach.setCommon(false);
+      flowAttach.setAuthor(sc.getUserHistory());
+      flowAttach.setFileDate(now);
+      flowAttachService.save(flowAttach);
+
+      // 复制文件
+      FileCopyUtils.copy(t.getInputStream(), new FileOutputStream(realFilePath));
+    } catch (IOException e) {
+      throw new RuntimeException(e);
+    }
   }
 
   /**

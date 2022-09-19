@@ -72,6 +72,7 @@ public interface WorkflowService {
    * @param moduleType 关联模块的类型，用于创建流程与模块的关联关系
    * @param moduleId 关联模块的ID，用于创建流程与模块的关联关系
    * @param autoCompleteFirstTask 是否自动完成流程发起后的首个待办，true-自动完成，false-不完成。
+   * @param attachCodes 流程附件的模板编码
    * @return 流程实例的ID
    */
   String startFlow(
@@ -79,7 +80,8 @@ public interface WorkflowService {
     Map<String, Object> globalVariables,
     Map<String, Object> taskLocalVariables,
     String moduleType, String moduleId,
-    boolean autoCompleteFirstTask
+    boolean autoCompleteFirstTask,
+    List<String> templateCodes
   );
 
   /**

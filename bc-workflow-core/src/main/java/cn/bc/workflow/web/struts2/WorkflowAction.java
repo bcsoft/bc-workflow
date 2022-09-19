@@ -24,6 +24,7 @@ import org.springframework.stereotype.Controller;
 
 import java.io.InputStream;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * 流程处理Action
@@ -46,7 +47,8 @@ public class WorkflowAction extends AbstractBaseAction {
   public String n;// [可选]指定下载文件的文件名
   public String mid;// 模块 ID，对应 WorkflowModuleRelation.mid
   public String mtype;// 模块类型，对应 WorkflowModuleRelation.mtype
-  public boolean autoCompleteFirstTask;// 是否自动完成首个待办的办理
+  public boolean autoCompleteFirstTask; // 是否自动完成首个待办的办理
+  public String templateCodes; // 添加流程附件的模板编码, 多个编码时用 “,” 分隔
 
   /**
    * 任务的表单数据，使用标准的Json数据格式：[{name:"",value:"",type:"int|long|string|date|...",scope:"process|task"}]
@@ -162,11 +164,16 @@ public class WorkflowAction extends AbstractBaseAction {
       Map<String, Object> globalVariables = (Map<String, Object>) variables[0];
       Map<String, Object> localVariables = (Map<String, Object>) variables[1];
 
+      List<String> codes = null;
+      if (this.templateCodes != null && !this.templateCodes.isEmpty())
+        codes = Arrays.stream(this.templateCodes.split(",")).collect(Collectors.toList());
+
       // 发起流程
       String processInstanceId = this.workflowService.startFlow(
         key, id,
         globalVariables, localVariables,
-        mtype, mid, autoCompleteFirstTask
+        mtype, mid, autoCompleteFirstTask,
+        codes
       );
 
       // 返回信息
