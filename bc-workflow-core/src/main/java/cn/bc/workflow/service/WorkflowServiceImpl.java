@@ -20,6 +20,8 @@ import cn.bc.identity.service.IdGeneratorService;
 import cn.bc.identity.web.SystemContext;
 import cn.bc.identity.web.SystemContextHolder;
 import cn.bc.identity.web.SystemContextImpl;
+import cn.bc.log.domain.OperateLog;
+import cn.bc.log.service.OperateLogService;
 import cn.bc.template.domain.Template;
 import cn.bc.template.service.TemplateService;
 import cn.bc.web.util.WebUtils;
@@ -99,6 +101,10 @@ public class WorkflowServiceImpl implements WorkflowService {
   private AttachService attachService;
   @Autowired
   private IdGeneratorService idGeneratorService;// 用于生成uid的服务
+  @Autowired
+  private WorkspaceService workspaceService;
+  @Autowired
+  private OperateLogService operateLogService;
 
   /**
    * 获取当前用户的帐号信息
@@ -1175,6 +1181,7 @@ public class WorkflowServiceImpl implements WorkflowService {
       HistoricProcessInstance pi = this.historyService
         .createHistoricProcessInstanceQuery().processInstanceId(id)
         .singleResult();
+
       if (pi == null) {
         throw new CoreException("要删除的流程实例在系统总已经不存在：id=" + id);
       }
@@ -1191,6 +1198,7 @@ public class WorkflowServiceImpl implements WorkflowService {
 
 
       boolean flowing = pi.getEndTime() == null;
+      Map<String, Object> ws = workspaceService.getWorkspaceData(id);
 
       // 删除流转中数据
       if (flowing) {
@@ -1199,6 +1207,16 @@ public class WorkflowServiceImpl implements WorkflowService {
 
       // 删除历史数据
       this.historyService.deleteHistoricProcessInstance(id);
+
+      // 记录操作日志
+      String startTime = ws.get("startTime") != null ? ws.get("startTime").toString() : "";
+      String startUser = ws.get("startUser") != null ? ws.get("startUser").toString() : "";
+      String title = String.format("删除流程%s_%s", id, startTime.split(" ")[0]);
+      if (ws.get("code") != null) title += "_" + ws.get("code");
+      if (ws.get("subject") != null) title += "_" + ws.get("subject");
+      String content = String.format("流程发起时间：%s\n流程发起人：%s", startTime, startUser);
+      this.operateLogService.saveWorkLog(HistoricProcessInstance.class.getSimpleName(), id, title, content,
+        OperateLog.OPERATE_DELETE);
 
       // 删除流转日志、意见、附件 TODO
     }
