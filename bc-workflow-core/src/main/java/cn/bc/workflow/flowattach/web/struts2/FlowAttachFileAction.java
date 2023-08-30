@@ -254,7 +254,7 @@ public class FlowAttachFileAction extends ActionSupport {
           this.to = flowAttach.getExt();
           params = getParams(flowAttach);
           bs = FreeMarkerUtils.format(
-            TemplateUtils.loadText(file_is), params).getBytes();
+            TemplateUtils.loadText(file_is), params).getBytes("UTF-8");
         } else {
           // convert
           OfficeUtils.convert(file_is, this.from, outputStream,
