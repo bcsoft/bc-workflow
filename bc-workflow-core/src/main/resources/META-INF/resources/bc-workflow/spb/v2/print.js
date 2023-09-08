@@ -22,18 +22,24 @@ window.onload = function () {
 
   // 导出为 PDF
   function save2pdf() {
-    var pdfDoc = new jsPDF('p', 'pt', 'a4');
-    pdfDoc.setFontSize(12);
-    var paperEl = document.querySelector(".paper");
-    //paperEl.classList.add("print");// 缩小字体
-    pdfDoc.addHTML(paperEl, function () {
-      var nameEl = document.getElementById("downloadFileName");
-      var downloadFileName = nameEl ? nameEl.value : document.title || "审批表";
-      if (downloadFileName.indexOf(".pdf") != downloadFileName.length - 4) {
-        downloadFileName = downloadFileName + ".pdf";
+    var pdfDoc = new jspdf.jsPDF({
+      orientation: "portrait",
+      unit: "mm",
+      format: 'a4'
+    });
+    // pdfDoc.setFontSize(12);
+    // var paperEl = document.querySelector(".paper");
+    
+    var nameEl = document.getElementById("downloadFileName");
+    var downloadFileName = nameEl ? nameEl.value : document.title || "审批表";
+    if (downloadFileName.indexOf(".pdf") != downloadFileName.length - 4) {
+      downloadFileName = downloadFileName + ".pdf";
+    }
+    pdfDoc.html(document.body, {
+      filename: downloadFileName,
+      callback: function (doc) {
+        doc.save(downloadFileName);
       }
-      pdfDoc.save(downloadFileName);
-      //paperEl.classList.remove("print");
     });
   }
 
@@ -64,9 +70,9 @@ window.onload = function () {
     // https://github.com/cburgmer/rasterizeHTML.js
     // http://mrrio.github.io/jsPDF (demo)、https://github.com/MrRio/jsPDF
     if (typeof(html2canvas) == "undefined") {
-      loadJS(ctx + "/ui-libs/html2canvas/0.4.1/html2canvas.min.js", function () {
+      loadJS(ctx + "/ui-libs/html2canvas/1.4.1/html2canvas.min.js", function () {
         if (typeof(jsPDF) == "undefined") {
-          loadJS(ctx + "/ui-libs/jspdf/1.0.272/jspdf.min.js", function () {
+          loadJS(ctx + "/ui-libs/jspdf/2.5.1/jspdf.umd.min.js", function () {
             loaded = true;
             callback && callback.call(this);
           });
@@ -77,7 +83,7 @@ window.onload = function () {
       })
     } else {
       if (typeof(jsPDF) == "undefined") {
-        loadJS(ctx + "/ui-libs/jspdf/1.0.272/jspdf.min.js", function () {
+        loadJS(ctx + "/ui-libs/jspdf/2.5.1/jspdf.umd.min.js", function () {
           loaded = true;
           callback && callback.call(this);
         });
