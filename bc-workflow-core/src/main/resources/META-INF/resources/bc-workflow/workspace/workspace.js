@@ -638,7 +638,7 @@ bc.flow.workspace = {
   },
 
   /**
-   * 添加附件
+   * 弹出对话框添加附件。
    *
    * @desc 上下文为附件列表容器的jquery对象
    * @param {String}
@@ -672,6 +672,110 @@ bc.flow.workspace = {
     });
   },
 
+  /**
+   * 直接添加附件到待办的附件区。
+   *
+   * @desc 上下文为附件列表容器的jquery对象
+   * @param {String} attachName 指定的附件名(不含扩展名)，不指定使用用户所选文件的原始文件名
+   */
+  addAttachDirectly: function (attachName) {
+    const $detail = this;
+    // 检测上传文件控件是否存在，没有就创建一个并绑定事件
+    let $file = $detail.find("input[name=selectFlowAttach");
+    if (!$file.length) {
+      $detail.append('<input type="file" name="selectFlowAttach" class="ignore" style="display:none">');
+      $file = $detail.find("input[name=selectFlowAttach");
+      // 绑定事件
+      $file.change(($event) => {
+        const file = $event.target.files[0];
+        // 固定文件名
+        const nameExt = file.name.split(".");
+        const fileSubject = attachName || nameExt[0];
+        const fileExt = nameExt[1];
+        const fileName = `${fileSubject}.${fileExt}`;
+        // 生成一个 uid
+        const puid = `CarRetired.${moment().format("YYYYMMDDTHHmmss.SSS")}`;
+        require(["bc/libs/request", "context", "moment", "bc"], function(R, context, moment, bc) {
+          // 上传为流程附件
+          R.request({
+            quiet: false,
+            method: "POST",
+            url: `${bc.root}/uploadfile/?a=1&subdir=workflow/attachment&ptype=FlowAttach&puid=${puid}`,
+            headers: {
+              "Content-Type": "application/octet-stream",
+              "Content-Disposition": `attachment; name="filedata"; filename="${encodeURIComponent(fileName)}"`,
+            },
+            body: file,
+          }).then((result) => {
+            // console.log(`result0=${result}`)
+            if (!result.startsWith("{")) throw new Error(`添加附件《${fileName}》失败`)
+            const r = JSON.parse(result)
+            if (r.err) throw new Error(r.err)
+            else return r
+          }).then((result) => {
+            // 保存为流程附件
+            const entity = {
+              type: 1,
+              common: false,
+              formatted: false,
+              uid: puid,
+              subject: fileSubject,
+              ext: fileExt,
+              path: result.to,
+              pid: $detail.closest(".bc-page").children("#wsForm").find("input[name='id']").val(),
+              tid: $detail.parent().data("id"),
+              size: file.size,
+              fileDate: moment().format("YYYY-MM-DD HH:mm:ss"),
+            };
+            const formData = Object.entries(entity).map(([key, value]) => `e.${key}=${encodeURIComponent(value + "")}`);
+            formData.push(`e.author.id=${context.userHid}`);
+            return R.request({
+              quiet: false,
+              method: "POST",
+              url: `${bc.root}/bc-workflow/flowattach/save`,
+              headers: {
+                "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+              },
+              body: formData.join("&"),
+            }).then((result) => {
+              // console.log(`result1=${result}`)
+              if (!result.startsWith("{")) throw new Error(`添加附件《${fileName}》失败`);
+              const json = JSON.parse(result);
+              if (!json.success) throw new Error(json.msg);
+              else {
+                // 添加到附件 UI 区域
+                const simpleLine = bc.flow.workspace.TPL.LINE.format(
+                  "attach",
+                  "ui-icon-link",
+                  "link",
+                  fileName,
+                  bc.flow.workspace.TPL.ATTACH_BUTTONS,
+                );
+                const detailLine = bc.flow.workspace.TPL.TEXT_LINE.format("low little", json.author + " " + json.fileDate);
+                const info = bc.flow.workspace.TPL.INFO.format(
+                  json.id,
+                  fileName,
+                  json.size,
+                  json.path,
+                  simpleLine,
+                  detailLine,
+                  "",
+                  "attach",
+                );
+
+                // 待办信息：插在意见和普通信息前
+                $detail.children(".comment,.normalFirst").filter(":first").before(info);
+              }
+            })
+          }).catch((err) =>
+            bc.msg.alert({ msg: err.message, title: `添加附件《${fileName}》失败`, width: 500, icon: "error" })
+          )
+        })
+      })
+    }
+    // 触发文件控件弹出选择文件对话框
+    $file.click();
+  },
   /** 表单验证 */
   validateForm: function ($form, namespace, procinstId, taskId, callback) {
     var scope = $form.data("scope");
