@@ -111,6 +111,9 @@ public class GroupHistoricTaskInstancesAction extends HistoricTaskInstancesActio
 
     if (!or.isEmpty()) {
       config.addTemplateParam("extra_condition", or.setAddBracket(true).getExpression());
+    } else {
+      // 所有条件为空应该看不到任何经办
+      config.addTemplateParam("extra_condition", new IsNullCondition("t.task_id").getExpression());
     }
 
     return config;
@@ -121,6 +124,9 @@ public class GroupHistoricTaskInstancesAction extends HistoricTaskInstancesActio
     // 状态条件
     AndCondition ac = new AndCondition();
 
+    // 排除自己的经办
+    ac.add(new NotEqualsCondition("t.assignee_", ((SystemContext) this.getContext()).getUser().getCode()));
+
     // 结束时间不能为空
     ac.add(new IsNotNullCondition("t.end_time_"));
     ac.add(new IsNullCondition("e.parent_id_"));
@@ -128,7 +134,7 @@ public class GroupHistoricTaskInstancesAction extends HistoricTaskInstancesActio
     return ac;
   }
 
-  /*获取属于当前用户拥有的指定岗位对应的上组织下的对应用户的条件*/
+  /** 有部门监控权限并且是部门领导岗位内的人，可以看到该领导岗位所属部门下所有人的经办 */
   private QlCondition getOwnActorCondition() {
     if (!this.isGroupControl()) return null;
 
@@ -186,7 +192,7 @@ public class GroupHistoricTaskInstancesAction extends HistoricTaskInstancesActio
 
     if (ownActors == null || ownActors.size() == 0) return null;
 
-    String sql = "t.assignee_code in (";
+    String sql = "\r\nt.assignee_code in (";
     for (int i = 0; i < ownActors.size(); i++) {
       if (i > 0) sql += ",";
 
@@ -197,7 +203,7 @@ public class GroupHistoricTaskInstancesAction extends HistoricTaskInstancesActio
     return new QlCondition(sql);
   }
 
-  //获取可访问属于流程部署的任务的条件
+  /** 有流程部署的监控权限可以看到此类流程的所有经办 */
   private QlCondition getDeployAccessControlCondition() {
     // 查找当前登录用户条件
     SystemContext context = (SystemContext) this.getContext();
@@ -227,7 +233,7 @@ public class GroupHistoricTaskInstancesAction extends HistoricTaskInstancesActio
 
     if (deployIds.size() == 0) return null;
 
-    String sql = "exists(select 1 from act_hi_taskinst dc_t";
+    String sql = "\r\nexists(select 1 from act_hi_taskinst dc_t";
     sql += " inner join act_re_procdef dc_r on dc_r.id_=dc_t.proc_def_id_";
     sql += " inner join bc_wf_deploy dc_d on dc_d.deployment_id=dc_r.deployment_id_";
     sql += " where dc_t.id_=t.task_id and dc_d.id in(";
@@ -242,7 +248,7 @@ public class GroupHistoricTaskInstancesAction extends HistoricTaskInstancesActio
     return new QlCondition(sql);
   }
 
-  //获取可访问属于流程实例的任务的条件
+  /** 有流程实例监控权限可以看到此流程实例的所有经办 */
   private QlCondition getProcessInstanceAccessControlCondition() {
     // 查找当前登录用户条件
     SystemContext context = (SystemContext) this.getContext();
@@ -272,7 +278,7 @@ public class GroupHistoricTaskInstancesAction extends HistoricTaskInstancesActio
 
     if (pIds.size() == 0) return null;
 
-    String sql = "exists(select 1 from act_hi_taskinst pi_a";
+    String sql = "\r\nexists(select 1 from act_hi_taskinst pi_a";
     sql += " where pi_a.id_=t.task_id and pi_a.proc_inst_id_ in(";
 
     for (int i = 0; i < pIds.size(); i++) {

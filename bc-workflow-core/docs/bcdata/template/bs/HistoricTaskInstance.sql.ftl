@@ -8,7 +8,7 @@ as (
     end as task_status
     , t.start_time_ start_time, t.end_time_ end_time, t.duration_ duration, t.due_date_ as due_date
     , t.proc_inst_id_ process_id, pd.name_ process_name, a.code as assignee_code, a.name as assignee
-    , e.suspension_state_ pstatus, t.task_def_key_, pd.key_ process_key
+    , (case when e.id_ is null then 3 else e.suspension_state_ end) pstatus, t.task_def_key_, pd.key_ process_key
     , pi.info->>'wf_code' as wf_code, pi.info->>'subject' as wf_subject, pd.deployment_id_
   from act_hi_taskinst t
   inner join act_hi_procinst p on p.proc_inst_id_ = t.proc_inst_id_
