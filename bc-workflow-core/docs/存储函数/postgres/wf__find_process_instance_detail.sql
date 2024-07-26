@@ -302,7 +302,7 @@ BEGIN
 				select row_to_json(u) from (
 					select a.id, a.code, a.name, a.type_ as type, a.pname, false candidate
 					from bc_identity_actor a
-					where a.code = t.assignee_
+					where a.code = t.assignee_ and a.type_ = 4
 				) u)
 			-- 未签领的岗位任务：act_ru_identitylink 的 group_id_=[岗位编码]
 			else (
@@ -310,7 +310,7 @@ BEGIN
 					select a.id, a.code, a.name, a.type_ as type, a.pname, true candidate
 					from bc_identity_actor a
 					inner join act_ru_identitylink l on l.task_id_ = t.id_
-					where a.code = l.group_id_
+					where a.code = l.group_id_ and a.type_ = 3
 					order by id_ asc limit 1 -- TODO: 暂时只支持发给一个岗位，发给多个岗位时只显示第一个，不支持发给多个候选用户
 				) u)
 			end) as actor
